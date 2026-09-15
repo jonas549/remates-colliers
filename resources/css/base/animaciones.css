@@ -1,0 +1,19 @@
+/* Animaciones de entrada del prototipo. ".sc-host" es el contenedor que el runtime de Claude
+   Design pone alrededor de cada pantalla; aquí lo reproduce el layout base. */
+
+@keyframes pulso { 0%, 100% { opacity: 1 } 50% { opacity: .25 } }
+@keyframes entra { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: none } }
+@keyframes entraSuave { from { opacity: 0 } to { opacity: 1 } }
+@keyframes entraPuja { 0% { opacity: 0; transform: translateY(-10px) } 100% { opacity: 1; transform: none } }
+@keyframes destello { 0% { transform: scale(.965); opacity: .55 } 60% { transform: scale(1.012) } 100% { transform: none; opacity: 1 } }
+
+.sc-host > div > div { animation: entra .55s ease-out both }
+.sc-host > div > div:first-child { animation: entraSuave .4s ease-out both }
+.sc-host > div > div:nth-child(2) { animation-delay: .05s }
+.sc-host > div > div:nth-child(3) { animation-delay: .11s }
+.sc-host > div > div:nth-child(4) { animation-delay: .17s }
+.sc-host > div > div:nth-child(5) { animation-delay: .23s }
+.sc-host > div > div:nth-child(6) { animation-delay: .29s }
+.sc-host > div > div:nth-child(n+7) { animation-delay: .34s }
+
+@media (prefers-reduced-motion: reduce) { *, .sc-host > div > div { animation: none !important } }

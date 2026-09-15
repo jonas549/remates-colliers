@@ -1,0 +1,38 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.codex
+/.cursor/
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+_ide_helper.php
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# public/build SÍ se versiona: el servidor no compila Vite (ver CLAUDE.md §4).
+
+# Material de referencia local, fuera del repositorio (el repo es público).
+/colliers-subastas-invitado-main/
+/colliers-subastas-usuario-main/
+/colliers-subastas-*.zip
+/Reunión*.docx
+/*.docx
+
+# Salida del arnés de comparación visual (se regenera con npm run comparar).
+/tools/comparar/salida/

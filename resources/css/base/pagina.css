@@ -1,0 +1,18 @@
+/* Estilos que cada pantalla del prototipo declara en su <style> propio y que son comunes a todas. */
+
+body { margin: 0; background: #ffffff; font-family: 'Source Sans 3', system-ui, sans-serif; color: #1d2530; }
+a { color: #25408f; text-decoration: none; }
+a:hover { color: #16265a; text-decoration: underline; }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible, textarea:focus-visible, a:focus-visible {
+  outline: 2px solid #25408f; outline-offset: 2px;
+}
+
+/* Algunas pantallas (login, registro, admin) aclaran el placeholder; se activa por página. */
+.placeholder-claro input::placeholder,
+.placeholder-claro textarea::placeholder { color: #a3abb8; }
+
+/* Equivalente del runtime: las pantallas sin "$preview" ocupan la altura completa. */
+html.pagina-completa, html.pagina-completa body,
+html.pagina-completa .sc-host { height: 100%; }
+
+[x-cloak] { display: none !important; }

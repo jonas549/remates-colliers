@@ -1,0 +1,35 @@
+# Handler de PHP 8.4 para LiteSpeed (cPanel / BanaHosting).
+# El Document Root a veces pierde la versión asignada. Si el sitio responde con otra versión
+# de PHP o descarga el código, descomenta el bloque usando EL NOMBRE EXACTO del handler que
+# muestra cPanel → MultiPHP Manager (o el que cPanel escribió en ~/public_html/.htaccess).
+# Se deja comentado porque un nombre incorrecto rompe el sitio completo.
+#
+# <IfModule mime_module>
+#   AddHandler application/x-httpd-ea-php84___lsphp .php .php8 .phtml
+# </IfModule>
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>

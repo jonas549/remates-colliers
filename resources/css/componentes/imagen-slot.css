@@ -1,0 +1,26 @@
+/* Reproduce el <image-slot> del prototipo en modo "cover": llena su contenedor, recorta al centro. */
+
+.imagen-slot {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 3 / 2;
+  font: 13px/1.3 system-ui, -apple-system, sans-serif;
+}
+.imagen-slot__marco {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: rgba(127, 127, 127, .08);
+}
+.imagen-slot__marco img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+}

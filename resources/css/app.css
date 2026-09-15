@@ -1,0 +1,10 @@
+/* El orden replica la cascada del prototipo: hoja Industry → <style> de la página → estilos del componente. */
+@import './base/fuentes.css';
+@import './base/industry.css';
+@import './base/tokens.css';
+@import './base/pagina.css';
+@import './base/animaciones.css';
+
+@import './componentes/imagen-slot.css';
+
+@import './paginas/acceso.css';

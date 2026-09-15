@@ -1,0 +1,25 @@
+/* Paleta y medidas del prototipo de Colliers. Toda regla nueva (incluidas las adaptaciones
+   móviles) usa estos valores; no se introducen colores ni tamaños fuera del sistema. */
+
+:root {
+  --azul: #25408f;
+  --marino: #16265a;
+  --texto: #1d2530;
+  --texto-2: #4a5563;
+  --gris: #5b6572;
+  --gris-2: #8c95a3;
+  --gris-3: #a3abb8;
+  --borde: #dbe1ec;
+  --borde-suave: #e6eaf1;
+  --fondo-suave: #f4f7fc;
+  --fondo-boton-inactivo: #eef1f6;
+  --rojo: #c8102e;
+  --celeste-texto: #c9d5ec;
+
+  --serif: 'Source Serif 4', serif;
+  --sans: 'Source Sans 3', system-ui, sans-serif;
+
+  --gutter-movil: 20px;
+  --gutter-tablet: 28px;
+  --gutter-escritorio: 32px;
+}
