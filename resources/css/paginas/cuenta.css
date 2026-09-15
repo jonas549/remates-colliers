@@ -1,0 +1,160 @@
+/* Estado de cuenta (prototipo: Estado Cuenta.dc.html), 5 variantes de estado.
+   ≥ 1120px: 1:1. Bajo 1120px los pasos pasan a lista vertical (aprobado) y los datos de la
+   garantía a grilla de dos columnas; la cabecera deja de mostrar el nombre en móvil
+   (en el original se monta sobre "Cerrar sesión"). */
+
+.cuenta { font-family: 'Source Sans 3', system-ui, sans-serif; color: #1d2530; background: #ffffff; min-height: 100vh; }
+
+.tramite-cabecera--cuenta .tramite-cabecera__acciones { gap: 18px; }
+.cuenta__nav-remates { color: #4a5563; }
+.cuenta__nav-usuario { color: #8c95a3; }
+.cuenta__nav-salir { font-weight: 600; }
+
+.cuenta__banda { color: #ffffff; }
+.cuenta__banda-interior { max-width: 1180px; margin: 0 auto; padding: 44px 32px; }
+.cuenta__banda-etiqueta { font-size: 11px; letter-spacing: 0.18em; font-weight: 700; margin-bottom: 16px; opacity: .9; }
+.cuenta__banda-grilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; align-items: end; }
+.cuenta__banda-titulo {
+  font-family: 'Source Serif 4', serif;
+  font-weight: 400;
+  font-size: 42px;
+  line-height: 1.05;
+  margin: 0;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+.cuenta__banda-texto { margin: 0; font-size: 16px; line-height: 1.65; opacity: .92; max-width: 56ch; }
+
+.cuenta__pasos-contenedor { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+.cuenta__pasos { display: flex; border-bottom: 1px solid #dbe1ec; flex-wrap: wrap; }
+.cuenta__paso { flex: 1; min-width: 200px; padding: 22px 36px 22px 28px; border-right: 1px solid #e6eaf1; }
+.cuenta__paso:first-child { padding-left: 0; }
+.cuenta__paso:last-child { border-right: none; }
+.cuenta__paso.es-actual { border-top: 2px solid #25408f; margin-top: -1px; }
+.cuenta__paso-cabeza { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.cuenta__paso-num { font-family: 'Source Serif 4', serif; font-size: 20px; color: #c3cad6; }
+.cuenta__paso.es-alcanzado .cuenta__paso-num { color: #25408f; }
+.cuenta__paso-titulo { font-size: 16px; font-weight: 600; color: #a3abb8; margin-bottom: 4px; }
+.cuenta__paso.es-alcanzado .cuenta__paso-titulo { color: #16265a; }
+.cuenta__paso.es-actual .cuenta__paso-titulo { font-weight: 700; }
+.cuenta__paso-texto { font-size: 13px; line-height: 1.5; color: #8c95a3; }
+
+.chip-tono { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 9px; }
+.chip-tono--neutro { background: #eef1f6; color: #5b6572; }
+.chip-tono--azul { background: #eef3fb; color: #16265a; border: 1px solid #c3d3ea; }
+.chip-tono--ambar { background: #fff8e0; color: #7a5c00; border: 1px solid #e5b800; }
+.chip-tono--verde { background: #eaf4ec; color: #1c5330; border: 1px solid #a9cdb5; }
+.chip-tono--rojo { background: #fdeef0; color: #8c0f22; border: 1px solid #e39aa6; }
+
+.cuenta__cuerpo {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 44px 32px 64px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 56px;
+  align-items: start;
+}
+.cuenta__columna { min-width: 0; }
+.cuenta__bloque-titulo { border-top: 2px solid #16265a; padding-top: 16px; margin-bottom: 22px; }
+.cuenta__bloque-titulo--lateral { margin-bottom: 20px; }
+.cuenta__kicker { font-size: 11px; letter-spacing: 0.16em; color: #25408f; font-weight: 700; }
+
+.cuenta__remate { font-family: 'Source Serif 4', serif; font-size: 28px; color: #16265a; line-height: 1.15; }
+.cuenta__remate-meta { font-size: 14px; color: #8c95a3; margin-bottom: 24px; }
+
+.cuenta__datos { display: flex; border-top: 1px solid #dbe1ec; border-bottom: 1px solid #dbe1ec; flex-wrap: wrap; }
+.cuenta__dato { flex: 1; min-width: 120px; padding: 16px 20px; border-right: 1px solid #e6eaf1; }
+.cuenta__dato:first-child { padding: 16px 20px 16px 0; }
+.cuenta__dato:last-child { padding: 16px 0 16px 20px; border-right: 0; }
+.cuenta__dato-etiqueta { font-size: 11px; letter-spacing: 0.12em; color: #8c95a3; font-weight: 700; }
+.cuenta__dato-valor { font-family: 'Source Serif 4', serif; font-size: 26px; color: #16265a; }
+.cuenta__dato-estado { font-family: 'Source Serif 4', serif; font-size: 22px; color: #16265a; }
+.cuenta__dato-estado--rojo { color: #8c0f22; }
+.cuenta__dato-estado--ambar { color: #7a5c00; }
+
+.cuenta__subtitulo { font-size: 11px; letter-spacing: 0.16em; color: #25408f; font-weight: 700; margin: 32px 0 14px; }
+.cuenta__subtitulo--ok { color: #1c5330; }
+.cuenta__lista { display: flex; flex-direction: column; }
+.cuenta__item { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid #e6eaf1; }
+.cuenta__item-marca { font-family: 'Source Serif 4', serif; font-size: 18px; color: #25408f; flex: none; }
+.cuenta__item-marca--ok { color: #1c5330; }
+.cuenta__item-texto { font-size: 15px; line-height: 1.6; color: #4a5563; }
+.cuenta__item-texto strong { color: #16265a; }
+
+.cuenta__botones { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 26px; }
+.cuenta__boton { background: #25408f; color: #ffffff; font-weight: 700; font-size: 15px; padding: 15px 26px; }
+.cuenta__boton:hover { background: #16265a; color: #ffffff; text-decoration: none; }
+.cuenta__boton-secundario { border: 1px solid #dbe1ec; color: #25408f; font-weight: 600; font-size: 15px; padding: 14px 26px; }
+.cuenta__boton-secundario:hover { background: #f0f4fb; text-decoration: none; }
+.cuenta__nota { font-size: 13px; color: #8c95a3; margin: 18px 0 0; line-height: 1.6; max-width: 66ch; }
+
+.cuenta__lateral-texto { margin: 0 0 18px; font-size: 16px; line-height: 1.65; color: #4a5563; }
+.cuenta__accesos { display: flex; flex-direction: column; gap: 0; border-top: 1px solid #dbe1ec; }
+.cuenta__acceso {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e6eaf1;
+  font-size: 15px;
+  font-weight: 600;
+}
+.cuenta__acceso:hover { color: #16265a; text-decoration: none; }
+.cuenta__acceso span { color: #a3abb8; }
+
+.cuenta__contacto { border-left: 3px solid #25408f; background: #f4f7fc; padding: 20px 22px; margin-top: 32px; }
+.cuenta__contacto-titulo { font-size: 11px; letter-spacing: 0.14em; color: #25408f; font-weight: 700; margin-bottom: 8px; }
+.cuenta__contacto p { margin: 0 0 14px; font-size: 15px; line-height: 1.6; color: #4a5563; }
+.cuenta__contacto-enlaces { display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+
+/* ── Tablet y móvil ───────────────────────────────────────────────────────────────── */
+@media (max-width: 1119.98px) {
+  /* Tablet: 4 pasos en fila no caben (el original los deja 3 + 1); grilla de 2 × 2. */
+  .cuenta__pasos { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 0; }
+  .cuenta__paso,
+  .cuenta__paso:first-child { min-width: 0; padding: 20px 24px 20px 0; border-right: 0; border-bottom: 1px solid #e6eaf1; }
+  .cuenta__paso:nth-child(2n) { padding-left: 24px; border-left: 1px solid #e6eaf1; }
+  .cuenta__paso.es-actual { margin-top: 0; }
+
+  /* Datos de la garantía: monto y plazo lado a lado, estado debajo (el plazo no cabe en tercios). */
+  .cuenta__datos { display: grid; grid-template-columns: 1fr 1fr; }
+  .cuenta__dato,
+  .cuenta__dato:first-child,
+  .cuenta__dato:last-child { min-width: 0; padding: 14px 12px 14px 0; border-right: 0; }
+  .cuenta__dato:nth-child(2) { padding-left: 12px; border-left: 1px solid #e6eaf1; }
+  .cuenta__dato:last-child { grid-column: 1 / -1; border-top: 1px solid #e6eaf1; }
+  .cuenta__dato-valor { font-size: 22px; }
+
+  .tramite-cabecera--cuenta .tramite-cabecera__acciones a { padding: 12px 0; margin: -12px 0; }
+  .cuenta__contacto-enlaces a { display: inline-block; width: fit-content; padding: 12px 0; margin: -12px 0; }
+  .cuenta__boton-secundario, .cuenta__boton { text-align: center; }
+}
+
+/* Bajo 900px dos columnas de 320px quedan apretadas (los tres datos de la garantía no caben). */
+@media (max-width: 899.98px) {
+  .cuenta__cuerpo { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+}
+
+@media (max-width: 759.98px) {
+  .cuenta__pasos { display: flex; flex-direction: column; }
+  .cuenta__paso,
+  .cuenta__paso:first-child,
+  .cuenta__paso:nth-child(2n) { padding: 18px 0; border-left: 0; }
+  .cuenta__paso-cabeza { margin-bottom: 8px; }
+
+  .cuenta__nav-usuario { display: none; }
+  .tramite-cabecera--cuenta .tramite-cabecera__etiqueta { display: none; }
+  .tramite-cabecera--cuenta .tramite-cabecera__separador { display: none; }
+
+  .cuenta__banda-interior { padding: 32px var(--gutter-movil); }
+  .cuenta__banda-grilla { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .cuenta__banda-titulo { font-size: 32px; }
+  .cuenta__pasos-contenedor { padding: 0 var(--gutter-movil); }
+  .cuenta__cuerpo { padding: 32px var(--gutter-movil) 48px; gap: 40px; }
+  .cuenta__remate { font-size: 24px; }
+
+
+  .cuenta__botones { flex-direction: column; }
+}

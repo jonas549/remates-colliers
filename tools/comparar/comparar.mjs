@@ -54,8 +54,7 @@ async function capturar(navegador, url, ancho, alto, variante, esOriginal) {
         timezoneId: 'America/Santiago',
     });
     const pagina = await contexto.newPage();
-    await pagina.clock.install({ time: HORA_FIJA });
-    await pagina.clock.pauseAt(HORA_FIJA);
+    await pagina.clock.setFixedTime(HORA_FIJA);
 
     if (esOriginal && variante.props) {
         await pagina.route(url, async (ruta) => {

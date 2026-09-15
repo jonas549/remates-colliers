@@ -1,5 +1,6 @@
 <?php
 
+use App\Demo\EstadoCuentaDemo;
 use App\Demo\RematesDemo;
 use Illuminate\Support\Facades\Route;
 
@@ -17,5 +18,11 @@ Route::get('/ingresar', fn () => view('auth.login', [
 ]))->name('login');
 
 Route::view('/registro', 'auth.registro')->name('registro');
-Route::get('/mi-cuenta', $pendiente('estado de cuenta'))->name('cuenta.estado');
+// ?estado= permite revisar cada variante del prototipo mientras no existe la sesión real.
+Route::get('/mi-cuenta', fn () => view('cuenta.estado', [
+    'estado' => EstadoCuentaDemo::para(request('estado')),
+]))->name('cuenta.estado');
+
+Route::get('/remates/{remate}', $pendiente('detalle de remate'))->name('remates.show');
+Route::get('/remates/{remate}/sala', $pendiente('sala de puja'))->name('sala.show');
 Route::get('/admin', $pendiente('dashboard'))->name('admin.dashboard');

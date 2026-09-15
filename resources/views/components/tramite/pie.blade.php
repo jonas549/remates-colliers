@@ -1,4 +1,5 @@
-<div class="tramite-pie">
+@props(['ancho' => null])
+<div class="tramite-pie" @if ($ancho) style="--tramite-ancho: {{ $ancho }}px" @endif>
     <div class="tramite-pie__interior">
         <img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="tramite-pie__logo">
         <a href="#" class="tramite-pie__enlace">Bases y condiciones</a>
