@@ -59,7 +59,7 @@ class PantallasRevision
                 'pantallas' => [
                     ['nombre' => 'Dashboard', 'ruta' => '/admin', 'estado' => 'terminada', 'nota' => 'En móvil/tablet: barra superior y menú deslizable (botón ☰).'],
                     ['nombre' => 'Subastas', 'ruta' => '/admin/subastas', 'estado' => 'terminada', 'nota' => 'Probar Crear subasta, pestañas de filtro y Cerrar ahora (modal). En móvil: botón Acciones abre una hoja inferior.'],
-                    ['nombre' => 'Postores', 'ruta' => null, 'estado' => 'pendiente'],
+                    ['nombre' => 'Postores', 'ruta' => '/admin/postores', 'estado' => 'terminada', 'nota' => 'Probar filtros, búsqueda, Aprobar/Rechazar y Ficha. En móvil cada postor es una tarjeta (criterio: aprobar una garantía desde el celular).'],
                     ['nombre' => 'Reportes', 'ruta' => null, 'estado' => 'pendiente'],
                 ],
             ],
