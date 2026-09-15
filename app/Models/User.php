@@ -10,12 +10,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'rol', 'estado', 'debe_cambiar_clave'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    public const ROL_ADMIN = 'admin';
+
+    public const ROL_MARTILLERO = 'martillero';
+
+    public const ROL_POSTOR = 'postor';
+
+    public const ESTADO_ACTIVO = 'activo';
 
     /**
      * Get the attributes that should be cast.
@@ -27,6 +35,12 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'debe_cambiar_clave' => 'boolean',
         ];
+    }
+
+    public function esAdmin(): bool
+    {
+        return $this->rol === self::ROL_ADMIN;
     }
 }

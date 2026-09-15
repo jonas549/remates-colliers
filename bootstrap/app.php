@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Clave de acceso mientras el subdominio es un sandbox público (COLLIERS_ACCESO_CLAVE).
+        $middleware->web(append: [\App\Http\Middleware\AccesoSandbox::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

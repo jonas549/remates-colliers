@@ -1,0 +1,1 @@
+<x-pagina-error codigo="419" titulo="Tu sesión expiró" mensaje="Por seguridad, el formulario dejó de ser válido después de un tiempo sin actividad. Vuelve atrás, recarga la página e inténtalo de nuevo." accion="Volver a intentarlo" :href="url()->previous()" />

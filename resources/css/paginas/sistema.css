@@ -1,0 +1,23 @@
+/* Pantallas de sistema (acceso al sandbox y errores). No existen en el prototipo: usan sus tokens y
+   la cabecera y el pie de trámite. */
+
+.acceso-sandbox { min-height: 100vh; display: flex; flex-direction: column; background: #ffffff; font-family: var(--sans); color: var(--texto); }
+.acceso-sandbox__cuerpo { flex: 1; display: flex; align-items: center; justify-content: center; padding: 56px var(--gutter-escritorio); background: var(--fondo-suave); }
+.acceso-sandbox__caja { width: 100%; max-width: 520px; background: #ffffff; border: 1px solid var(--borde); border-top: 3px solid var(--marino); padding: 36px 40px; }
+.acceso-sandbox__kicker { font-size: 11px; letter-spacing: 0.16em; color: var(--azul); font-weight: 700; margin-bottom: 12px; }
+.acceso-sandbox__titulo { font-family: var(--serif); font-weight: 400; font-size: 34px; line-height: 1.1; margin: 0 0 12px; color: var(--marino); letter-spacing: -0.01em; }
+.acceso-sandbox__texto { margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: var(--texto-2); }
+.acceso-sandbox__campo { display: block; border-top: 2px solid var(--marino); border-bottom: 1px solid var(--borde); padding: 14px 0; }
+.acceso-sandbox__etiqueta { display: block; font-size: 11px; letter-spacing: 0.14em; color: var(--gris-2); font-weight: 700; margin-bottom: 6px; }
+.acceso-sandbox__input { border: 0; outline: none; background: transparent; width: 100%; font-family: inherit; font-size: 19px; color: var(--marino); padding: 4px 0; }
+.acceso-sandbox__error { border-left: 3px solid var(--rojo); background: #fdeef0; color: #8c0f22; padding: 12px 14px; font-size: 14px; margin-top: 14px; }
+.acceso-sandbox__boton { display: block; width: 100%; min-height: 52px; margin-top: 20px; border: 0; background: var(--azul); color: #ffffff; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; text-align: center; }
+.acceso-sandbox__boton:hover { background: var(--marino); color: #ffffff; text-decoration: none; }
+.acceso-sandbox__boton--enlace { line-height: 52px; }
+.acceso-sandbox__ayuda { margin: 18px 0 0; font-size: 13px; line-height: 1.55; color: var(--gris-2); }
+
+@media (max-width: 759.98px) {
+  .acceso-sandbox__cuerpo { padding: 28px var(--gutter-movil) 40px; align-items: flex-start; }
+  .acceso-sandbox__caja { padding: 24px 20px; }
+  .acceso-sandbox__titulo { font-size: 28px; }
+}

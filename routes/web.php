@@ -5,6 +5,7 @@ use App\Demo\DetalleDemo;
 use App\Demo\EstadoCuentaDemo;
 use App\Demo\PantallasRevision;
 use App\Demo\RematesDemo;
+use App\Http\Controllers\AccesoSandboxController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +15,10 @@ use Illuminate\Support\Facades\Route;
  * Durante el Bloque T la raíz es el índice de revisión y el listado vive en /remates.
  * Al cerrar T, "/" pasa a ser el listado y el índice se elimina.
  */
+
+// Clave de acceso al sandbox (ver App\Http\Middleware\AccesoSandbox).
+Route::get('/acceso', [AccesoSandboxController::class, 'formulario'])->name('acceso.formulario');
+Route::post('/acceso', [AccesoSandboxController::class, 'ingresar'])->name('acceso.ingresar');
 
 $pendiente = fn (string $nombre) => fn () => response('Pantalla pendiente del Bloque T: ' . $nombre, 200);
 

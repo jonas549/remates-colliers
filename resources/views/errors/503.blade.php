@@ -1,0 +1,1 @@
+<x-pagina-error codigo="503" titulo="Estamos haciendo mantenimiento" mensaje="La plataforma vuelve en unos minutos. Si tenías un remate en curso, el estado oficial de las pujas se conserva en el servidor." accion="Reintentar" />

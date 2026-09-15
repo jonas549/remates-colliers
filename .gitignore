@@ -36,3 +36,6 @@ Thumbs.db
 
 # Salida del arnés de comparación visual (se regenera con npm run comparar).
 /tools/comparar/salida/
+
+# Latido del programador de tareas (lo escribe el cron).
+/storage/framework/latido-programador

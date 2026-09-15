@@ -184,6 +184,23 @@ El servidor **no es un VPS**. Es hosting compartido.
 4. Log en `~/scripts/deploy-colliers.log`
 
 **No hay GitHub Actions.** No los configures.
+
+### Contrato de deploy (conectar el servidor una sola vez)
+
+El servidor se configura **una vez**; desde ahí todo entra por push y cron. Para que siga siendo así:
+
+- **`colliers:puede-desplegar`** se ejecuta antes de actualizar el código. Código de salida 75 = no
+  desplegar (el script termina y reintenta en el próximo ciclo). Hoy bloquea con el archivo
+  `storage/app/bloquear-deploy`; en el Bloque J se agrega el bloqueo con remate en curso.
+- **`colliers:instalar`** se ejecuta después de `migrate`. Idempotente. **Todo paso de instalación futuro
+  (configuración por defecto, catálogos, plantillas) se agrega a este comando, nunca como paso manual.**
+- **Una sola línea de cron para tareas:** `schedule:run` cada minuto. Toda tarea periódica nueva va en
+  `routes/console.php`, nunca como cron adicional. La cola se procesa ahí con `--stop-when-empty`.
+- **`colliers:diagnostico`** revisa extensiones, entorno, base, permisos, assets y el latido del cron.
+- **Clave de acceso al sandbox:** `COLLIERS_ACCESO_CLAVE` protege todo el sitio (incluido /admin).
+- **Migraciones solo aditivas:** crear tablas, agregar columnas nullable o con valor por defecto, índices.
+  Nunca renombrar ni eliminar columnas. Si algo cambia de significado, columna nueva y la antigua deprecada.
+- `users` guarda credenciales y rol (admin, martillero, postor). Los datos del postor van en tablas propias.
 **Bloqueo de deploy obligatorio:** el script no debe desplegar mientras haya un remate en curso
 (pendiente de implementar; requiere cambio en el script del servidor).
 
@@ -316,14 +333,17 @@ aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox
 
 ### BLOQUE B — Base del proyecto Laravel
 
+- [x] Comandos `colliers:instalar`, `colliers:puede-desplegar`, `colliers:diagnostico` (con pruebas)
+- [x] Programador de tareas: latido y cola por minuto con `--stop-when-empty`
+- [x] Clave de acceso al sandbox (middleware, formulario, límite de intentos, noindex)
+- [x] Páginas de error propias: 403, 404, 419, 429, 500, 503
+- [x] Traducciones al español en `lang/es/` (validación, autenticación, contraseñas, paginación)
+- [x] `.env.example` completo y sin secretos
+- [x] `users` con rol, estado y cambio de clave obligatorio (migración aditiva)
+
 - [ ] `.env`: base de datos, correo, locale `es` (hecho en T), zona de visualización `America/Santiago`
-- [ ] `.env.example` completo y sin secretos
 - [ ] Fortify, en español
 - [ ] `maatwebsite/excel` para exportaciones
-- [ ] Traducciones al español en `lang/es/`, incluidos mensajes de validación
-- [ ] Páginas de error propias: 403, 404, 419, 429, 500, 503
-- [ ] Driver de colas configurado para funcionar por cron
-- [ ] Comando `colliers:instalar` idempotente
 - [ ] Confirmar y activar el handler de PHP 8.4 en `.htaccess`
 
 ### BLOQUE C — Modelo de datos
@@ -425,7 +445,7 @@ Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo más t
 |---|---|---|---|
 | A — Entorno y servidor | **Cerrado** | 2026-09-15 | Hecho por Jonas. PHP 8.4.24, Composer 2.10.2, BD, deploy key, script de deploy y cron cada 5 min. |
 | T — Diseño a Blade | En curso | 2026-09-15 | B0 y Login listos (escritorio ≤ 0,04% de diferencia, solo remuestreo de foto). |
-| B — Base Laravel | Pendiente | | |
+| B — Base Laravel | Infra lista | 2026-09-15 | Contrato de deploy, comandos, cron, clave de sandbox, errores y es. Pendiente: Fortify (D), maatwebsite/excel (O). |
 | C — Modelo de datos | Pendiente | | |
 | J — Motor de subastas | Pendiente | | |
 | D — Autenticación | Pendiente | | |
