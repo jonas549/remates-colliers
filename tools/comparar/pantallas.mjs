@@ -11,6 +11,13 @@ export const ANCHOS_ESTRICTOS = [1120, 1280, 1366, 1440];
 export const ANCHOS_REFERENCIA = [375, 759, 760, 1024, 1119];
 
 export const PANTALLAS = {
+    registro: {
+        original: 'Registro Postor.dc.html',
+        laravel: '/registro',
+        alto: 900,
+        variantes: [{ id: 'base' }],
+        mascaras: [],
+    },
     login: {
         original: 'Login.dc.html',
         laravel: '/ingresar',

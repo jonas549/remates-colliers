@@ -16,6 +16,6 @@ Route::get('/ingresar', fn () => view('auth.login', [
     'proximo' => RematesDemo::proximoDestacado(),
 ]))->name('login');
 
-Route::get('/registro', $pendiente('registro'))->name('registro');
+Route::view('/registro', 'auth.registro')->name('registro');
 Route::get('/mi-cuenta', $pendiente('estado de cuenta'))->name('cuenta.estado');
 Route::get('/admin', $pendiente('dashboard'))->name('admin.dashboard');

@@ -90,8 +90,11 @@ async function capturar(navegador, url, ancho, alto, variante, esOriginal) {
                 if (estilo.display === 'none' || estilo.visibility === 'hidden') continue;
                 const caja = el.getBoundingClientRect();
                 if (caja.width === 0 && caja.height === 0) continue;
-                // Enlaces dentro de un párrafo de texto están exentos (WCAG 2.5.8, excepción "inline").
-                const enLinea = estilo.display === 'inline' && el.closest('p');
+                // Enlaces dentro de una frase están exentos (WCAG 2.5.8, excepción "inline"):
+                // en línea y con texto propio del contenedor alrededor.
+                const padre = el.parentElement;
+                const enLinea = estilo.display === 'inline' && padre &&
+                    padre.textContent.trim().length > el.textContent.trim().length;
                 // Campos dentro de una etiqueta cuentan con la etiqueta como área táctil
                 // (tocar la etiqueta enfoca o marca el campo).
                 const etiqueta = ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) && el.closest('label');

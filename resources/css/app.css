@@ -6,5 +6,7 @@
 @import './base/animaciones.css';
 
 @import './componentes/imagen-slot.css';
+@import './componentes/tramite.css';
 
 @import './paginas/acceso.css';
+@import './paginas/registro.css';

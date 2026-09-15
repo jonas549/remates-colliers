@@ -1,0 +1,53 @@
+/* Cabecera y pie compactos de las pantallas de trámite (Registro Postor, Estado Cuenta).
+   El ancho del contenedor cambia por pantalla: 1240px en registro, 1180px en estado de cuenta. */
+
+.tramite-cabecera { background: #ffffff; border-bottom: 1px solid #dbe1ec; }
+.tramite-cabecera__interior {
+  max-width: var(--tramite-ancho, 1240px);
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 74px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.tramite-cabecera__logo { height: 44px; width: auto; display: block; }
+.tramite-cabecera__separador { width: 1px; height: 26px; background: #dbe1ec; }
+.tramite-cabecera__etiqueta { font-size: 11px; letter-spacing: 0.16em; color: #25408f; font-weight: 700; }
+.tramite-cabecera__acciones {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.tramite-pie { background: #16265a; color: #ffffff; }
+.tramite-pie__interior {
+  max-width: var(--tramite-ancho, 1240px);
+  margin: 0 auto;
+  padding: 26px 32px;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.tramite-pie__logo { height: 42px; width: auto; display: block; }
+.tramite-pie__enlace { color: #c9d5ec; }
+.tramite-pie__credito { margin-left: auto; color: #8fa2c9; }
+.tramite-pie__credito a { color: #ffffff; font-weight: 600; }
+
+@media (max-width: 1119.98px) {
+  .tramite-cabecera__interior > a { display: block; padding: 15px 0; margin: -15px 0; }
+  .tramite-pie__enlace { padding: 12px 0; margin: -12px 0; }
+}
+
+@media (max-width: 759.98px) {
+  .tramite-cabecera__interior { padding: 0 var(--gutter-movil); height: 64px; gap: 16px; }
+  .tramite-cabecera__logo { height: 36px; }
+  .tramite-cabecera__interior > a { padding: 4px 0; margin: -4px 0; }
+  .tramite-pie__interior { padding: 24px var(--gutter-movil); gap: 16px 24px; }
+  .tramite-pie__credito { margin-left: 0; flex-basis: 100%; }
+}

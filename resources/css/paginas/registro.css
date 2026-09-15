@@ -1,0 +1,220 @@
+/* Registro de postor (prototipo: Registro Postor.dc.html).
+   ≥ 1120px: 1:1, incluida la grilla auto-fit con el formulario en "span 2" (a 1120–1183px el
+   original deja la columna lateral a media anchura bajo el formulario; se replica).
+   < 1120px: una sola columna. El "span 2" del original fuerza dos pistas de 320px y desborda
+   bajo ~760px (corrección aprobada). */
+
+.registro { font-family: 'Source Sans 3', system-ui, sans-serif; color: #1d2530; background: #ffffff; }
+
+.registro__hero { background: #25408f; color: #ffffff; }
+.registro__hero-interior {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 44px 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  align-items: end;
+}
+.registro__kicker { font-size: 11px; letter-spacing: 0.18em; font-weight: 700; color: #c9d5ec; margin-bottom: 14px; }
+.registro__titulo {
+  font-family: 'Source Serif 4', serif;
+  font-weight: 400;
+  font-size: 44px;
+  line-height: 1.05;
+  margin: 0;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+.registro__bajada { margin: 0; font-size: 16px; line-height: 1.65; color: #c9d5ec; max-width: 52ch; }
+
+.registro__cuerpo {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 44px 32px 64px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 56px;
+  align-items: start;
+}
+.registro__formulario { min-width: 0; grid-column: span 2; }
+
+.registro__tipo { display: flex; gap: 0; border: 1px solid #dbe1ec; width: fit-content; margin-bottom: 12px; }
+.registro__tipo-opcion {
+  padding: 13px 22px;
+  border: 0;
+  background: #ffffff;
+  color: #4a5563;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.registro__tipo-opcion.es-activa { background: #25408f; color: #ffffff; }
+
+.registro__seccion {
+  font-family: 'Source Serif 4', serif;
+  font-weight: 400;
+  font-size: 26px;
+  color: #16265a;
+  margin: 40px 0 18px;
+  padding-top: 14px;
+  border-top: 2px solid #16265a;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.registro__seccion-num { font-family: 'Source Sans 3', sans-serif; font-size: 12px; letter-spacing: 0.14em; font-weight: 700; color: #25408f; }
+
+.registro__grilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 32px; }
+.registro__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  border-bottom: 1px solid #e6eaf1;
+  padding: 12px 0;
+}
+.registro__etiqueta { font-size: 11px; letter-spacing: 0.12em; font-weight: 700; color: #8c95a3; }
+.registro__input {
+  height: 34px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: 17px;
+  color: #16265a;
+  width: 100%;
+  box-sizing: border-box;
+}
+.registro__input.es-invalido { color: #c8102e; }
+.registro__ayuda { font-size: 12px; color: #a3abb8; }
+.registro__ayuda.es-invalido { color: #c8102e; }
+
+.registro__documentos { border-top: 1px solid #dbe1ec; }
+.registro__documento {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e6eaf1;
+  padding: 16px 0;
+}
+.registro__documento-marca {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  border: 1px solid #dbe1ec;
+  color: #a3abb8;
+}
+.registro__documento-marca.es-cargado { border: 0; background: #25408f; color: #ffffff; }
+.registro__documento-texto { flex: 1; min-width: 160px; }
+.registro__documento-nombre { font-size: 15px; font-weight: 600; color: #16265a; }
+.registro__documento-detalle { font-size: 13px; color: #5b6572; }
+.registro__documento-boton {
+  border: 1px solid #25408f;
+  background: #ffffff;
+  color: #25408f;
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  padding: 11px 20px;
+  cursor: pointer;
+}
+.registro__documento-boton.es-cargado { border-color: #dbe1ec; color: #5b6572; }
+.registro__documento-archivo { display: none; }
+
+.registro__aviso { border-left: 3px solid #25408f; background: #f4f7fc; padding: 20px 22px; margin-top: 36px; }
+.registro__aviso-titulo { font-size: 11px; letter-spacing: 0.14em; color: #25408f; font-weight: 700; margin-bottom: 8px; }
+.registro__aviso p { margin: 0; font-size: 15px; line-height: 1.65; color: #4a5563; }
+
+.registro__declaracion {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 24px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #4a5563;
+}
+.registro__declaracion input { accent-color: #25408f; width: 18px; height: 18px; margin-top: 2px; flex: none; }
+
+.registro__acciones {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 28px;
+  border-top: 2px solid #16265a;
+  padding-top: 24px;
+}
+/* En el prototipo es un <a>; aquí es <button> (envío real), con la misma caja visual. */
+.registro__enviar {
+  display: inline-block;
+  padding: 16px 34px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: inherit;
+  border: 0;
+  background: #eef1f6;
+  color: #a3abb8;
+  pointer-events: none;
+  cursor: pointer;
+}
+.registro__enviar.es-listo { background: #25408f; color: #ffffff; pointer-events: auto; }
+.registro__ya-tengo { font-size: 14px; }
+
+.registro__lateral { min-width: 0; display: flex; flex-direction: column; gap: 0; position: sticky; top: 24px; }
+.registro__lateral-bloque { border-top: 2px solid #16265a; padding-top: 16px; }
+.registro__lateral-titulo { font-size: 11px; letter-spacing: 0.16em; color: #25408f; font-weight: 700; margin-bottom: 18px; }
+.registro__paso { display: flex; gap: 16px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid #e6eaf1; }
+.registro__paso-num { flex: none; font-family: 'Source Serif 4', serif; font-size: 20px; color: #25408f; line-height: 1.2; }
+.registro__paso-cuerpo { min-width: 0; }
+.registro__paso-titulo { font-size: 15px; font-weight: 600; color: #16265a; margin-bottom: 2px; }
+.registro__paso-texto { font-size: 13px; line-height: 1.55; color: #5b6572; }
+
+.registro__garantia { border-left: 3px solid #e5b800; background: #fff8e0; padding: 18px 20px; margin-top: 28px; }
+.registro__garantia-titulo { font-size: 11px; letter-spacing: 0.14em; color: #7a5c00; font-weight: 700; margin-bottom: 6px; }
+.registro__garantia p { margin: 0; font-size: 14px; line-height: 1.6; color: #7a5c00; }
+
+.registro__dudas { border-top: 1px solid #dbe1ec; margin-top: 28px; padding-top: 16px; }
+.registro__dudas-titulo { font-size: 11px; letter-spacing: 0.16em; color: #8c95a3; font-weight: 700; margin-bottom: 10px; }
+.registro__dudas-enlaces { display: flex; flex-direction: column; gap: 8px; font-size: 15px; }
+
+.tramite-cabecera__pregunta { color: #8c95a3; }
+.tramite-cabecera__boton { border: 1px solid #25408f; color: #25408f; padding: 10px 20px; font-weight: 700; }
+.tramite-cabecera__boton:hover { background: #25408f; color: #ffffff; text-decoration: none; }
+
+/* ── Tablet y móvil ───────────────────────────────────────────────────────────────── */
+@media (max-width: 1119.98px) {
+  .registro__cuerpo { grid-template-columns: minmax(0, 1fr); gap: 48px; }
+  .registro__formulario { grid-column: auto; }
+  .registro__lateral { position: static; }
+
+  /* Áreas táctiles de 44px sin cambiar la caja visible */
+  .registro__tipo-opcion { padding-block: 13px; min-height: 44px; }
+  .registro__documento-boton { padding-block: 13px; margin-block: -2px; }
+  .registro__declaracion { padding-block: 12px; margin-block: 12px -12px; }
+  .registro__ya-tengo, .registro__dudas-enlaces a { display: inline-block; padding: 12px 0; margin: -12px 0; width: fit-content; }
+  .tramite-cabecera__boton { padding-block: 12px; margin-block: -2px; }
+}
+
+@media (max-width: 759.98px) {
+  .registro__hero-interior { padding: 32px var(--gutter-movil); gap: 16px; }
+  .registro__titulo { font-size: 32px; }
+  .registro__cuerpo { padding: 12px var(--gutter-movil) 48px; gap: 40px; }
+  .registro__grilla { grid-template-columns: minmax(0, 1fr); }
+  .registro__tipo { width: 100%; }
+  .registro__tipo-opcion { flex: 1; }
+  .registro__documento-boton { width: 100%; }
+  .registro__enviar { width: 100%; text-align: center; }
+  .tramite-cabecera__pregunta { display: none; }
+}
