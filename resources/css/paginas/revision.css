@@ -1,0 +1,28 @@
+/* Índice interno de revisión (no pertenece al diseño). Usa los tokens del sistema. */
+
+.revision { max-width: 880px; margin: 0 auto; padding: 40px var(--gutter-escritorio) 64px; color: var(--texto); }
+.revision__cabecera { display: flex; align-items: center; gap: 24px; border-bottom: 2px solid var(--marino); padding-bottom: 20px; }
+.revision__logo { height: 44px; width: auto; }
+.revision__kicker { font-size: 11px; letter-spacing: 0.16em; color: var(--azul); font-weight: 700; margin-bottom: 6px; }
+.revision__titulo { font-family: var(--serif); font-weight: 400; font-size: 32px; line-height: 1.1; margin: 0; color: var(--marino); letter-spacing: -0.01em; }
+.revision__intro { font-size: 15px; color: var(--texto-2); margin: 18px 0 8px; }
+.revision__grupo { font-family: var(--serif); font-weight: 400; font-size: 22px; color: var(--marino); margin: 32px 0 8px; letter-spacing: 0; }
+.revision__lista { border-top: 1px solid var(--borde); }
+.revision__fila { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--borde-suave); }
+.revision__nombre { font-size: 16px; font-weight: 600; }
+.revision__nombre a { display: inline-block; padding: 10px 0; margin: -10px 0; }
+.revision__nombre--pendiente { color: var(--gris-3); }
+.revision__nota { font-size: 13px; font-weight: 400; color: var(--gris); margin-top: 4px; }
+.revision__variantes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.revision__variantes a { font-size: 13px; font-weight: 600; border: 1px solid var(--borde); padding: 12px 12px; }
+.revision__variantes a:hover { background: var(--fondo-suave); text-decoration: none; }
+.revision__estado { flex: none; font-size: 11px; letter-spacing: 0.08em; font-weight: 700; padding: 4px 9px; }
+.revision__estado--terminada { background: #eaf4ec; color: #1c5330; border: 1px solid #a9cdb5; }
+.revision__estado--pendiente { background: var(--fondo-boton-inactivo); color: var(--gris); }
+
+@media (max-width: 759.98px) {
+  .revision { padding: 24px var(--gutter-movil) 48px; }
+  .revision__cabecera { gap: 16px; }
+  .revision__logo { height: 36px; }
+  .revision__titulo { font-size: 26px; }
+}
