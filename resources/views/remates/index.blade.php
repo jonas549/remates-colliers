@@ -102,7 +102,7 @@
                     <div class="listado__hero-acciones">
                         <a href="{{ $heroCta['href'] }}" class="listado__hero-cta">{{ $heroCta['texto'] }}</a>
                         <a href="{{ route('remates.show', $hero['id']) }}" class="listado__hero-cta2">Ver bases y condiciones</a>
-                        <a href="#" class="listado__hero-visita">Agendar visita a la propiedad</a>
+                        <a href="mailto:remates@colliers.cl?subject={{ rawurlencode('Visita a ' . $hero['direccion'] . ' (' . $hero['folio'] . ')') }}" class="listado__hero-visita">Coordinar visita a la propiedad</a>
                     </div>
                     <p class="listado__hero-nota">Martillero: <span>{{ $hero['martillero'] }}</span>. La garantía se constituye por vale a la vista o transferencia y es revisada manualmente por Colliers.</p>
                 </div>
@@ -120,7 +120,7 @@
                 </button>
                 <label class="listado__buscador">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5b6572" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-                    <input :value="q" @input="buscar($event.target.value)" placeholder="Busca por dirección, comuna o tipo" aria-label="Buscar remates">
+                    <input id="buscar" :value="q" @input="buscar($event.target.value)" placeholder="Busca por dirección, comuna o tipo" aria-label="Buscar remates">
                 </label>
                 <select class="listado__orden" x-model="orden" aria-label="Ordenar remates">
                     <option value="fecha">Ordenar por: fecha de remate</option>
@@ -226,9 +226,7 @@
                                             <div class="tarjeta__capa">
                                                 <div class="tarjeta__capa-arriba">
                                                     <div class="badge-remate" :class="l.badgeClase" x-text="l.estado"></div>
-                                                    <button type="button" class="tarjeta__guardar" :class="{ 'es-guardado': l.guardado }" title="Guardar remate" :aria-pressed="l.guardado" @click="alternarGuardado(l.id)">
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" :fill="l.guardado ? '#25408f' : 'none'" stroke="currentColor" stroke-width="1.5"><path d="M6 3h12v18l-6-4.5L6 21Z"></path></svg>
-                                                    </button>
+                                                    {{-- Guardar remate (favoritos): fuera de alcance por decisión del 15/09. --}}
                                                 </div>
                                                 <div class="tarjeta__precio">
                                                     <div class="tarjeta__precio-etiqueta">PRECIO BASE</div>

@@ -1,7 +1,7 @@
 import { clp, cuentaRegresiva, partes, dos } from './formato';
 
 // Listado de remates. Port de la lógica de index.dc.html: filtros por estado y ocupación,
-// búsqueda, orden, grilla/tabla, "cargar más", guardados y cuentas regresivas.
+// búsqueda, orden, grilla/tabla, "cargar más" y cuentas regresivas (favoritos: fuera de alcance).
 // Bloque T: filtra en el navegador. En el Bloque N pasa a filtrar en el servidor con el estado en la URL.
 export default ({ remates, sesion, rutas, columnas = 3 }) => ({
     remates,
@@ -13,7 +13,6 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
     orden: 'fecha',
     vista: 'Grilla',
     visibles: 6,
-    guardados: {},
     filtros: null,
     ultimoFiltro: null,
     compacto: false,
@@ -25,6 +24,8 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
         this.compacto = consulta.matches;
         consulta.addEventListener('change', (e) => { this.compacto = e.matches; });
         setInterval(() => { this.ahora = Date.now(); }, 1000);
+        // La lupa de la cabecera lleva a /remates#buscar: enfoca el buscador.
+        if (window.location.hash === '#buscar') this.$nextTick(() => document.getElementById('buscar')?.focus());
     },
 
     get filtrosAbiertos() {
@@ -95,12 +96,7 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
             abierto,
             nuevoRemate: l.nuevoRemate || '',
             cta: l.estado === 'En vivo' ? 'Ver transmisión y pujar' : (this.sesion === 'aprobada' ? 'Ver remate' : 'Inscribirme para pujar'),
-            guardado: !!this.guardados[l.id],
         };
-    },
-
-    alternarGuardado(id) {
-        this.guardados = { ...this.guardados, [id]: !this.guardados[id] };
     },
 
     opciones(claves, campo, todas) {

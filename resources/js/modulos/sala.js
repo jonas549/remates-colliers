@@ -50,7 +50,6 @@ export default ({ base, paso, actual, deltaCierre, historial, postor }) => ({
     get actualTexto() { return clp(this.actual); },
     get actualEnUf() { return 'UF ' + (this.actual / UF).toLocaleString('es-CL', { maximumFractionDigits: 0 }); },
     get sobreBase() { return '+' + Math.round((this.actual / this.base - 1) * 100) + '%'; },
-    get espectadores() { return 128 + ((Math.floor((this.ahora - this.fin) / 7000) % 40) + 40); },
 
     get estadoTitulo() { return this.yoGanando ? 'Vas ganando' : 'Te superaron'; },
     get estadoDetalle() {

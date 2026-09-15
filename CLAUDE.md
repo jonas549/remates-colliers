@@ -263,6 +263,15 @@ aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox
 - Margen de liquidación configurable, 2 s por defecto.
 - WordPress fuera del alcance.
 - Frontend primero (Bloque T), luego lo riesgoso (J núcleo) lo antes posible.
+- Mapa: OpenStreetMap (Esri deprecado). CARTO queda como alternativa en tonos grises si se evalúa.
+- **Alcance de funciones del diseño:**
+  - DENTRO: suscripción «avísame», recordatorio antes del remate, calendario .ics, mapa, documentos
+    descargables, recomendados, enlace al canal de Colliers.
+  - FUERA (aplicado en T): favoritos (sin botón), agendar visita (enlace de contacto «Coordinar visita»),
+    contador de «personas viendo» (quitado), lupa de la cabecera (lleva al buscador del listado).
+  - A DECIDIR: idioma EN/ES (Bloque N) y exportar PDF (Bloque O); en T se ven pero no funcionan.
+  - Pendiente de Jonas: qué filtros extra del listado entran.
+- Fotos de muestra: origen desconocido → se reemplazan por imágenes de licencia libre.
 
 ### Pendientes con el cliente (no bloquean; se anotan y se sigue)
 
@@ -275,9 +284,6 @@ aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox
 - Cierre anticipado: ¿adjudica la mejor puja o anula el lote?
 - Con varios lotes: ¿garantía por remate o por lote, y sobre qué base el 10%?
 - Con varios lotes: ¿el siguiente abre al cierre efectivo del anterior + pausa, u horario fijo?
-- Funcionalidades del diseño fuera del acta (favoritos, suscripción, agendar visita, calendario,
-  compartir, EN/ES, PDF, contador de espectadores, buscador de cabecera). Se ven en T pero no
-  funcionan hasta decidir.
 - ¿Se enmascara la identidad de los postores en el feed? (el diseño usa «Postor #N»)
 - ¿Qué pasa con la garantía del perdedor? (el diseño afirma devolución; el acta no lo define)
 - ¿2FA solo para administradores o también para postores?

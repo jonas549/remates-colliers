@@ -12,6 +12,7 @@
 .pub-cabecera__links a { color: #1d2530; }
 .pub-cabecera__links a.es-actual { color: #25408f; font-weight: 700; padding-bottom: 4px; border-bottom: 2px solid #25408f; }
 .pub-cabecera__derecha { margin-left: auto; display: flex; align-items: center; gap: 16px; font-size: 13px; color: #5b6572; }
+.pub-cabecera__buscar { display: flex; }
 .pub-cabecera__idioma { letter-spacing: 0.06em; white-space: nowrap; }
 .pub-cabecera__idioma span { color: #25408f; font-weight: 700; }
 .pub-cabecera__panel { background: #16265a; color: #ffffff; padding: 9px 16px; font-weight: 700; font-size: 14px; white-space: nowrap; }
@@ -63,6 +64,7 @@
   .pub-cabecera__acceso { padding-block: 11px; }
   .pub-cabecera__panel { padding-block: 12px; }
   .pub-cabecera__nav > a { padding: 14px 0; margin: -14px 0; }
+  .pub-cabecera__buscar { padding: 13px; margin: -13px; }
   .pub-menu a { padding-block: 11px; margin-block: -11px; }
   .pub-menu .pub-menu__acceso, .pub-menu .pub-menu__panel { padding-block: 12px; margin-block: 0; }
   .pub-garantia__accion { padding-block: 12px; margin-block: -12px; }

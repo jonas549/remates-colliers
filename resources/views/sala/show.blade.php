@@ -54,7 +54,6 @@
                     </div>
                     <div class="sala__video-pie">
                         <span>Transmisión del canal de Colliers Chile · Martillero <span>{{ $propiedad['martillero'] }}</span></span>
-                        <span><span x-text="espectadores"></span> personas viendo</span>
                     </div>
 
                     <div class="sala__ficha">

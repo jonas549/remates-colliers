@@ -16,7 +16,7 @@
             <a href="{{ route('remates.index') }}" class="es-actual">Remates</a>
         </div>
         <div class="pub-cabecera__derecha">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <a href="{{ route('remates.index') }}#buscar" class="pub-cabecera__buscar" aria-label="Buscar remates"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></a>
             <span class="pub-cabecera__idioma">EN / <span>ES</span></span>
             @if ($logueado)
                 <a href="{{ route('admin.dashboard') }}" class="pub-cabecera__panel">Panel Colliers</a>
