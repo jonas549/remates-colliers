@@ -17,7 +17,12 @@ $pendiente = fn (string $nombre) => fn () => response('Pantalla pendiente del Bl
 
 Route::get('/', fn () => view('revision', ['grupos' => PantallasRevision::todas()]))->name('revision');
 
-Route::get('/remates', $pendiente('listado'))->name('remates.index');
+// ?sesion= (visitante | registrado | en-revision | aprobada) simula la sesión hasta el Bloque D.
+Route::get('/remates', fn () => view('remates.index', [
+    'remates' => RematesDemo::todos(),
+    'hero' => RematesDemo::buscar('militares'),
+    'sesion' => in_array(request('sesion'), ['registrado', 'en-revision', 'aprobada'], true) ? request('sesion') : 'visitante',
+]))->name('remates.index');
 Route::get('/remates/{remate}', $pendiente('detalle de remate'))->name('remates.show');
 Route::get('/remates/{remate}/sala', $pendiente('sala de puja'))->name('sala.show');
 

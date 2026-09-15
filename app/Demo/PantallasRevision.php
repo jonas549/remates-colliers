@@ -28,7 +28,12 @@ class PantallasRevision
             [
                 'grupo' => 'Sitio público',
                 'pantallas' => [
-                    ['nombre' => 'Listado de remates', 'ruta' => '/remates', 'estado' => 'pendiente'],
+                    ['nombre' => 'Listado de remates', 'ruta' => '/remates', 'estado' => 'terminada', 'nota' => 'Probar filtros, búsqueda, orden, vista tabla (solo escritorio), cargar más y guardar. En tablet/móvil los filtros se abren como panel lateral.', 'variantes' => [
+                        'Visitante' => '/remates',
+                        'Registrado (sin garantía)' => '/remates?sesion=registrado',
+                        'Garantía en revisión' => '/remates?sesion=en-revision',
+                        'Garantía aprobada' => '/remates?sesion=aprobada',
+                    ]],
                     ['nombre' => 'Detalle de remate próximo', 'ruta' => null, 'estado' => 'pendiente'],
                     ['nombre' => 'Detalle de remate en vivo', 'ruta' => null, 'estado' => 'pendiente'],
                 ],

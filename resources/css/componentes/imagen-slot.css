@@ -24,3 +24,11 @@
   object-position: center;
   user-select: none;
 }
+/* Con JS: mismo método de posicionamiento que el prototipo (ver resources/js/modulos/imagen-slot.js). */
+.imagen-slot__marco img.es-encuadrada {
+  inset: auto;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  object-fit: fill;
+}

@@ -4,7 +4,7 @@
 //   npm run comparar -- login                 (todas las variantes y anchos)
 //   npm run comparar -- login --anchos 1440   (solo ese ancho)
 //
-// Requisitos: prototipo servido en PROTOTIPO_URL (php -S 127.0.0.1:8081 -t colliers-subastas-usuario-main)
+// Requisitos: prototipo servido en PROTOTIPO_URL desde la raíz del proyecto (php -S 127.0.0.1:8081 -t .)
 // y la aplicación en LARAVEL_URL (php artisan serve). El original necesita internet (React por unpkg).
 //
 // Salida: tools/comparar/salida/<pantalla>/<variante>/<ancho>-{original,laravel,diff}.png y resumen.json
@@ -67,7 +67,29 @@ async function capturar(navegador, url, ancho, alto, variante, esOriginal) {
     await pagina.goto(url, { waitUntil: 'networkidle' });
     if (esOriginal) {
         await pagina.waitForSelector('#dc-root .sc-host > *', { timeout: 30000 });
+        // <image-slot> carga su foto dentro de un shadow root: se espera a que todas terminen.
+        await pagina.waitForFunction(
+            () => [...document.querySelectorAll('image-slot')].every((s) => {
+                const img = s.shadowRoot && s.shadowRoot.querySelector('.frame img');
+                return !s.getAttribute('src') || (img && img.complete && img.naturalWidth > 0);
+            }),
+            null,
+            { timeout: 90000, polling: 250 },
+        ).catch(() => console.warn('  (aviso: alguna imagen del prototipo no terminó de cargar)'));
+        // El anillo punteado es cromo del editor de Claude Design (visible mientras el slot no está
+        // marcado como lleno), no parte del diseño: se oculta marcando los slots ya cargados.
+        await pagina.evaluate(() => {
+            for (const s of document.querySelectorAll('image-slot')) {
+                const img = s.shadowRoot && s.shadowRoot.querySelector('.frame img');
+                if (img && img.complete && img.naturalWidth > 0) s.setAttribute('data-filled', '');
+            }
+        });
     }
+    // Decodificación completa en ambos lados: Chrome escala distinto una imagen aún no decodificada.
+    await pagina.evaluate(() => {
+        const sombras = [...document.querySelectorAll('image-slot')].flatMap((s) => s.shadowRoot ? [...s.shadowRoot.querySelectorAll('img')] : []);
+        return Promise.all([...document.images, ...sombras].map((img) => img.getAttribute('src') ? img.decode().catch(() => null) : null));
+    });
     await pagina.evaluate(async () => {
         await document.fonts.ready;
         await Promise.all([...document.images].map((img) => img.complete ? null : new Promise((r) => { img.onload = img.onerror = r; })));
@@ -162,7 +184,7 @@ for (const variante of pantalla.variantes) {
     fs.mkdirSync(dir, { recursive: true });
 
     for (const ancho of anchos) {
-        const urlOriginal = PROTOTIPO_URL + '/' + encodeURI(pantalla.original);
+        const urlOriginal = PROTOTIPO_URL + '/' + encodeURI(variante.original || pantalla.original);
         const urlLaravel = LARAVEL_URL + pantalla.laravel + (variante.query ? '?' + variante.query : '');
         const alto = pantalla.alto || 900;
 

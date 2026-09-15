@@ -7,8 +7,10 @@
 
 @import './componentes/imagen-slot.css';
 @import './componentes/tramite.css';
+@import './componentes/publico.css';
 
 @import './paginas/acceso.css';
 @import './paginas/registro.css';
 @import './paginas/cuenta.css';
+@import './paginas/listado.css';
 @import './paginas/revision.css';

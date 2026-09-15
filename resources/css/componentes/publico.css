@@ -1,0 +1,86 @@
+/* Cabecera, barra de garantía y pie del sitio público (index y detalles del prototipo).
+   El prototipo calcula estos estilos en JS con tres tramos: móvil < 760, tablet 760–1119,
+   escritorio ≥ 1120. Aquí son media queries con los mismos cortes. */
+
+.contenedor { max-width: 1360px; margin: 0 auto; }
+
+/* ── Cabecera ─────────────────────────────────────────────────────────────────────── */
+.pub-cabecera { background: #ffffff; border-bottom: 1px solid #dbe1ec; position: sticky; top: 0; z-index: 30; }
+.pub-cabecera__nav { padding: 0 32px; height: 72px; display: flex; align-items: center; gap: 40px; }
+.pub-cabecera__logo { height: 44px; width: auto; display: block; }
+.pub-cabecera__links { display: flex; align-items: center; gap: 28px; font-size: 15px; }
+.pub-cabecera__links a { color: #1d2530; }
+.pub-cabecera__links a.es-actual { color: #25408f; font-weight: 700; padding-bottom: 4px; border-bottom: 2px solid #25408f; }
+.pub-cabecera__derecha { margin-left: auto; display: flex; align-items: center; gap: 16px; font-size: 13px; color: #5b6572; }
+.pub-cabecera__idioma { letter-spacing: 0.06em; white-space: nowrap; }
+.pub-cabecera__idioma span { color: #25408f; font-weight: 700; }
+.pub-cabecera__panel { background: #16265a; color: #ffffff; padding: 9px 16px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.pub-cabecera__acceso { border: 1px solid #25408f; color: #25408f; padding: 8px 16px; font-weight: 600; font-size: 14px; white-space: nowrap; }
+.pub-cabecera__menu-boton { display: none; }
+
+.pub-menu { border-top: 1px solid #dbe1ec; padding: 14px 20px; display: flex; flex-direction: column; gap: 14px; font-size: 16px; background: #ffffff; }
+.pub-menu a { color: #1d2530; }
+.pub-menu a.es-actual { color: #25408f; font-weight: 700; }
+.pub-menu .pub-menu__acceso { border: 1px solid #25408f; color: #25408f; padding: 12px; font-weight: 600; text-align: center; }
+.pub-menu .pub-menu__panel { background: #16265a; color: #ffffff; padding: 12px; font-weight: 700; text-align: center; }
+
+.pub-garantia__interior { padding: 12px 32px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 14px; }
+.pub-garantia--registrado { background: #fff8e0; color: #7a5c00; border-top: 1px solid #e5b800; }
+.pub-garantia--revision { background: #eef3fb; color: #16265a; border-top: 1px solid #c3d3ea; }
+.pub-garantia--aprobada { background: #eaf4ec; color: #1c5330; border-top: 1px solid #a9cdb5; }
+.pub-garantia__chip { font-weight: 700; letter-spacing: 0.08em; font-size: 11px; border: 1px solid currentColor; padding: 4px 9px; }
+.pub-garantia__accion { margin-left: auto; font-weight: 700; color: inherit; text-decoration: underline; }
+.pub-garantia__accion:hover { color: inherit; }
+
+/* ── Pie ──────────────────────────────────────────────────────────────────────────── */
+.pub-pie { background: #16265a; color: #ffffff; }
+.pub-pie--borde { border-top: 1px solid rgba(255, 255, 255, .15); }
+.pub-pie__arriba { padding: 36px 32px; display: flex; gap: 48px; align-items: center; flex-wrap: wrap; flex-direction: row; }
+.pub-pie__logo { height: 52px; width: auto; display: block; }
+.pub-pie__links { display: flex; gap: 36px; font-size: 17px; font-weight: 700; flex-wrap: wrap; }
+.pub-pie__links a { color: #ffffff; }
+.pub-pie__sociales { margin-left: auto; display: flex; gap: 20px; align-items: center; }
+.pub-pie__sociales a { color: #ffffff; display: flex; }
+.pub-pie__separador { border-top: 1px solid rgba(255, 255, 255, .2); }
+.pub-pie__abajo { padding: 18px 32px; display: flex; gap: 28px; align-items: center; flex-wrap: wrap; font-size: 13px; flex-direction: row; }
+.pub-pie__abajo > a { color: #c9d5ec; }
+.pub-pie__copy { margin-left: auto; display: flex; gap: 24px; align-items: center; color: #8fa2c9; flex-direction: row; }
+.pub-pie__copy a { color: #ffffff; font-weight: 600; }
+
+/* ── Tablet (760–1119) ────────────────────────────────────────────────────────────── */
+@media (max-width: 1119.98px) {
+  .pub-cabecera__nav { padding: 0 28px; gap: 16px; }
+  .pub-cabecera__links { display: none; }
+  .pub-cabecera__menu-boton {
+    border: 1px solid #dbe1ec; background: #ffffff; width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+  }
+  .pub-garantia__interior { padding: 12px 28px; }
+  .pub-garantia__accion { margin-left: 0; }
+
+  /* Áreas táctiles (sin cambio visible) */
+  /* Botones con borde: el área no se puede ampliar sin verse; en tablet crecen a 44px de alto. */
+  .pub-cabecera__acceso { padding-block: 11px; }
+  .pub-cabecera__panel { padding-block: 12px; }
+  .pub-cabecera__nav > a { padding: 14px 0; margin: -14px 0; }
+  .pub-menu a { padding-block: 11px; margin-block: -11px; }
+  .pub-menu .pub-menu__acceso, .pub-menu .pub-menu__panel { padding-block: 12px; margin-block: 0; }
+  .pub-garantia__accion { padding-block: 12px; margin-block: -12px; }
+  .pub-pie__links a, .pub-pie__abajo > a { padding-block: 12px; margin-block: -12px; }
+  .pub-pie__sociales a { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; margin: -11px; }
+}
+
+/* ── Móvil (< 760) ───────────────────────────────────────────────────────────────── */
+@media (max-width: 759.98px) {
+  .pub-cabecera__nav { padding: 0 20px; height: 64px; }
+  .pub-cabecera__logo { height: 36px; }
+  .pub-cabecera__nav > a { padding: 4px 0; margin: -4px 0; }
+  .pub-cabecera__idioma, .pub-cabecera__panel, .pub-cabecera__acceso { display: none; }
+  .pub-garantia__interior { padding: 12px 20px; }
+
+  .pub-pie__arriba { padding: 28px 20px; gap: 20px; align-items: flex-start; flex-direction: column; }
+  .pub-pie__links { gap: 18px; font-size: 15px; }
+  .pub-pie__sociales { margin-left: 0; }
+  .pub-pie__abajo { padding: 18px 20px; gap: 12px; align-items: flex-start; flex-direction: column; }
+  .pub-pie__copy { margin-left: 0; gap: 10px; align-items: flex-start; flex-direction: column; }
+}

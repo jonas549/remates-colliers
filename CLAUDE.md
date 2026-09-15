@@ -51,7 +51,7 @@ Por eso el traspaso a Blade es una **reimplementación** (Bloque T):
 ### Arnés de comparación visual (`tools/comparar/`)
 
 ```
-php -S 127.0.0.1:8081 -t colliers-subastas-usuario-main   # prototipo (necesita internet)
+php -S 127.0.0.1:8081 -t .                                 # prototipos (necesita internet)
 php artisan serve                                          # aplicación
 npm run comparar -- <pantalla>                             # DETALLE=1 para ver zonas y táctiles
 ```
