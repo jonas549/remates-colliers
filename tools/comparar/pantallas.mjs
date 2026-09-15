@@ -13,6 +13,65 @@ export const ANCHOS_ESTRICTOS = [1120, 1280, 1366, 1440];
 export const ANCHOS_REFERENCIA = [375, 759, 760, 1024, 1119];
 
 export const PANTALLAS = {
+    'admin-reportes': {
+        original: 'colliers-subastas-usuario-main/Admin Reportes.dc.html',
+        laravel: '/admin/reportes',
+        alto: 1050,
+        variantes: [{ id: 'base' }],
+        mascaras: [],
+    },
+    'admin-subastas': {
+        original: 'colliers-subastas-usuario-main/Admin Subastas.dc.html',
+        laravel: '/admin/subastas',
+        alto: 900,
+        variantes: [{ id: 'base' }],
+        mascaras: [],
+    },
+    'admin-postores': {
+        original: 'colliers-subastas-usuario-main/Admin Postores.dc.html',
+        laravel: '/admin/postores',
+        alto: 900,
+        variantes: [{ id: 'base' }],
+        mascaras: [],
+    },
+    'admin-dashboard': {
+        original: 'colliers-subastas-usuario-main/Admin Dashboard.dc.html',
+        laravel: '/admin',
+        alto: 1000,
+        variantes: [{ id: 'base' }],
+        mascaras: [],
+    },
+    sala: {
+        original: 'colliers-subastas-usuario-main/Puja en Vivo.dc.html',
+        laravel: '/remates/apoquindo/sala',
+        alto: 900,
+        variantes: [{ id: 'base', props: { simularRivales: false } }],
+        mascaras: ['iframe'],
+    },
+    'detalle-vivo': {
+        original: 'colliers-subastas-usuario-main/Detalle Remate en Vivo.dc.html',
+        laravel: '/remates/apoquindo',
+        alto: 900,
+        variantes: [
+            { id: 'visitante', original: 'colliers-subastas-invitado-main/Detalle Remate en Vivo.dc.html', props: { estadoUsuario: 'Visitante', simularPujas: false } },
+            { id: 'registrado', props: { estadoUsuario: 'Registrado', simularPujas: false }, query: 'sesion=registrado' },
+            { id: 'en-revision', props: { estadoUsuario: 'En revisión', simularPujas: false }, query: 'sesion=en-revision' },
+            { id: 'aprobada', props: { estadoUsuario: 'Aprobada', simularPujas: false }, query: 'sesion=aprobada' },
+        ],
+        mascaras: ['.leaflet-container', 'iframe'],
+    },
+    'detalle-proximo': {
+        original: 'colliers-subastas-usuario-main/Detalle Remate Proximo.dc.html',
+        laravel: '/remates/militares',
+        alto: 900,
+        variantes: [
+            { id: 'visitante', original: 'colliers-subastas-invitado-main/Detalle Remate Proximo.dc.html', props: { estadoUsuario: 'Visitante' } },
+            { id: 'registrado', props: { estadoUsuario: 'Registrado' }, query: 'sesion=registrado' },
+            { id: 'en-revision', props: { estadoUsuario: 'En revisión' }, query: 'sesion=en-revision' },
+            { id: 'aprobada', props: { estadoUsuario: 'Aprobada' }, query: 'sesion=aprobada' },
+        ],
+        mascaras: ['.leaflet-container'],
+    },
     listado: {
         original: 'colliers-subastas-usuario-main/index.dc.html',
         laravel: '/remates',

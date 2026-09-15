@@ -1,0 +1,205 @@
+/* Sala de puja en vivo (prototipo: Puja en Vivo.dc.html).
+   Escritorio ≥ 1120: 1:1, panel de puja fijo a la derecha.
+   < 1120 (adaptación aprobada): el panel lateral se reemplaza por una barra fija inferior con
+   precio, estado y cuenta regresiva, y un botón "Pujar" que abre una hoja con la puja rápida,
+   el monto libre y el envío. La confirmación sigue siendo el mismo modal. */
+
+.sala { font-family: 'Source Sans 3', system-ui, sans-serif; color: #1d2530; background: #ffffff; }
+
+.sala-cabecera { background: #ffffff; border-bottom: 1px solid #dbe1ec; position: sticky; top: 0; z-index: 40; }
+.sala-cabecera__nav { padding: 0 32px; height: 72px; display: flex; align-items: center; gap: 28px; }
+.sala-cabecera__logo { height: 42px; width: auto; display: block; }
+.sala-cabecera__titulo { font-size: 11px; letter-spacing: 0.16em; color: #25408f; font-weight: 700; border-left: 1px solid #dbe1ec; padding-left: 22px; white-space: nowrap; }
+.sala-cabecera__derecha { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 14px; flex-wrap: wrap; }
+.sala-cabecera__chip { background: #1c5330; color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; padding: 6px 11px; white-space: nowrap; }
+.sala-cabecera__usuario { color: #5b6572; }
+
+.sala-ticker { background: #c8102e; color: #ffffff; padding: 10px 32px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.sala-ticker.es-cerrado { background: #16265a; }
+.sala-ticker__estado { display: flex; align-items: center; gap: 8px; font-weight: 700; letter-spacing: 0.1em; font-size: 11px; }
+.sala-ticker__punto { width: 9px; height: 9px; background: #ffffff; border-radius: 50%; animation: pulso 1.4s infinite; }
+.sala-ticker.es-cerrado .sala-ticker__punto { animation: none; }
+.sala-ticker__direccion { font-size: 14px; }
+.sala-ticker__tiempo { margin-left: auto; font-weight: 700; font-size: 14px; }
+
+.sala__contenido { padding: 28px 32px 48px; }
+.sala__layout { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 36px; align-items: start; }
+.sala__principal { min-width: 0; animation: entra .5s ease-out both; }
+
+.sala__video { position: relative; background: #0f1723; aspect-ratio: 16 / 9; width: 100%; border: 1px solid #dbe1ec; }
+.sala__video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.sala__video-pie {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+  border: 1px solid #dbe1ec; border-top: 0; padding: 12px 16px; font-size: 13px; color: #5b6572;
+}
+
+.sala__ficha { border-top: 2px solid #16265a; margin-top: 30px; padding-top: 18px; }
+.sala__ficha-fila { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.sala__titulo { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 30px; line-height: 1.15; margin: 0 0 6px; color: #16265a; }
+.sala__meta { font-size: 15px; color: #4a5563; }
+.sala__antecedentes { border: 1px solid #dbe1ec; color: #25408f; font-weight: 600; font-size: 14px; padding: 11px 18px; white-space: nowrap; }
+.sala__antecedentes:hover { background: #f0f4fb; text-decoration: none; }
+.sala__datos { display: flex; border-top: 1px solid #dbe1ec; margin-top: 18px; flex-wrap: wrap; }
+.sala__dato { flex: 1; min-width: 150px; padding: 16px 20px; border-right: 1px solid #e6eaf1; }
+.sala__dato:first-child { padding: 16px 20px 16px 0; }
+.sala__dato:last-child { padding: 16px 0 16px 20px; border-right: 0; }
+.sala__dato-etiqueta { font-size: 11px; letter-spacing: 0.12em; color: #8c95a3; font-weight: 700; }
+.sala__dato-valor { font-family: 'Source Serif 4', serif; font-size: 24px; color: #16265a; }
+
+.sala__historial { margin-top: 36px; }
+.sala__historial-cabeza {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-top: 2px solid #16265a;
+  padding-top: 14px; margin-bottom: 4px; flex-wrap: wrap;
+}
+.sala__historial-titulo { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 24px; margin: 0; color: #16265a; }
+.sala__historial-conteo { font-size: 11px; letter-spacing: 0.1em; color: #8c95a3; font-weight: 700; }
+.sala__historial-lista { max-height: 340px; overflow-y: auto; }
+.sala__historial-nota { padding: 14px 0 0; border-top: 1px solid #dbe1ec; font-size: 12px; color: #8c95a3; line-height: 1.55; }
+
+.sala__historial-lista .historial-puja.es-primera { animation: entraPuja .45s ease-out; }
+.historial-puja.es-mia.es-primera { background: #eaf4ec; border-left-color: #1c5330; }
+.historial-puja.es-mia .historial-puja__monto { color: #1c5330; }
+.sala__historial-lista .historial-puja__monto { color: #16265a; }
+.sala__historial-lista .historial-puja.es-mia .historial-puja__monto { color: #1c5330; }
+
+/* ── Panel lateral ─────────────────────────────────────────────────────────────────── */
+.sala__lateral { position: sticky; top: 132px; animation: entra .5s .1s ease-out both; }
+.sala-panel { border: 1px solid #dbe1ec; }
+.sala-panel__cabeza { background: #c8102e; color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.sala-panel__cabeza.es-cerrado { background: #16265a; }
+.sala-panel__estado { font-weight: 700; letter-spacing: 0.1em; font-size: 11px; }
+.sala-panel__folio { font-size: 13px; opacity: .85; }
+.sala-panel__cuerpo { padding: 20px; }
+.sala-panel__etiqueta { font-size: 11px; letter-spacing: 0.12em; color: #8c95a3; font-weight: 700; }
+.sala-panel__precio { font-family: 'Source Serif 4', serif; font-size: 44px; line-height: 1.05; color: #16265a; animation: destello .5s ease-out; }
+.sala-panel__base { font-size: 13px; color: #5b6572; margin-bottom: 14px; }
+
+.sala-estado { display: flex; gap: 10px; align-items: flex-start; padding: 14px 16px; border: 1px solid #e39aa6; background: #fdeef0; color: #8c0f22; }
+.sala-estado.es-ganando { border-color: #a9cdb5; background: #eaf4ec; color: #1c5330; }
+.sala-estado svg { flex: none; }
+.sala-estado__titulo { font-weight: 700; font-size: 14px; }
+.sala-estado__texto { font-size: 13px; line-height: 1.45; }
+
+.sala-panel__etiqueta--cierra { margin: 18px 0 8px; }
+.sala-contador { display: flex; gap: 8px; margin-bottom: 6px; }
+.sala-contador__caja { flex: 1; border: 1px solid #dbe1ec; padding: 10px; text-align: center; }
+.sala-contador__digito { font-family: 'Source Serif 4', serif; font-size: 26px; line-height: 1; color: #16265a; font-variant-numeric: tabular-nums; }
+.sala-contador.es-final .sala-contador__digito { color: #c8102e; }
+.sala-contador__etiqueta { font-size: 10px; letter-spacing: 0.12em; color: #8c95a3; margin-top: 2px; }
+.sala-panel__sin-extension { font-size: 12px; color: #8c95a3; margin-bottom: 18px; }
+
+.sala-puja__titulo { font-size: 11px; letter-spacing: 0.12em; color: #8c95a3; font-weight: 700; margin-bottom: 10px; padding-top: 16px; border-top: 1px solid #dbe1ec; }
+.sala-puja__rapidas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.sala-puja__rapida {
+  border: 1px solid #25408f; background: #ffffff; color: #25408f; font-family: inherit; padding: 10px 6px;
+  cursor: pointer; display: flex; flex-direction: column; gap: 2px; align-items: center;
+}
+.sala-puja__rapida-label { font-size: 14px; font-weight: 700; }
+.sala-puja__rapida-total { font-size: 11px; color: #5b6572; }
+.sala-puja__libre-titulo { font-size: 11px; letter-spacing: 0.12em; color: #8c95a3; font-weight: 700; margin-bottom: 8px; }
+.sala-puja__input {
+  width: 100%; box-sizing: border-box; height: 52px; border: 1px solid #dbe1ec; padding: 0 14px;
+  font-family: 'Source Serif 4', serif; font-size: 24px; color: #16265a;
+}
+.sala-puja__input.es-invalido { border-color: #c8102e; }
+.sala-puja__ayuda { font-size: 12px; margin: 8px 0 14px; color: #8c95a3; }
+.sala-puja__ayuda.es-invalido { color: #c8102e; }
+.sala-puja__boton {
+  width: 100%; height: 56px; border: 0; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+  background: #25408f; color: #ffffff;
+}
+.sala-puja__boton:disabled { background: #eef1f6; color: #a3abb8; cursor: not-allowed; }
+.sala-puja__nota { font-size: 12px; color: #8c95a3; margin-top: 10px; line-height: 1.45; }
+
+.sala-resultado { border: 1px solid #c3d3ea; background: #eef3fb; color: #16265a; padding: 16px; }
+.sala-resultado.es-desierto { border-color: #dbe1ec; background: #f7f9fc; color: #4a5563; }
+.sala-resultado__titulo { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.sala-resultado__texto { font-size: 13px; line-height: 1.5; }
+
+.sala-soporte { border-left: 3px solid #25408f; background: #f4f7fc; margin-top: 20px; padding: 18px 20px; }
+.sala-soporte__titulo { font-size: 11px; letter-spacing: 0.14em; color: #25408f; font-weight: 700; margin-bottom: 8px; }
+.sala-soporte p { margin: 0 0 10px; font-size: 14px; line-height: 1.55; color: #4a5563; }
+.sala-soporte__enlaces { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+
+/* Modal de confirmación */
+.sala-modal { position: fixed; inset: 0; background: rgba(22, 38, 90, .55); z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.sala-modal__caja { background: #ffffff; border: 1px solid #dbe1ec; max-width: 460px; width: 100%; box-shadow: 0 20px 60px rgba(22, 38, 90, .3); }
+.sala-modal__cabeza { padding: 20px 24px; border-bottom: 1px solid #dbe1ec; }
+.sala-modal__titulo { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 24px; margin: 0; color: #16265a; }
+.sala-modal__cuerpo { padding: 24px; }
+.sala-modal__propiedad { font-size: 13px; color: #5b6572; margin-bottom: 4px; }
+.sala-modal__monto { font-family: 'Source Serif 4', serif; font-size: 38px; color: #16265a; line-height: 1.1; margin-bottom: 6px; }
+.sala-modal__detalle { font-size: 14px; color: #5b6572; margin-bottom: 18px; }
+.sala-modal__aviso { border: 1px solid #e5b800; background: #fff8e0; color: #7a5c00; padding: 14px 16px; font-size: 13px; line-height: 1.55; }
+.sala-modal__botones { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+.sala-modal__confirmar { flex: 1; min-width: 160px; background: #25408f; color: #ffffff; border: 0; font-family: inherit; font-size: 15px; font-weight: 700; padding: 15px; cursor: pointer; }
+.sala-modal__cancelar { flex: 1; min-width: 120px; background: #ffffff; color: #4a5563; border: 1px solid #dbe1ec; font-family: inherit; font-size: 15px; font-weight: 600; padding: 15px; cursor: pointer; }
+
+/* Barra inferior y hoja de puja: solo bajo 1120px */
+.sala-barra, .sala-hoja, .sala-hoja__velo { display: none; }
+
+/* ── Tablet y móvil (< 1120) ───────────────────────────────────────────────────────── */
+@media (max-width: 1119.98px) {
+  .sala-cabecera__nav { padding: 0 28px; }
+  .sala-ticker { padding: 10px 28px; }
+  .sala__contenido { padding: 28px 28px 48px; }
+  .sala__layout { grid-template-columns: 1fr; gap: 28px; }
+  .sala__lateral { position: static; }
+  /* El panel de puja vive en la barra inferior y en la hoja; queda el bloque de soporte. */
+  .sala-panel { display: none; }
+  .sala-soporte { margin-top: 0; }
+  .sala-soporte__enlaces a { display: inline-block; width: fit-content; padding-block: 11px; margin-block: -11px; }
+  .sala__antecedentes { padding-block: 13px; }
+  .sala-cabecera__nav > a { padding: 15px 0; margin: -15px 0; }
+
+  /* Espacio para la barra fija */
+  .sala { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+  .sala-barra {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; background: #ffffff;
+    border-top: 2px solid #16265a; box-shadow: 0 -8px 24px rgba(22, 38, 90, .12);
+    padding: 12px 28px calc(12px + env(safe-area-inset-bottom, 0px)); align-items: center; gap: 16px;
+  }
+  .sala-barra__datos { min-width: 0; flex: 1; }
+  .sala-barra__fila { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .sala-barra__precio { font-family: 'Source Serif 4', serif; font-size: 24px; line-height: 1.1; color: #16265a; }
+  .sala-barra__tiempo { font-size: 13px; font-weight: 700; color: #16265a; font-variant-numeric: tabular-nums; }
+  .sala-barra__tiempo.es-final { color: #c8102e; }
+  .sala-barra__estado { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border: 1px solid #e39aa6; background: #fdeef0; color: #8c0f22; }
+  .sala-barra__estado.es-ganando { border-color: #a9cdb5; background: #eaf4ec; color: #1c5330; }
+  .sala-barra__estado.es-cerrado { border-color: #c3d3ea; background: #eef3fb; color: #16265a; }
+  .sala-barra__boton { flex: none; height: 52px; padding: 0 28px; border: 0; background: #25408f; color: #ffffff; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .sala-barra__boton:disabled { background: #eef1f6; color: #a3abb8; cursor: not-allowed; }
+
+  .sala-hoja__velo { display: block; position: fixed; inset: 0; background: rgba(22, 38, 90, .45); z-index: 75; }
+  .sala-hoja {
+    display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 76; background: #ffffff;
+    max-height: 88vh; overflow-y: auto; border-top: 2px solid #16265a;
+    padding: 0 28px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+  .sala-hoja__cabeza { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 0 4px; }
+  .sala-hoja__titulo { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 22px; margin: 0; color: #16265a; }
+  .sala-hoja__cerrar { border: 1px solid #dbe1ec; background: #ffffff; width: 44px; height: 44px; cursor: pointer; color: #25408f; font-size: 18px; }
+  .sala-hoja__resumen { font-size: 13px; color: #5b6572; margin-bottom: 14px; }
+  .sala-hoja .sala-puja__titulo { border-top: 0; padding-top: 4px; }
+  .sala-hoja .sala-puja__rapida { min-height: 56px; }
+}
+
+@media (max-width: 759.98px) {
+  .sala-cabecera__nav { padding: 0 20px; height: 64px; gap: 14px; }
+  .sala-cabecera__logo { height: 34px; }
+  .sala-cabecera__nav > a { padding: 5px 0; margin: -5px 0; }
+  .sala-cabecera__titulo, .sala-cabecera__usuario { display: none; }
+  .sala-ticker { padding: 10px 20px; }
+  .sala-ticker__tiempo { margin-left: 0; }
+  .sala__contenido { padding: 24px 20px 40px; }
+  .sala__titulo { font-size: 24px; }
+  .sala__dato,
+  .sala__dato:first-child,
+  .sala__dato:last-child { flex: 1 1 50%; min-width: 0; padding: 14px 12px 14px 0; border-right: 0; border-bottom: 1px solid #e6eaf1; }
+  .sala__dato-valor { font-size: 20px; }
+  .sala-barra { padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px)); gap: 12px; }
+  .sala-barra__precio { font-size: 20px; }
+  .sala-barra__boton { padding: 0 22px; }
+  .sala-hoja { padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px)); }
+}

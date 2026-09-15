@@ -1,0 +1,92 @@
+/* Admin · Postores (prototipo: Admin Postores.dc.html).
+   ≥ 1120px: 1:1. Tablet: tabla con scroll horizontal y primera columna fija.
+   Móvil (< 760, adaptación aprobada): cada postor es una tarjeta con botones a ancho completo y la
+   ficha se abre a pantalla completa. Criterio: aprobar una garantía desde el celular. */
+
+.admin-encabezado__texto--angosto { max-width: 64ch; }
+.admin-boton-borde { border: 1px solid #dbe1ec; background: #ffffff; color: #25408f; font-family: inherit; font-weight: 600; font-size: 14px; padding: 12px 22px; cursor: pointer; }
+
+.admin-pestanas--postores { align-items: stretch; }
+.admin-pestanas--postores .admin-pestana { min-width: 130px; }
+/* Envoltura de las pestañas: transparente en escritorio (display: contents), tira con scroll en tablet. */
+.admin-pestanas__tira { display: contents; }
+.admin-buscador { flex: 2; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 0 32px; border-left: 1px solid #e6eaf1; }
+.admin-buscador input { border: 0; outline: none; flex: 1; min-width: 0; font-family: inherit; font-size: 15px; background: transparent; height: 100%; }
+
+.admin-postores { padding: 24px 32px 48px; }
+.admin-postores__resumen { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.admin-postores__conteo { font-size: 14px; color: #4a5563; }
+.admin-postores__total { font-size: 13px; color: #8c95a3; }
+.admin-postores__total strong { color: #16265a; }
+.admin-tabla--postores { min-width: 1000px; }
+.admin-tabla--postores td { padding: 16px 16px 16px 0; }
+.admin-tabla--postores td.es-primera { padding-left: 14px; border-left: 3px solid #e5b800; }
+.admin-tabla td.es-primera.regla-aprobada { border-left-color: #1c5330; }
+.admin-tabla td.es-primera.regla-rechazada { border-left-color: #c8102e; }
+.admin-tabla td.es-primera.regla-revision { border-left-color: #25408f; }
+.admin-postor__monto { font-family: 'Source Serif 4', serif; font-size: 17px; color: #16265a; }
+.admin-postor__actualizado { font-size: 12px; color: #a3abb8; margin-top: 5px; }
+
+.admin-aprobar { border: 0; background: #25408f; color: #ffffff; font-family: inherit; font-size: 13px; font-weight: 700; padding: 8px 15px; cursor: pointer; }
+.admin-aprobar.es-inactivo { background: #eef1f6; color: #a3abb8; }
+.admin-rechazar { border: 1px solid #e39aa6; background: #ffffff; color: #8c0f22; font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 15px; cursor: pointer; }
+.admin-rechazar.es-inactivo { border-color: #dbe1ec; color: #a3abb8; }
+.admin-ver-ficha { border: 1px solid #dbe1ec; background: #ffffff; color: #25408f; font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 13px; cursor: pointer; }
+
+.admin-postores__vacio { padding: 48px; text-align: center; color: #8c95a3; border-bottom: 1px solid #e6eaf1; }
+.admin-postores__nota { font-size: 13px; color: #8c95a3; margin-top: 18px; max-width: 96ch; line-height: 1.6; }
+
+.admin-tarjetas { display: none; }
+
+/* Ficha del postor */
+.admin-ficha { position: fixed; inset: 0; background: rgba(22, 38, 90, .55); z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.admin-ficha__caja { background: #ffffff; max-width: 560px; width: 100%; max-height: 86vh; overflow-y: auto; box-shadow: 0 24px 70px rgba(22, 38, 90, .35); }
+.admin-ficha__cabeza { background: #16265a; color: #ffffff; padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.admin-ficha__kicker { font-size: 11px; letter-spacing: 0.16em; color: #8fa2c9; font-weight: 700; margin-bottom: 6px; }
+.admin-ficha__nombre { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 26px; margin: 0; }
+.admin-ficha__cerrar { border: 1px solid rgba(255, 255, 255, .4); background: transparent; width: 38px; height: 38px; cursor: pointer; color: #ffffff; font-size: 16px; flex: none; }
+.admin-ficha__cuerpo { padding: 26px; }
+.admin-ficha__dato { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid #f0f2f6; font-size: 14px; }
+.admin-ficha__k { color: #8c95a3; }
+.admin-ficha__v { color: #16265a; font-weight: 600; text-align: right; }
+.admin-ficha__nota { border-left: 3px solid #25408f; background: #f4f7fc; padding: 14px 16px; margin-top: 20px; font-size: 13px; color: #4a5563; line-height: 1.6; }
+.admin-ficha__botones { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+.admin-ficha__aprobar { flex: 1; min-width: 150px; background: #25408f; color: #ffffff; border: 0; font-family: inherit; font-size: 15px; font-weight: 700; padding: 15px; cursor: pointer; }
+.admin-ficha__rechazar { flex: 1; min-width: 150px; background: #ffffff; color: #8c0f22; border: 1px solid #e39aa6; font-family: inherit; font-size: 15px; font-weight: 600; padding: 15px; cursor: pointer; }
+
+/* ── Tablet ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1119.98px) {
+  .admin-pestanas--postores { flex-wrap: wrap; overflow: visible; }
+  .admin-pestanas--postores .admin-pestanas__tira { display: flex; overflow-x: auto; flex: 1 1 100%; }
+  .admin-buscador { flex: 1 1 100%; min-height: 56px; padding: 0 20px; border-left: 0; border-top: 1px solid #e6eaf1; }
+  .admin-postores { padding: 16px 20px 40px; }
+  .admin-tabla--postores td.es-primera { position: sticky; left: 0; background: #ffffff; z-index: 2; }
+  .admin-aprobar, .admin-rechazar, .admin-ver-ficha { min-height: 44px; }
+  .admin-ficha__cerrar { width: 44px; height: 44px; }
+}
+
+/* ── Móvil: tarjetas ───────────────────────────────────────────────────────────────── */
+@media (max-width: 759.98px) {
+  .admin-postores__tabla { display: none; }
+  .admin-tarjetas { display: flex; flex-direction: column; gap: 12px; }
+  .admin-tarjeta { border: 1px solid #dbe1ec; border-left: 3px solid #e5b800; padding: 16px; }
+  .admin-tarjeta.regla-aprobada { border-left-color: #1c5330; }
+  .admin-tarjeta.regla-rechazada { border-left-color: #c8102e; }
+  .admin-tarjeta.regla-revision { border-left-color: #25408f; }
+  .admin-tarjeta__nombre { font-weight: 600; color: #16265a; font-size: 16px; }
+  .admin-tarjeta__sub { font-size: 12px; color: #a3abb8; }
+  .admin-tarjeta__fila { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f2f6; }
+  .admin-tarjeta__remate { font-size: 14px; color: #4a5563; min-width: 0; }
+  .admin-tarjeta__badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .admin-tarjeta__actualizado { font-size: 12px; color: #a3abb8; margin-top: 6px; }
+  .admin-tarjeta__botones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .admin-tarjeta__botones .admin-aprobar, .admin-tarjeta__botones .admin-rechazar { min-height: 48px; font-size: 15px; }
+  .admin-tarjeta__botones .admin-ver-ficha { grid-column: 1 / -1; min-height: 44px; font-size: 14px; }
+
+  .admin-ficha { padding: 0; align-items: stretch; }
+  .admin-ficha__caja { max-width: none; max-height: none; height: 100%; display: flex; flex-direction: column; }
+  .admin-ficha__cabeza { padding: 16px 20px; position: sticky; top: 0; }
+  .admin-ficha__nombre { font-size: 22px; }
+  .admin-ficha__cuerpo { padding: 16px 20px 28px; }
+  .admin-ficha__aprobar, .admin-ficha__rechazar { min-width: 0; flex: 1 1 100%; min-height: 52px; }
+}

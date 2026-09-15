@@ -1,5 +1,6 @@
 /* El orden replica la cascada del prototipo: hoja Industry → <style> de la página → estilos del componente. */
 @import './base/fuentes.css';
+@import 'leaflet/dist/leaflet.css';
 @import './base/industry.css';
 @import './base/tokens.css';
 @import './base/pagina.css';
@@ -8,9 +9,16 @@
 @import './componentes/imagen-slot.css';
 @import './componentes/tramite.css';
 @import './componentes/publico.css';
+@import './componentes/admin.css';
 
 @import './paginas/acceso.css';
 @import './paginas/registro.css';
 @import './paginas/cuenta.css';
 @import './paginas/listado.css';
+@import './paginas/detalle.css';
+@import './paginas/sala.css';
+@import './paginas/admin-dashboard.css';
+@import './paginas/admin-subastas.css';
+@import './paginas/admin-postores.css';
+@import './paginas/admin-reportes.css';
 @import './paginas/revision.css';

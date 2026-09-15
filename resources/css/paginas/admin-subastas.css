@@ -1,0 +1,93 @@
+/* Admin · Subastas (prototipo: Admin Subastas.dc.html). Usa .admin-tabla y .badge-admin de admin-dashboard.css. */
+
+.admin-encabezado__texto { max-width: 68ch; }
+.admin-boton-toggle { border: 0; font-family: inherit; font-weight: 700; font-size: 14px; padding: 14px 24px; cursor: pointer; background: #25408f; color: #ffffff; }
+.admin-boton-toggle.es-abierto { background: #eef1f6; color: #4a5563; }
+
+/* Formulario de creación */
+.admin-form { background: #f4f7fc; border-bottom: 1px solid #dbe1ec; }
+.admin-form__interior { padding: 28px 32px; }
+.admin-form__cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-top: 2px solid #25408f; padding-top: 14px; margin-bottom: 22px; }
+.admin-form__titulo { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 26px; margin: 0; color: #16265a; }
+.admin-form__cerrar { border: 0; background: transparent; color: #25408f; font-family: inherit; font-size: 13px; letter-spacing: 0.08em; font-weight: 700; cursor: pointer; }
+.admin-form__seccion { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.admin-form__seccion--siguiente { margin: 32px 0 6px; }
+.admin-form__num { font-family: 'Source Sans 3', sans-serif; font-size: 12px; letter-spacing: 0.14em; font-weight: 700; color: #25408f; }
+.admin-form__subtitulo { font-family: 'Source Serif 4', serif; font-size: 20px; color: #16265a; }
+.admin-form__grilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0 32px; }
+.admin-form__campo { display: flex; flex-direction: column; gap: 5px; min-width: 0; border-bottom: 1px solid #dbe1ec; padding: 12px 0; }
+.admin-form__etiqueta { font-size: 11px; letter-spacing: 0.12em; font-weight: 700; color: #8c95a3; }
+.admin-form__input { height: 34px; border: 0; outline: none; background: transparent; padding: 0; font-family: inherit; font-size: 17px; color: #16265a; width: 100%; box-sizing: border-box; }
+.admin-form__resumen { font-size: 13px; color: #5b6572; margin-top: 12px; }
+.admin-form__aviso { border-left: 3px solid #25408f; background: #ffffff; padding: 16px 18px; font-size: 13px; color: #4a5563; line-height: 1.6; margin-top: 24px; }
+.admin-form__botones { display: flex; gap: 14px; margin-top: 24px; flex-wrap: wrap; }
+.admin-form__publicar { background: #25408f; color: #ffffff; border: 0; font-family: inherit; font-size: 15px; font-weight: 700; padding: 15px 30px; cursor: pointer; }
+.admin-form__borrador { background: transparent; color: #25408f; border: 1px solid #c3d3ea; font-family: inherit; font-size: 15px; font-weight: 600; padding: 15px 30px; cursor: pointer; }
+
+/* Pestañas de filtro con contador (compartidas con Postores) */
+.admin-pestanas { display: flex; border-bottom: 1px solid #dbe1ec; flex-wrap: wrap; }
+.admin-pestana {
+  flex: 1; min-width: 140px; text-align: left; padding: 18px 24px 18px 32px; border: 0; border-right: 1px solid #e6eaf1;
+  cursor: pointer; font-family: inherit; background: #ffffff; color: #5b6572;
+}
+.admin-pestana.es-activa { background: #25408f; color: #ffffff; }
+.admin-pestana__etiqueta { font-size: 11px; letter-spacing: 0.12em; font-weight: 700; opacity: .75; }
+.admin-pestana__cuenta { font-family: 'Source Serif 4', serif; font-size: 28px; line-height: 1.1; margin-top: 4px; color: #16265a; }
+.admin-pestana.es-activa .admin-pestana__cuenta { color: #ffffff; }
+
+.admin-subastas__tabla { padding: 24px 32px 48px; overflow-x: auto; }
+.admin-tabla--subastas { min-width: 1040px; }
+.admin-tabla--subastas td { padding: 16px 16px 16px 0; }
+.admin-tabla--subastas td.es-primera { padding: 16px 16px 16px 14px; border-left: 3px solid #c3cad6; }
+.admin-tabla td.es-primera.regla-vivo { border-left-color: #c8102e; }
+.admin-tabla td.es-primera.regla-proxima { border-left-color: #25408f; }
+.admin-tabla td.es-primera.regla-borrador { border-left-color: #e5b800; }
+.admin-tabla td.es-primera.regla-adjudicada { border-left-color: #1c5330; }
+.admin-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-accion { border: 1px solid #dbe1ec; background: #ffffff; color: #25408f; font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 13px; cursor: pointer; }
+.admin-accion--peligro { border-color: #e39aa6; color: #8c0f22; }
+.admin-acciones-menu { display: none; }
+
+/* Modal de cierre anticipado */
+.admin-modal { position: fixed; inset: 0; background: rgba(22, 38, 90, .55); z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.admin-modal__caja { background: #ffffff; max-width: 480px; width: 100%; box-shadow: 0 24px 70px rgba(22, 38, 90, .35); }
+.admin-modal__cabeza { background: #8c0f22; color: #ffffff; padding: 22px 26px; }
+.admin-modal__kicker { font-size: 11px; letter-spacing: 0.16em; font-weight: 700; opacity: .85; margin-bottom: 6px; }
+.admin-modal__titulo { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 26px; margin: 0; }
+.admin-modal__cuerpo { padding: 26px; }
+.admin-modal__texto { margin: 0 0 18px; font-size: 15px; line-height: 1.65; color: #4a5563; }
+.admin-modal__texto strong { color: #16265a; }
+.admin-modal__etiqueta { display: block; font-size: 11px; letter-spacing: 0.12em; font-weight: 700; color: #8c95a3; margin-bottom: 8px; }
+.admin-modal__textarea { width: 100%; box-sizing: border-box; border: 1px solid #dbe1ec; min-height: 96px; padding: 12px 14px; font-family: inherit; font-size: 14px; resize: vertical; }
+.admin-modal__botones { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+.admin-modal__confirmar { flex: 1; min-width: 150px; background: #c8102e; color: #ffffff; border: 0; font-family: inherit; font-size: 15px; font-weight: 700; padding: 15px; cursor: pointer; }
+.admin-modal__confirmar--azul { background: #25408f; }
+.admin-modal__cancelar { flex: 1; min-width: 120px; background: #ffffff; color: #4a5563; border: 1px solid #dbe1ec; font-family: inherit; font-size: 15px; font-weight: 600; padding: 15px; cursor: pointer; }
+
+/* ── Tablet y móvil ────────────────────────────────────────────────────────────────── */
+@media (max-width: 1119.98px) {
+  .admin-form__interior { padding: 24px 20px; }
+  .admin-form__cerrar { padding: 12px 0; margin: -12px 0; }
+  .admin-form__publicar, .admin-form__borrador { flex: 1 1 auto; }
+
+  /* Pestañas: tira con scroll horizontal */
+  .admin-pestanas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  .admin-pestana { flex: none; min-width: 132px; padding: 14px 20px; }
+  .admin-pestana__cuenta { font-size: 24px; }
+
+  .admin-subastas__tabla { padding: 16px 20px 40px; }
+  /* Acciones: menú dentro de la primera columna (la columna de acciones se oculta) */
+  .admin-tabla--subastas { min-width: 860px; }
+  .admin-tabla--subastas .col-acciones { display: none; }
+  .admin-acciones-menu { display: block; position: relative; margin-top: 10px; }
+  .admin-acciones-menu__boton { border: 1px solid #dbe1ec; background: #ffffff; color: #25408f; font-family: inherit; font-size: 13px; font-weight: 700; min-height: 44px; padding: 0 14px; cursor: pointer; }
+  .admin-acciones-menu__lista { position: absolute; top: calc(100% + 4px); left: 0; z-index: 5; background: #ffffff; border: 1px solid #dbe1ec; box-shadow: 0 12px 32px rgba(22, 38, 90, .18); min-width: 200px; display: flex; flex-direction: column; }
+  .admin-acciones-menu__lista button { border: 0; border-bottom: 1px solid #f0f2f6; background: #ffffff; text-align: left; font-family: inherit; font-size: 14px; font-weight: 600; color: #25408f; min-height: 48px; padding: 0 16px; cursor: pointer; }
+  .admin-acciones-menu__lista button.es-peligro { color: #8c0f22; }
+  .admin-tabla--subastas td.es-primera { position: sticky; left: 0; background: #ffffff; z-index: 2; }
+}
+
+@media (max-width: 759.98px) {
+  .admin-form__grilla { grid-template-columns: 1fr; }
+  .admin-modal__cuerpo { padding: 20px; }
+}

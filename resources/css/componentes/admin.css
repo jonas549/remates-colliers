@@ -1,0 +1,83 @@
+/* Estructura del panel de administración (prototipos Admin *.dc.html).
+   ≥ 1120px: 1:1, barra lateral fija de 236px.
+   < 1120px (adaptación aprobada): barra superior marina de 64px con logo, sección y hamburguesa;
+   la misma barra lateral se abre como menú deslizable desde la izquierda. */
+
+.admin { display: flex; min-height: 100vh; background: #ffffff; font-family: 'Source Sans 3', system-ui, sans-serif; color: #1d2530; flex-wrap: wrap; }
+.admin a:focus-visible, .admin button:focus-visible { outline: 2px solid #25408f; outline-offset: 2px; }
+
+.admin-lateral { width: 236px; flex: none; background: #16265a; color: #ffffff; min-height: 100vh; display: flex; flex-direction: column; }
+.admin-lateral__marca { padding: 24px 24px 22px; border-bottom: 1px solid rgba(255, 255, 255, .18); }
+.admin-lateral__logo { height: 42px; width: auto; display: block; }
+.admin-lateral__subtitulo { font-size: 10px; letter-spacing: 0.18em; color: #8fa2c9; margin-top: 14px; line-height: 1.5; }
+.admin-lateral__menu { padding: 8px 0; }
+.admin-lateral__item {
+  display: flex; align-items: center; gap: 12px; padding: 14px 24px; font-size: 15px; color: #c9d5ec;
+  border-left: 3px solid transparent;
+}
+.admin-lateral__item:hover { background: rgba(255, 255, 255, .06); color: #ffffff; text-decoration: none; }
+.admin-lateral__item.es-actual { font-weight: 700; color: #ffffff; border-left-color: #ffffff; background: rgba(255, 255, 255, .08); }
+.admin-lateral__item.es-actual:hover { background: rgba(255, 255, 255, .08); text-decoration: underline; }
+.admin-lateral__num { font-family: 'Source Serif 4', serif; font-size: 12px; opacity: .6; }
+.admin-lateral__item.es-actual .admin-lateral__num { opacity: .7; }
+.admin-lateral__badge { margin-left: auto; background: #c8102e; color: #ffffff; font-size: 11px; font-weight: 700; padding: 2px 7px; }
+.admin-lateral__pie { margin-top: auto; padding: 22px 24px; border-top: 1px solid rgba(255, 255, 255, .18); font-size: 13px; color: #8fa2c9; }
+.admin-lateral__usuario { color: #ffffff; font-weight: 600; }
+.admin-lateral__rol { font-size: 12px; letter-spacing: 0.06em; }
+.admin-lateral__salir { color: #c9d5ec; display: inline-block; margin-top: 12px; font-size: 13px; }
+
+.admin-principal { flex: 1; min-width: 0; }
+.admin-encabezado { border-bottom: 2px solid #16265a; padding: 26px 32px 20px; display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+.admin-encabezado__kicker { font-size: 11px; letter-spacing: 0.18em; color: #25408f; font-weight: 700; margin-bottom: 8px; }
+.admin-encabezado__titulo { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 34px; margin: 0; color: #16265a; line-height: 1.05; }
+.admin-encabezado__titulo--con-bajada { margin: 0 0 6px; }
+.admin-encabezado__bajada { font-size: 14px; color: #5b6572; line-height: 1.55; }
+.admin-encabezado__acciones { margin-left: auto; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+.admin-barra, .admin-velo { display: none; }
+
+/* ── Tablet y móvil ────────────────────────────────────────────────────────────────── */
+@media (max-width: 1119.98px) {
+  .admin { display: flex; flex-direction: column; flex-wrap: nowrap; min-height: 100vh; }
+  .admin-principal { flex: none; }
+
+  .admin-barra {
+    display: flex; order: -1; position: sticky; top: 0; z-index: 60; height: 64px; background: #16265a; color: #ffffff;
+    align-items: center; gap: 14px; padding: 0 12px 0 20px;
+  }
+  .admin-barra__logo { height: 32px; width: auto; display: block; }
+  .admin-barra__seccion { font-size: 11px; letter-spacing: 0.14em; font-weight: 700; color: #c9d5ec; border-left: 1px solid rgba(255, 255, 255, .25); padding-left: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .admin-barra__menu {
+    margin-left: auto; flex: none; width: 44px; height: 44px; border: 1px solid rgba(255, 255, 255, .35);
+    background: transparent; color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
+  }
+
+  .admin-lateral {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 80; min-height: 0; width: min(300px, 86vw);
+    overflow-y: auto; transform: translateX(-100%); transition: transform .2s ease-out; box-shadow: 0 0 40px rgba(22, 38, 90, .35);
+  }
+  .admin-lateral.es-abierta { transform: none; }
+  .admin-velo.es-visible { display: block; position: fixed; inset: 0; z-index: 70; background: rgba(22, 38, 90, .45); }
+  .admin-lateral__cerrar {
+    position: absolute; top: 16px; right: 12px; width: 44px; height: 44px; border: 1px solid rgba(255, 255, 255, .35);
+    background: transparent; color: #ffffff; font-size: 18px; cursor: pointer;
+  }
+  .admin-lateral__item { min-height: 52px; }
+  .admin-lateral__salir { padding-block: 12px; margin-block: 0 -12px; }
+
+  .admin-encabezado { padding: 22px 20px 18px; gap: 16px; }
+  .admin-encabezado__titulo { font-size: 28px; }
+  .admin-encabezado__acciones { margin-left: 0; width: 100%; }
+}
+
+@media (min-width: 1120px) {
+  .admin-lateral__cerrar { display: none; }
+}
+
+@media (max-width: 759.98px) {
+  .admin-encabezado__acciones > * { flex: 1 1 auto; text-align: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-lateral { transition: none; }
+}

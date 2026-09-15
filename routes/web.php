@@ -1,5 +1,7 @@
 <?php
 
+use App\Demo\AdminDemo;
+use App\Demo\DetalleDemo;
 use App\Demo\EstadoCuentaDemo;
 use App\Demo\PantallasRevision;
 use App\Demo\RematesDemo;
@@ -15,16 +17,22 @@ use Illuminate\Support\Facades\Route;
 
 $pendiente = fn (string $nombre) => fn () => response('Pantalla pendiente del Bloque T: ' . $nombre, 200);
 
+// ?sesion= (visitante | registrado | en-revision | aprobada) simula la sesión hasta el Bloque D.
+$sesionDemo = fn () => in_array(request('sesion'), ['registrado', 'en-revision', 'aprobada'], true) ? request('sesion') : 'visitante';
+
 Route::get('/', fn () => view('revision', ['grupos' => PantallasRevision::todas()]))->name('revision');
 
-// ?sesion= (visitante | registrado | en-revision | aprobada) simula la sesión hasta el Bloque D.
 Route::get('/remates', fn () => view('remates.index', [
     'remates' => RematesDemo::todos(),
     'hero' => RematesDemo::buscar('militares'),
-    'sesion' => in_array(request('sesion'), ['registrado', 'en-revision', 'aprobada'], true) ? request('sesion') : 'visitante',
+    'sesion' => $sesionDemo(),
 ]))->name('remates.index');
-Route::get('/remates/{remate}', $pendiente('detalle de remate'))->name('remates.show');
-Route::get('/remates/{remate}/sala', $pendiente('sala de puja'))->name('sala.show');
+// Demo: 'apoquindo' es el remate en vivo; cualquier otro muestra la ficha de 'militares' (próximo).
+Route::get('/remates/{remate}', fn (string $remate) => view('remates.show', [
+    'r' => DetalleDemo::para($remate) ?? DetalleDemo::para('militares'),
+    'sesion' => $sesionDemo(),
+]))->name('remates.show');
+Route::get('/remates/{remate}/sala', fn () => view('sala.show'))->name('sala.show');
 
 Route::get('/ingresar', fn () => view('auth.login', [
     'proximo' => RematesDemo::proximoDestacado(),
@@ -37,4 +45,9 @@ Route::get('/mi-cuenta', fn () => view('cuenta.estado', [
     'estado' => EstadoCuentaDemo::para(request('estado')),
 ]))->name('cuenta.estado');
 
-Route::get('/admin', $pendiente('dashboard'))->name('admin.dashboard');
+Route::prefix('admin')->name('admin.')->group(function () use ($pendiente) {
+    Route::get('/', fn () => view('admin.dashboard', ['datos' => AdminDemo::dashboard()]))->name('dashboard');
+    Route::get('/subastas', fn () => view('admin.subastas', ['subastas' => AdminDemo::subastas()]))->name('subastas');
+    Route::get('/postores', fn () => view('admin.postores', ['postores' => AdminDemo::postores()]))->name('postores');
+    Route::view('/reportes', 'admin.reportes')->name('reportes');
+});

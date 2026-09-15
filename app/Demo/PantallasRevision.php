@@ -34,8 +34,18 @@ class PantallasRevision
                         'Garantía en revisión' => '/remates?sesion=en-revision',
                         'Garantía aprobada' => '/remates?sesion=aprobada',
                     ]],
-                    ['nombre' => 'Detalle de remate próximo', 'ruta' => null, 'estado' => 'pendiente'],
-                    ['nombre' => 'Detalle de remate en vivo', 'ruta' => null, 'estado' => 'pendiente'],
+                    ['nombre' => 'Detalle de remate próximo', 'ruta' => '/remates/militares', 'estado' => 'terminada', 'nota' => 'Mapa con OpenStreetMap (el prototipo usaba Esri, servicio deprecado).', 'variantes' => [
+                        'Visitante' => '/remates/militares',
+                        'Registrado' => '/remates/militares?sesion=registrado',
+                        'Garantía en revisión' => '/remates/militares?sesion=en-revision',
+                        'Garantía aprobada' => '/remates/militares?sesion=aprobada',
+                    ]],
+                    ['nombre' => 'Detalle de remate en vivo', 'ruta' => '/remates/apoquindo', 'estado' => 'terminada', 'nota' => 'Historial de pujas y cuenta regresiva en vivo (datos de ejemplo).', 'variantes' => [
+                        'Visitante' => '/remates/apoquindo',
+                        'Registrado' => '/remates/apoquindo?sesion=registrado',
+                        'Garantía en revisión' => '/remates/apoquindo?sesion=en-revision',
+                        'Garantía aprobada' => '/remates/apoquindo?sesion=aprobada',
+                    ]],
                 ],
             ],
             [

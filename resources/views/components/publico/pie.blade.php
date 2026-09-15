@@ -1,5 +1,5 @@
-@props(['borde' => false])
-<div @class(['pub-pie', 'pub-pie--borde' => $borde])>
+@props(['borde' => false, 'separado' => false])
+<div @class(['pub-pie', 'pub-pie--borde' => $borde, 'pub-pie--separado' => $separado])>
     <div class="pub-pie__arriba contenedor">
         <img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="pub-pie__logo">
         <div class="pub-pie__links">

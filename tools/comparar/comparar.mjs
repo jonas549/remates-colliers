@@ -3,6 +3,7 @@
 // Uso:
 //   npm run comparar -- login                 (todas las variantes y anchos)
 //   npm run comparar -- login --anchos 1440   (solo ese ancho)
+//   npm run comparar -- cuenta --variantes aprobada,rechazada
 //
 // Requisitos: prototipo servido en PROTOTIPO_URL desde la raíz del proyecto (php -S 127.0.0.1:8081 -t .)
 // y la aplicación en LARAVEL_URL (php artisan serve). El original necesita internet (React por unpkg).
@@ -25,6 +26,8 @@ const args = process.argv.slice(2);
 const nombre = args.find((a) => !a.startsWith('--'));
 const idxAnchos = args.indexOf('--anchos');
 const anchosFiltro = idxAnchos >= 0 ? args[idxAnchos + 1].split(',').map(Number) : null;
+const idxVariantes = args.indexOf('--variantes');
+const variantesFiltro = idxVariantes >= 0 ? args[idxVariantes + 1].split(',') : null;
 
 if (!nombre || !PANTALLAS[nombre]) {
     console.error('Pantalla desconocida. Disponibles: ' + Object.keys(PANTALLAS).join(', '));
@@ -74,7 +77,9 @@ async function capturar(navegador, url, ancho, alto, variante, esOriginal) {
         });
     }
 
-    await pagina.goto(url, { waitUntil: 'networkidle' });
+    // 'load' y no 'networkidle': el iframe de YouTube mantiene conexiones abiertas indefinidamente.
+    await pagina.goto(url, { waitUntil: 'load', timeout: 60000 });
+    await pagina.waitForTimeout(800);
     if (esOriginal) {
         await pagina.waitForSelector('#dc-root .sc-host > *', { timeout: 30000 });
         // <image-slot> carga su foto dentro de un shadow root: se espera a que todas terminen.
@@ -189,7 +194,7 @@ function igualarTamano(png, ancho, alto) {
 const navegador = await chromium.launch({ channel: 'chrome' });
 const resumen = [];
 
-for (const variante of pantalla.variantes) {
+for (const variante of pantalla.variantes.filter((v) => !variantesFiltro || variantesFiltro.includes(v.id))) {
     const dir = path.join(SALIDA, nombre, variante.id);
     fs.mkdirSync(dir, { recursive: true });
 

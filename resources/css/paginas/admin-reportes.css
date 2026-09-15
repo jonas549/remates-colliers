@@ -1,0 +1,75 @@
+/* Admin · Reportes (prototipo: Admin Reportes.dc.html). Gráficos con CSS, sin librerías. */
+
+.admin-reportes__periodo { height: 46px; border: 1px solid #dbe1ec; background: #ffffff; padding: 0 14px; font-family: inherit; font-size: 14px; color: #16265a; }
+.admin-reportes__formato { border: 1px solid #dbe1ec; background: #ffffff; color: #25408f; font-family: inherit; font-weight: 600; font-size: 14px; padding: 13px 18px; cursor: pointer; }
+.admin-reportes__pdf { background: #25408f; color: #ffffff; border: 0; font-family: inherit; font-weight: 700; font-size: 14px; padding: 14px 20px; cursor: pointer; }
+
+.admin-reportes__kpis-fondo { background: #25408f; color: #ffffff; }
+.admin-reportes__kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+.admin-reportes__kpi { min-width: 0; padding: 26px 28px; border-right: 1px solid rgba(255, 255, 255, .2); border-bottom: 1px solid rgba(255, 255, 255, .2); }
+.admin-reportes__kpi-etiqueta { font-size: 11px; letter-spacing: 0.12em; color: #c9d5ec; font-weight: 700; }
+.admin-reportes__kpi-valor { font-family: 'Source Serif 4', serif; font-size: 38px; line-height: 1; margin: 8px 0 6px; }
+.admin-reportes__kpi-nota { font-size: 13px; color: #c9d5ec; }
+
+.admin-reportes { padding: 32px; }
+.admin-reportes__nota-titulo { font-size: 13px; color: #8c95a3; }
+.admin-tabla--reportes { min-width: 960px; }
+.admin-tabla--reportes td.es-primera { padding: 15px 16px 15px 14px; border-left: 3px solid #1c5330; }
+.admin-tabla--reportes td.es-primera.regla-no { border-left-color: #c8102e; }
+.admin-tabla--reportes td.es-primera.regla-anticipado { border-left-color: #e5b800; }
+.admin-reportes__delta { font-family: 'Source Serif 4', serif; font-size: 18px; color: #1c5330; }
+.admin-reportes__delta.es-vacio { color: #a3abb8; }
+.badge-admin--no-adjudicado { background: #fdeef0; color: #8c0f22; border: 1px solid #e39aa6; }
+.badge-admin--anticipado { background: #fff8e0; color: #7a5c00; border: 1px solid #e5b800; }
+
+.admin-reportes__grilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 44px; margin-top: 44px; align-items: start; }
+.admin-reportes__bloque-cabeza { border-top: 2px solid #16265a; padding-top: 14px; margin-bottom: 18px; }
+.admin-reportes__bloque-cabeza--tabla { margin-bottom: 6px; }
+
+.admin-participacion { padding: 12px 0; border-bottom: 1px solid #e6eaf1; }
+.admin-participacion__fila { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.admin-participacion__label { font-size: 15px; color: #4a5563; }
+.admin-participacion__valor { font-family: 'Source Serif 4', serif; font-size: 22px; color: #16265a; }
+.admin-participacion__barra { height: 6px; background: #eef1f6; }
+.admin-participacion__relleno { height: 6px; background: #25408f; }
+.admin-participacion__nota { font-size: 12px; color: #a3abb8; margin-top: 6px; }
+
+.admin-dinamica { display: flex; align-items: flex-end; gap: 12px; height: 180px; border-bottom: 1px solid #dbe1ec; padding-bottom: 0; }
+.admin-dinamica__columna { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%; }
+.admin-dinamica__valor { font-family: 'Source Serif 4', serif; font-size: 15px; color: #16265a; }
+.admin-dinamica__barra { width: 100%; background: #25408f; }
+.admin-dinamica__barra.es-larga { background: #16265a; }
+.admin-dinamica__etiquetas { display: flex; gap: 12px; }
+.admin-dinamica__etiqueta { flex: 1; text-align: center; font-size: 11px; letter-spacing: 0.06em; color: #a3abb8; padding-top: 8px; }
+.admin-reportes__texto { font-size: 13px; color: #5b6572; margin: 16px 0 0; line-height: 1.6; }
+.admin-reportes__texto--gris { color: #8c95a3; margin-top: 14px; }
+
+.admin-tabla--categorias { min-width: 420px; }
+.admin-tabla--categorias td.es-primera { font-weight: 600; color: #16265a; }
+.admin-tabla--categorias tr.es-total td.es-primera { font-weight: 700; border-bottom: 2px solid #16265a; }
+.admin-tabla--categorias tbody tr:hover { background: transparent; }
+
+.admin-exportables { border-top: 2px solid #16265a; padding-top: 14px; margin-top: 44px; }
+.admin-exportables .admin-seccion__titulo { margin: 0 0 16px; }
+.admin-exportables__grilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 0 32px; }
+.admin-exportable { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 16px 0; border-bottom: 1px solid #e6eaf1; }
+.admin-exportable__nombre { font-size: 15px; font-weight: 600; color: #16265a; }
+.admin-exportable__detalle { font-size: 12px; color: #a3abb8; }
+.admin-exportable button { border: 1px solid #25408f; background: #ffffff; color: #25408f; font-family: inherit; font-size: 13px; font-weight: 700; padding: 9px 15px; cursor: pointer; white-space: nowrap; }
+
+@media (max-width: 1119.98px) {
+  .admin-reportes { padding: 24px 20px 40px; }
+  .admin-reportes__formato, .admin-reportes__pdf, .admin-exportable button { min-height: 44px; }
+  .admin-tabla--reportes td.es-primera { position: sticky; left: 0; background: #ffffff; z-index: 2; }
+  .admin-reportes__grilla { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 36px; }
+  .admin-tabla--categorias td:first-child { position: static; box-shadow: none; }
+}
+
+@media (max-width: 759.98px) {
+  .admin-reportes__periodo { flex: 1 1 100%; }
+  .admin-reportes__kpis { grid-template-columns: 1fr 1fr; }
+  .admin-reportes__kpi { padding: 18px 20px; }
+  .admin-reportes__kpi-valor { font-size: 30px; }
+  .admin-reportes__grilla { grid-template-columns: minmax(0, 1fr); }
+  .admin-exportables__grilla { grid-template-columns: minmax(0, 1fr); }
+}

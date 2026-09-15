@@ -1,0 +1,74 @@
+/* Admin · Dashboard (prototipo: Admin Dashboard.dc.html). */
+
+.admin-fecha { font-size: 13px; color: #8c95a3; padding-bottom: 6px; }
+.admin-boton { background: #25408f; color: #ffffff; font-weight: 700; font-size: 14px; padding: 13px 22px; white-space: nowrap; }
+.admin-boton:hover { background: #16265a; color: #ffffff; text-decoration: none; }
+.admin-boton-secundario { border: 1px solid #dbe1ec; color: #25408f; font-weight: 600; font-size: 14px; padding: 12px 22px; white-space: nowrap; }
+.admin-boton-secundario:hover { background: #f0f4fb; text-decoration: none; }
+
+.admin-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); border-bottom: 1px solid #dbe1ec; }
+.admin-kpi { min-width: 0; padding: 22px 28px; border-right: 1px solid #e6eaf1; border-top: 3px solid transparent; }
+.admin-kpi:first-child { padding-left: 32px; }
+.admin-kpi.es-alerta { border-top-color: #e5b800; }
+.admin-kpi__etiqueta { font-size: 11px; letter-spacing: 0.12em; color: #8c95a3; font-weight: 700; }
+.admin-kpi__valor { font-family: 'Source Serif 4', serif; font-size: 38px; line-height: 1; color: #16265a; margin: 8px 0 6px; }
+.admin-kpi.es-alerta .admin-kpi__valor { color: #7a5c00; }
+.admin-kpi__nota { font-size: 13px; color: #5b6572; }
+
+.admin-dashboard { padding: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 44px; align-items: start; }
+.admin-seccion { min-width: 0; }
+.admin-seccion--ancha { grid-column: 1 / -1; }
+.admin-seccion__cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-top: 2px solid #16265a; padding-top: 14px; margin-bottom: 6px; flex-wrap: wrap; }
+.admin-seccion__titulo { font-family: 'Source Serif 4', serif; font-weight: 400; font-size: 24px; margin: 0; color: #16265a; }
+.admin-seccion__enlace { font-size: 14px; font-weight: 600; }
+
+.admin-tabla-scroll { overflow-x: auto; }
+.admin-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-tabla thead tr { text-align: left; }
+.admin-tabla th { padding: 0 16px 10px 0; font-size: 11px; letter-spacing: 0.12em; color: #8c95a3; font-weight: 700; border-bottom: 1px solid #dbe1ec; white-space: nowrap; }
+.admin-tabla td { padding: 15px 16px 15px 0; border-bottom: 1px solid #f0f2f6; color: #4a5563; vertical-align: top; }
+.admin-tabla td.es-num { font-variant-numeric: tabular-nums; }
+.admin-tabla td.es-fuerte { font-family: 'Source Serif 4', serif; font-size: 17px; color: #16265a; }
+.admin-tabla tbody tr:hover { background: #f7f9fc; }
+.admin-tabla__principal { font-weight: 600; color: #16265a; }
+.admin-tabla__secundario { font-size: 12px; color: #a3abb8; }
+.admin-tabla a { font-weight: 600; }
+.admin-tabla--dashboard { min-width: 800px; }
+
+.badge-admin { display: inline-block; font-size: 11px; letter-spacing: 0.08em; font-weight: 700; padding: 5px 10px; white-space: nowrap; }
+.badge-admin--vivo { background: #c8102e; color: #ffffff; }
+.badge-admin--proximo { background: #ffffff; color: #25408f; border: 1px solid #25408f; }
+.badge-admin--cerrado { background: #eef1f6; color: #5b6572; }
+.badge-admin--revision { background: #eef3fb; color: #16265a; border: 1px solid #c3d3ea; }
+.badge-admin--pendiente { background: #fff8e0; color: #7a5c00; border: 1px solid #e5b800; }
+.badge-admin--borrador { background: #fff8e0; color: #7a5c00; border: 1px solid #e5b800; }
+.badge-admin--adjudicada, .badge-admin--aprobada { background: #eaf4ec; color: #1c5330; border: 1px solid #a9cdb5; }
+.badge-admin--rechazada { background: #fdeef0; color: #8c0f22; border: 1px solid #e39aa6; }
+
+.admin-pendiente { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 15px 0; border-bottom: 1px solid #e6eaf1; flex-wrap: wrap; }
+.admin-pendiente__nombre { font-weight: 600; color: #16265a; }
+.admin-pendiente__detalle { font-size: 12px; color: #a3abb8; }
+.admin-seccion__nota { padding: 14px 0; font-size: 13px; color: #8c95a3; line-height: 1.55; }
+
+.admin-actividad { display: flex; gap: 14px; padding: 13px 0; border-bottom: 1px solid #e6eaf1; }
+.admin-actividad__punto { flex: none; width: 8px; height: 8px; margin-top: 7px; }
+.admin-actividad__texto { font-size: 14px; line-height: 1.45; color: #1d2530; }
+.admin-actividad__hora { font-size: 12px; color: #a3abb8; margin-top: 2px; }
+
+@media (max-width: 1119.98px) {
+  .admin-kpi:first-child { padding-left: 28px; }
+  .admin-dashboard { padding: 24px 20px; gap: 36px; }
+  /* Tabla ancha: scroll horizontal con la primera columna fija */
+  .admin-tabla th:first-child, .admin-tabla td:first-child { position: sticky; left: 0; background: #ffffff; z-index: 1; box-shadow: 8px 0 8px -8px rgba(22, 38, 90, .18); padding-left: 0; }
+  .admin-tabla tbody tr:hover td:first-child { background: #f7f9fc; }
+  .admin-tabla td:first-child .admin-tabla__principal { max-width: 180px; }
+  .admin-tabla a { display: inline-block; padding-block: 12px; margin-block: -12px; min-width: 44px; }
+  .admin-seccion__enlace { display: inline-block; padding-block: 12px; margin-block: -12px; }
+}
+
+@media (max-width: 759.98px) {
+  .admin-kpis { grid-template-columns: 1fr 1fr; }
+  .admin-kpi, .admin-kpi:first-child { padding: 18px 20px; border-bottom: 1px solid #e6eaf1; }
+  .admin-kpi__valor { font-size: 30px; }
+  .admin-kpi:last-child { grid-column: 1 / -1; }
+}
