@@ -58,7 +58,7 @@ class PantallasRevision
                 'grupo' => 'Administración',
                 'pantallas' => [
                     ['nombre' => 'Dashboard', 'ruta' => '/admin', 'estado' => 'terminada', 'nota' => 'En móvil/tablet: barra superior y menú deslizable (botón ☰).'],
-                    ['nombre' => 'Subastas', 'ruta' => null, 'estado' => 'pendiente'],
+                    ['nombre' => 'Subastas', 'ruta' => '/admin/subastas', 'estado' => 'terminada', 'nota' => 'Probar Crear subasta, pestañas de filtro y Cerrar ahora (modal). En móvil: botón Acciones abre una hoja inferior.'],
                     ['nombre' => 'Postores', 'ruta' => null, 'estado' => 'pendiente'],
                     ['nombre' => 'Reportes', 'ruta' => null, 'estado' => 'pendiente'],
                 ],

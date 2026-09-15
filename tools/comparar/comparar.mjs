@@ -109,6 +109,11 @@ async function capturar(navegador, url, ancho, alto, variante, esOriginal) {
         await document.fonts.ready;
         await Promise.all([...document.images].map((img) => img.complete ? null : new Promise((r) => { img.onload = img.onerror = r; })));
     });
+    // Pasos opcionales de la variante (p. ej. abrir un formulario o un modal) antes de capturar.
+    for (const paso of variante.pasos || []) {
+        await pagina.locator(paso).first().click();
+        await pagina.waitForTimeout(250);
+    }
     await pagina.waitForTimeout(300);
 
     const mascaras = (pantalla.mascaras || []).map((sel) => pagina.locator(sel));

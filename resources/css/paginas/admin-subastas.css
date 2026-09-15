@@ -46,7 +46,7 @@
 .admin-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
 .admin-accion { border: 1px solid #dbe1ec; background: #ffffff; color: #25408f; font-family: inherit; font-size: 13px; font-weight: 600; padding: 8px 13px; cursor: pointer; }
 .admin-accion--peligro { border-color: #e39aa6; color: #8c0f22; }
-.admin-acciones-menu { display: none; }
+.admin-acciones-menu, .admin-acciones-menu__velo, .admin-acciones-menu__lista { display: none; }
 
 /* Modal de cierre anticipado */
 .admin-modal { position: fixed; inset: 0; background: rgba(22, 38, 90, .55); z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -67,7 +67,7 @@
 /* ── Tablet y móvil ────────────────────────────────────────────────────────────────── */
 @media (max-width: 1119.98px) {
   .admin-form__interior { padding: 24px 20px; }
-  .admin-form__cerrar { padding: 12px 0; margin: -12px 0; }
+  .admin-form__cerrar { padding: 13px 0; margin: -13px 0; }
   .admin-form__publicar, .admin-form__borrador { flex: 1 1 auto; }
 
   /* Pestañas: tira con scroll horizontal */
@@ -81,8 +81,15 @@
   .admin-tabla--subastas .col-acciones { display: none; }
   .admin-acciones-menu { display: block; position: relative; margin-top: 10px; }
   .admin-acciones-menu__boton { border: 1px solid #dbe1ec; background: #ffffff; color: #25408f; font-family: inherit; font-size: 13px; font-weight: 700; min-height: 44px; padding: 0 14px; cursor: pointer; }
-  .admin-acciones-menu__lista { position: absolute; top: calc(100% + 4px); left: 0; z-index: 5; background: #ffffff; border: 1px solid #dbe1ec; box-shadow: 0 12px 32px rgba(22, 38, 90, .18); min-width: 200px; display: flex; flex-direction: column; }
-  .admin-acciones-menu__lista button { border: 0; border-bottom: 1px solid #f0f2f6; background: #ffffff; text-align: left; font-family: inherit; font-size: 14px; font-weight: 600; color: #25408f; min-height: 48px; padding: 0 16px; cursor: pointer; }
+  /* Hoja de acciones fija abajo: no la recorta el scroll de la tabla ni la tapa la columna fija */
+  .admin-acciones-menu__velo { display: block; position: fixed; inset: 0; z-index: 88; background: rgba(22, 38, 90, .45); }
+  .admin-acciones-menu__lista {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; background: #ffffff; border-top: 2px solid #16265a;
+    display: flex; flex-direction: column; padding: 8px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  .admin-acciones-menu__titulo { font-family: 'Source Serif 4', serif; font-size: 18px; color: #16265a; padding: 12px 0; border-bottom: 1px solid #dbe1ec; }
+  .admin-acciones-menu__lista button { border: 0; border-bottom: 1px solid #f0f2f6; background: #ffffff; text-align: left; font-family: inherit; font-size: 15px; font-weight: 600; color: #25408f; min-height: 52px; padding: 0; cursor: pointer; }
+  .admin-acciones-menu__lista button.es-cancelar { color: #4a5563; border-bottom: 0; text-align: center; margin-top: 8px; border: 1px solid #dbe1ec; }
   .admin-acciones-menu__lista button.es-peligro { color: #8c0f22; }
   .admin-tabla--subastas td.es-primera { position: sticky; left: 0; background: #ffffff; z-index: 2; }
 }

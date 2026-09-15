@@ -54,7 +54,7 @@
                             <tr>
                                 <td class="es-primera" :class="regla(p)">
                                     <div class="admin-tabla__principal" x-text="p.nombre"></div>
-                                    <div class="admin-tabla__secundario" x-text="p.rut + ' · ' + p.tipo"></div>
+                                    <div class="admin-tabla__secundario"><span x-text="p.rut"></span> · <span x-text="p.tipo"></span></div>
                                 </td>
                                 <td>
                                     <div x-text="p.correo"></div>

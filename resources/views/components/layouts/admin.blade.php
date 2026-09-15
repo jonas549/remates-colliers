@@ -2,7 +2,7 @@
     Layout del panel de administración. $seccion: dashboard | subastas | postores | reportes.
     Datos de usuario y contador de pendientes: demo hasta los Bloques D y G.
 --}}
-@props(['seccion', 'titulo'])
+@props(['seccion', 'titulo', 'claseCuerpo' => ''])
 @php
     $items = [
         'dashboard' => ['01', 'Dashboard', route('admin.dashboard'), null],
@@ -11,7 +11,7 @@
         'reportes' => ['04', 'Reportes', route('admin.reportes'), null],
     ];
 @endphp
-<x-layouts.base :titulo="$titulo . ' · Administración'">
+<x-layouts.base :titulo="$titulo . ' · Administración'" :clase-cuerpo="$claseCuerpo">
     <div class="admin" x-data="{ menu: false }" @keydown.escape.window="menu = false">
 
         <div class="admin-lateral" id="admin-menu" :class="{ 'es-abierta': menu }">

@@ -6,6 +6,7 @@
 // laravel:   ruta de la aplicación (servida en LARAVEL_URL)
 // variantes: estados simulados. `props` sobrescribe los valores por defecto de data-props
 //            en el original; `query` se agrega a la URL de Laravel.
+// pasos:     selectores a los que se hace clic (en ambos lados) antes de capturar.
 // mascaras:  selectores que se tapan en ambas capturas (contenido que no puede coincidir:
 //            iframes de YouTube, mosaicos de mapa).
 
@@ -24,14 +25,23 @@ export const PANTALLAS = {
         original: 'colliers-subastas-usuario-main/Admin Subastas.dc.html',
         laravel: '/admin/subastas',
         alto: 900,
-        variantes: [{ id: 'base' }],
+        variantes: [
+            { id: 'base' },
+            { id: 'formulario', pasos: ['button:has-text("Crear subasta")'] },
+            { id: 'cierre', pasos: ['button:has-text("Cerrar ahora")'] },
+            { id: 'filtro-cerradas', pasos: ['button:has-text("CERRADAS")'] },
+        ],
         mascaras: [],
     },
     'admin-postores': {
         original: 'colliers-subastas-usuario-main/Admin Postores.dc.html',
         laravel: '/admin/postores',
         alto: 900,
-        variantes: [{ id: 'base' }],
+        variantes: [
+            { id: 'base' },
+            { id: 'ficha', pasos: ['button:has-text("Ficha")'] },
+            { id: 'filtro-revision', pasos: ['button:has-text("EN REVISIÓN")'] },
+        ],
         mascaras: [],
     },
     'admin-dashboard': {

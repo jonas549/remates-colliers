@@ -50,6 +50,10 @@ export default ({ subastas }) => ({
         this[campo] = String(valor).replace(/[^\d]/g, '');
     },
 
+    get enMenu() {
+        return this.menuAbierto ? this.todas.find((s) => s.id === this.menuAbierto) : null;
+    },
+
     get enCierre() {
         return this.cerrar ? this.todas.find((s) => s.id === this.cerrar) : null;
     },

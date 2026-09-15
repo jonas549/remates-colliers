@@ -1,7 +1,7 @@
 @php
     $filtros = ['Todas', 'En vivo', 'Próximas', 'Borradores', 'Cerradas'];
 @endphp
-<x-layouts.admin seccion="subastas" titulo="Subastas">
+<x-layouts.admin seccion="subastas" titulo="Subastas" clase-cuerpo="placeholder-claro">
     <div x-data="adminSubastas(@js(['subastas' => $subastas]))" @keydown.escape.window="cerrar = null; menuAbierto = null">
         <div class="admin-encabezado">
             <div class="admin-encabezado__texto">
@@ -88,20 +88,9 @@
                         <tr>
                             <td class="es-primera" :class="{ 'regla-vivo': s.estado === 'En vivo', 'regla-proxima': s.estado === 'Próxima', 'regla-borrador': s.estado === 'Borrador', 'regla-adjudicada': s.estado === 'Adjudicada' }">
                                 <div class="admin-tabla__principal" x-text="s.direccion"></div>
-                                <div class="admin-tabla__secundario" x-text="s.folio + ' · ' + s.comuna + ' · ' + s.martillero"></div>
-                                <div class="admin-acciones-menu" @click.outside="menuAbierto === s.id && (menuAbierto = null)">
-                                    <button type="button" class="admin-acciones-menu__boton" @click="menuAbierto = menuAbierto === s.id ? null : s.id" :aria-expanded="menuAbierto === s.id">Acciones ▾</button>
-                                    <template x-if="menuAbierto === s.id">
-                                        <div class="admin-acciones-menu__lista">
-                                            <button type="button" @click="menuAbierto = null">Editar</button>
-                                            <template x-if="s.estado === 'En vivo' || s.estado === 'Próxima'">
-                                                <button type="button" class="es-peligro" @click="cerrar = s.id; menuAbierto = null">Cerrar ahora</button>
-                                            </template>
-                                            <template x-if="s.estado === 'Cerrada'">
-                                                <button type="button" @click="form = true; menuAbierto = null">Crear remate nuevo</button>
-                                            </template>
-                                        </div>
-                                    </template>
+                                <div class="admin-tabla__secundario"><span x-text="s.folio"></span> · <span x-text="s.comuna"></span> · <span x-text="s.martillero"></span></div>
+                                <div class="admin-acciones-menu">
+                                    <button type="button" class="admin-acciones-menu__boton" @click="menuAbierto = s.id" aria-haspopup="dialog">Acciones ▾</button>
                                 </div>
                             </td>
                             <td><span class="badge-admin" :class="{ 'badge-admin--vivo': s.estado === 'En vivo', 'badge-admin--proximo': s.estado === 'Próxima', 'badge-admin--borrador': s.estado === 'Borrador', 'badge-admin--adjudicada': s.estado === 'Adjudicada', 'badge-admin--cerrado': s.estado === 'Cerrada' }" x-text="s.estado.toUpperCase()"></span></td>
@@ -126,6 +115,25 @@
                 </tbody>
             </table>
         </div>
+
+
+        {{-- Hoja de acciones (tablet y móvil). Fuera de la tabla: las celdas fijas crean su propio apilamiento. --}}
+        <template x-if="enMenu">
+            <div>
+                <div class="admin-acciones-menu__velo" @click="menuAbierto = null"></div>
+                <div class="admin-acciones-menu__lista" role="dialog" aria-modal="true" :aria-label="'Acciones de ' + enMenu.direccion">
+                    <div class="admin-acciones-menu__titulo" x-text="enMenu.direccion"></div>
+                    <button type="button" @click="menuAbierto = null">Editar</button>
+                    <template x-if="enMenu.estado === 'En vivo' || enMenu.estado === 'Próxima'">
+                        <button type="button" class="es-peligro" @click="cerrar = enMenu.id; menuAbierto = null">Cerrar ahora</button>
+                    </template>
+                    <template x-if="enMenu.estado === 'Cerrada'">
+                        <button type="button" @click="form = true; menuAbierto = null">Crear remate nuevo</button>
+                    </template>
+                    <button type="button" class="es-cancelar" @click="menuAbierto = null">Cancelar</button>
+                </div>
+            </div>
+        </template>
 
         <template x-if="enCierre">
             <div class="admin-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-cierre">
