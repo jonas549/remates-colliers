@@ -201,6 +201,7 @@ El servidor se configura **una vez**; desde ahí todo entra por push y cron. Par
 - **Migraciones solo aditivas:** crear tablas, agregar columnas nullable o con valor por defecto, índices.
   Nunca renombrar ni eliminar columnas. Si algo cambia de significado, columna nueva y la antigua deprecada.
 - `users` guarda credenciales y rol (admin, martillero, postor). Los datos del postor van en tablas propias.
+
 **Bloqueo de deploy obligatorio:** el script no debe desplegar mientras haya un remate en curso
 (pendiente de implementar; requiere cambio en el script del servidor).
 
@@ -321,15 +322,16 @@ aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox
 - [x] B0: Laravel 13, Vite + Alpine, fuentes locales, `.gitignore`, `.htaccess` (handler comentado)
 - [x] Arnés de comparación visual y de usabilidad móvil
 - [x] Login
-- [ ] Registro de postor (corregir el `grid-column: span 2` que desborda en pantallas angostas)
-- [ ] Estado de cuenta (5 variantes)
-- [ ] Listado de remates (index)
-- [ ] Detalle de remate próximo
-- [ ] Detalle de remate en vivo
-- [ ] Sala de puja (móvil: barra fija inferior + hoja de puja)
-- [ ] Admin: dashboard, subastas, postores, reportes (móvil: barra superior + menú deslizable,
+- [x] Registro de postor (corregido el `grid-column: span 2` que desbordaba en pantallas angostas)
+- [x] Estado de cuenta (5 variantes)
+- [x] Listado de remates (index), filtros verificados con `tools/comparar/filtros-interaccion.mjs`
+- [x] Detalle de remate próximo
+- [x] Detalle de remate en vivo
+- [x] Sala de puja (móvil: barra fija inferior + hoja de puja)
+- [x] Admin: dashboard, subastas, postores, reportes (móvil: barra superior + menú deslizable,
       tarjetas en postores/pendientes, tablas con scroll y primera columna fija, pestañas con scroll)
-- [ ] Recorrido «aprobar garantía» a 375 px automatizado
+- [x] Recorrido «aprobar garantía» a 375 px automatizado
+- [x] Raíz invertida: `/` es el listado, `/remates` redirige; índice de revisión en `/revision` solo en local
 
 ### BLOQUE B — Base del proyecto Laravel
 
@@ -444,7 +446,7 @@ Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo más t
 | Bloque | Estado | Fecha | Notas |
 |---|---|---|---|
 | A — Entorno y servidor | **Cerrado** | 2026-09-15 | Hecho por Jonas. PHP 8.4.24, Composer 2.10.2, BD, deploy key, script de deploy y cron cada 5 min. |
-| T — Diseño a Blade | En curso | 2026-09-15 | B0 y Login listos (escritorio ≤ 0,04% de diferencia, solo remuestreo de foto). |
+| T — Diseño a Blade | **Cerrado** | 2026-09-15 | 11 pantallas 1:1 en escritorio; diferencias restantes son decisiones de alcance (favoritos, contador, filtros). Móvil y tablet sin desborde ni táctiles < 44 px. |
 | B — Base Laravel | Infra lista | 2026-09-15 | Contrato de deploy, comandos, cron, clave de sandbox, errores y es. Pendiente: Fortify (D), maatwebsite/excel (O). |
 | C — Modelo de datos | Pendiente | | |
 | J — Motor de subastas | Pendiente | | |

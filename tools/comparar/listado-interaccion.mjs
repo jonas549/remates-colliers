@@ -28,8 +28,13 @@ for (const [nombre, url] of Object.entries(casos)) {
     await p.getByRole('button', { name: 'Tabla' }).click();
     r.tabla = await p.locator('table tbody tr').count();
     await p.getByRole('button', { name: 'Grilla' }).click();
-    await p.locator('[title="Guardar remate"]').first().click();
-    r.guardado = await p.locator('[title="Guardar remate"] svg').first().getAttribute('fill');
+    // Favoritos quedó FUERA del alcance (15/09): en Laravel no hay botón.
+    if (await p.locator('[title="Guardar remate"]').count()) {
+        await p.locator('[title="Guardar remate"]').first().click();
+        r.guardado = await p.locator('[title="Guardar remate"] svg').first().getAttribute('fill');
+    } else {
+        r.guardado = 'sin botón';
+    }
     await p.getByText('Ocultar filtros').click();
     r.ocultarFiltros = await p.getByText('Estado del remate').count();
     await p.setViewportSize({ width: 800, height: 900 });
