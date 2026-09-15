@@ -189,8 +189,12 @@ El servidor **no es un VPS**. Es hosting compartido.
 
 ### Flujo de trabajo
 
-Desarrollas en local → Jonas prueba en local → push a `main` → el cron despliega solo en
-5 minutos → Jonas verifica en el sandbox.
+**Todo el desarrollo es local** (entorno y base de datos locales). Se commitea en local, pero
+**no se hace push a `main` hasta que Jonas revise y apruebe explícitamente**: cada push lo
+despliega el cron del servidor en 5 minutos.
+
+Desarrollas en local → Jonas revisa en local (Laragon, `http://remates-colliers.test`) → Jonas
+aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox.
 
 ---
 
