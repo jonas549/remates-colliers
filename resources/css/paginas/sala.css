@@ -148,7 +148,7 @@
   /* El panel de puja vive en la barra inferior y en la hoja; queda el bloque de soporte. */
   .sala-panel { display: none; }
   .sala-soporte { margin-top: 0; }
-  .sala-soporte__enlaces a { display: inline-block; width: fit-content; padding-block: 11px; margin-block: -11px; }
+  .sala-soporte__enlaces a { display: inline-block; width: fit-content; padding-block: 12px; margin-block: -12px; }
   .sala__antecedentes { padding-block: 13px; }
   .sala-cabecera__nav > a { padding: 15px 0; margin: -15px 0; }
 

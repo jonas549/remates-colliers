@@ -51,7 +51,7 @@ class PantallasRevision
             [
                 'grupo' => 'Sala de puja',
                 'pantallas' => [
-                    ['nombre' => 'Puja en vivo', 'ruta' => null, 'estado' => 'pendiente'],
+                    ['nombre' => 'Puja en vivo', 'ruta' => '/remates/apoquindo/sala', 'estado' => 'terminada', 'nota' => 'Probar puja rápida, monto libre y confirmación. En móvil/tablet: barra fija inferior y botón Pujar que abre la hoja. Las pujas son solo en pantalla hasta el Bloque K.'],
                 ],
             ],
             [
