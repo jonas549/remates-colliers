@@ -102,7 +102,7 @@
                             <tr>
                                 <td class="es-primera {{ $regla }}">
                                     <div class="admin-tabla__principal">{{ $direccion }}</div>
-                                    <div class="admin-tabla__secundario">{{ $folio }} · {{ $fecha }}</div>
+                                    <div class="admin-tabla__secundario"><span>{{ $folio }}</span> · <span>{{ $fecha }}</span></div>
                                 </td>
                                 <td>{{ $categoria }}</td>
                                 <td class="es-num">{{ $clp($base) }}</td>
