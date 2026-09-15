@@ -34,7 +34,7 @@ class PantallasRevision
                         'Garantía en revisión' => '/remates?sesion=en-revision',
                         'Garantía aprobada' => '/remates?sesion=aprobada',
                     ]],
-                    ['nombre' => 'Detalle de remate próximo', 'ruta' => '/remates/militares', 'estado' => 'terminada', 'nota' => 'Mapa con OpenStreetMap (el prototipo usaba Esri, servicio deprecado).', 'variantes' => [
+                    ['nombre' => 'Detalle de remate próximo', 'ruta' => '/remates/militares', 'estado' => 'terminada', 'nota' => 'Mapa con OpenStreetMap en gris claro (el prototipo usaba Esri, servicio deprecado).', 'variantes' => [
                         'Visitante' => '/remates/militares',
                         'Registrado' => '/remates/militares?sesion=registrado',
                         'Garantía en revisión' => '/remates/militares?sesion=en-revision',

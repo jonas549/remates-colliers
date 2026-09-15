@@ -263,7 +263,8 @@ aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox
 - Margen de liquidación configurable, 2 s por defecto.
 - WordPress fuera del alcance.
 - Frontend primero (Bloque T), luego lo riesgoso (J núcleo) lo antes posible.
-- Mapa: OpenStreetMap (Esri deprecado). CARTO queda como alternativa en tonos grises si se evalúa.
+- Mapa: OpenStreetMap con los mosaicos en escala de grises vía CSS (tono cercano al Esri Light Gray del
+  prototipo, sin cuenta). CARTO Positron queda como alternativa si hiciera falta (requiere API key).
 - **Alcance de funciones del diseño:**
   - DENTRO: suscripción «avísame», recordatorio antes del remate, calendario .ics, mapa, documentos
     descargables, recomendados, enlace al canal de Colliers.

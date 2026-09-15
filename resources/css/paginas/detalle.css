@@ -232,3 +232,7 @@
 @media (max-width: 759.98px) {
   .detalle-historial { max-height: 320px; }
 }
+
+/* Mosaicos de OpenStreetMap en gris claro: acerca el mapa al tono del prototipo (Esri Light Gray)
+   sin cuenta ni proveedor adicional. Solo afecta a los mosaicos; marcador y círculo mantienen su azul. */
+.detalle__mapa .leaflet-tile-pane { filter: grayscale(1) contrast(.85) brightness(1.06); }
