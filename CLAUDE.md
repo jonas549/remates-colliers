@@ -271,7 +271,9 @@ aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox
   - FUERA (aplicado en T): favoritos (sin botón), agendar visita (enlace de contacto «Coordinar visita»),
     contador de «personas viendo» (quitado), lupa de la cabecera (lleva al buscador del listado).
   - A DECIDIR: idioma EN/ES (Bloque N) y exportar PDF (Bloque O); en T se ven pero no funcionan.
-  - Pendiente de Jonas: qué filtros extra del listado entran.
+  - Filtros del listado: fecha, tipo, dormitorios, estacionamiento/bodega, rango de precio, región y
+    comuna (región y comuna generadas desde los datos). Quitado «con visita programada». «Garantía
+    requerida» queda OCULTO (código conservado, tramos calculados desde los datos); activable en el Bloque V.
 - Fotos de muestra: las del prototipo eran de origen desconocido; reemplazadas por fotos Unsplash License
   (créditos en public/img/demo/CREDITOS.md). Las originales siguen en el historial de git del primer push.
 

@@ -15,16 +15,11 @@
     };
     $opcionesEstado = ['Todos' => 'Todos los remates', 'En vivo' => 'En vivo', 'Próximo' => 'Próximos', 'Cerrado' => 'Cerrados'];
     $opcionesOcupacion = ['Todas' => 'Todas', 'Desocupada' => 'Desocupada', 'Ocupada' => 'Ocupada'];
-    $grupos = [
-        'Fecha de remate' => ['Esta semana', 'Próximos 30 días', 'Próximos 90 días'],
-        'Tipo de propiedad' => ['Departamento', 'Casa'],
-        'Características' => ['2 dormitorios o más', '3 dormitorios o más', 'Con estacionamiento', 'Con bodega', 'Con visita programada'],
-    ];
-    $gruposFinales = [
-        'Región' => ['Metropolitana', 'Valparaíso', 'Biobío', 'La Araucanía'],
-        'Comuna' => ['Las Condes', 'Providencia', 'Ñuñoa', 'Colina'],
-        'Garantía requerida' => ['Hasta $5.000.000', '$5.000.001 a $10.000.000', 'Más de $10.000.000'],
-    ];
+    // Opciones de filtro generadas desde los remates publicados.
+    $tipos = collect($remates)->pluck('tipo')->unique()->sortBy(fn ($t) => $t === 'Departamento' ? 0 : 1)->values();
+    $regiones = \App\Support\RegionesChile::ordenar(collect($remates)->pluck('region')->unique()->values()->all());
+    $comunas = collect($remates)->mapWithKeys(fn ($r) => [$r['comuna'] => $r['region']])->sortKeysUsing(fn ($x, $y) => collator_compare(collator_create('es_CL'), $x, $y))->all();
+    $mostrarFiltroGarantia = false; // Ver la nota junto al grupo "Garantía requerida".
     $config = [
         'remates' => $remates,
         'sesion' => $sesion,
@@ -173,35 +168,77 @@
                             </div>
                         </details>
 
-                        @foreach ($grupos as $titulo => $items)
-                            <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                                <summary>{{ $titulo }} <span x-text="abierto ? '–' : '+'">+</span></summary>
-                                <div class="listado__opciones">
-                                    @foreach ($items as $item)
-                                        <label class="listado__opcion"><input type="checkbox">{{ $item }}</label>
-                                    @endforeach
-                                </div>
-                            </details>
-                        @endforeach
+                        {{-- Filtros adicionales (decisión del 15/09). Se quitó "Con visita programada": agendar visita quedó fuera de alcance. --}}
+                        <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
+                            <summary>Fecha de remate <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <div class="listado__opciones">
+                                <label class="listado__opcion"><input type="checkbox" value="7" x-model="extra.fecha" @change="marcarExtra('fecha')">Esta semana</label>
+                                <label class="listado__opcion"><input type="checkbox" value="30" x-model="extra.fecha" @change="marcarExtra('fecha')">Próximos 30 días</label>
+                                <label class="listado__opcion"><input type="checkbox" value="90" x-model="extra.fecha" @change="marcarExtra('fecha')">Próximos 90 días</label>
+                            </div>
+                        </details>
+                        <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
+                            <summary>Tipo de propiedad <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <div class="listado__opciones">
+                                @foreach ($tipos as $tipo)
+                                    <label class="listado__opcion"><input type="checkbox" value="{{ $tipo }}" x-model="extra.tipo" @change="marcarExtra('tipo')">{{ $tipo }}</label>
+                                @endforeach
+                            </div>
+                        </details>
+                        <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
+                            <summary>Características <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <div class="listado__opciones">
+                                <label class="listado__opcion"><input type="checkbox" value="2" x-model="extra.dorm" @change="marcarExtra('caracteristicas')">2 dormitorios o más</label>
+                                <label class="listado__opcion"><input type="checkbox" value="3" x-model="extra.dorm" @change="marcarExtra('caracteristicas')">3 dormitorios o más</label>
+                                <label class="listado__opcion"><input type="checkbox" x-model="extra.estac" @change="marcarExtra('caracteristicas')">Con estacionamiento</label>
+                                <label class="listado__opcion"><input type="checkbox" x-model="extra.bodega" @change="marcarExtra('caracteristicas')">Con bodega</label>
+                            </div>
+                        </details>
 
                         <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
                             <summary>Rango de precio base <span x-text="abierto ? '–' : '+'">+</span></summary>
                             <div class="listado__rango">
-                                <input placeholder="Desde CLP" aria-label="Precio base desde">
-                                <input placeholder="Hasta CLP" aria-label="Precio base hasta">
+                                <input placeholder="Desde CLP" aria-label="Precio base desde" inputmode="numeric" :value="extra.desde" @input="extra.desde = $event.target.value.replace(/[^\d]/g, ''); $event.target.value = extra.desde; marcarExtra('precio')">
+                                <input placeholder="Hasta CLP" aria-label="Precio base hasta" inputmode="numeric" :value="extra.hasta" @input="extra.hasta = $event.target.value.replace(/[^\d]/g, ''); $event.target.value = extra.hasta; marcarExtra('precio')">
                             </div>
                         </details>
 
-                        @foreach ($gruposFinales as $titulo => $items)
+                        {{-- Región y comuna: opciones generadas desde los remates publicados (no fijas). --}}
+                        <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
+                            <summary>Región <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <div class="listado__opciones">
+                                @foreach ($regiones as $region)
+                                    <label class="listado__opcion"><input type="checkbox" value="{{ $region }}" x-model="extra.region" @change="marcarExtra('region')">{{ \App\Support\RegionesChile::nombreCorto($region) }}</label>
+                                @endforeach
+                            </div>
+                        </details>
+                        <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
+                            <summary>Comuna <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <div class="listado__opciones">
+                                @foreach ($comunas as $comuna => $regionComuna)
+                                    <label class="listado__opcion" x-show="comunaVisible(@js($comuna), @js($regionComuna))"><input type="checkbox" value="{{ $comuna }}" x-model="extra.comuna" @change="marcarExtra('comuna')">{{ $comuna }}</label>
+                                @endforeach
+                            </div>
+                        </details>
+
+                        {{--
+                            Garantía requerida: OCULTO, no borrar (decisión del 15/09).
+                            Sería redundante con el rango de precio solo si la garantía fuera un porcentaje fijo, pero el
+                            porcentaje será configurable (Bloque V) y el prototipo ya muestra garantías distintas del 10%.
+                            Si Colliers define porcentajes por remate, el filtro vuelve a ser útil. En el Bloque V se activa
+                            desde configuración, reemplazando $mostrarFiltroGarantia. Los tramos no son fijos: se calculan
+                            desde los datos (resources/js/modulos/listado.js → tramosGarantia).
+                        --}}
+                        @if ($mostrarFiltroGarantia)
                             <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                                <summary>{{ $titulo }} <span x-text="abierto ? '–' : '+'">+</span></summary>
+                                <summary>Garantía requerida <span x-text="abierto ? '–' : '+'">+</span></summary>
                                 <div class="listado__opciones">
-                                    @foreach ($items as $item)
-                                        <label class="listado__opcion"><input type="checkbox">{{ $item }}</label>
-                                    @endforeach
+                                    <template x-for="(tramo, i) in tramosGarantia" :key="i">
+                                        <label class="listado__opcion"><input type="checkbox" :value="i" x-model.number="extra.garantia" @change="marcarExtra('garantia')"><span x-text="tramo.etiqueta"></span></label>
+                                    </template>
                                 </div>
                             </details>
-                        @endforeach
+                        @endif
 
                         <div class="listado__filtros-acciones">
                             <button type="button" class="listado__limpiar" @click="limpiar()">Limpiar filtros</button>

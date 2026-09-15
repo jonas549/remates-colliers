@@ -1,7 +1,8 @@
 import { clp, cuentaRegresiva, partes, dos } from './formato';
 
 // Listado de remates. Port de la lógica de index.dc.html: filtros por estado y ocupación,
-// búsqueda, orden, grilla/tabla, "cargar más" y cuentas regresivas (favoritos: fuera de alcance).
+// búsqueda, orden, grilla/tabla, "cargar más" y cuentas regresivas (favoritos: fuera de alcance),
+// más los filtros adicionales del panel.
 // Bloque T: filtra en el navegador. En el Bloque N pasa a filtrar en el servidor con el estado en la URL.
 export default ({ remates, sesion, rutas, columnas = 3 }) => ({
     remates,
@@ -14,6 +15,9 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
     vista: 'Grilla',
     visibles: 6,
     filtros: null,
+    // Filtros adicionales del panel (decisión del 15/09: fecha, tipo, dormitorios, estacionamiento/bodega,
+    // rango de precio, región y comuna; garantía requerida queda oculta, ver la vista).
+    extra: { fecha: [], tipo: [], dorm: [], estac: false, bodega: false, desde: '', hasta: '', region: [], comuna: [], garantia: [] },
     ultimoFiltro: null,
     compacto: false,
     t0: Date.now(),
@@ -36,12 +40,70 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
         this.filtros = !this.filtrosAbiertos;
     },
 
+    numero(v) {
+        return parseInt(String(v).replace(/[^\d]/g, ''), 10) || 0;
+    },
+
+    // Un remate pasa los filtros adicionales si cumple todos los grupos activos (dentro de cada grupo, basta una opción).
+    cumpleExtra(l) {
+        const e = this.extra;
+        if (e.fecha.length) {
+            // Días hasta el remate. Los cerrados no tienen fecha futura y quedan fuera.
+            if (l.delta == null) return false;
+            const limite = Math.max(...e.fecha.map(Number));
+            if (l.delta / 86400 > limite) return false;
+        }
+        if (e.tipo.length && !e.tipo.includes(l.tipo)) return false;
+        if (e.dorm.length && l.dorm < Math.min(...e.dorm.map(Number))) return false;
+        if (e.estac && !l.estac) return false;
+        if (e.bodega && !l.bodega) return false;
+        const desde = this.numero(e.desde);
+        const hasta = this.numero(e.hasta);
+        if (desde && l.precio < desde) return false;
+        if (hasta && l.precio > hasta) return false;
+        if (e.region.length && !e.region.includes(l.region)) return false;
+        if (e.comuna.length && !e.comuna.includes(l.comuna)) return false;
+        if (e.garantia.length && !e.garantia.some((i) => this.enTramo(l.garantia, this.tramosGarantia[i]))) return false;
+        return true;
+    },
+
+    // Comunas disponibles: si hay regiones marcadas, solo las de esas regiones.
+    comunaVisible(comuna, region) {
+        return !this.extra.region.length || this.extra.region.includes(region);
+    },
+
+    // Tramos de garantía calculados desde los datos (terciles redondeados a 00.000), no fijos:
+    // el porcentaje de garantía será configurable y puede variar por remate.
+    get tramosGarantia() {
+        const valores = this.remates.map((l) => l.garantia).filter(Boolean).sort((a, b) => a - b);
+        if (valores.length < 3) return [];
+        const redondear = (n) => Math.round(n / 500000) * 500000;
+        const c1 = redondear(valores[Math.floor(valores.length / 3)]);
+        const c2 = redondear(valores[Math.floor((valores.length * 2) / 3)]);
+        if (c1 >= c2) return [];
+        return [
+            { etiqueta: 'Hasta ' + clp(c1), min: 0, max: c1 },
+            { etiqueta: clp(c1 + 1) + ' a ' + clp(c2), min: c1 + 1, max: c2 },
+            { etiqueta: 'Más de ' + clp(c2), min: c2 + 1, max: Infinity },
+        ];
+    },
+
+    enTramo(valor, tramo) {
+        return !!tramo && valor >= tramo.min && valor <= tramo.max;
+    },
+
+    marcarExtra(nombre) {
+        this.visibles = 6;
+        this.ultimoFiltro = nombre;
+    },
+
     get filtrados() {
         const texto = this.q.trim().toLowerCase();
         const lista = this.remates.filter((l) =>
             (this.estado === 'Todos' || l.estado === this.estado) &&
             (this.ocupacion === 'Todas' || l.ocupacion === this.ocupacion) &&
-            (!texto || (l.direccion + ' ' + l.comuna + ' ' + l.region + ' ' + l.tipo).toLowerCase().includes(texto)));
+            (!texto || (l.direccion + ' ' + l.comuna + ' ' + l.region + ' ' + l.tipo).toLowerCase().includes(texto)) &&
+            this.cumpleExtra(l));
         const orden = this.orden;
         return lista.sort((a, b) => {
             if (orden === 'precio-asc') return a.precio - b.precio;
@@ -122,6 +184,7 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
         this.estado = 'Todos';
         this.ocupacion = 'Todas';
         this.q = '';
+        this.extra = { fecha: [], tipo: [], dorm: [], estac: false, bodega: false, desde: '', hasta: '', region: [], comuna: [], garantia: [] };
         this.visibles = 6;
         this.ultimoFiltro = null;
     },
@@ -144,7 +207,8 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
 
     get sugerencia() {
         if (this.ultimoFiltro === 'texto') return 'La búsqueda “' + this.q + '” no coincide con ningún remate publicado.';
-        return 'El filtro por ' + (this.ultimoFiltro === 'ocupacion' ? 'ocupación' : 'estado del remate') + ' es el que más resultados descarta.';
+        const nombres = { ocupacion: 'ocupación', fecha: 'fecha de remate', tipo: 'tipo de propiedad', caracteristicas: 'características', precio: 'rango de precio', region: 'región', comuna: 'comuna', garantia: 'garantía requerida' };
+        return 'El filtro por ' + (nombres[this.ultimoFiltro] || 'estado del remate') + ' es el que más resultados descarta.';
     },
 
     get sugerenciaAccion() {
