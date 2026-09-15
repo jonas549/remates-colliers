@@ -272,7 +272,8 @@ aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox
     contador de «personas viendo» (quitado), lupa de la cabecera (lleva al buscador del listado).
   - A DECIDIR: idioma EN/ES (Bloque N) y exportar PDF (Bloque O); en T se ven pero no funcionan.
   - Pendiente de Jonas: qué filtros extra del listado entran.
-- Fotos de muestra: origen desconocido → se reemplazan por imágenes de licencia libre.
+- Fotos de muestra: las del prototipo eran de origen desconocido; reemplazadas por fotos Unsplash License
+  (créditos en public/img/demo/CREDITOS.md). Las originales siguen en el historial de git del primer push.
 
 ### Pendientes con el cliente (no bloquean; se anotan y se sigue)
 
