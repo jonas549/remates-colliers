@@ -84,7 +84,7 @@ export const PANTALLAS = {
     },
     listado: {
         original: 'colliers-subastas-usuario-main/index.dc.html',
-        laravel: '/remates',
+        laravel: '/',
         alto: 900,
         variantes: [
             { id: 'visitante', original: 'colliers-subastas-invitado-main/index.dc.html' },

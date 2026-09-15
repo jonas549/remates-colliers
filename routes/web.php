@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Route;
  * Bloque T: rutas definitivas con vistas alimentadas por datos de ejemplo (App\Demo).
  * Las rutas aún sin pantalla responden con un aviso temporal.
  *
- * Durante el Bloque T la raíz es el índice de revisión y el listado vive en /remates.
- * Al cerrar T, "/" pasa a ser el listado y el índice se elimina.
+ * La raíz es el listado de remates; /remates redirige a "/".
  */
 
 // Clave de acceso al sandbox (ver App\Http\Middleware\AccesoSandbox).
@@ -25,13 +24,17 @@ $pendiente = fn (string $nombre) => fn () => response('Pantalla pendiente del Bl
 // ?sesion= (visitante | registrado | en-revision | aprobada) simula la sesión hasta el Bloque D.
 $sesionDemo = fn () => in_array(request('sesion'), ['registrado', 'en-revision', 'aprobada'], true) ? request('sesion') : 'visitante';
 
-Route::get('/', fn () => view('revision', ['grupos' => PantallasRevision::todas()]))->name('revision');
-
-Route::get('/remates', fn () => view('remates.index', [
+Route::get('/', fn () => view('remates.index', [
     'remates' => RematesDemo::todos(),
     'hero' => RematesDemo::buscar('militares'),
     'sesion' => $sesionDemo(),
 ]))->name('remates.index');
+Route::permanentRedirect('/remates', '/');
+
+// Índice de pantallas para revisar variantes: solo en el entorno local, nunca en el servidor.
+if (app()->isLocal()) {
+    Route::get('/revision', fn () => view('revision', ['grupos' => PantallasRevision::todas()]))->name('revision');
+}
 // Demo: 'apoquindo' es el remate en vivo; cualquier otro muestra la ficha de 'militares' (próximo).
 Route::get('/remates/{remate}', fn (string $remate) => view('remates.show', [
     'r' => DetalleDemo::para($remate) ?? DetalleDemo::para('militares'),

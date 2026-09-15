@@ -28,11 +28,11 @@ class PantallasRevision
             [
                 'grupo' => 'Sitio público',
                 'pantallas' => [
-                    ['nombre' => 'Listado de remates', 'ruta' => '/remates', 'estado' => 'terminada', 'nota' => 'Probar filtros, búsqueda, orden, vista tabla (solo escritorio), cargar más y guardar. En tablet/móvil los filtros se abren como panel lateral.', 'variantes' => [
-                        'Visitante' => '/remates',
-                        'Registrado (sin garantía)' => '/remates?sesion=registrado',
-                        'Garantía en revisión' => '/remates?sesion=en-revision',
-                        'Garantía aprobada' => '/remates?sesion=aprobada',
+                    ['nombre' => 'Listado de remates', 'ruta' => '/', 'estado' => 'terminada', 'nota' => 'Probar filtros, búsqueda, orden, vista tabla (solo escritorio), cargar más y guardar. En tablet/móvil los filtros se abren como panel lateral.', 'variantes' => [
+                        'Visitante' => '/',
+                        'Registrado (sin garantía)' => '/?sesion=registrado',
+                        'Garantía en revisión' => '/?sesion=en-revision',
+                        'Garantía aprobada' => '/?sesion=aprobada',
                     ]],
                     ['nombre' => 'Detalle de remate próximo', 'ruta' => '/remates/militares', 'estado' => 'terminada', 'nota' => 'Mapa con OpenStreetMap en gris claro (el prototipo usaba Esri, servicio deprecado).', 'variantes' => [
                         'Visitante' => '/remates/militares',

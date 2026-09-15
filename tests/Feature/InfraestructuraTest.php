@@ -102,6 +102,14 @@ class InfraestructuraTest extends TestCase
         $this->get('/esta-pagina-no-existe')->assertNotFound()->assertSee('No encontramos esta página');
     }
 
+    public function test_la_raiz_es_el_listado_y_remates_redirige(): void
+    {
+        config(['colliers.acceso.clave' => null]);
+
+        $this->get('/')->assertOk()->assertSee('Cargar más remates');
+        $this->get('/remates')->assertRedirect('/')->assertStatus(301);
+    }
+
     public function test_programador_incluye_latido_y_cola(): void
     {
         $this->artisan('schedule:list')

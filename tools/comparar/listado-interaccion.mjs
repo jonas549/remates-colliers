@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 const navegador = await chromium.launch({ channel: 'chrome' });
 const casos = {
     original: 'http://127.0.0.1:8081/colliers-subastas-invitado-main/index.dc.html',
-    laravel: 'http://127.0.0.1:8000/remates',
+    laravel: 'http://127.0.0.1:8000/',
 };
 const titulos = (p) => p.locator('h3 a').allTextContents();
 for (const [nombre, url] of Object.entries(casos)) {
