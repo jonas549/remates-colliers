@@ -56,6 +56,16 @@ async function capturar(navegador, url, ancho, alto, variante, esOriginal) {
     const pagina = await contexto.newPage();
     await pagina.clock.setFixedTime(HORA_FIJA);
 
+    if (esOriginal) {
+        // Las fotos de muestra del prototipo pesan hasta 6000px y agotan la memoria al decodificarse.
+        // Se sirven al original las mismas copias reducidas que usa la aplicación (public/img/demo),
+        // así ambos lados comparan exactamente los mismos píxeles.
+        await pagina.route(/\/assets\/prop-[a-z]+\.jpg$/, (ruta) => {
+            const archivo = path.resolve('public/img/demo', path.basename(new URL(ruta.request().url()).pathname));
+            return ruta.fulfill({ path: archivo, contentType: 'image/jpeg' });
+        });
+    }
+
     if (esOriginal && variante.props) {
         await pagina.route(url, async (ruta) => {
             const respuesta = await ruta.fetch();
