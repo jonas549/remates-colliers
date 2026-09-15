@@ -46,7 +46,7 @@
                             <tr>
                                 <td>
                                     <div class="admin-tabla__principal">{{ $s['direccion'] }}</div>
-                                    <div class="admin-tabla__secundario">{{ $s['folio'] }} · {{ $s['comuna'] }}</div>
+                                    <div class="admin-tabla__secundario"><span>{{ $s['folio'] }}</span> · <span>{{ $s['comuna'] }}</span></div>
                                 </td>
                                 <td><span class="badge-admin badge-admin--{{ $s['tono'] }}">{{ $s['estado'] }}</span></td>
                                 <td class="es-num">{{ $s['base'] }}</td>

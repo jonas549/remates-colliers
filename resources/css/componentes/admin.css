@@ -46,6 +46,7 @@
     align-items: center; gap: 14px; padding: 0 12px 0 20px;
   }
   .admin-barra__logo { height: 32px; width: auto; display: block; }
+  .admin-barra > a { display: block; padding: 6px 0; margin: -6px 0; }
   .admin-barra__seccion { font-size: 11px; letter-spacing: 0.14em; font-weight: 700; color: #c9d5ec; border-left: 1px solid rgba(255, 255, 255, .25); padding-left: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .admin-barra__menu {
     margin-left: auto; flex: none; width: 44px; height: 44px; border: 1px solid rgba(255, 255, 255, .35);
@@ -54,9 +55,10 @@
 
   .admin-lateral {
     position: fixed; top: 0; left: 0; bottom: 0; z-index: 80; min-height: 0; width: min(300px, 86vw);
-    overflow-y: auto; transform: translateX(-100%); transition: transform .2s ease-out; box-shadow: 0 0 40px rgba(22, 38, 90, .35);
+    overflow-y: auto; transform: translateX(-100%); transition: transform .2s ease-out, visibility .2s;
+    visibility: hidden;
   }
-  .admin-lateral.es-abierta { transform: none; }
+  .admin-lateral.es-abierta { transform: none; visibility: visible; box-shadow: 0 0 40px rgba(22, 38, 90, .35); }
   .admin-velo.es-visible { display: block; position: fixed; inset: 0; z-index: 70; background: rgba(22, 38, 90, .45); }
   .admin-lateral__cerrar {
     position: absolute; top: 16px; right: 12px; width: 44px; height: 44px; border: 1px solid rgba(255, 255, 255, .35);
