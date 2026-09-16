@@ -21,6 +21,8 @@ diseño. Panel de administración propio, subdominio aparte, plazo comprometido 
 
 | Archivo / carpeta | Dónde | Qué es |
 |---|---|---|
+| `docs/BACKLOG.md` | Repo | **Registro vivo del avance**: bloques, tareas marcables, orden y decisiones pendientes |
+| `docs/PROGRESO.md` | Repo | Punto de retome de la última jornada |
 | `Reunión Colliers Fase 3 - Preguntas clave .docx` | Local, **fuera del repo** | Acta del 18/08 con las reglas de negocio confirmadas |
 | Acta del 25/08 | Pendiente de subir | Aplicación a medida sin WordPress, panel propio, subdominio, 30 días, diseño de Ángel |
 | `colliers-subastas-invitado-main/` | Local, **fuera del repo** | Prototipo de la vista de invitado |
@@ -214,6 +216,17 @@ despliega el cron del servidor en 5 minutos.
 Desarrollas en local → Jonas revisa en local (Laragon, `http://remates-colliers.test`) → Jonas
 aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox.
 
+### Registro vivo del avance: `docs/BACKLOG.md`
+
+**Contrato de trabajo:** cada vez que se termina algo, se actualiza `docs/BACKLOG.md` **en el mismo
+commit**: casilla de la tarea, conteo y estado en la tabla resumen, «Dónde vamos» y decisiones
+pendientes. Jonas tiene que poder abrir ese archivo y saber dónde vamos sin preguntar.
+
+- `[x]` solo con la tarea verificada ejecutándola (ver §6, «Sobre verificación»).
+- Si `docs/BACKLOG.md` y los §8 o §10 de este archivo no coinciden, **manda `docs/BACKLOG.md`**.
+- `docs/PROGRESO.md` es el punto de retome de la jornada (qué se hizo, qué sigue mañana); se actualiza al
+  cerrar cada día.
+
 ---
 
 ## 5. El punto crítico del proyecto
@@ -315,6 +328,9 @@ aprueba → push a `main` → el cron despliega → Jonas verifica en el sandbox
 
 ## 8. Backlog
 
+> **El estado vivo está en `docs/BACKLOG.md`** (ver §4, «Registro vivo del avance»). Esta sección es la
+> definición original; si no coincide, manda `docs/BACKLOG.md`.
+>
 > El Bloque A (entorno, servidor, deploy, cron, repositorio) **ya está completo**.
 
 ### BLOQUE T — Traspaso del diseño a Blade (1:1 en escritorio)
@@ -442,6 +458,8 @@ Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo más t
 ---
 
 ## 10. Registro de avance
+
+> Resumen histórico. El estado al día está en `docs/BACKLOG.md`.
 
 | Bloque | Estado | Fecha | Notas |
 |---|---|---|---|

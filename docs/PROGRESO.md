@@ -1,19 +1,32 @@
 # PROGRESO — Remates Colliers · Fase 3
 
-> Punto de retome. Última actualización: **2026-09-15, cierre de jornada.**
-> Leer junto con `CLAUDE.md` (reglas, decisiones y backlog). Este archivo dice **dónde quedamos**.
+> Punto de retome. Última actualización: **2026-09-16, cierre de jornada.**
+> Leer junto con `CLAUDE.md` (reglas) y **`docs/BACKLOG.md` (estado vivo de cada tarea)**.
+> Este archivo dice **dónde quedamos**.
 
 ---
 
 ## 0. Para retomar en 30 segundos
 
-- Rama `main`, **17 commits locales por delante de `origin/main`. Nada de eso está en GitHub.**
+### 16/09
+
+- **Push hecho** con aprobación de Jonas: `origin/main` = `ce52a89` (todo T + B-infra en GitHub).
+  Los commits posteriores (BACKLOG) vuelven a estar solo en local hasta el próximo visto bueno.
+- Corrida de control: filtros 42/42, listado en escritorio 0,297–0,331 %, tablet/móvil sin desborde ni
+  táctiles < 44 px, `php artisan test` 13/13. Única diferencia nueva anotada: Grilla/Tabla a 760 px (§1.1).
+- **Arnés liviano:** ya era secuencial (un Chrome, una pestaña). Correrlo **un proceso por ancho**
+  (`--anchos N`) y por partes: escritorio primero, móvil después. Pico medido: Chrome 2,2 GB,
+  Node 309 MB, PHP 207 MB → hacen falta ~2,7 GB libres.
+- Se entregaron a Jonas los pasos numerados para conectar el servidor (pausar cron de deploy, clone con
+  `github-colliers`, `.env`, `APP_KEY` con respaldo, comandos, bloque del script, cron de `schedule:run`,
+  Document Root, `colliers:diagnostico`). **Falta que Jonas los ejecute y reporte la salida.**
+- Creado `docs/BACKLOG.md` como registro vivo; regla en `CLAUDE.md` §4: se actualiza en el mismo commit.
+- **Mañana, en orden:** (1) revisar la salida del servidor que traiga Jonas; (2) hook pre-commit de
+  assets (`public/build`), pospuesto por Jonas; (3) Bloque C.
+
+### 15/09 (histórico)
+
 - Bloque T **cerrado y verificado**. B-infra **terminado y probado** (13/13 pruebas).
-- **El arnés completo YA se corrió el 15/09** (todas las pantallas + filtros + recorridos), con todo en
-  verde (detalle en §1). Jonas lo quiere correr mañana: es una repetición de control, no hay nada
-  pendiente de verificar.
-- **Siguiente acción: esperar el visto bueno de Jonas para el push.** No hacer push sin su aprobación
-  explícita en el mensaje del día.
 - Antes de correr el arnés, **avisar a Jonas para que libere memoria** (el equipo se queda sin RAM).
 
 ---
