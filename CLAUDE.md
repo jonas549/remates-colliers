@@ -63,6 +63,11 @@ porcentaje de diferencia por ancho. En anchos < 1120 comprueba además: sin scro
 táctiles ≥ 44 px. Usa el Chrome instalado (`channel: 'chrome'`). Una pantalla no se da por terminada
 sin correr el arnés.
 
+- Pantallas protegidas: `sesion: 'admin' | 'postor'` en `pantallas.mjs`; la aplicación entra antes por
+  `/revision/entrar/{rol}` (solo local). Requiere la base local con `php artisan migrate:fresh --seed`.
+- Pantallas sin original en el prototipo: `node tools/comparar/sin-original.mjs` (usabilidad + capturas).
+- Para no quedarse sin memoria: un proceso por ancho (`--anchos N`), escritorio primero y móvil después.
+
 ---
 
 ## 3. Reglas de negocio confirmadas por el cliente
@@ -298,6 +303,16 @@ El servidor de prueba usa la configuración en caché (como el servidor real): c
 ---
 
 ## 7. Decisiones
+
+### Tomadas (16/09)
+
+- Pantallas de autenticación sin diseño (acceso de administradores, recuperar/restablecer/cambiar/confirmar
+  contraseña, verificar correo, sesiones activas): **reutilizan el diseño del Login** (`x-acceso.marco`).
+- Bloqueo por intentos fallidos: 5 intentos (diseño) y **15 minutos** por defecto; ambos en `configuraciones`.
+- El sandbox corre con `APP_ENV=staging`; `colliers:remate-demo` se niega en `production` y el seeder de
+  desarrollo solo corre en `local`/`testing`.
+- Supuestos vigentes de C y J (garantía por remate, horario fijo, cierre anticipado, «Postor #N»…): ver
+  «Decisiones pendientes» en `docs/BACKLOG.md`.
 
 ### Tomadas (15/09)
 

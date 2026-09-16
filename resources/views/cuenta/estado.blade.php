@@ -3,8 +3,11 @@
 
         <x-tramite.cabecera etiqueta="MI CUENTA" :ancho="1180" class="tramite-cabecera--cuenta">
             <a href="{{ route('remates.index') }}" class="cuenta__nav-remates">Remates</a>
-            <span class="cuenta__nav-usuario">María Paz González</span>
-            <a href="{{ route('login') }}" class="cuenta__nav-salir">Cerrar sesión</a>
+            <span class="cuenta__nav-usuario">{{ auth()->user()?->name }}</span>
+            <form method="POST" action="{{ route('logout') }}" class="formulario-en-linea">
+                @csrf
+                <button type="submit" class="boton-enlace cuenta__nav-salir">Cerrar sesión</button>
+            </form>
         </x-tramite.cabecera>
 
         <div class="cuenta__banda" style="background: {{ $estado['fondo'] }}">

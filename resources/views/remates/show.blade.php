@@ -19,7 +19,7 @@
         'aprobada' => ['tono' => 'verde', 'titulo' => 'Estás habilitado para pujar', 'texto' => 'Tu garantía fue aprobada para este remate. Podrás ingresar posturas cuando comience la transmisión.', 'cta' => 'Recordarme al comenzar'],
     ][$sesion];
     $ctaHref = match ($sesion) {
-        'visitante' => route('registro'),
+        'visitante' => route('register'),
         'aprobada' => route('sala.show', $r['id']),
         default => route('cuenta.estado'),
     };
@@ -244,7 +244,7 @@
                                     <a href="{{ route('sala.show', $r['id']) }}" class="detalle-remate__secundario">Ya tengo garantía aprobada: entrar a la sala</a>
                                 @endif
                                 <div class="detalle-remate__enlaces">
-                                    <a href="{{ $sesion === 'visitante' ? route('registro') : route('cuenta.estado') }}">Cómo constituir la garantía</a>
+                                    <a href="{{ $sesion === 'visitante' ? route('register') : route('cuenta.estado') }}">Cómo constituir la garantía</a>
                                     <span>|</span>
                                     <a href="#">Contactar al ejecutivo</a>
                                 </div>

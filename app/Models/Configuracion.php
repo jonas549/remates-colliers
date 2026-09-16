@@ -14,13 +14,15 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable(['clave', 'valor', 'tipo', 'grupo', 'descripcion'])]
 class Configuracion extends Model
 {
-    /** Solo valores confirmados en el acta o en decisiones tomadas (CLAUDE.md §3 y §7). */
+    /** Solo valores confirmados en el acta, en el diseño o en decisiones de Jonas (CLAUDE.md §3 y §7). */
     public const DEFECTOS = [
         'incremento_minimo' => ['valor' => '100000', 'tipo' => 'entero', 'grupo' => 'pujas', 'descripcion' => 'Incremento mínimo global entre pujas, en pesos'],
         'pujas_rapidas' => ['valor' => '[100000,500000,1000000]', 'tipo' => 'json', 'grupo' => 'pujas', 'descripcion' => 'Montos de los botones de puja rápida, en pesos'],
         'margen_liquidacion_segundos' => ['valor' => '2', 'tipo' => 'entero', 'grupo' => 'pujas', 'descripcion' => 'Segundos después del cierre para terminar las pujas recibidas antes de T'],
         'porcentaje_garantia' => ['valor' => '10', 'tipo' => 'porcentaje', 'grupo' => 'garantias', 'descripcion' => 'Porcentaje de la garantía sobre el precio base del remate'],
-        'duracion_lote_minutos' => ['valor' => '30', 'tipo' => 'entero', 'grupo' => 'remates', 'descripcion' => 'Duración por defecto de cada lote (temporizador fijo, sin extensiones)'],
+        'login_intentos_maximos' => ['valor' => '5', 'tipo' => 'entero', 'grupo' => 'seguridad', 'descripcion' => 'Intentos fallidos de ingreso antes de bloquear la cuenta (diseño del Login)'],
+        'login_bloqueo_minutos' => ['valor' => '15', 'tipo' => 'entero', 'grupo' => 'seguridad', 'descripcion' => 'Minutos que dura el bloqueo por intentos fallidos (decisión del 16/09)'],
+        'duracion_lote_minutos' =>['valor' => '30', 'tipo' => 'entero', 'grupo' => 'remates', 'descripcion' => 'Duración por defecto de cada lote (temporizador fijo, sin extensiones)'],
     ];
 
     /** Crea las claves que faltan con su valor por defecto. Devuelve cuántas creó. Idempotente. */

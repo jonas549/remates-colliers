@@ -7,6 +7,7 @@
 // variantes: estados simulados. `props` sobrescribe los valores por defecto de data-props
 //            en el original; `query` se agrega a la URL de Laravel.
 // pasos:     selectores a los que se hace clic (en ambos lados) antes de capturar.
+// sesion:    rol con el que la aplicación entra antes de capturar (pantallas protegidas, Bloque D).
 // mascaras:  selectores que se tapan en ambas capturas (contenido que no puede coincidir:
 //            iframes de YouTube, mosaicos de mapa).
 
@@ -17,6 +18,7 @@ export const PANTALLAS = {
     'admin-reportes': {
         original: 'colliers-subastas-usuario-main/Admin Reportes.dc.html',
         laravel: '/admin/reportes',
+        sesion: 'admin',
         alto: 1050,
         variantes: [{ id: 'base' }],
         mascaras: [],
@@ -24,6 +26,7 @@ export const PANTALLAS = {
     'admin-subastas': {
         original: 'colliers-subastas-usuario-main/Admin Subastas.dc.html',
         laravel: '/admin/subastas',
+        sesion: 'admin',
         alto: 900,
         variantes: [
             { id: 'base' },
@@ -36,10 +39,11 @@ export const PANTALLAS = {
     'admin-postores': {
         original: 'colliers-subastas-usuario-main/Admin Postores.dc.html',
         laravel: '/admin/postores',
+        sesion: 'admin',
         alto: 900,
         variantes: [
             { id: 'base' },
-            { id: 'ficha', pasos: ['button:has-text("Ficha")'] },
+            { id: 'ficha', pasos: ['button:has-text("Ficha"):visible'] },
             { id: 'filtro-revision', pasos: ['button:has-text("EN REVISIÓN")'] },
         ],
         mascaras: [],
@@ -47,6 +51,7 @@ export const PANTALLAS = {
     'admin-dashboard': {
         original: 'colliers-subastas-usuario-main/Admin Dashboard.dc.html',
         laravel: '/admin',
+        sesion: 'admin',
         alto: 1000,
         variantes: [{ id: 'base' }],
         mascaras: [],
@@ -97,6 +102,7 @@ export const PANTALLAS = {
     cuenta: {
         original: 'colliers-subastas-usuario-main/Estado Cuenta.dc.html',
         laravel: '/mi-cuenta',
+        sesion: 'postor',
         alto: 900,
         variantes: [
             { id: 'aprobada', props: { estado: 'Aprobada' }, query: 'estado=aprobada' },

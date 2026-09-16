@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Listeners\RegistroDeAccesos;
 use App\Subastas\Difusion\Emisor;
 use App\Subastas\Difusion\EmisorJsonEstatico;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
@@ -29,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::subscribe(RegistroDeAccesos::class);
+
         RateLimiter::for('pujas', fn (Request $request) => Limit::perMinute(config('colliers.limites.pujas_por_minuto'))
             ->by('puja:' . ($request->user()?->id ?? $request->ip())));
 

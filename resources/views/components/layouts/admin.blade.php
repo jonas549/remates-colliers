@@ -26,9 +26,12 @@
                 @endforeach
             </div>
             <div class="admin-lateral__pie">
-                <div class="admin-lateral__usuario">Carolina Méndez</div>
-                <div class="admin-lateral__rol">Administradora</div>
-                <a href="{{ route('login') }}" class="admin-lateral__salir">Cerrar sesión</a>
+                <div class="admin-lateral__usuario">{{ auth()->user()?->name }}</div>
+                <div class="admin-lateral__rol">{{ auth()->user()?->rol === \App\Models\User::ROL_MARTILLERO ? 'Martillero/a' : 'Administración' }}</div>
+                <form method="POST" action="{{ route('logout') }}" class="formulario-en-linea">
+                    @csrf
+                    <button type="submit" class="boton-enlace admin-lateral__salir">Cerrar sesión</button>
+                </form>
             </div>
         </div>
 

@@ -1,7 +1,8 @@
 // Formulario de ingreso: botón habilitado solo con ambos campos, mostrar/ocultar clave
 // y aviso de error al intentar ingresar con campos vacíos (comportamiento del prototipo).
-export default () => ({
-    usuario: '',
+// `usuarioInicial`: lo escrito antes de un error del servidor, para no borrarlo.
+export default (usuarioInicial = '') => ({
+    usuario: usuarioInicial,
     clave: '',
     ver: false,
     recordar: true,

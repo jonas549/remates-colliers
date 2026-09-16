@@ -137,6 +137,11 @@
   .cuenta__cuerpo { grid-template-columns: minmax(0, 1fr); gap: 48px; }
 }
 
+/* Tablet y móvil: «Cerrar sesión» es un botón (va por POST); área táctil de 44 px sin mover el texto. */
+@media (max-width: 1119.98px) {
+  .cuenta__nav-salir { padding-block: 13px; margin-block: -13px; }
+}
+
 @media (max-width: 759.98px) {
   .cuenta__pasos { display: flex; flex-direction: column; }
   .cuenta__paso,

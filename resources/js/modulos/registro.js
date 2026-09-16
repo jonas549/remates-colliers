@@ -2,10 +2,11 @@ import { rutValido } from './rut';
 
 // Formulario de registro de postor: tipo de persona, RUT con dígito verificador,
 // documentos adjuntos y aceptación de bases (habilita el envío).
-export default () => ({
-    tipo: 'natural',
-    rut: '',
-    acepta: false,
+// Los valores iniciales vienen del servidor cuando el envío volvió con errores.
+export default (tipoInicial = 'natural', rutInicial = '', aceptaInicial = false) => ({
+    tipo: tipoInicial,
+    rut: rutInicial,
+    acepta: aceptaInicial,
     cargados: {},
 
     get juridica() {

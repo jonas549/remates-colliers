@@ -9,7 +9,7 @@
         'aprobada' => ['clase' => 'aprobada', 'msg' => 'Garantía aprobada para Los Militares 5620, Depto. 703. Puedes pujar cuando comience el remate.', 'accion' => 'Ir al remate'],
     ][$sesion] ?? null;
     $heroCta = match ($sesion) {
-        'visitante' => ['texto' => 'Crear cuenta para pujar', 'href' => route('registro')],
+        'visitante' => ['texto' => 'Crear cuenta para pujar', 'href' => route('register')],
         'aprobada' => ['texto' => 'Ir al remate', 'href' => route('sala.show', $hero['id'])],
         default => ['texto' => 'Constituir la garantía', 'href' => route('cuenta.estado')],
     };

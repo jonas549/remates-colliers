@@ -32,7 +32,8 @@
 
         <div class="registro__cuerpo">
 
-            <form class="registro__formulario" method="GET" action="{{ route('cuenta.estado') }}" x-data="registro">
+            <form class="registro__formulario" method="POST" action="{{ route('register.store') }}" enctype="multipart/form-data" x-data="registro(@js(old('tipo', 'natural')), @js(old('rut', '')), @js((bool) old('acepta')))">
+                @csrf
                 <div class="registro__tipo">
                     <button type="button" class="registro__tipo-opcion" :class="{ 'es-activa': !juridica }" @click="tipo = 'natural'">Persona natural</button>
                     <button type="button" class="registro__tipo-opcion" :class="{ 'es-activa': juridica }" @click="tipo = 'juridica'">Persona jurídica</button>
@@ -41,18 +42,18 @@
 
                 <h2 class="registro__seccion"><span class="registro__seccion-num">01</span> Datos personales</h2>
                 <div class="registro__grilla">
-                    <label class="registro__campo"><span class="registro__etiqueta">NOMBRES</span><input name="nombres" placeholder="María Paz" class="registro__input" autocomplete="given-name"></label>
-                    <label class="registro__campo"><span class="registro__etiqueta">APELLIDOS</span><input name="apellidos" placeholder="González Soto" class="registro__input" autocomplete="family-name"></label>
-                    <label class="registro__campo"><span class="registro__etiqueta">RUT</span><input name="rut" x-model="rut" placeholder="12.345.678-9" class="registro__input" :class="{ 'es-invalido': estadoRut === false }"><span class="registro__ayuda" :class="{ 'es-invalido': estadoRut === false }" x-text="mensajeRut">Formato 12.345.678-9</span></label>
-                    <label class="registro__campo"><span class="registro__etiqueta">FECHA DE NACIMIENTO</span><input type="date" name="fecha_nacimiento" class="registro__input"></label>
-                    <label class="registro__campo"><span class="registro__etiqueta">NACIONALIDAD</span><input name="nacionalidad" placeholder="Chilena" class="registro__input"></label>
+                    <label class="registro__campo"><span class="registro__etiqueta">NOMBRES</span><input name="nombres" placeholder="María Paz" value="{{ old('nombres') }}" class="registro__input" autocomplete="given-name">@error('nombres')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
+                    <label class="registro__campo"><span class="registro__etiqueta">APELLIDOS</span><input name="apellidos" placeholder="González Soto" value="{{ old('apellidos') }}" class="registro__input" autocomplete="family-name">@error('apellidos')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
+                    <label class="registro__campo"><span class="registro__etiqueta">RUT</span><input name="rut" x-model="rut" placeholder="12.345.678-9" class="registro__input" :class="{ 'es-invalido': estadoRut === false }">@error('rut')<span class="registro__ayuda es-invalido">{{ $message }}</span>@else<span class="registro__ayuda" :class="{ 'es-invalido': estadoRut === false }" x-text="mensajeRut">Formato 12.345.678-9</span>@enderror</label>
+                    <label class="registro__campo"><span class="registro__etiqueta">FECHA DE NACIMIENTO</span><input type="date" name="fecha_nacimiento" value="{{ old('fecha_nacimiento') }}" class="registro__input">@error('fecha_nacimiento')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
+                    <label class="registro__campo"><span class="registro__etiqueta">NACIONALIDAD</span><input name="nacionalidad" placeholder="Chilena" value="{{ old('nacionalidad') }}" class="registro__input">@error('nacionalidad')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
                     <label class="registro__campo"><span class="registro__etiqueta">ESTADO CIVIL</span>
                         <select name="estado_civil" class="registro__input">
-                            <option>Soltero(a)</option>
-                            <option>Casado(a)</option>
-                            <option>Divorciado(a)</option>
-                            <option>Viudo(a)</option>
-                        </select>
+                            <option @selected(old('estado_civil') === 'Soltero(a)')>Soltero(a)</option>
+                            <option @selected(old('estado_civil') === 'Casado(a)')>Casado(a)</option>
+                            <option @selected(old('estado_civil') === 'Divorciado(a)')>Divorciado(a)</option>
+                            <option @selected(old('estado_civil') === 'Viudo(a)')>Viudo(a)</option>
+                        </select>@error('estado_civil')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
                     </label>
                 </div>
 
@@ -60,14 +61,14 @@
                     <div>
                         <h2 class="registro__seccion"><span class="registro__seccion-num">02</span> Datos de la empresa</h2>
                         <div class="registro__grilla">
-                            <label class="registro__campo"><span class="registro__etiqueta">RAZÓN SOCIAL</span><input name="razon_social" placeholder="Inversiones Andes SpA" class="registro__input"></label>
-                            <label class="registro__campo"><span class="registro__etiqueta">RUT DE LA EMPRESA</span><input name="rut_empresa" placeholder="76.543.210-K" class="registro__input"></label>
-                            <label class="registro__campo"><span class="registro__etiqueta">GIRO</span><input name="giro" placeholder="Inversiones inmobiliarias" class="registro__input"></label>
+                            <label class="registro__campo"><span class="registro__etiqueta">RAZÓN SOCIAL</span><input name="razon_social" placeholder="Inversiones Andes SpA" value="{{ old('razon_social') }}" class="registro__input">@error('razon_social')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
+                            <label class="registro__campo"><span class="registro__etiqueta">RUT DE LA EMPRESA</span><input name="rut_empresa" placeholder="76.543.210-K" value="{{ old('rut_empresa') }}" class="registro__input">@error('rut_empresa')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
+                            <label class="registro__campo"><span class="registro__etiqueta">GIRO</span><input name="giro" placeholder="Inversiones inmobiliarias" value="{{ old('giro') }}" class="registro__input">@error('giro')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
                             <label class="registro__campo"><span class="registro__etiqueta">CALIDAD EN QUE ACTÚA</span>
                                 <select name="calidad" class="registro__input">
-                                    <option>Representante legal</option>
-                                    <option>Mandatario con poder</option>
-                                </select>
+                                    <option @selected(old('calidad') === 'Representante legal')>Representante legal</option>
+                                    <option @selected(old('calidad') === 'Mandatario con poder')>Mandatario con poder</option>
+                                </select>@error('calidad')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
                             </label>
                         </div>
                     </div>
@@ -75,26 +76,26 @@
 
                 <h2 class="registro__seccion"><span class="registro__seccion-num" x-text="numero(2)">02</span> Contacto</h2>
                 <div class="registro__grilla">
-                    <label class="registro__campo"><span class="registro__etiqueta">CORREO ELECTRÓNICO</span><input type="email" name="email" placeholder="maria@correo.cl" class="registro__input" autocomplete="email"></label>
-                    <label class="registro__campo"><span class="registro__etiqueta">TELÉFONO</span><input name="telefono" placeholder="+56 9 1234 5678" class="registro__input" autocomplete="tel"></label>
-                    <label class="registro__campo"><span class="registro__etiqueta">DIRECCIÓN</span><input name="direccion" placeholder="Av. Providencia 1234, depto. 501" class="registro__input" autocomplete="street-address"></label>
-                    <label class="registro__campo"><span class="registro__etiqueta">COMUNA</span><input name="comuna" placeholder="Providencia" class="registro__input"></label>
+                    <label class="registro__campo"><span class="registro__etiqueta">CORREO ELECTRÓNICO</span><input type="email" name="email" placeholder="maria@correo.cl" value="{{ old('email') }}" class="registro__input" autocomplete="email">@error('email')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
+                    <label class="registro__campo"><span class="registro__etiqueta">TELÉFONO</span><input name="telefono" placeholder="+56 9 1234 5678" value="{{ old('telefono') }}" class="registro__input" autocomplete="tel">@error('telefono')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
+                    <label class="registro__campo"><span class="registro__etiqueta">DIRECCIÓN</span><input name="direccion" placeholder="Av. Providencia 1234, depto. 501" value="{{ old('direccion') }}" class="registro__input" autocomplete="street-address">@error('direccion')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
+                    <label class="registro__campo"><span class="registro__etiqueta">COMUNA</span><input name="comuna" placeholder="Providencia" value="{{ old('comuna') }}" class="registro__input">@error('comuna')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
                     <label class="registro__campo"><span class="registro__etiqueta">REGIÓN</span>
                         <select name="region" class="registro__input">
-                            <option>Metropolitana</option>
-                            <option>Valparaíso</option>
-                            <option>Biobío</option>
-                            <option>La Araucanía</option>
-                            <option>Otra</option>
-                        </select>
+                            <option @selected(old('region') === 'Metropolitana')>Metropolitana</option>
+                            <option @selected(old('region') === 'Valparaíso')>Valparaíso</option>
+                            <option @selected(old('region') === 'Biobío')>Biobío</option>
+                            <option @selected(old('region') === 'La Araucanía')>La Araucanía</option>
+                            <option @selected(old('region') === 'Otra')>Otra</option>
+                        </select>@error('region')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
                     </label>
                     <label class="registro__campo"><span class="registro__etiqueta">¿CÓMO NOS CONOCISTE?</span>
                         <select name="origen" class="registro__input">
-                            <option>Sitio de Colliers</option>
-                            <option>Publicación en prensa</option>
-                            <option>Redes sociales</option>
-                            <option>Recomendación</option>
-                        </select>
+                            <option @selected(old('origen') === 'Sitio de Colliers')>Sitio de Colliers</option>
+                            <option @selected(old('origen') === 'Publicación en prensa')>Publicación en prensa</option>
+                            <option @selected(old('origen') === 'Redes sociales')>Redes sociales</option>
+                            <option @selected(old('origen') === 'Recomendación')>Recomendación</option>
+                        </select>@error('origen')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
                     </label>
                 </div>
 
@@ -106,6 +107,7 @@
                             <div class="registro__documento-texto">
                                 <div class="registro__documento-nombre">{{ $doc['nombre'] }}</div>
                                 <div class="registro__documento-detalle" x-text="cargados['{{ $doc['id'] }}'] ? 'Archivo cargado · pendiente de revisión' : @js($doc['detalle'])">{{ $doc['detalle'] }}</div>
+                                @error('documentos.' . $doc['id'])<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
                             </div>
                             <input type="file" name="documentos[{{ $doc['id'] }}]" accept=".jpg,.jpeg,.png,.pdf" class="registro__documento-archivo" x-ref="archivo-{{ $doc['id'] }}" @change="archivoElegido('{{ $doc['id'] }}', $event)">
                             <button type="button" class="registro__documento-boton" :class="{ 'es-cargado': cargados['{{ $doc['id'] }}'] }" @click="elegirArchivo('{{ $doc['id'] }}')" x-text="cargados['{{ $doc['id'] }}'] ? 'Reemplazar' : 'Adjuntar'">Adjuntar</button>
@@ -115,7 +117,7 @@
 
                 <h2 class="registro__seccion"><span class="registro__seccion-num" x-text="numero(4)">04</span> Clave de acceso</h2>
                 <div class="registro__grilla">
-                    <label class="registro__campo"><span class="registro__etiqueta">CONTRASEÑA</span><input type="password" name="password" placeholder="Mínimo 8 caracteres" class="registro__input" autocomplete="new-password"></label>
+                    <label class="registro__campo"><span class="registro__etiqueta">CONTRASEÑA</span><input type="password" name="password" placeholder="Mínimo 8 caracteres" class="registro__input" autocomplete="new-password">@error('password')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
                     <label class="registro__campo"><span class="registro__etiqueta">REPETIR CONTRASEÑA</span><input type="password" name="password_confirmation" placeholder="Repite la contraseña" class="registro__input" autocomplete="new-password"></label>
                 </div>
 
@@ -125,9 +127,10 @@
                 </div>
 
                 <label class="registro__declaracion">
-                    <input type="checkbox" name="acepta" x-model="acepta">
+                    <input type="checkbox" name="acepta" value="1" x-model="acepta">
                     Declaro que los datos entregados son verídicos y acepto las bases generales de los remates, los términos de uso y la política de privacidad de Colliers.
                 </label>
+                @error('acepta')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
 
                 <div class="registro__acciones">
                     <button type="submit" class="registro__enviar" :class="{ 'es-listo': acepta }">Enviar solicitud de registro</button>

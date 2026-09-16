@@ -16,10 +16,10 @@ nota *(verifica Jonas en el sandbox)*.
 |---|---|---|---|
 | A | Entorno y servidor | **Completo** | 5/5 |
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
-| B | Base del proyecto Laravel | En progreso | 17/19 |
+| B | Base del proyecto Laravel | En progreso | 18/19 |
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 24/29 |
-| D | Autenticación y registro de postores | Pendiente | 0/7 |
+| D | Autenticación y registro de postores | En progreso | 10/12 |
 | K | Sala de puja conectada al motor real | Pendiente | 0/9 |
 | I | Remates y lotes + panel del martillero | Pendiente | 0/8 |
 | V | Configuración autoadministrable y SMTP | Pendiente | 0/10 |
@@ -44,9 +44,9 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
-**Dónde vamos:** T y C cerrados y desplegados (`4bd54c0`, verificado en el sandbox el 16/09). B completo salvo
-Fortify (va en D) y `maatwebsite/excel` (va en O). J núcleo hecho y probado en local con concurrencia real; faltan
-las verificaciones del sandbox (LiteSpeed, límites, espectadores) y repetir con MariaDB. **Siguiente: D.**
+**Dónde vamos:** T y C cerrados. B completo salvo `maatwebsite/excel` (va en O). J núcleo probado en local con
+concurrencia real; faltan las verificaciones del sandbox. D hecho en local; faltan el primer ingreso del admin en el
+sandbox y el SMTP real (V). **Siguiente: K** (sala de puja conectada al motor).
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -100,7 +100,7 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] `colliers:diagnostico` sin errores ni avisos, latido del cron a 38 s *(Jonas en el sandbox, 16/09)*
 - [x] Handler versionado en `public/.htaccess`: sitio carga tras el deploy de `4bd54c0` y `git status` limpio *(Jonas en el sandbox, 16/09)*
 - [x] Hook pre-commit (`.githooks/pre-commit`) que verifica que `public/build` corresponde a los assets del commit (5 casos probados, 16/09)
-- [ ] Fortify en español *(se hace en D)*
+- [x] Fortify en español (Bloque D, 16/09)
 - [ ] `maatwebsite/excel` para exportaciones *(se hace en O)*
 
 ## C — Modelo de datos · Completo
@@ -161,21 +161,31 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Vaciar la caché a mitad del remate no altera el estado (`optimize:clear` en PHPUnit, `cache:clear` en concurrencia)
 - [x] El ganador registrado coincide con la última puja válida (ráfagas y cierre disputado por 20 liquidaciones)
 - [x] Simulación de 20 postores en paralelo (Apache de Laragon + **MySQL 8.4**)
-- [ ] Concurrencia contra **MariaDB real** del sandbox, sobre el remate de demostración (decisión de Jonas, 16/09; requiere login HTTP del Bloque D)
+- [ ] Concurrencia contra **MariaDB real** del sandbox, sobre el remate de demostración (decisión de Jonas, 16/09; el login HTTP ya existe)
 - [x] Comando `colliers:remate-demo`: remate marcado `es_demostracion`, postores aprobados con garantía y claves aleatorias mostradas una vez; se niega con APP_ENV=production (16/09)
 - [ ] Sandbox con `APP_ENV=staging` para poder crear el remate de demostración *(Jonas en el servidor)*
 - [ ] Prueba del transporte en el sandbox con espectadores simulados, sobre el remate de demostración
 - [x] Bloqueo de deploy con remate en curso o por comenzar (30 min antes; `colliers:puede-desplegar` sale 75)
 
-## D — Autenticación y registro de postores · Pendiente
+## D — Autenticación y registro de postores · En progreso
 
-- [ ] Registro de postor; validación de RUT (formato y dígito verificador)
-- [ ] Verificación de correo
-- [ ] Login de postor y login de administrador, separados (Fortify, en español)
-- [ ] Recuperación y cambio de contraseña (propia y de otros desde el admin, cerrando sesiones)
-- [ ] Registro de accesos; bloqueo tras intentos fallidos con el contador en tabla, no en caché
-- [ ] Sesiones activas y cierre remoto
-- [ ] Middleware de rol y policies; ninguna consulta por id sin filtrar por dueño
+Verificado el 16/09: `AutenticacionTest` (17 pruebas; 70/70 en total). Arnés visual: Login, Registro y Estado de cuenta
+en **0 %** en escritorio (1120–1440), estos dos últimos ya con sesión real; admin 0,005–0,01 % (el rol dice
+«Administración» y no «Administradora»). Pantallas sin diseño: `tools/comparar/sin-original.mjs` sin desborde ni
+táctiles < 44 px en 375/760/1120/1440, y revisadas a ojo.
+
+- [x] Registro de postor (Fortify): campos del diseño, RUT con dígito verificador y único, empresa (una empresa = una cuenta), documentos JPG/PNG/PDF ≤ 5 MB en disco privado
+- [x] Verificación de correo; al verificar, la cuenta pasa de `registrado` a `en_revision`
+- [x] Login de postor (`/ingresar`, correo o RUT) y de administración (`/admin/ingresar`), separados; cada uno rechaza al otro rol
+- [x] Recuperación de contraseña por correo; cambio de la propia (exige la actual, cierra las demás sesiones); cambio obligatorio (`debe_cambiar_clave`)
+- [x] Restablecer la clave de otra cuenta desde administración (clave temporal mostrada una vez, cambio obligatorio, cierra sus sesiones) *(endpoint; el botón va en la ficha, Bloque G)*
+- [x] Registro de accesos (ingresos, fallos con motivo, bloqueos, salidas, registro, verificación, cambios de clave)
+- [x] Bloqueo tras 5 intentos durante 15 minutos con el contador en la tabla `users` (vaciar la caché no desbloquea); desbloqueo desde administración
+- [x] Sesiones activas y cierre remoto (una, o todas las demás); nunca se cierra una sesión ajena por id
+- [x] Middleware de rol (`/admin` para admin y martillero; acciones de cuentas solo admin) y policy de documentos; consultas filtradas por dueño en lo existente *(G y H lo extienden a postores y garantías)*
+- [x] Pantallas que el diseño no tiene, con el diseño del Login: acceso de administradores, recuperar y restablecer contraseña, verificar correo, cambiar contraseña, confirmar contraseña, sesiones activas
+- [ ] En el sandbox: el primer administrador entra por `/admin/ingresar` y cambia su clave temporal *(Jonas en el sandbox)*
+- [ ] Correos reales de verificación y recuperación: hoy `MAIL_MAILER=log` (el enlace queda en `storage/logs`); SMTP en el Bloque V
 
 ## K — Sala de puja conectada al motor real · Pendiente
 
@@ -318,6 +328,13 @@ Se completan a medida que las pantallas lo pidan.
 ---
 
 ## Decisiones pendientes
+
+### Tomadas por Jonas
+
+- 16/09: las pantallas de autenticación que el diseño no tiene reutilizan el diseño del Login.
+- 16/09: bloqueo por intentos fallidos de 15 minutos por defecto (5 intentos, según el diseño); editable en V.
+- 16/09: el JSON público de estado de remates no pasa por la clave del sandbox (las subastas son públicas).
+- 16/09: la concurrencia contra MariaDB se prueba en el sandbox sobre el remate de demostración.
 
 ### De Jonas
 

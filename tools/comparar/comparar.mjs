@@ -77,6 +77,15 @@ async function capturar(navegador, url, ancho, alto, variante, esOriginal) {
         });
     }
 
+    // Pantallas protegidas (Bloque D): la aplicación entra primero como el usuario del seeder de ese rol
+    // (ruta /revision/entrar, que solo existe en local). Requiere `php artisan migrate:fresh --seed`.
+    if (!esOriginal && pantalla.sesion) {
+        const entrada = await pagina.goto(LARAVEL_URL + '/revision/entrar/' + pantalla.sesion, { waitUntil: 'load', timeout: 60000 });
+        if (!entrada || entrada.status() >= 400) {
+            throw new Error(`No se pudo entrar como ${pantalla.sesion}: corre php artisan migrate:fresh --seed (APP_ENV=local).`);
+        }
+    }
+
     // 'load' y no 'networkidle': el iframe de YouTube mantiene conexiones abiertas indefinidamente.
     await pagina.goto(url, { waitUntil: 'load', timeout: 60000 });
     await pagina.waitForTimeout(800);

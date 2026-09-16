@@ -89,8 +89,12 @@ class InfraestructuraTest extends TestCase
         $respuesta = $this->post('/acceso', ['clave' => 'clave-sandbox']);
         $respuesta->assertRedirect(url('/admin'))->assertCookie(AccesoSandbox::COOKIE);
 
+        // Con la clave del sandbox se pasa al sitio; el panel además exige sesión (Bloque D).
         $this->withCookie(AccesoSandbox::COOKIE, AccesoSandbox::huella('clave-sandbox'))
             ->get('/admin')
+            ->assertRedirect(route('admin.ingresar'));
+        $this->withCookie(AccesoSandbox::COOKIE, AccesoSandbox::huella('clave-sandbox'))
+            ->get('/admin/ingresar')
             ->assertOk()
             ->assertHeader('X-Robots-Tag', 'noindex, nofollow');
     }

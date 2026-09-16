@@ -54,7 +54,7 @@ class DesarrolloSeeder extends Seeder
     private function personal(): void
     {
         $this->usuarios['admin'] = User::create([
-            'name' => 'Administrador Local', 'email' => 'admin@colliers.test', 'password' => 'colliers-local-2026',
+            'name' => 'Carolina Méndez', 'email' => 'admin@colliers.test', 'password' => 'colliers-local-2026',
             'rol' => User::ROL_ADMIN, 'estado' => User::ESTADO_ACTIVO,
         ]);
         foreach (['M. Ossandón' => 'mossandon', 'C. Vergara' => 'cvergara', 'R. Fuentes' => 'rfuentes'] as $nombre => $usuario) {
@@ -81,10 +81,11 @@ class DesarrolloSeeder extends Seeder
 
         foreach ($filas as [$clave, $nombres, $apellidos, $cuerpo, $correo, $telefono, $estado, $empresa]) {
             $user = User::create([
-                'name' => $empresa ? $empresa[1] : "{$nombres} {$apellidos}", 'email' => $correo,
+                'name' => $empresa ? $empresa[1] : trim($nombres . ' ' . strtok($apellidos, ' ')), 'email' => $correo,
                 'password' => 'colliers-local-2026', 'rol' => User::ROL_POSTOR, 'estado' => User::ESTADO_ACTIVO,
-                'email_verified_at' => $this->ahora->subDays(20),
             ]);
+            // No es asignable en masa: se fuerza (los postores de ejemplo ya confirmaron su correo).
+            $user->forceFill(['email_verified_at' => $this->ahora->subDays(20)])->save();
             $empresaModelo = $empresa ? Empresa::create([
                 'rut' => $empresa[0] . Rut::digitoVerificador($empresa[0]), 'razon_social' => $empresa[1], 'giro' => $empresa[2],
             ]) : null;

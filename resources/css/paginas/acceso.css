@@ -212,7 +212,8 @@
    agranda la zona que recibe el toque y el margen negativo devuelve el espacio que ocupaba. */
 @media (max-width: 1119.98px) {
   .acceso__olvide,
-  .acceso__contacto a { display: inline-block; padding: 12px 0; margin: -12px 0; }
+  .acceso__contacto a,
+  .acceso__contacto button { display: inline-block; padding: 12px 0; margin: -12px 0; }
   .acceso__recordar { padding: 11px 0; margin: -11px 0; }
   .acceso__ver-clave { padding: 14px 4px; bottom: 6px; }
   .acceso__cabecera a { display: block; width: fit-content; padding: 4px 0; margin: -4px 0; }
