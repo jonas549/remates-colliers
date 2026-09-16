@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Configuracion;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
@@ -33,6 +34,7 @@ class Instalar extends Command
         $this->carpetas();
         $this->enlaceStorage();
         $this->primerAdministrador();
+        $this->configuracionPorDefecto();
 
         $this->info('Instalación completa.');
 
@@ -61,6 +63,19 @@ class Instalar extends Command
         } catch (\Throwable $e) {
             $this->warn('  ! No se pudo crear public/storage: ' . $e->getMessage());
         }
+    }
+
+    /** Siembra solo las claves que faltan: nunca pisa un valor que un administrador ya cambió. */
+    private function configuracionPorDefecto(): void
+    {
+        if (! Schema::hasTable('configuraciones')) {
+            $this->warn('  ! Falta la tabla configuraciones; ejecuta migrate');
+
+            return;
+        }
+
+        $creadas = Configuracion::sembrarDefectos();
+        $this->line($creadas ? "  ✓ Configuración por defecto: {$creadas} valor(es) nuevo(s)" : '  ✓ Configuración por defecto ya presente');
     }
 
     private function primerAdministrador(): void

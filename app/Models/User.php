@@ -7,6 +7,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -42,5 +44,20 @@ class User extends Authenticatable
     public function esAdmin(): bool
     {
         return $this->rol === self::ROL_ADMIN;
+    }
+
+    public function postor(): HasOne
+    {
+        return $this->hasOne(Postor::class);
+    }
+
+    public function garantias(): HasMany
+    {
+        return $this->hasMany(Garantia::class);
+    }
+
+    public function pujas(): HasMany
+    {
+        return $this->hasMany(Puja::class);
     }
 }

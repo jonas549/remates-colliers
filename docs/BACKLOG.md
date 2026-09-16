@@ -17,7 +17,7 @@ nota *(verifica Jonas en el sandbox)*.
 | A | Entorno y servidor | **Completo** | 5/5 |
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
 | B | Base del proyecto Laravel | En progreso | 15/19 |
-| C | Modelo de datos | Pendiente | 0/11 |
+| C | Modelo de datos | En progreso | 11/12 |
 | J | Motor de subastas en tiempo real ⚠️ | Pendiente | 0/23 |
 | D | Autenticación y registro de postores | Pendiente | 0/7 |
 | K | Sala de puja conectada al motor real | Pendiente | 0/9 |
@@ -45,7 +45,8 @@ Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes 
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
 **Dónde vamos:** T cerrado y en GitHub. B casi cerrado: servidor conectado por Jonas (16/09); falta
-`colliers:diagnostico` en el sandbox y verificar el handler versionado tras el próximo push. **En curso: C.**
+`colliers:diagnostico` en el sandbox y verificar el handler versionado tras el próximo push.
+C terminado en local (falta verlo migrado en MariaDB tras el push). **Siguiente: J núcleo.**
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -102,19 +103,24 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [ ] Fortify en español *(se hace en D)*
 - [ ] `maatwebsite/excel` para exportaciones *(se hace en O)*
 
-## C — Modelo de datos · Pendiente
+## C — Modelo de datos · En progreso
 
-- [ ] `users`: RUT cifrado + índice ciego, teléfono, estado de validación, datos extensibles (tablas propias del postor)
-- [ ] `remates`: nombre, fecha, estado, identificador de streaming, incremento propio (opcional)
-- [ ] `lotes`: remate, datos del activo, precio base, orden, estado, `cierra_en`, precio actual, ganador
-- [ ] `lote_imagenes`, documentos, visitas
-- [ ] `garantias`: postor, remate, monto, estado, comprobante, quién aprobó y cuándo
-- [ ] `pujas`: lote, postor, monto, timestamp de servidor, IP, user agent (solo crece)
-- [ ] `puja_intentos`: intentos rechazados con motivo
-- [ ] `adjudicaciones`: lote, ganador, monto final, fecha de cierre
-- [ ] `access_logs`, `configuraciones`, `notificaciones_log`
-- [ ] Todas las fechas en UTC; todas las migraciones con `down()`
-- [ ] Seeders de desarrollo con datos realistas (reemplazan `App\Demo\RematesDemo`)
+Verificado el 16/09: 14 pruebas nuevas (27/27 en total) en SQLite y en MySQL 8.4 de Laragon; ciclo
+migrate → seed → reset → migrate con datos en ambos motores. El servidor usa **MariaDB**: la primera
+corrida real es el `migrate` del deploy.
+
+- [x] Postores fuera de `users`: `postores` + `empresas` + `postor_documentos`; RUT cifrado con índice ciego (HMAC con subclave de APP_KEY), teléfono, estado de cuenta, `datos_extra` extensible
+- [x] `remates`: folio, slug, título, estado, inicio, cierre de garantías, duración y pausa, incremento y % propios (opcionales), video de YouTube, martillero
+- [x] `lotes`: remate, orden, datos del activo + `atributos` extensibles, precio base, `abre_en`/`cierra_en`, precio actual, ganador, total de pujas, cierre (cuándo, motivo, quién), lote de origen
+- [x] `lote_imagenes`, `lote_visitas`, `documentos` (del remate o de un lote) *(documentos sin datos de ejemplo: no hay archivos)*
+- [x] `garantias`: por remate, monto/%/base fijados al crear, estado, medio, comprobante, quién revisó y cuándo, motivo de rechazo
+- [x] `pujas`: lote, postor, monto, hora de recepción con microsegundos, IP, user agent; el modelo impide editar y borrar
+- [x] `puja_intentos`: intentos rechazados con motivo y detalle *(la escritura fuera de la transacción se prueba en J)*
+- [x] `adjudicaciones`: lote (único), ganador, puja, monto, cierre, motivo, estado
+- [x] `access_logs`, `configuraciones` (defectos del acta sembrados por `colliers:instalar`, sin pisar cambios), `notificaciones_log`
+- [x] Fechas en UTC (cast `FechaUtc`, probado con hora de Santiago); todas las migraciones con `down()` probado con datos
+- [x] Seeder de desarrollo con el catálogo del prototipo (garantía 10 % e incremento del acta); se niega a correr en producción *(las vistas siguen con `App\Demo` hasta K/N)*
+- [ ] Migraciones aplicadas en el sandbox (MariaDB) por el deploy *(verifica Jonas en el sandbox: `php artisan migrate:status`)*
 
 ## J — Motor de subastas en tiempo real ⚠️ · Pendiente
 
@@ -310,6 +316,16 @@ Se completan a medida que las pantallas lo pidan.
 - [ ] Idioma EN/ES (Bloque N): hoy se ve y no funciona
 - [ ] Exportar a PDF (Bloque O): hoy se ve y no funciona
 - [ ] Activar el filtro «Garantía requerida» (hoy oculto; pasa a ajuste del panel en V)
+
+### Supuestos vigentes (16/09, mientras el cliente no defina; cambiar cualquiera no borra datos)
+
+| Decisión abierta | Supuesto | Cómo se cambia |
+|---|---|---|
+| Garantía con varios lotes | Por remate; base = suma de precios base de los lotes | `garantias.lote_id` ya existe (nulo): solo lógica |
+| Secuencia de lotes | Horario fijo calculado al publicar; duración por remate con valor opcional por lote | Encadenar = recalcular `abre_en`/`cierra_en` al cierre: solo lógica |
+| Cierre anticipado | Adjudica la mejor puja (modal del diseño); sin pujas, desierto | Estados como texto: «anulado» es un valor más |
+| Persona jurídica | Una empresa = una cuenta, de la persona que actúa por ella | Regla validada en la aplicación, no en la base |
+| Unicidad del RUT de la persona | Una persona = una cuenta (índice único en `postores.rut_indice`) | Quitar el índice único: no borra datos, pero no es aditivo |
 
 ### Del cliente (no bloquean; se anota y se sigue)
 
