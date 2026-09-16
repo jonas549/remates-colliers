@@ -16,7 +16,7 @@ nota *(verifica Jonas en el sandbox)*.
 |---|---|---|---|
 | A | Entorno y servidor | **Completo** | 5/5 |
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
-| B | Base del proyecto Laravel | En progreso | 9/16 |
+| B | Base del proyecto Laravel | En progreso | 14/19 |
 | C | Modelo de datos | Pendiente | 0/11 |
 | J | Motor de subastas en tiempo real ⚠️ | Pendiente | 0/23 |
 | D | Autenticación y registro de postores | Pendiente | 0/7 |
@@ -44,8 +44,8 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
-**Dónde vamos:** T cerrado y en GitHub (push del 16/09). B en progreso: falta que Jonas conecte el
-servidor con los pasos entregados el 16/09. Lo siguiente es **C**.
+**Dónde vamos:** T cerrado y en GitHub. B casi cerrado: servidor conectado por Jonas (16/09); falta
+`colliers:diagnostico` en el sandbox y verificar el handler versionado tras el próximo push. **En curso: C.**
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -91,10 +91,13 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] `users` con rol, estado y cambio de clave obligatorio (migración aditiva)
 - [x] `php artisan test` 13/13 (16/09)
 - [x] Push a `main` con aprobación de Jonas (16/09, `ce52a89`)
-- [ ] Conectar el servidor: clone, `.env`, `APP_KEY` respaldada, migrate, `colliers:instalar` *(Jonas)*
-- [ ] Script de deploy con `colliers:puede-desplegar` y `colliers:instalar`; cron de `schedule:run` *(Jonas)*
+- [x] Conectar el servidor: clone, `.env`, `APP_KEY` generada y respaldada, migrate, `colliers:instalar`, administrador creado *(Jonas, 16/09)*
+- [x] Script de deploy con `colliers:puede-desplegar` y `colliers:instalar` *(Jonas, 16/09)*
+- [x] Cron de `schedule:run` cada minuto y cron de deploy cada 5 minutos activos *(Jonas, 16/09)*
+- [x] Handler PHP 8.4 aplicado en el servidor: `application/x-httpd-ea-php84` *(Jonas, 16/09)*
+- [x] Sandbox responde en https y pide la clave de acceso *(Jonas, 16/09)*
 - [ ] `colliers:diagnostico` sin fallas y latido OK en el sandbox *(verifica Jonas en el sandbox)*
-- [ ] Confirmar y activar el handler de PHP 8.4 en `public/.htaccess` *(Jonas da el nombre)*
+- [ ] Handler versionado en `public/.htaccess` (el deploy revierte cambios manuales); verificar el sitio tras el push *(verifica Jonas en el sandbox)*
 - [ ] Hook pre-commit que verifique que `public/build` está compilado y al día con CSS/JS
 - [ ] Fortify en español *(se hace en D)*
 - [ ] `maatwebsite/excel` para exportaciones *(se hace en O)*
@@ -302,7 +305,7 @@ Se completan a medida que las pantallas lo pidan.
 
 ### De Jonas
 
-- [ ] Nombre exacto del handler PHP 8.4 en cPanel/LiteSpeed (para `public/.htaccess`)
+- [x] Nombre exacto del handler PHP 8.4 en cPanel/LiteSpeed: `application/x-httpd-ea-php84` (16/09)
 - [ ] Subir el acta del 25/08 al material local de referencia
 - [ ] Idioma EN/ES (Bloque N): hoy se ve y no funciona
 - [ ] Exportar a PDF (Bloque O): hoy se ve y no funciona

@@ -1,12 +1,12 @@
-# Handler de PHP 8.4 para LiteSpeed (cPanel / BanaHosting).
-# El Document Root a veces pierde la versión asignada. Si el sitio responde con otra versión
-# de PHP o descarga el código, descomenta el bloque usando EL NOMBRE EXACTO del handler que
-# muestra cPanel → MultiPHP Manager (o el que cPanel escribió en ~/public_html/.htaccess).
-# Se deja comentado porque un nombre incorrecto rompe el sitio completo.
-#
-# <IfModule mime_module>
-#   AddHandler application/x-httpd-ea-php84___lsphp .php .php8 .phtml
-# </IfModule>
+# Handler de PHP 8.4 para LiteSpeed (cPanel / BanaHosting), confirmado por Jonas el 16/09.
+# Va versionado: el deploy hace `git reset --hard`, que revierte cualquier cambio hecho a mano
+# en el servidor. Solo aplica bajo LiteSpeed; el Apache de Laragon lo ignora (en local un
+# handler inexistente serviría el código PHP como texto).
+<IfModule LiteSpeed>
+    <IfModule mime_module>
+        AddHandler application/x-httpd-ea-php84 .php .php8 .phtml
+    </IfModule>
+</IfModule>
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
