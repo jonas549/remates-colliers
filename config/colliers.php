@@ -36,6 +36,30 @@ return [
     /* Archivo que el programador de tareas actualiza cada minuto; colliers:diagnostico lo revisa. */
     'latido_programador' => storage_path('framework/latido-programador'),
 
+    /*
+     * Tiempo real (Bloque J). `json`: estado del remate como archivo estático en `carpeta`, servido por
+     * LiteSpeed sin ejecutar PHP. La capa está abstraída (App\Subastas\Difusion\Emisor) para cambiar a Pusher.
+     */
+    'tiempo_real' => [
+        'driver' => env('COLLIERS_TIEMPO_REAL', 'json'),
+        'carpeta' => env('COLLIERS_TIEMPO_REAL_CARPETA', public_path('tiempo-real')),
+    ],
+
+    /*
+     * Límites técnicos de protección (no son reglas de negocio del acta): peticiones por minuto.
+     * Un postor real no se acerca a 30 pujas por minuto; los espectadores consultan el JSON estático, no PHP.
+     */
+    'limites' => [
+        'pujas_por_minuto' => (int) env('COLLIERS_PUJAS_POR_MINUTO', 30),
+        'estado_por_minuto' => (int) env('COLLIERS_ESTADO_POR_MINUTO', 60),
+    ],
+
+    /*
+     * Bloqueo automático de deploy: no se despliega desde estos minutos antes de que abra un lote hasta que
+     * todos los lotes del remate estén liquidados.
+     */
+    'deploy_minutos_antes_de_remate' => (int) env('COLLIERS_DEPLOY_MINUTOS_ANTES', 30),
+
     /* Zona horaria en que se muestran las fechas. En base de datos todo se guarda en UTC. */
     'zona_visualizacion' => env('COLLIERS_ZONA_VISUALIZACION', 'America/Santiago'),
 

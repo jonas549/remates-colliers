@@ -18,7 +18,7 @@ nota *(verifica Jonas en el sandbox)*.
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
 | B | Base del proyecto Laravel | En progreso | 17/19 |
 | C | Modelo de datos | **Completo** | 12/12 |
-| J | Motor de subastas en tiempo real ⚠️ | Pendiente | 0/23 |
+| J | Motor de subastas en tiempo real ⚠️ | En progreso | 23/27 |
 | D | Autenticación y registro de postores | Pendiente | 0/7 |
 | K | Sala de puja conectada al motor real | Pendiente | 0/9 |
 | I | Remates y lotes + panel del martillero | Pendiente | 0/8 |
@@ -45,7 +45,8 @@ Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes 
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
 **Dónde vamos:** T y C cerrados y desplegados (`4bd54c0`, verificado en el sandbox el 16/09). B completo salvo
-Fortify (va en D) y `maatwebsite/excel` (va en O). **En curso: J núcleo.**
+Fortify (va en D) y `maatwebsite/excel` (va en O). J núcleo hecho y probado en local con concurrencia real; faltan
+las verificaciones del sandbox (LiteSpeed, límites, espectadores) y repetir con MariaDB. **Siguiente: D.**
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -121,40 +122,48 @@ corrida real es el `migrate` del deploy.
 - [x] Seeder de desarrollo con el catálogo del prototipo (garantía 10 % e incremento del acta); se niega a correr en producción *(las vistas siguen con `App\Demo` hasta K/N)*
 - [x] Migraciones aplicadas por el deploy automático en MariaDB 11.4.13, las 6 en `Ran` *(Jonas en el sandbox, 16/09)*
 
-## J — Motor de subastas en tiempo real ⚠️ · Pendiente
+## J — Motor de subastas en tiempo real ⚠️ · En progreso
 
 Leer `CLAUDE.md` §5 antes de empezar. **No se cierra sin pruebas de concurrencia automatizadas.**
 
+Verificado el 16/09: `MotorPujasTest` (22 pruebas; 49/49 en total en SQLite y MySQL 8.4) y `tools/concurrencia/prueba.php`
+contra Apache de Laragon (mod_php multihilo, OPcache) + MySQL 8.4: 4 corridas con 20 postores y 2 con 40, todas en verde
+tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300 ms (se serializan en el bloqueo del lote).
+
 **Validación de la puja**
-- [ ] Endpoint con transacción y `lockForUpdate` sobre la fila del lote, reintentos ante deadlock
-- [ ] Remate en curso, lote abierto, postor aprobado, garantía aprobada
-- [ ] Monto ≥ actual + incremento; el postor no es quien va ganando
-- [ ] Validez por hora de recepción en el servidor
-- [ ] Rate limiting sobre el endpoint
-- [ ] Intentos rechazados registrados fuera de la transacción
+- [x] Endpoint `POST /remates/{remate}/lotes/{lote}/pujas` con transacción, `lockForUpdate` sobre el lote y 5 reintentos ante deadlock
+- [x] Remate disponible, lote abierto, cuenta aprobada (releída de la base en cada puja), garantía aprobada del remate
+- [x] Monto ≥ precio base (primera) o actual + incremento; el postor no es quien va ganando; solo enteros de pesos
+- [x] Validez por hora de recepción (middleware global `HoraRecepcion`, antes de esperar el bloqueo)
+- [x] Rate limiting sobre el endpoint (30 por minuto por postor, en `config/colliers.php`)
+- [x] Intentos rechazados registrados fuera de la transacción, con motivo, detalle, IP y user agent
 
 **Temporizador y cierre**
-- [ ] Endpoint de sincronización de reloj
-- [ ] Cierre perezoso idempotente + margen de liquidación configurable (sin anti-sniping)
-- [ ] Adjudicación automática; lote desierto
-- [ ] Paso al siguiente lote (cuando haya varios)
-- [ ] Cierre manual de emergencia desde el panel del martillero
+- [x] Endpoint de sincronización de reloj (`GET /hora`) *(el cronómetro del navegador es K)*
+- [x] Cierre perezoso idempotente + margen de liquidación configurable; sin anti-sniping (una puja nunca toca `cierra_en`)
+- [x] Adjudicación automática; lote desierto; detectores: puja rechazada por cierre, endpoint de estado y `colliers:liquidar` cada minuto
+- [x] Paso al siguiente lote: horario fijo, cada lote abre a su `abre_en`; el remate se finaliza al liquidar el último
+- [x] Cierre manual de emergencia: endpoint para administrador o el martillero del remate *(la pantalla es del Bloque I)*
 
 **Difusión en tiempo real**
-- [ ] Interfaz de emisión abstraída (JSON estático; alternativa Pusher)
-- [ ] Escritura atómica del estado por remate; cabeceras sin caché en LiteSpeed
-- [ ] Eventos: puja nueva, cierre de lote y apertura del siguiente, mensaje del martillero
-- [ ] Reconexión recuperando el estado actual
+- [x] Interfaz de emisión abstraída (`App\Subastas\Difusion\Emisor`; implementación JSON estático; Pusher = otra clase)
+- [x] Escritura atómica (temporal + rename) bajo bloqueo de archivo por remate; el archivo nunca retrocede (probado con 300 pujas concurrentes)
+- [x] Cabeceras sin caché y sin ETag; bloqueos y temporales no descargables (403) *(verificado en Apache local)*
+- [ ] Cabeceras sin caché servidas por **LiteSpeed** *(verifica Jonas en el sandbox)*
+- [x] Eventos: puja nueva, cierre de lote (la apertura del siguiente va por horario en el mismo estado), mensaje del martillero
+- [x] Estado público sin identidades: «Postor #N» por orden de garantía *(supuesto vigente)*
+- [x] Reconexión recuperando el estado actual (`GET /remates/{remate}/estado`, que además liquida lo vencido) *(el cliente es K)*
 
 **QA obligatorio**
-- [ ] Medición de límites del sandbox (EP, CPU, `max_execution_time`, cron, HTTP saliente)
-- [ ] Dos pujas del mismo monto en el mismo instante: solo una gana
-- [ ] Puja bajo el incremento / sin garantía / después del cierre: rechazadas
-- [ ] Vaciar la caché a mitad del remate no altera el estado
-- [ ] El ganador registrado coincide con la última puja válida
-- [ ] Simulación de 20 postores en paralelo (Apache/Nginx de Laragon + MariaDB)
-- [ ] Prueba del transporte en el sandbox con espectadores simulados
-- [ ] Bloqueo de deploy con remate en curso (`colliers:puede-desplegar`)
+- [ ] Medición de límites del sandbox (EP, CPU, `max_execution_time`, cron, HTTP saliente, **OPcache activo**) *(Jonas en el servidor)*
+- [x] Dos pujas del mismo monto en el mismo instante: solo una gana (5 rondas × 20 simultáneas)
+- [x] Puja bajo el incremento / sin garantía / después del cierre: rechazadas
+- [x] Vaciar la caché a mitad del remate no altera el estado (`optimize:clear` en PHPUnit, `cache:clear` en concurrencia)
+- [x] El ganador registrado coincide con la última puja válida (ráfagas y cierre disputado por 20 liquidaciones)
+- [x] Simulación de 20 postores en paralelo (Apache de Laragon + **MySQL 8.4**)
+- [ ] Repetir `tools/concurrencia` con **MariaDB** local (Laragon no la trae instalada)
+- [ ] Prueba del transporte en el sandbox con espectadores simulados *(requiere un remate de prueba en el sandbox)*
+- [x] Bloqueo de deploy con remate en curso o por comenzar (30 min antes; `colliers:puede-desplegar` sale 75)
 
 ## D — Autenticación y registro de postores · Pendiente
 
@@ -325,6 +334,8 @@ Se completan a medida que las pantallas lo pidan.
 | Cierre anticipado | Adjudica la mejor puja (modal del diseño); sin pujas, desierto | Estados como texto: «anulado» es un valor más |
 | Persona jurídica | Una empresa = una cuenta, de la persona que actúa por ella | Regla validada en la aplicación, no en la base |
 | Unicidad del RUT de la persona | Una persona = una cuenta (índice único en `postores.rut_indice`) | Quitar el índice único: no borra datos, pero no es aditivo |
+| Identidad en el feed público | «Postor #N» (orden de inscripción de la garantía), como el diseño | Solo `EstadoRemate::alias()` |
+| Mecánica del cierre anticipado | Fija `cierra_en` en ese momento y adjudica por el mismo camino que el cierre por tiempo, pasado el margen | Solo `Liquidador` |
 
 ### Del cliente (no bloquean; se anota y se sigue)
 

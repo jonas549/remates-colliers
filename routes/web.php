@@ -6,6 +6,9 @@ use App\Demo\EstadoCuentaDemo;
 use App\Demo\PantallasRevision;
 use App\Demo\RematesDemo;
 use App\Http\Controllers\AccesoSandboxController;
+use App\Http\Controllers\Admin\SalaMartilleroController;
+use App\Http\Controllers\PujaController;
+use App\Http\Controllers\TiempoRealController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,6 +21,20 @@ use Illuminate\Support\Facades\Route;
 // Clave de acceso al sandbox (ver App\Http\Middleware\AccesoSandbox).
 Route::get('/acceso', [AccesoSandboxController::class, 'formulario'])->name('acceso.formulario');
 Route::post('/acceso', [AccesoSandboxController::class, 'ingresar'])->name('acceso.ingresar');
+
+/*
+ * Bloque J: motor de pujas y tiempo real. Los espectadores leen /tiempo-real/{remate}.json (estático);
+ * estas rutas ejecutan PHP solo para pujar, sincronizar el reloj, reconectar y cerrar.
+ */
+Route::get('/hora', [TiempoRealController::class, 'hora'])->name('tiempo-real.hora');
+Route::get('/remates/{remate:slug}/estado', [TiempoRealController::class, 'estado'])
+    ->middleware('throttle:estado-remate')->name('tiempo-real.estado');
+Route::post('/remates/{remate:slug}/lotes/{lote}/pujas', [PujaController::class, 'store'])
+    ->whereNumber('lote')->middleware(['auth', 'throttle:pujas'])->name('pujas.store');
+Route::post('/admin/remates/{remate:slug}/lotes/{lote}/cerrar', [SalaMartilleroController::class, 'cerrarLote'])
+    ->whereNumber('lote')->middleware('auth')->name('admin.sala.cerrar-lote');
+Route::post('/admin/remates/{remate:slug}/mensaje', [SalaMartilleroController::class, 'mensaje'])
+    ->middleware('auth')->name('admin.sala.mensaje');
 
 $pendiente = fn (string $nombre) => fn () => response('Pantalla pendiente del Bloque T: ' . $nombre, 200);
 

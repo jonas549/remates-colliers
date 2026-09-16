@@ -15,6 +15,12 @@ Schedule::call(function () {
     touch($archivo);
 })->name('latido-programador')->everyMinute();
 
+// Respaldo del cierre perezoso (Bloque J): liquida lotes vencidos que ninguna petición detectó.
+Schedule::command('colliers:liquidar')
+    ->name('liquidar-lotes')
+    ->everyMinute()
+    ->withoutOverlapping(5);
+
 // Cola de trabajos (correos y demás) procesada por cron: termina cuando la cola queda vacía y nunca dura más
 // de 50 s, para no superponerse con la ejecución del minuto siguiente.
 Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3 --backoff=60')

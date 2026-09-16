@@ -39,3 +39,6 @@ Thumbs.db
 
 # Latido del programador de tareas (lo escribe el cron).
 /storage/framework/latido-programador
+
+# Servidor y resultados de las pruebas de concurrencia (tools/concurrencia).
+/storage/framework/concurrencia/

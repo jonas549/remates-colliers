@@ -258,6 +258,16 @@ pendientes. Jonas tiene que poder abrir ese archivo y saber dónde vamos sin pre
 
 **Este bloque no se marca como terminado sin pruebas de concurrencia automatizadas.**
 
+Pruebas de concurrencia (`tools/concurrencia/`), con MySQL/MariaDB de Laragon encendido:
+
+```
+php tools/concurrencia/servidor.php        # Apache de Laragon, mod_php multihilo + OPcache, puerto 8090
+php tools/concurrencia/prueba.php [20]     # recrea la base colliers_concurrencia y verifica invariantes
+```
+
+El servidor de prueba usa la configuración en caché (como el servidor real): con PHP multihilo, leer el
+`.env` en cada petición no es seguro entre hilos.
+
 ---
 
 ## 6. Reglas técnicas

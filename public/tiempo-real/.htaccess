@@ -1,0 +1,17 @@
+# Estado de los remates en tiempo real (Bloque J): JSON estático que el navegador consulta cada ~1 s.
+# Nunca en caché: ni en el navegador, ni en proxies, ni en la caché de LiteSpeed.
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header unset ETag
+</IfModule>
+<IfModule LiteSpeed>
+    RewriteEngine On
+    RewriteRule .* - [E=Cache-Control:no-cache]
+</IfModule>
+FileETag None
+
+# Solo se publican los .json: bloqueos y temporales no se sirven.
+<FilesMatch "^\.|\.tmp$">
+    Require all denied
+</FilesMatch>

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'folio', 'slug', 'titulo', 'descripcion', 'estado', 'inicio_en', 'cierre_garantias_en',
     'duracion_lote_segundos', 'pausa_entre_lotes_segundos', 'incremento_minimo', 'porcentaje_garantia',
     'youtube_video_id', 'martillero_id', 'publicado_en', 'finalizado_en', 'cancelado_en',
+    'mensaje_martillero', 'mensaje_martillero_en',
 ])]
 class Remate extends Model
 {
@@ -39,6 +40,7 @@ class Remate extends Model
             'publicado_en' => FechaUtc::class,
             'finalizado_en' => FechaUtc::class,
             'cancelado_en' => FechaUtc::class,
+            'mensaje_martillero_en' => FechaUtc::class,
             'created_at' => FechaUtc::class,
             'updated_at' => FechaUtc::class,
             'duracion_lote_segundos' => 'integer',

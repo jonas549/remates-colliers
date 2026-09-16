@@ -1,0 +1,4 @@
+# Lo escribe la aplicación en cada puja (Bloque J); solo se versionan estas reglas.
+*
+!.gitignore
+!.htaccess
