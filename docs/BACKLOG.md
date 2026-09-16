@@ -16,8 +16,8 @@ nota *(verifica Jonas en el sandbox)*.
 |---|---|---|---|
 | A | Entorno y servidor | **Completo** | 5/5 |
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
-| B | Base del proyecto Laravel | En progreso | 15/19 |
-| C | Modelo de datos | En progreso | 11/12 |
+| B | Base del proyecto Laravel | En progreso | 17/19 |
+| C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | Pendiente | 0/23 |
 | D | Autenticación y registro de postores | Pendiente | 0/7 |
 | K | Sala de puja conectada al motor real | Pendiente | 0/9 |
@@ -44,9 +44,8 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
-**Dónde vamos:** T cerrado y en GitHub. B casi cerrado: servidor conectado por Jonas (16/09); falta
-`colliers:diagnostico` en el sandbox y verificar el handler versionado tras el próximo push.
-C en GitHub desde `4bd54c0`: falta ver `migrate:status` en MariaDB. **Siguiente: J núcleo.**
+**Dónde vamos:** T y C cerrados y desplegados (`4bd54c0`, verificado en el sandbox el 16/09). B completo salvo
+Fortify (va en D) y `maatwebsite/excel` (va en O). **En curso: J núcleo.**
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -97,13 +96,13 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] Cron de `schedule:run` cada minuto y cron de deploy cada 5 minutos activos *(Jonas, 16/09)*
 - [x] Handler PHP 8.4 aplicado en el servidor: `application/x-httpd-ea-php84` *(Jonas, 16/09)*
 - [x] Sandbox responde en https y pide la clave de acceso *(Jonas, 16/09)*
-- [ ] `colliers:diagnostico` sin fallas y latido OK en el sandbox *(verifica Jonas en el sandbox)*
-- [ ] Handler versionado en `public/.htaccess` (el deploy revierte cambios manuales); verificar el sitio tras el push *(verifica Jonas en el sandbox)*
+- [x] `colliers:diagnostico` sin errores ni avisos, latido del cron a 38 s *(Jonas en el sandbox, 16/09)*
+- [x] Handler versionado en `public/.htaccess`: sitio carga tras el deploy de `4bd54c0` y `git status` limpio *(Jonas en el sandbox, 16/09)*
 - [x] Hook pre-commit (`.githooks/pre-commit`) que verifica que `public/build` corresponde a los assets del commit (5 casos probados, 16/09)
 - [ ] Fortify en español *(se hace en D)*
 - [ ] `maatwebsite/excel` para exportaciones *(se hace en O)*
 
-## C — Modelo de datos · En progreso
+## C — Modelo de datos · Completo
 
 Verificado el 16/09: 14 pruebas nuevas (27/27 en total) en SQLite y en MySQL 8.4 de Laragon; ciclo
 migrate → seed → reset → migrate con datos en ambos motores. El servidor usa **MariaDB**: la primera
@@ -120,7 +119,7 @@ corrida real es el `migrate` del deploy.
 - [x] `access_logs`, `configuraciones` (defectos del acta sembrados por `colliers:instalar`, sin pisar cambios), `notificaciones_log`
 - [x] Fechas en UTC (cast `FechaUtc`, probado con hora de Santiago); todas las migraciones con `down()` probado con datos
 - [x] Seeder de desarrollo con el catálogo del prototipo (garantía 10 % e incremento del acta); se niega a correr en producción *(las vistas siguen con `App\Demo` hasta K/N)*
-- [ ] Migraciones aplicadas en el sandbox (MariaDB) por el deploy *(verifica Jonas en el sandbox: `php artisan migrate:status`)*
+- [x] Migraciones aplicadas por el deploy automático en MariaDB 11.4.13, las 6 en `Ran` *(Jonas en el sandbox, 16/09)*
 
 ## J — Motor de subastas en tiempo real ⚠️ · Pendiente
 
