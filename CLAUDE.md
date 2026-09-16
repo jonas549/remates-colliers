@@ -22,7 +22,8 @@ diseño. Panel de administración propio, subdominio aparte, plazo comprometido 
 | Archivo / carpeta | Dónde | Qué es |
 |---|---|---|
 | `docs/BACKLOG.md` | Repo | **Registro vivo del avance**: bloques, tareas marcables, orden y decisiones pendientes |
-| `docs/PROGRESO.md` | Repo | Punto de retome de la última jornada |
+| `docs/PROGRESO.md` | Repo | Punto de retome: estado, qué sigue, reglas y trampas del entorno |
+| `docs/progreso/AAAA-MM-DD.md` | Repo | Registro detallado de cada jornada |
 | `Reunión Colliers Fase 3 - Preguntas clave .docx` | Local, **fuera del repo** | Acta del 18/08 con las reglas de negocio confirmadas |
 | Acta del 25/08 | Pendiente de subir | Aplicación a medida sin WordPress, panel propio, subdominio, 30 días, diseño de Ángel |
 | `colliers-subastas-invitado-main/` | Local, **fuera del repo** | Prototipo de la vista de invitado |
@@ -234,8 +235,8 @@ pendientes. Jonas tiene que poder abrir ese archivo y saber dónde vamos sin pre
 
 - `[x]` solo con la tarea verificada ejecutándola (ver §6, «Sobre verificación»).
 - Si `docs/BACKLOG.md` y los §8 o §10 de este archivo no coinciden, **manda `docs/BACKLOG.md`**.
-- `docs/PROGRESO.md` es el punto de retome de la jornada (qué se hizo, qué sigue mañana); se actualiza al
-  cerrar cada día.
+- `docs/PROGRESO.md` es el punto de retome (estado, qué sigue, reglas y trampas); se actualiza al cerrar cada
+  día, junto con el registro detallado de la jornada en `docs/progreso/AAAA-MM-DD.md`.
 
 ---
 
