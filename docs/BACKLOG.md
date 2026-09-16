@@ -20,7 +20,7 @@ nota *(verifica Jonas en el sandbox)*.
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 24/29 |
 | D | Autenticación y registro de postores | En progreso | 10/12 |
-| K | Sala de puja conectada al motor real | Pendiente | 0/9 |
+| K | Sala de puja conectada al motor real | En progreso | 10/14 |
 | I | Remates y lotes + panel del martillero | Pendiente | 0/8 |
 | V | Configuración autoadministrable y SMTP | Pendiente | 0/10 |
 | G | Postores | Pendiente | 0/5 |
@@ -44,9 +44,9 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
-**Dónde vamos:** T y C cerrados. B completo salvo `maatwebsite/excel` (va en O). J núcleo probado en local con
-concurrencia real; faltan las verificaciones del sandbox. D hecho en local; faltan el primer ingreso del admin en el
-sandbox y el SMTP real (V). **Siguiente: K** (sala de puja conectada al motor).
+**Dónde vamos:** T y C cerrados. B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
+(K en navegador real contra el motor); faltan sus verificaciones en el sandbox. **Siguiente: I** (remates y lotes +
+panel del martillero).
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -187,17 +187,27 @@ táctiles < 44 px en 375/760/1120/1440, y revisadas a ojo.
 - [ ] En el sandbox: el primer administrador entra por `/admin/ingresar` y cambia su clave temporal *(Jonas en el sandbox)*
 - [ ] Correos reales de verificación y recuperación: hoy `MAIL_MAILER=log` (el enlace queda en `storage/logs`); SMTP en el Bloque V
 
-## K — Sala de puja conectada al motor real · Pendiente
+## K — Sala de puja conectada al motor real · En progreso
 
-- [ ] Estado inicial desde el servidor (precio, ganador, `cierra_en`)
-- [ ] Botones de puja rápida CLP 100k / 500k / 1M
-- [ ] Campo «Otro» respetando el incremento mínimo
-- [ ] Modal de confirmación obligatorio antes de registrar la puja
-- [ ] Indicador «vas ganando» / «te superaron»
-- [ ] Actualización en tiempo real (consulta ~1 s al JSON estático)
-- [ ] Cronómetro sincronizado con el endpoint de reloj
-- [ ] Aviso visible: el cronómetro y el precio de la plataforma son la fuente oficial, no el video
-- [ ] Mensajes de rechazo en español para cada motivo
+Verificado el 16/09: `SalaTest` (5; 75/75 en total) y `tools/comparar/sala-real.mjs` en navegador real contra el motor
+(26/26, dos corridas, 0 errores en el log): dos postores a la vez + un tercero + móvil, reloj del equipo adelantado
+7 min, reconexión sin red y cierre con adjudicación. Arnés 1:1 con `?demo=1` (datos del prototipo, solo local):
+interacción idéntica; escritorio 0,05 % en 1280–1440 y 1,9 % en 1120 por el aviso de fuente oficial (acta, ver abajo).
+
+- [x] Estado inicial desde el servidor (precio, ganador, `cierra_en`); solo entra el postor con cuenta y garantía del remate aprobadas
+- [x] Botones de puja rápida CLP 100k / 500k / 1M (desde `configuraciones`)
+- [x] Campo «Otro» respetando el incremento mínimo (validación en pantalla y en el motor)
+- [x] Modal de confirmación obligatorio antes de registrar la puja; sin doble envío
+- [x] Indicador «vas ganando» / «te superaron» (y «sin posturas» cuando nadie ha pujado)
+- [x] Actualización en tiempo real (JSON estático cada ~1 s; respaldo al endpoint de estado; reconexión al volver la red o la pestaña)
+- [x] Cronómetro sincronizado con `/hora` compensando la latencia (probado con el equipo 7 min adelantado)
+- [x] Aviso visible: «Precio y cronómetro oficiales: el video tiene 10–30 s de retraso» *(a 1120 px ocupa una segunda línea: diferencia deliberada con el diseño)*
+- [x] Mensajes de rechazo del motor en español, más sesión vencida (419), exceso de pujas (429) y sin conexión
+- [x] Cierre: el formulario desaparece en `cierra_en` y el navegador dispara la liquidación pasado el margen; resultado para ganador y perdedores
+- [ ] Varios lotes en la sala: hoy pasa al siguiente lote al liquidarse el actual, sin navegación ni pantalla de transición *(no hay diseño)*
+- [ ] Mensaje del martillero en la sala *(el motor lo difunde; el diseño no tiene dónde mostrarlo)*
+- [ ] Textos del resultado («tu garantía se imputa / será devuelta») son del diseño y dependen de la decisión pendiente sobre la garantía del perdedor
+- [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración *(Jonas)*
 
 ## I — Remates y lotes, incluido el panel del martillero · Pendiente
 
@@ -337,6 +347,9 @@ Se completan a medida que las pantallas lo pidan.
 - 16/09: la concurrencia contra MariaDB se prueba en el sandbox sobre el remate de demostración.
 
 ### De Jonas
+
+- [ ] Sala con varios lotes: ¿cómo se muestra el paso de un lote al siguiente? (no hay diseño)
+- [ ] ¿Dónde se muestra el mensaje del martillero en la sala? (no hay diseño)
 
 - [x] Nombre exacto del handler PHP 8.4 en cPanel/LiteSpeed: `application/x-httpd-ea-php84` (16/09)
 - [ ] Subir el acta del 25/08 al material local de referencia

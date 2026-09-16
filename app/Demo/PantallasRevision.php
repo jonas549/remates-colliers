@@ -62,7 +62,10 @@ class PantallasRevision
             [
                 'grupo' => 'Sala de puja',
                 'pantallas' => [
-                    ['nombre' => 'Puja en vivo', 'ruta' => '/remates/apoquindo/sala', 'estado' => 'terminada', 'nota' => 'Probar puja rápida, monto libre y confirmación. En móvil/tablet: barra fija inferior y botón Pujar que abre la hoja. Las pujas son solo en pantalla hasta el Bloque K.'],
+                    ['nombre' => 'Puja en vivo', 'ruta' => self::como('postor', '/remates/apoquindo/sala'), 'estado' => 'terminada', 'nota' => 'Conectada al motor (Bloque K): las pujas son reales. Abre otra ventana privada como otro postor para ver la actualización en vivo. Con la base recién sembrada el remate cierra en 42 min.', 'variantes' => [
+                        'Real (María Paz, Postor #1)' => self::como('postor', '/remates/apoquindo/sala'),
+                        'Datos del prototipo (?demo=1)' => self::como('postor', '/remates/apoquindo/sala?demo=1'),
+                    ]],
                 ],
             ],
             [

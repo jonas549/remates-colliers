@@ -14,6 +14,6 @@
     <input id="monto-{{ $id }}" :value="monto" @input="escribir($event.target.value); $event.target.value = monto" inputmode="numeric" :placeholder="placeholder" class="sala-puja__input" :class="{ 'es-invalido': montoInvalidoVisible }" autocomplete="off">
     <div class="sala-puja__ayuda" :class="{ 'es-invalido': montoInvalidoVisible }" x-text="ayuda"></div>
 
-    <button type="button" class="sala-puja__boton" :disabled="!montoValido" @click="abrirModal()" x-text="botonTexto"></button>
+    <button type="button" class="sala-puja__boton" :disabled="!montoValido || enviando" @click="abrirModal()" x-text="botonTexto"></button>
     <div class="sala-puja__nota">Las posturas se cursan en pesos y son irrevocables. Se te pedirá confirmar antes de registrarlas.</div>
 </div>

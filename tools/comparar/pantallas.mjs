@@ -58,7 +58,8 @@ export const PANTALLAS = {
     },
     sala: {
         original: 'colliers-subastas-usuario-main/Puja en Vivo.dc.html',
-        laravel: '/remates/apoquindo/sala',
+        laravel: '/remates/apoquindo/sala?demo=1',
+        sesion: 'postor',
         alto: 900,
         variantes: [{ id: 'base', props: { simularRivales: false } }],
         mascaras: ['iframe'],

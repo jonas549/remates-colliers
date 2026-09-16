@@ -4,7 +4,8 @@ import { chromium } from 'playwright';
 const navegador = await chromium.launch({ channel: 'chrome' });
 const casos = {
     original: 'http://127.0.0.1:8081/colliers-subastas-usuario-main/Puja%20en%20Vivo.dc.html',
-    laravel: 'http://127.0.0.1:8000/remates/apoquindo/sala',
+    // Datos fijos del prototipo (?demo=1, solo local); la sala exige sesión de postor (Bloque K).
+    laravel: 'http://127.0.0.1:8000/revision/entrar/postor?a=' + encodeURIComponent('/remates/apoquindo/sala?demo=1'),
 };
 for (const [nombre, url] of Object.entries(casos)) {
     const ctx = await navegador.newContext({ viewport: { width: 1440, height: 900 } });

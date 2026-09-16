@@ -19,6 +19,8 @@ class RevisionController extends Controller
 
         $user = User::where('rol', $rol)->where('estado', User::ESTADO_ACTIVO)
             ->when($rol === User::ROL_POSTOR, fn ($q) => $q->whereNotNull('email_verified_at'))
+            // ?usuario=correo: un usuario puntual del seeder (p. ej. dos postores distintos en la prueba de la sala).
+            ->when($request->filled('usuario'), fn ($q) => $q->where('email', $request->query('usuario')))
             ->orderBy('id')->first();
         abort_if($user === null, 404, "No hay usuarios con rol {$rol}: corre php artisan migrate:fresh --seed");
 

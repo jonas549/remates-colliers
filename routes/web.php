@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\RevisionController;
+use App\Http\Controllers\SalaController;
 use App\Http\Controllers\TiempoRealController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
@@ -59,7 +60,9 @@ Route::get('/remates/{remate}', fn (string $remate) => view('remates.show', [
     'r' => DetalleDemo::para($remate) ?? DetalleDemo::para('militares'),
     'sesion' => $sesionDemo(),
 ]))->name('remates.show');
-Route::get('/remates/{remate}/sala', fn () => view('sala.show'))->name('sala.show');
+// Bloque K: sala de puja conectada al motor. Solo postores con cuenta y garantía del remate aprobadas.
+Route::get('/remates/{remate:slug}/sala', [SalaController::class, 'show'])
+    ->middleware(['auth', 'rol:postor', 'verified', 'clave.vigente'])->name('sala.show');
 
 /*
  * Bloque D: autenticación. Fortify registra /ingresar, /registro, /salir, /recuperar-clave, /restablecer-clave y

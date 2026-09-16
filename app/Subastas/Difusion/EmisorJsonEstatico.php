@@ -32,7 +32,7 @@ class EmisorJsonEstatico implements Emisor
         try {
             $json = json_encode(EstadoRemate::construir($remate), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
             $temporal = $destino . '.' . bin2hex(random_bytes(6)) . '.tmp';
-            if (file_put_contents($temporal, $json) === false || ! rename($temporal, $destino)) {
+            if (file_put_contents($temporal, $json) === false || ! $this->reemplazar($temporal, $destino)) {
                 @unlink($temporal);
                 throw new RuntimeException("No se pudo escribir el estado de {$remate->slug}.");
             }
@@ -40,6 +40,32 @@ class EmisorJsonEstatico implements Emisor
             flock($bloqueo, LOCK_UN);
             fclose($bloqueo);
         }
+    }
+
+    /**
+     * rename atómico: en Linux (el servidor) reemplaza siempre, aunque alguien esté leyendo el archivo.
+     * En Windows (solo desarrollo local) otro proceso puede retener el archivo unos instantes y rename falla con
+     * «Acceso denegado»: se reintenta y, si sigue retenido, se copia encima (no atómico, aceptable en local).
+     */
+    private function reemplazar(string $temporal, string $destino): bool
+    {
+        for ($intento = 1; $intento <= 5; $intento++) {
+            if (@rename($temporal, $destino)) {
+                return true;
+            }
+            if (PHP_OS_FAMILY !== 'Windows') {
+                return false;
+            }
+            usleep(10000);
+        }
+
+        if (@copy($temporal, $destino)) {
+            @unlink($temporal);
+
+            return true;
+        }
+
+        return false;
     }
 
     public function rutaDe(Remate $remate): string

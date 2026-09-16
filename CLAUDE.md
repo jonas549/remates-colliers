@@ -66,6 +66,8 @@ sin correr el arnés.
 - Pantallas protegidas: `sesion: 'admin' | 'postor'` en `pantallas.mjs`; la aplicación entra antes por
   `/revision/entrar/{rol}` (solo local). Requiere la base local con `php artisan migrate:fresh --seed`.
 - Pantallas sin original en el prototipo: `node tools/comparar/sin-original.mjs` (usabilidad + capturas).
+- Sala de puja real (Bloque K): `node tools/comparar/sala-real.mjs` (navegador contra el motor; reinicia la base local).
+  La comparación 1:1 de la sala usa `?demo=1` (datos fijos del prototipo, solo local).
 - Para no quedarse sin memoria: un proceso por ancho (`--anchos N`), escritorio primero y móvil después.
 
 ---
