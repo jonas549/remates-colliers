@@ -22,7 +22,9 @@ use RuntimeException;
  * Diferencias deliberadas con el prototipo, porque manda el acta:
  * - Garantía = 10 % de la base (el prototipo muestra ~4 %).
  * - Incremento mínimo = valor global de configuración, CLP 100.000 (el prototipo usa 1.000.000 y 1.500.000).
- * Solo para local: se niega a correr en producción. No se ejecuta en el deploy (no hay db:seed).
+ * Solo para local y pruebas: crea usuarios con una clave FIJA que está en este repositorio público, así que se niega
+ * a correr en cualquier otro entorno (también en el sandbox). Para el sandbox: `colliers:remate-demo`.
+ * No se ejecuta en el deploy (no hay db:seed).
  */
 class DesarrolloSeeder extends Seeder
 {
@@ -33,8 +35,8 @@ class DesarrolloSeeder extends Seeder
 
     public function run(): void
     {
-        if (app()->isProduction()) {
-            throw new RuntimeException('DesarrolloSeeder no se ejecuta en producción.');
+        if (! app()->environment(['local', 'testing'])) {
+            throw new RuntimeException('DesarrolloSeeder solo se ejecuta en local (usa claves fijas y públicas).');
         }
 
         $this->ahora = CarbonImmutable::now('UTC')->startOfMinute();

@@ -18,7 +18,7 @@ nota *(verifica Jonas en el sandbox)*.
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
 | B | Base del proyecto Laravel | En progreso | 17/19 |
 | C | Modelo de datos | **Completo** | 12/12 |
-| J | Motor de subastas en tiempo real ⚠️ | En progreso | 23/27 |
+| J | Motor de subastas en tiempo real ⚠️ | En progreso | 24/29 |
 | D | Autenticación y registro de postores | Pendiente | 0/7 |
 | K | Sala de puja conectada al motor real | Pendiente | 0/9 |
 | I | Remates y lotes + panel del martillero | Pendiente | 0/8 |
@@ -161,8 +161,10 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Vaciar la caché a mitad del remate no altera el estado (`optimize:clear` en PHPUnit, `cache:clear` en concurrencia)
 - [x] El ganador registrado coincide con la última puja válida (ráfagas y cierre disputado por 20 liquidaciones)
 - [x] Simulación de 20 postores en paralelo (Apache de Laragon + **MySQL 8.4**)
-- [ ] Repetir `tools/concurrencia` con **MariaDB** local (Laragon no la trae instalada)
-- [ ] Prueba del transporte en el sandbox con espectadores simulados *(requiere un remate de prueba en el sandbox)*
+- [ ] Concurrencia contra **MariaDB real** del sandbox, sobre el remate de demostración (decisión de Jonas, 16/09; requiere login HTTP del Bloque D)
+- [x] Comando `colliers:remate-demo`: remate marcado `es_demostracion`, postores aprobados con garantía y claves aleatorias mostradas una vez; se niega con APP_ENV=production (16/09)
+- [ ] Sandbox con `APP_ENV=staging` para poder crear el remate de demostración *(Jonas en el servidor)*
+- [ ] Prueba del transporte en el sandbox con espectadores simulados, sobre el remate de demostración
 - [x] Bloqueo de deploy con remate en curso o por comenzar (30 min antes; `colliers:puede-desplegar` sale 75)
 
 ## D — Autenticación y registro de postores · Pendiente

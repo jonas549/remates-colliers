@@ -47,6 +47,7 @@ class Remate extends Model
             'pausa_entre_lotes_segundos' => 'integer',
             'incremento_minimo' => 'integer',
             'porcentaje_garantia' => 'decimal:2',
+            'es_demostracion' => 'boolean',
         ];
     }
 

@@ -34,9 +34,10 @@ class Diagnostico extends Command
 
         $this->seccion('Entorno');
         $this->revisar(filled(config('app.key')), 'APP_KEY definida (respaldarla: el RUT se cifra con ella)');
-        $produccion = app()->environment('production');
+        // En un servidor (production o staging, como el sandbox) se exigen las mismas condiciones.
+        $produccion = ! app()->environment(['local', 'testing']);
         $this->revisar(true, 'APP_ENV=' . app()->environment());
-        $this->revisar(! ($produccion && config('app.debug')), 'APP_DEBUG=false en producción', critico: $produccion);
+        $this->revisar(! ($produccion && config('app.debug')), 'APP_DEBUG=false en el servidor', critico: $produccion);
         $this->revisar(config('app.timezone') === 'UTC', 'Zona horaria de la aplicación en UTC');
         $this->revisar(config('app.locale') === 'es', 'Idioma español (APP_LOCALE=es)');
         $this->revisar(str_starts_with((string) config('app.url'), 'https://') || ! $produccion, 'APP_URL con https', critico: false);
