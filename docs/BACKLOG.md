@@ -16,7 +16,7 @@ nota *(verifica Jonas en el sandbox)*.
 |---|---|---|---|
 | A | Entorno y servidor | **Completo** | 5/5 |
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
-| B | Base del proyecto Laravel | En progreso | 14/19 |
+| B | Base del proyecto Laravel | En progreso | 15/19 |
 | C | Modelo de datos | Pendiente | 0/11 |
 | J | Motor de subastas en tiempo real ⚠️ | Pendiente | 0/23 |
 | D | Autenticación y registro de postores | Pendiente | 0/7 |
@@ -98,7 +98,7 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] Sandbox responde en https y pide la clave de acceso *(Jonas, 16/09)*
 - [ ] `colliers:diagnostico` sin fallas y latido OK en el sandbox *(verifica Jonas en el sandbox)*
 - [ ] Handler versionado en `public/.htaccess` (el deploy revierte cambios manuales); verificar el sitio tras el push *(verifica Jonas en el sandbox)*
-- [ ] Hook pre-commit que verifique que `public/build` está compilado y al día con CSS/JS
+- [x] Hook pre-commit (`.githooks/pre-commit`) que verifica que `public/build` corresponde a los assets del commit (5 casos probados, 16/09)
 - [ ] Fortify en español *(se hace en D)*
 - [ ] `maatwebsite/excel` para exportaciones *(se hace en O)*
 

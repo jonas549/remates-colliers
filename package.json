@@ -5,7 +5,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "comparar": "node tools/comparar/comparar.mjs"
+        "comparar": "node tools/comparar/comparar.mjs",
+        "prepare": "git config core.hooksPath .githooks"
     },
     "dependencies": {
         "alpinejs": "^3.14.0",

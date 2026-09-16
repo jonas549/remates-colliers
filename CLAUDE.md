@@ -170,7 +170,10 @@ El servidor **no es un VPS**. Es hosting compartido.
 - **NO hay Supervisor.** No se pueden correr procesos persistentes.
 - **Las colas van por cron**, con `queue:work --stop-when-empty`. No con un worker permanente.
 - **Vite NO se compila en el servidor.** `public/build/` se commitea. Si tocas CSS o JS, compila y
-  commitea el build.
+  commitea el build. El hook `.githooks/pre-commit` lo verifica: si el commit toca `resources/css`,
+  `resources/js`, `resources/fonts`, `vite.config.js` o `package*.json`, compila y rechaza el commit si
+  `public/build` no coincide con lo preparado, o si hay cambios de assets sin preparar. Se activa con
+  `git config core.hooksPath .githooks` (lo hace `npm install` con el script `prepare`).
 - **El cron de deploy corre `migrate` pero no `db:seed`.** Lo que necesite datos sembrados va en un
   comando idempotente (`colliers:instalar`) que el script de deploy sí ejecuta.
 - **LiteSpeed puede requerir forzar el handler de PHP vía `.htaccess`.** El bloque está en

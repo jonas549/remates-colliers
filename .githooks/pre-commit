@@ -1,0 +1,40 @@
+#!/bin/sh
+# Pre-commit: public/build tiene que corresponder a los assets que se commitean.
+# Vite NO se compila en el servidor (CLAUDE.md §4): si se commitea CSS/JS sin su build, el sandbox
+# queda con el diseño viejo o roto. Se activa con `git config core.hooksPath .githooks`
+# (lo hace `npm install` mediante el script "prepare").
+
+ENTRADAS='^(resources/(css|js|fonts)/|vite\.config\.js$|package\.json$|package-lock\.json$|public/build/)'
+
+if ! git diff --cached --name-only | grep -Eq "$ENTRADAS"; then
+    exit 0
+fi
+
+# El build se genera desde la copia de trabajo: si hay cambios sin preparar en las entradas,
+# el resultado no correspondería a lo que se commitea.
+SIN_PREPARAR=$( { git diff --name-only; git ls-files --others --exclude-standard; } \
+    | grep -E '^(resources/(css|js|fonts)/|vite\.config\.js$|package\.json$|package-lock\.json$)' )
+if [ -n "$SIN_PREPARAR" ]; then
+    echo "pre-commit: hay cambios en assets que no están en el commit:"
+    echo "$SIN_PREPARAR" | sed 's/^/  - /'
+    echo "Agrégalos con git add o guárdalos con git stash antes de commitear."
+    exit 1
+fi
+
+echo "pre-commit: compilando assets para verificar public/build..."
+if ! npm run build --silent > /dev/null 2>&1; then
+    echo "pre-commit: npm run build falló. Ejecútalo a mano para ver el error."
+    exit 1
+fi
+
+# Tras compilar, public/build no puede diferir de lo preparado para el commit.
+DIFERENCIAS=$(git status --porcelain --untracked-files=all -- public/build | grep -E '^(\?\?|.[^ ])')
+if [ -n "$DIFERENCIAS" ]; then
+    echo "pre-commit: public/build no corresponde a los assets del commit:"
+    echo "$DIFERENCIAS" | sed 's/^/  /'
+    echo "El build ya quedó actualizado. Ejecuta: git add -A public/build  y vuelve a commitear."
+    exit 1
+fi
+
+echo "pre-commit: public/build al día."
+exit 0
