@@ -46,7 +46,7 @@ A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
 **Dónde vamos:** T cerrado y en GitHub. B casi cerrado: servidor conectado por Jonas (16/09); falta
 `colliers:diagnostico` en el sandbox y verificar el handler versionado tras el próximo push.
-C terminado en local (falta verlo migrado en MariaDB tras el push). **Siguiente: J núcleo.**
+C en GitHub desde `4bd54c0`: falta ver `migrate:status` en MariaDB. **Siguiente: J núcleo.**
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -91,7 +91,7 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] `.env.example` completo y sin secretos
 - [x] `users` con rol, estado y cambio de clave obligatorio (migración aditiva)
 - [x] `php artisan test` 13/13 (16/09)
-- [x] Push a `main` con aprobación de Jonas (16/09, `ce52a89`)
+- [x] Push a `main` con aprobación de Jonas (16/09, `ce52a89`; segundo push `4bd54c0` con C, hook y handler)
 - [x] Conectar el servidor: clone, `.env`, `APP_KEY` generada y respaldada, migrate, `colliers:instalar`, administrador creado *(Jonas, 16/09)*
 - [x] Script de deploy con `colliers:puede-desplegar` y `colliers:instalar` *(Jonas, 16/09)*
 - [x] Cron de `schedule:run` cada minuto y cron de deploy cada 5 minutos activos *(Jonas, 16/09)*
