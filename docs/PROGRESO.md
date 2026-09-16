@@ -48,6 +48,17 @@ y la sala difieren por remuestreo de fotos y el contador de «personas viendo» 
 En tablet/móvil los porcentajes altos del admin (20–55 %) son las adaptaciones aprobadas
 (barra superior + menú deslizable, tarjetas, tablas con primera columna fija), no errores.
 
+**Listado a 760 px: 22 % de diferencia, deliberada** (detectada en la corrida de control del 16/09).
+En tablet (760–1119) el prototipo muestra los botones **Grilla / Tabla**, pero no funcionan: fuerza la
+grilla y la tabla nunca aparece. Laravel los oculta desde `0925424` (`.listado__vista { display: none; }`
+en `resources/css/paginas/listado.css`). A 760 px los botones del prototipo bajan a una segunda fila
+(62 px), así que todo lo que sigue queda desplazado y la diferencia se acumula. A 1024 y 1119 px caben en
+la misma fila y la diferencia es ≈ 0,35 %. Sin scroll horizontal y 0 táctiles < 44 px en todas.
+
+Corrida de control del 16/09 (listado): escritorio 0,297–0,331 %; 375 px ≈ 0,61 %; 759 px ≈ 0,36 %;
+760 px ≈ 22 % (lo anterior); 1024/1119 px ≈ 0,33–0,36 %. Filtros 42/42, interacción idéntica salvo
+favoritos, `php artisan test` 13/13. Un proceso por ancho: pico de Chrome 2,2 GB, Node 309 MB, PHP 207 MB.
+
 **Pruebas de interacción (15/09, todas OK):**
 
 | Script | Qué verifica | Resultado |
