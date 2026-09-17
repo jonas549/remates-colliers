@@ -3,7 +3,7 @@ import { clp, cuentaRegresiva, partes, dos } from './formato';
 // Listado de remates. Port de la lógica de index.dc.html: filtros por estado y ocupación,
 // búsqueda, orden, grilla/tabla, "cargar más" y cuentas regresivas (favoritos: fuera de alcance),
 // más los filtros adicionales del panel.
-// Bloque T: filtra en el navegador. En el Bloque N pasa a filtrar en el servidor con el estado en la URL.
+// Datos reales desde el Bloque N (App\Publico\Catalogo). Filtra en el navegador: el catálogo es chico (decenas de remates).
 export default ({ remates, sesion, rutas, columnas = 3 }) => ({
     remates,
     sesion,
@@ -136,11 +136,11 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
         return {
             id: l.id,
             href: rutas.detalle.replace('__ID__', l.id),
-            foto: rutas.fotos + '/prop-' + l.id + '.jpg',
+            foto: l.foto,
             direccion: l.direccion,
             ubicacion: l.comuna + ', ' + l.region,
-            tipoSup: l.tipo + ' · ' + l.sup + ' m² útiles',
-            dormBanos: l.dorm + 'D / ' + l.banos + 'B',
+            tipoSup: l.tipo + (l.sup ? ' · ' + String(l.sup).replace('.', ',') + ' m² útiles' : ''),
+            dormBanos: l.dorm ? l.dorm + 'D / ' + l.banos + 'B' : l.tipo,
             extras,
             ocupacion: l.ocupacion,
             ocupacionClase: l.ocupacion === 'Ocupada' ? 'tarjeta__chip--ocupada' : 'tarjeta__chip--desocupada',
@@ -157,6 +157,8 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
             statusClase,
             abierto,
             nuevoRemate: l.nuevoRemate || '',
+            nuevoHref: l.nuevoHref || '',
+            bases: l.bases || '',
             cta: l.estado === 'En vivo' ? 'Ver transmisión y pujar' : (this.sesion === 'aprobada' ? 'Ver remate' : 'Inscribirme para pujar'),
         };
     },
@@ -172,6 +174,26 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
         this[campo] = valor;
         this.visibles = 6;
         this.ultimoFiltro = valor === todas ? null : campo;
+    },
+
+    // «Avísame de los próximos remates» (Bloque M).
+    avisoMensaje: '',
+    avisoEnviando: false,
+    async suscribir(formulario) {
+        this.avisoEnviando = true;
+        try {
+            const r = await fetch(rutas.avisame, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '' },
+                body: JSON.stringify({ email: formulario.email.value }),
+            });
+            const datos = await r.json().catch(() => ({}));
+            this.avisoMensaje = datos.mensaje || datos.message || (r.ok ? 'Listo.' : 'No pudimos registrar tu correo.');
+        } catch (e) {
+            this.avisoMensaje = 'Sin conexión: inténtalo de nuevo.';
+        } finally {
+            this.avisoEnviando = false;
+        }
     },
 
     buscar(valor) {

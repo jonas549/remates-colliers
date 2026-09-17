@@ -1,17 +1,22 @@
 @php
-    use App\Demo\RematesDemo;
+    use App\Support\Formato;
+    use App\Support\Sitio;
 
-    $clp = fn ($n) => RematesDemo::clp($n);
-    $logueado = $sesion !== 'visitante';
+    $clp = fn ($n) => Formato::clp($n);
+    $sesion = $visitante['sesion'];
+    $logueado = $visitante['logueado'];
+    // En local, ?sesion= reproduce el prototipo (remate de ejemplo); con datos reales, el remate de la inscripción.
+    $remateBarra = $visitante['remate']['titulo'] ?? ($hero['direccion'] ?? '');
+    $slugBarra = $visitante['remate']['slug'] ?? ($hero['id'] ?? null);
     $barra = [
         'registrado' => ['clase' => 'registrado', 'msg' => 'Aún no registras una garantía. Necesitas una aprobada por remate para poder pujar.', 'accion' => 'Cómo constituirla'],
-        'en-revision' => ['clase' => 'revision', 'msg' => 'Recibimos tu comprobante para Los Militares 5620, Depto. 703. Lo revisamos dentro de 24 horas hábiles.', 'accion' => 'Ver estado'],
-        'aprobada' => ['clase' => 'aprobada', 'msg' => 'Garantía aprobada para Los Militares 5620, Depto. 703. Puedes pujar cuando comience el remate.', 'accion' => 'Ir al remate'],
+        'en-revision' => ['clase' => 'revision', 'msg' => 'Recibimos tu comprobante para ' . $remateBarra . '. Lo revisamos dentro de ' . Sitio::horasRevision() . ' horas hábiles.', 'accion' => 'Ver estado'],
+        'aprobada' => ['clase' => 'aprobada', 'msg' => 'Garantía aprobada para ' . $remateBarra . '. Puedes pujar cuando comience el remate.', 'accion' => 'Ir al remate'],
     ][$sesion] ?? null;
-    $heroCta = match ($sesion) {
-        'visitante' => ['texto' => 'Crear cuenta para pujar', 'href' => route('register')],
-        'aprobada' => ['texto' => 'Ir al remate', 'href' => route('sala.show', $hero['id'])],
-        default => ['texto' => 'Constituir la garantía', 'href' => route('cuenta.estado')],
+    $heroCta = $hero === null ? null : match ($sesion) {
+        'visitante' => $logueado ? ['texto' => 'Ver bases y condiciones', 'href' => route('remates.show', $hero['id'])] : ['texto' => 'Crear cuenta para pujar', 'href' => route('register')],
+        'aprobada' => ['texto' => 'Ir al remate', 'href' => $visitante['remate'] ? route('sala.show', $visitante['remate']['slug']) : route('remates.show', $hero['id'])],
+        default => ['texto' => 'Constituir la garantía', 'href' => route('remates.show', $hero['id'])],
     };
     $opcionesEstado = ['Todos' => 'Todos los remates', 'En vivo' => 'En vivo', 'Próximo' => 'Próximos', 'Cerrado' => 'Cerrados'];
     $opcionesOcupacion = ['Todas' => 'Todas', 'Desocupada' => 'Desocupada', 'Ocupada' => 'Ocupada'];
@@ -19,23 +24,23 @@
     $tipos = collect($remates)->pluck('tipo')->unique()->sortBy(fn ($t) => $t === 'Departamento' ? 0 : 1)->values();
     $regiones = \App\Support\RegionesChile::ordenar(collect($remates)->pluck('region')->unique()->values()->all());
     $comunas = collect($remates)->mapWithKeys(fn ($r) => [$r['comuna'] => $r['region']])->sortKeysUsing(fn ($x, $y) => collator_compare(collator_create('es_CL'), $x, $y))->all();
-    $mostrarFiltroGarantia = false; // Ver la nota junto al grupo "Garantía requerida".
+    // $mostrarFiltroGarantia: Administración → Configuración → Sitio público (ver la nota junto al grupo "Garantía requerida").
     $config = [
         'remates' => $remates,
         'sesion' => $sesion,
-        'rutas' => ['detalle' => route('remates.show', '__ID__'), 'fotos' => asset('img/demo')],
+        'rutas' => ['detalle' => route('remates.show', '__ID__'), 'avisame' => route('suscripciones.store')],
     ];
 @endphp
 <x-layouts.base titulo="Remates" pagina-completa>
     <div class="listado" x-data="listado(@js($config))">
 
-        <x-publico.cabecera :sesion="$sesion">
+        <x-publico.cabecera :sesion="$sesion" :visitante="$visitante">
             @if ($barra)
                 <div class="pub-garantia pub-garantia--{{ $barra['clase'] }}">
                     <div class="pub-garantia__interior contenedor">
                         <span class="pub-garantia__chip">GARANTÍA</span>
                         <span>{{ $barra['msg'] }}</span>
-                        <a href="{{ $sesion === 'aprobada' ? route('sala.show', $hero['id']) : route('cuenta.estado') }}" class="pub-garantia__accion">{{ $barra['accion'] }}</a>
+                        <a href="{{ $sesion === 'aprobada' && $slugBarra ? route('sala.show', $slugBarra) : route('cuenta.estado', array_filter(['remate' => $visitante['remate']['slug'] ?? null])) }}" class="pub-garantia__accion">{{ $barra['accion'] }}</a>
                     </div>
                 </div>
             @endif
@@ -52,8 +57,8 @@
                 <div class="listado__uf">
                     <div>
                         <div class="listado__uf-etiqueta">UF DE HOY</div>
-                        <div class="listado__uf-valor">$39.412,73</div>
-                        <div class="listado__uf-fecha">31 de agosto de 2026</div>
+                        <div class="listado__uf-valor">{{ $uf['valor'] ? '$' . number_format($uf['valor'], 2, ',', '.') : '—' }}</div>
+                        <div class="listado__uf-fecha">{{ $uf['fecha'] ? Formato::fechaLarga(\Carbon\CarbonImmutable::parse($uf['fecha'], Formato::ZONA)) : 'Sin valor vigente' }}</div>
                     </div>
                     <div class="listado__uf-divisor"></div>
                     <p>Valor de referencia informativa. Los precios base, las garantías y las pujas se expresan y se pagan en pesos (CLP).</p>
@@ -61,12 +66,13 @@
             </div>
         </div>
 
+        @if ($hero)
         <div class="listado__hero">
             <div class="listado__hero-interior contenedor">
                 <div>
-                    <div class="listado__hero-chip">PRÓXIMO REMATE</div>
+                    <div class="listado__hero-chip">{{ $hero['enVivo'] ? 'REMATE EN VIVO' : 'PRÓXIMO REMATE' }}</div>
                     <h2 class="listado__hero-titulo">{{ $hero['direccion'] }}</h2>
-                    <div class="listado__hero-meta">{{ $hero['comuna'] }}, {{ $hero['region'] }} · {{ $hero['tipo'] }} · {{ $hero['sup'] }} m² útiles · {{ $hero['dorm'] }}D / {{ $hero['banos'] }}B · {{ $hero['ocupacion'] }}</div>
+                    <div class="listado__hero-meta">{{ collect([trim($hero['comuna'] . ', ' . $hero['region'], ', '), $hero['tipo'], $hero['sup'] ? Formato::numero($hero['sup'], 2) . ' m² útiles' : null, $hero['dorm'] ? $hero['dorm'] . 'D / ' . $hero['banos'] . 'B' : null, $hero['ocupacion']])->filter()->join(' · ') }}</div>
                     <div class="listado__contador">
                         @foreach (['d' => 'DÍAS', 'h' => 'HORAS', 'm' => 'MIN', 's' => 'SEG'] as $parte => $etiqueta)
                             <div class="listado__caja-tiempo">
@@ -75,11 +81,13 @@
                             </div>
                         @endforeach
                     </div>
-                    <div class="listado__hero-plazo">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffd400" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-                        <span>Garantía aprobada a más tardar el</span>
-                        <span>07-09-2026, 18:00</span>
-                    </div>
+                    @if ($hero['limiteLargo'] && ! $hero['enVivo'])
+                        <div class="listado__hero-plazo">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffd400" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                            <span>Garantía aprobada a más tardar el</span>
+                            <span>{{ $hero['limiteLargo'] }}</span>
+                        </div>
+                    @endif
                     <div class="listado__hero-datos">
                         <div class="listado__hero-dato">
                             <div class="listado__hero-dato-etiqueta">PRECIO BASE</div>
@@ -97,15 +105,16 @@
                     <div class="listado__hero-acciones">
                         <a href="{{ $heroCta['href'] }}" class="listado__hero-cta">{{ $heroCta['texto'] }}</a>
                         <a href="{{ route('remates.show', $hero['id']) }}" class="listado__hero-cta2">Ver bases y condiciones</a>
-                        <a href="mailto:{{ \App\Support\Sitio::correo() }}?subject={{ rawurlencode('Visita a ' . $hero['direccion'] . ' (' . $hero['folio'] . ')') }}" class="listado__hero-visita">Coordinar visita a la propiedad</a>
+                        <a href="mailto:{{ Sitio::correo() }}?subject={{ rawurlencode('Visita a ' . $hero['direccion'] . ' (' . $hero['folio'] . ')') }}" class="listado__hero-visita">Coordinar visita a la propiedad</a>
                     </div>
                     <p class="listado__hero-nota">Martillero: <span>{{ $hero['martillero'] }}</span>. La garantía se constituye por vale a la vista o transferencia y es revisada manualmente por Colliers.</p>
                 </div>
                 <div class="listado__hero-foto">
-                    <x-imagen-slot :src="asset('img/demo/prop-hero.jpg')" alt="Foto de la propiedad destacada" />
+                    <x-imagen-slot :src="$hero['foto']" alt="Foto de la propiedad destacada" />
                 </div>
             </div>
         </div>
+        @endif
 
         <div class="listado__lista contenedor">
             <div class="listado__herramientas">
@@ -313,7 +322,7 @@
                                                     <div class="tarjeta__cerrado">
                                                         <div class="tarjeta__cerrado-caja">Remate cerrado</div>
                                                         <template x-if="l.nuevoRemate">
-                                                            <a href="#" class="tarjeta__nuevo" x-text="'Se republicó en un remate nuevo: ' + l.nuevoRemate"></a>
+                                                            <a :href="l.nuevoHref || '#'" class="tarjeta__nuevo" x-text="'Se republicó en un remate nuevo: ' + l.nuevoRemate"></a>
                                                         </template>
                                                     </div>
                                                 </template>
@@ -321,7 +330,7 @@
                                                     <a :href="l.href" class="tarjeta__cta" x-text="l.cta"></a>
                                                 </template>
                                                 <div class="tarjeta__enlaces">
-                                                    <a href="#">Bases del remate</a>
+                                                    <a :href="l.bases || l.href">Bases del remate</a>
                                                     <span>Martillero: <span x-text="l.martillero"></span></span>
                                                 </div>
                                             </div>
@@ -394,10 +403,12 @@
                     <h2 class="listado__aviso-titulo">Avísame de los próximos remates</h2>
                     <p>Recibe un correo cuando se publique un nuevo remate de casas y departamentos, y un recordatorio 48 horas antes del cierre de garantías.</p>
                 </div>
-                <div class="listado__aviso-form">
-                    <input placeholder="tu@correo.cl" aria-label="Correo electrónico">
-                    <button type="button">Suscribirme</button>
-                </div>
+                {{-- Bloque M: suscripción real a avisos de remates nuevos. --}}
+                <form class="listado__aviso-form" @submit.prevent="suscribir($event.target)">
+                    <input type="email" name="email" required placeholder="tu@correo.cl" aria-label="Correo electrónico" value="{{ auth()->user()?->email }}">
+                    <button type="submit" :disabled="avisoEnviando">Suscribirme</button>
+                </form>
+                <p class="listado__aviso-resultado" x-show="avisoMensaje" x-text="avisoMensaje" role="status"></p>
             </div>
         </div>
 

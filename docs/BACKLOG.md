@@ -26,7 +26,7 @@ nota *(verifica Jonas en el sandbox)*.
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 7/8 |
 | M | Notificaciones | En progreso | 7/8 |
-| N | Sitio público | Pendiente | 0/9 |
+| N | Sitio público | En progreso | 11/12 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | Pendiente | 0/3 |
 | O | Reportes | Pendiente | 0/7 |
@@ -44,7 +44,7 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
-**Dónde vamos:** T, C e I cerrados; V, G y H hechos salvo pruebas en el sandbox y correos (M). B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
+**Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) siguen con datos de ejemplo. B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
 camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
 **K → I → V → G → H → M → N**, commits locales, push al terminar N.
@@ -299,16 +299,24 @@ real `database` + `queue:work --stop-when-empty` (encola 1 trabajo, lo envía y 
 - [x] Plantillas en español (asunto «… · Remates Colliers», saludo, pie con el contacto de Configuración y textos del correo base traducidos en `lang/es.json`)
 - [ ] Envío real por el SMTP de Colliers y entrega en bandeja (no spam) *(Jonas en el sandbox)*
 
-## N — Sitio público · Pendiente
+## N — Sitio público · En progreso
 
-- [ ] Listado con datos reales y filtros desde los datos
-- [ ] Detalle de remate próximo y en vivo con datos reales
-- [ ] Calendario `.ics`
-- [ ] Mapa (OpenStreetMap en gris)
-- [ ] Documentos descargables
-- [ ] Recomendados
-- [ ] Enlace al canal de YouTube de Colliers
-- [ ] Contacto «Coordinar visita»
+Verificado el 17/09: `SitioPublicoTest` (4; 113/113 en total), `filtros-interaccion.mjs` con datos reales (todo OK a 1440 y
+375 px) y `tools/comparar/sitio-publico.mjs` (33/33: listado, detalle próximo y cerrado, «Avísame», calendario, detalle en vivo
+que se actualiza solo con una puja real, inscripción desde el detalle a 375 px, usabilidad de listado, detalles y login a
+375–1440 px). Ya no se usan `App\Demo\RematesDemo` ni `DetalleDemo` (quedan para el índice de revisión y `?demo=1`).
+
+- [x] Listado con datos reales (sin borradores, cancelados ni remates de demostración) y filtros generados desde los datos; UF de Configuración; hero con el próximo remate real
+- [x] Detalle de remate próximo, en vivo y cerrado con datos reales (ficha, antecedentes, fotos, varios lotes); bloqueo y botón según la cuenta y la garantía de ESE remate
+- [x] Detalle en vivo que solo lee el JSON estático (cada 2 s) y `hora.php`: los espectadores no ejecutan el framework *(docs/RENDIMIENTO-SIN-OPCACHE.md)*
+- [x] «Constituir la garantía» inscribe al postor desde el detalle (Bloque H)
+- [x] Calendario `.ics`
+- [x] Mapa (OpenStreetMap en gris) con las coordenadas del lote
+- [x] Documentos descargables: públicos para todos; reservados solo con garantía aprobada del remate
+- [x] Recomendados (próximos y en vivo)
+- [x] Enlace al canal de YouTube de Colliers (Configuración; se oculta si está vacío) y «Compartir»
+- [x] Contacto «Coordinar visita» y «Contactar al ejecutivo» con el correo de Configuración
+- [x] «Avísame» en el listado y en el detalle; foto y datos del próximo remate real en el Login y demás pantallas de acceso
 - [ ] Idioma EN/ES *(pendiente de decisión de Jonas)*
 
 ## L — Streaming · Pendiente

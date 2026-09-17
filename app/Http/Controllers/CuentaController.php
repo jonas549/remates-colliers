@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Autenticacion\Sesiones;
 use App\Demo\EstadoCuentaDemo;
-use App\Demo\RematesDemo;
+use App\Publico\Catalogo;
 use App\Models\AccessLog;
 use App\Models\Garantia;
 use App\Models\Postor;
@@ -80,7 +80,7 @@ class CuentaController extends Controller
     public function clave(Request $request): View
     {
         return view('auth.cambiar-clave', [
-            'proximo' => RematesDemo::proximoDestacado(),
+            'proximo' => Catalogo::destacado(),
             'obligatorio' => (bool) $request->user()->debe_cambiar_clave,
         ]);
     }
@@ -88,7 +88,7 @@ class CuentaController extends Controller
     public function sesiones(Request $request): View
     {
         return view('cuenta.sesiones', [
-            'proximo' => RematesDemo::proximoDestacado(),
+            'proximo' => Catalogo::destacado(),
             'sesiones' => Sesiones::de($request->user(), $request->session()->getId()),
             'disponible' => Sesiones::disponible(),
         ]);

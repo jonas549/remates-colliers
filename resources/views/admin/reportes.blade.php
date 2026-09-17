@@ -65,6 +65,8 @@
             </div>
         </div>
 
+        <div class="admin-avisos"><div class="admin-aviso admin-aviso--info">Datos de ejemplo del diseño: los reportes se conectan a los remates reales en el Bloque O.</div></div>
+
         <div class="admin-reportes__kpis-fondo">
             <div class="admin-reportes__kpis">
                 @foreach ($kpis as [$etiqueta, $valor, $nota])

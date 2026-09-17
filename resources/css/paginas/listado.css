@@ -262,3 +262,6 @@
   .listado__como-titulo { font-size: 26px; }
   .listado__como-grilla { grid-template-columns: 1fr; gap: 16px; }
 }
+
+/* Bloque M: resultado de «Suscribirme». */
+.listado__aviso-resultado { margin: 10px 0 0; font-size: 14px; }

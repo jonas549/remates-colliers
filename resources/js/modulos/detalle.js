@@ -1,7 +1,7 @@
 import L from 'leaflet';
 import { clp, dos } from './formato';
 
-const UF = 39412.73;
+const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 
 function reloj(segundos) {
     const s = Math.max(0, segundos);
@@ -10,24 +10,56 @@ function reloj(segundos) {
     return Math.floor(s / 3600) + ' h';
 }
 
-function horaDe(fecha) {
-    return dos(fecha.getHours()) + ':' + dos(fecha.getMinutes()) + ':' + dos(fecha.getSeconds());
-}
-
-// Detalle de remate: cuenta regresiva (inicio o cierre), historial de pujas y mapa.
-// delta: segundos desde la carga hasta el inicio/cierre (demo). pujas: [monto, postor, segundos atrás].
-export default ({ delta, pujas, mapa }) => ({
+// Detalle de remate (Bloque N): cuenta regresiva al inicio o al cierre con la hora del servidor, historial de pujas en vivo
+// y mapa. Los espectadores SOLO leen el JSON estático (cada ~2 s) y sincronizan el reloj con hora.php: el detalle nunca
+// ejecuta el framework, así la cantidad de espectadores no compite con las pujas (docs/RENDIMIENTO-SIN-OPCACHE.md).
+export default ({ enVivo, loteId, objetivoMs, servidorMs, estadoJson, hora, pujas, precioActual, totalPujas, uf, mapa, rutas, remate }) => ({
     pujas,
-    t0: Date.now(),
-    ahora: Date.now(),
+    precio: precioActual,
+    total: totalPujas,
+    objetivo: objetivoMs,
+    desfase: servidorMs - Date.now(),
+    ahora: servidorMs,
+    compartido: '',
+    avisoAbierto: false,
+    avisoMensaje: '',
+    avisoEnviando: false,
 
     init() {
-        setInterval(() => { this.ahora = Date.now(); }, 1000);
+        setInterval(() => { this.ahora = Date.now() + this.desfase; }, 1000);
+        this.sincronizar();
+        if (enVivo) this.consultar();
         this.$nextTick(() => this.iniciarMapa());
     },
 
+    async sincronizar() {
+        try {
+            const t0 = Date.now();
+            const r = await fetch(hora + '?t=' + t0, { cache: 'no-store' });
+            const t1 = Date.now();
+            this.desfase = (await r.json()).servidor_ms - (t0 + t1) / 2;
+        } catch (e) { /* se mantiene la hora de la carga */ }
+    },
+
+    async consultar() {
+        try {
+            const r = await fetch(estadoJson + '?t=' + Date.now(), { cache: 'no-store' });
+            if (r.ok) {
+                const estado = await r.json();
+                const lote = estado.lotes.find((l) => l.id === loteId) || estado.lotes.find((l) => !TERMINALES.includes(l.estado));
+                if (lote) {
+                    this.pujas = lote.pujas || [];
+                    this.precio = lote.precio_actual;
+                    this.total = lote.total_pujas;
+                    this.objetivo = lote.cierra_en_ms;
+                }
+            }
+        } catch (e) { /* reintenta en el próximo ciclo */ }
+        setTimeout(() => this.consultar(), 2000);
+    },
+
     get restante() {
-        return Math.max(0, Math.floor((this.t0 + delta * 1000 - this.ahora) / 1000));
+        return Math.max(0, Math.floor((this.objetivo - this.ahora) / 1000));
     },
 
     // Próximo: días/horas/min/seg. En vivo: horas totales/min/seg.
@@ -35,7 +67,7 @@ export default ({ delta, pujas, mapa }) => ({
         const rs = this.restante;
         return {
             d: dos(Math.floor(rs / 86400)),
-            h: dos(this.pujas.length ? Math.floor(rs / 3600) : Math.floor((rs % 86400) / 3600)),
+            h: dos(enVivo ? Math.floor(rs / 3600) : Math.floor((rs % 86400) / 3600)),
             m: dos(Math.floor((rs % 3600) / 60)),
             s: dos(rs % 60),
         };
@@ -46,29 +78,58 @@ export default ({ delta, pujas, mapa }) => ({
         return p.h + ':' + p.m + ':' + p.s;
     },
 
-    get transcurrido() {
-        return Math.floor((this.ahora - this.t0) / 1000);
-    },
-
     get pujaActual() {
-        return this.pujas.length ? clp(this.pujas[0][0]) : '';
+        return this.precio ? clp(this.precio) : 'Sin pujas';
     },
 
     get pujaEnUf() {
-        return this.pujas.length ? 'UF ' + (this.pujas[0][0] / UF).toLocaleString('es-CL', { maximumFractionDigits: 0 }) : '';
+        return this.precio && uf ? 'UF ' + (this.precio / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }) : '—';
     },
 
     get haceUltima() {
-        return this.pujas.length ? reloj(this.pujas[0][2] + this.transcurrido) : '';
+        return this.pujas.length ? reloj(Math.floor((this.ahora - this.pujas[0].en_ms) / 1000)) : '—';
     },
 
     get historial() {
-        return this.pujas.map(([monto, postor, seg]) => ({
-            monto: clp(monto),
-            postor: 'Postor #' + postor,
-            hora: horaDe(new Date(this.t0 - seg * 1000)),
-            hace: 'hace ' + reloj(seg + this.transcurrido),
+        return this.pujas.map((p) => ({
+            monto: clp(p.monto),
+            postor: p.postor,
+            hora: new Date(p.en_ms).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour12: false }),
+            hace: 'hace ' + reloj(Math.floor((this.ahora - p.en_ms) / 1000)),
         }));
+    },
+
+    async compartir() {
+        const url = window.location.href;
+        try {
+            if (navigator.share) {
+                await navigator.share({ title: document.title, url });
+                return;
+            }
+            await navigator.clipboard.writeText(url);
+            this.compartido = 'Enlace copiado';
+        } catch (e) {
+            this.compartido = '';
+        }
+    },
+
+    // «Avísame antes de que comience» (Bloque M).
+    async avisame(email) {
+        if (!email) { this.avisoAbierto = true; return; }
+        this.avisoEnviando = true;
+        try {
+            const r = await fetch(rutas.avisame, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '' },
+                body: JSON.stringify({ email, remate }),
+            });
+            const datos = await r.json().catch(() => ({}));
+            this.avisoMensaje = datos.mensaje || datos.message || (r.ok ? 'Listo.' : 'No pudimos registrar tu correo.');
+        } catch (e) {
+            this.avisoMensaje = 'Sin conexión: inténtalo de nuevo.';
+        } finally {
+            this.avisoEnviando = false;
+        }
     },
 
     iniciarMapa() {

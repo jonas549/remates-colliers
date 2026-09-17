@@ -6,7 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Autenticacion\AutenticarUsuario;
-use App\Demo\RematesDemo;
+use App\Publico\Catalogo;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -55,12 +55,12 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::authenticateUsing(fn (Request $request) => app(AutenticarUsuario::class)($request));
 
-        Fortify::loginView(fn () => view('auth.login', ['proximo' => RematesDemo::proximoDestacado(), 'portal' => 'postores']));
+        Fortify::loginView(fn () => view('auth.login', ['proximo' => Catalogo::destacado(), 'portal' => 'postores']));
         Fortify::registerView(fn () => view('auth.registro'));
-        Fortify::requestPasswordResetLinkView(fn () => view('auth.recuperar-clave', ['proximo' => RematesDemo::proximoDestacado()]));
-        Fortify::resetPasswordView(fn (Request $request) => view('auth.restablecer-clave', ['proximo' => RematesDemo::proximoDestacado(), 'request' => $request]));
-        Fortify::verifyEmailView(fn () => view('auth.verificar-correo', ['proximo' => RematesDemo::proximoDestacado()]));
-        Fortify::confirmPasswordView(fn () => view('auth.confirmar-clave', ['proximo' => RematesDemo::proximoDestacado()]));
+        Fortify::requestPasswordResetLinkView(fn () => view('auth.recuperar-clave', ['proximo' => Catalogo::destacado()]));
+        Fortify::resetPasswordView(fn (Request $request) => view('auth.restablecer-clave', ['proximo' => Catalogo::destacado(), 'request' => $request]));
+        Fortify::verifyEmailView(fn () => view('auth.verificar-correo', ['proximo' => Catalogo::destacado()]));
+        Fortify::confirmPasswordView(fn () => view('auth.confirmar-clave', ['proximo' => Catalogo::destacado()]));
 
         // Protección por IP y usuario. El bloqueo de la CUENTA tras 5 intentos va en la tabla users (AutenticarUsuario).
         RateLimiter::for('login', function (Request $request) {

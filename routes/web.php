@@ -1,9 +1,6 @@
 <?php
 
-use App\Demo\AdminDemo;
-use App\Demo\DetalleDemo;
 use App\Demo\PantallasRevision;
-use App\Demo\RematesDemo;
 use App\Http\Controllers\AccesoSandboxController;
 use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -15,6 +12,7 @@ use App\Http\Controllers\Admin\RematesController;
 use App\Http\Controllers\Admin\SalaMartilleroController;
 use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CuentaController;
+use App\Http\Controllers\PublicoController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\RevisionController;
 use App\Http\Controllers\SalaController;
@@ -24,9 +22,8 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
 /*
- * Bloque T: rutas definitivas con vistas alimentadas por datos de ejemplo (App\Demo).
- *
- * La raíz es el listado de remates; /remates redirige a "/".
+ * Rutas de la aplicación. La raíz es el listado de remates; /remates redirige a "/".
+ * Las vistas del diseño (Bloque T) reciben datos reales desde los Bloques I a N.
  */
 
 // Clave de acceso al sandbox (ver App\Http\Middleware\AccesoSandbox).
@@ -51,14 +48,8 @@ Route::post('/admin/remates/{remate:slug}/mensaje', [SalaMartilleroController::c
 Route::post('/avisame', [SuscripcionesController::class, 'store'])->middleware('throttle:10,1')->name('suscripciones.store');
 Route::get('/avisame/baja/{token}', [SuscripcionesController::class, 'baja'])->where('token', '[A-Za-z0-9]{40}')->name('suscripciones.baja');
 
-// ?sesion= (visitante | registrado | en-revision | aprobada) simula la sesión en las páginas públicas hasta K y N.
-$sesionDemo = fn () => in_array(request('sesion'), ['registrado', 'en-revision', 'aprobada'], true) ? request('sesion') : 'visitante';
-
-Route::get('/', fn () => view('remates.index', [
-    'remates' => RematesDemo::todos(),
-    'hero' => RematesDemo::buscar('militares'),
-    'sesion' => $sesionDemo(),
-]))->name('remates.index');
+// Bloque N: sitio público con datos reales. En local, ?sesion= fuerza la variante del visitante (arnés visual).
+Route::get('/', [PublicoController::class, 'index'])->name('remates.index');
 Route::permanentRedirect('/remates', '/');
 
 // Índice de pantallas para revisar variantes: solo en el entorno local, nunca en el servidor.
@@ -67,11 +58,9 @@ if (app()->isLocal()) {
     // Entra como el primer usuario de un rol del seeder (pantallas protegidas y arnés visual).
     Route::get('/revision/entrar/{rol}', [RevisionController::class, 'entrar'])->name('revision.entrar');
 }
-// Demo: 'apoquindo' es el remate en vivo; cualquier otro muestra la ficha de 'militares' (próximo).
-Route::get('/remates/{remate}', fn (string $remate) => view('remates.show', [
-    'r' => DetalleDemo::para($remate) ?? DetalleDemo::para('militares'),
-    'sesion' => $sesionDemo(),
-]))->name('remates.show');
+Route::get('/remates/{remate:slug}', [PublicoController::class, 'show'])->name('remates.show');
+Route::get('/remates/{remate:slug}/documentos/{documento}', [PublicoController::class, 'documento'])->whereNumber('documento')->name('remates.documento');
+Route::get('/remates/{remate:slug}/calendario.ics', [PublicoController::class, 'calendario'])->name('remates.calendario');
 // Bloque K: sala de puja conectada al motor. Solo postores con cuenta y garantía del remate aprobadas.
 Route::get('/remates/{remate:slug}/sala', [SalaController::class, 'show'])
     ->middleware(['auth', 'rol:postor', 'verified', 'clave.vigente'])->name('sala.show');
@@ -81,7 +70,7 @@ Route::get('/remates/{remate:slug}/sala', [SalaController::class, 'show'])
  * /verificar-correo (config/fortify.php). Aquí: el acceso separado de administración y el área de la cuenta.
  */
 Route::middleware('guest')->group(function () {
-    Route::get('/admin/ingresar', fn () => view('auth.login', ['proximo' => RematesDemo::proximoDestacado(), 'portal' => 'administracion']))
+    Route::get('/admin/ingresar', fn () => view('auth.login', ['proximo' => \App\Publico\Catalogo::destacado(), 'portal' => 'administracion']))
         ->name('admin.ingresar');
     Route::post('/admin/ingresar', [AuthenticatedSessionController::class, 'store'])
         ->middleware('throttle:login')->name('admin.ingresar.store');

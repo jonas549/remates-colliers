@@ -84,6 +84,14 @@ switch ($accion) {
         echo "ok\n";
         break;
 
+    case 'pujar':
+        // pujar SLUG CORREO MONTO: una puja real por el motor (lo que haría la sala), para ver al espectador actualizarse.
+        $remate = Remate::where('slug', $argv[2] ?? '')->firstOrFail();
+        $user = User::where('email', $argv[3] ?? '')->firstOrFail();
+        $puja = app(App\Subastas\MotorPujas::class)->pujar($user, $remate->lotes()->first()->id, (int) ($argv[4] ?? 0), CarbonImmutable::now('UTC'));
+        echo "ok {$puja->monto}\n";
+        break;
+
     default:
         fwrite(STDERR, "Acción desconocida.\n");
         exit(1);

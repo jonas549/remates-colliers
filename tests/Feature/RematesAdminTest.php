@@ -176,7 +176,7 @@ class RematesAdminTest extends TestCase
         $lote = $remate->lotes()->first();
 
         $this->actingAs($this->admin)->post(route('admin.lotes.imagenes.store', [$remate, $lote]), [
-            'imagenes' => [UploadedFile::fake()->image('grande.jpg', 4000, 3000), UploadedFile::fake()->image('otra.png', 800, 600)],
+            'imagenes' => [UploadedFile::fake()->image('grande.jpg', 2560, 1920), UploadedFile::fake()->image('otra.png', 800, 600)],
         ])->assertSessionHas('estado', '2 fotos agregadas.');
         [$primera, $segunda] = $lote->imagenes()->get()->all();
         Storage::disk('public')->assertExists($primera->ruta);

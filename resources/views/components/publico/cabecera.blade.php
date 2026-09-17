@@ -1,9 +1,15 @@
 {{--
-    Cabecera pública. $sesion: visitante | registrado | en-revision | aprobada (demo hasta el Bloque D).
+    Cabecera pública. $sesion: visitante | registrado | en-revision | aprobada. $visitante: App\Publico\EstadoVisitante.
+    «Mi cuenta» para postores; «Panel Colliers» solo para administración (en local con ?sesion= se ven ambos, como el prototipo).
     Slot opcional: franjas bajo la navegación (barra de garantía, ticker de remate en vivo).
 --}}
-@props(['sesion' => 'visitante', 'zIndex' => null])
-@php($logueado = $sesion !== 'visitante')
+@props(['sesion' => 'visitante', 'visitante' => null, 'zIndex' => null])
+@php
+    $logueado = $visitante['logueado'] ?? $sesion !== 'visitante';
+    $simulado = app()->isLocal() && request()->filled('sesion');
+    $panel = $simulado || ($visitante['esAdministracion'] ?? false);
+    $cuenta = $simulado || (auth()->user()?->rol === \App\Models\User::ROL_POSTOR);
+@endphp
 <div class="pub-cabecera" @if ($zIndex) style="z-index: {{ $zIndex }}" @endif x-data="{ menu: false }">
     <div class="pub-cabecera__nav contenedor">
         <a href="{{ route('remates.index') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="pub-cabecera__logo"></a>
@@ -19,8 +25,8 @@
             <a href="{{ route('remates.index') }}#buscar" class="pub-cabecera__buscar" aria-label="Buscar remates"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></a>
             <span class="pub-cabecera__idioma">EN / <span>ES</span></span>
             @if ($logueado)
-                <a href="{{ route('admin.dashboard') }}" class="pub-cabecera__panel">Panel Colliers</a>
-                <a href="{{ route('cuenta.estado') }}" class="pub-cabecera__acceso">Mi cuenta</a>
+                @if ($panel)<a href="{{ route('admin.dashboard') }}" class="pub-cabecera__panel">Panel Colliers</a>@endif
+                @if ($cuenta)<a href="{{ route('cuenta.estado') }}" class="pub-cabecera__acceso">Mi cuenta</a>@else<a href="{{ route('admin.dashboard') }}" class="pub-cabecera__acceso">Panel</a>@endif
             @else
                 <a href="{{ route('login') }}" class="pub-cabecera__acceso">Ingresar</a>
             @endif
@@ -38,8 +44,8 @@
             <a href="#">Nosotros</a>
             <a href="{{ route('remates.index') }}" class="es-actual">Remates</a>
             @if ($logueado)
-                <a href="{{ route('cuenta.estado') }}" class="pub-menu__acceso">Mi cuenta</a>
-                <a href="{{ route('admin.dashboard') }}" class="pub-menu__panel">Panel Colliers</a>
+                @if ($cuenta)<a href="{{ route('cuenta.estado') }}" class="pub-menu__acceso">Mi cuenta</a>@endif
+                @if ($panel)<a href="{{ route('admin.dashboard') }}" class="pub-menu__panel">Panel Colliers</a>@endif
             @else
                 <a href="{{ route('login') }}" class="pub-menu__acceso">Ingresar</a>
             @endif

@@ -28,28 +28,33 @@
         </div>
 
         <div class="acceso__foto">
-            <x-imagen-slot :src="asset('img/demo/' . $proximo['foto'])" />
+            {{-- Próximo remate real (App\Publico\Catalogo::destacado); sin remates publicados, solo la foto. --}}
+            <x-imagen-slot :src="$proximo['foto'] ?? asset('img/demo/prop-hero.jpg')" />
             <div class="acceso__foto-velo"></div>
-            <div class="acceso__foto-contenido">
-                <div class="acceso__foto-chip">PRÓXIMO REMATE</div>
-                <div>
-                    <div class="acceso__foto-titulo">{{ $proximo['direccion'] }}</div>
-                    <div class="acceso__foto-datos">
-                        <div class="acceso__foto-dato">
-                            <div class="acceso__foto-dato-etiqueta">PRECIO BASE</div>
-                            <div class="acceso__foto-dato-valor">{{ \App\Demo\RematesDemo::clp($proximo['precio']) }}</div>
-                        </div>
-                        <div class="acceso__foto-dato">
-                            <div class="acceso__foto-dato-etiqueta">SUPERFICIE</div>
-                            <div class="acceso__foto-dato-valor">{{ $proximo['sup'] }} m²</div>
-                        </div>
-                        <div class="acceso__foto-dato">
-                            <div class="acceso__foto-dato-etiqueta">REMATE</div>
-                            <div class="acceso__foto-dato-valor">{{ $proximo['fechaCorta'] }}</div>
+            @if ($proximo)
+                <div class="acceso__foto-contenido">
+                    <div class="acceso__foto-chip">{{ $proximo['enVivo'] ? 'REMATE EN VIVO' : 'PRÓXIMO REMATE' }}</div>
+                    <div>
+                        <div class="acceso__foto-titulo">{{ $proximo['direccion'] }}</div>
+                        <div class="acceso__foto-datos">
+                            <div class="acceso__foto-dato">
+                                <div class="acceso__foto-dato-etiqueta">PRECIO BASE</div>
+                                <div class="acceso__foto-dato-valor">{{ \App\Support\Formato::clp($proximo['precio']) }}</div>
+                            </div>
+                            @if ($proximo['sup'])
+                                <div class="acceso__foto-dato">
+                                    <div class="acceso__foto-dato-etiqueta">SUPERFICIE</div>
+                                    <div class="acceso__foto-dato-valor">{{ \App\Support\Formato::numero($proximo['sup'], 2) }} m²</div>
+                                </div>
+                            @endif
+                            <div class="acceso__foto-dato">
+                                <div class="acceso__foto-dato-etiqueta">REMATE</div>
+                                <div class="acceso__foto-dato-valor">{{ $proximo['fechaCorta'] }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 </x-layouts.base>
