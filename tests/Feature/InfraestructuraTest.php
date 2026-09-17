@@ -99,6 +99,54 @@ class InfraestructuraTest extends TestCase
             ->assertHeader('X-Robots-Tag', 'noindex, nofollow');
     }
 
+    public function test_la_clave_del_sandbox_no_expulsa_una_sesion_autenticada_y_le_devuelve_la_cookie(): void
+    {
+        config(['colliers.acceso.clave' => 'clave-sandbox']);
+        $admin = User::create(['name' => 'Admin', 'email' => 'admin@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_ADMIN, 'estado' => User::ESTADO_ACTIVO]);
+
+        // Sesión iniciada pero sin la cookie de la clave: pasa y recibe la cookie de nuevo.
+        $this->actingAs($admin)->get('/admin')->assertOk()->assertCookie(AccesoSandbox::COOKIE);
+        $this->assertSame(302, $this->actingAs($admin->fresh()->forceFill(['debe_cambiar_clave' => true]))->get('/admin')->status(), 'sigue su flujo normal (cambio de clave)');
+    }
+
+    public function test_la_clave_del_sandbox_nunca_bloquea_en_silencio(): void
+    {
+        config(['colliers.acceso.clave' => 'clave-sandbox']);
+
+        // Petición JSON (puja, acciones del panel): 403 con el motivo, no un redirect que fetch mostraría como éxito.
+        $this->postJson('/admin/postores/1/aprobar')->assertForbidden()
+            ->assertJson(['motivo' => 'acceso_sandbox', 'mensaje' => AccesoSandbox::MENSAJE_VENCIDO]);
+        $this->postJson('/remates/prueba/lotes/1/pujas', ['monto' => 1])->assertForbidden()->assertJsonPath('motivo', 'acceso_sandbox');
+
+        // Primera visita: formulario sin aviso.
+        $this->get('/admin/ingresar')->assertRedirect(route('acceso.formulario'))->assertSessionMissing('acceso_aviso');
+
+        // Venía navegando (tiene cookie de sesión) y envía un formulario: se explica y vuelve a la página del formulario.
+        $this->withCookie((string) config('session.cookie'), 'sesion-anterior')->from(url('/admin/ingresar'))
+            ->post('/admin/ingresar', ['usuario' => 'a@colliers.test', 'password' => 'x'])
+            ->assertRedirect(route('acceso.formulario'))->assertSessionHas('acceso_aviso', AccesoSandbox::MENSAJE_VENCIDO)
+            ->assertSessionHas('url.intended', url('/admin/ingresar'));
+        $this->get('/acceso')->assertOk()->assertSee('venció o no se encontró');
+        $this->post('/acceso', ['clave' => 'clave-sandbox'])->assertRedirect(url('/admin/ingresar'));
+    }
+
+    public function test_sesion_vencida_en_una_accion_por_fetch_responde_en_espanol(): void
+    {
+        config(['colliers.acceso.clave' => null]);
+        $admin = User::create(['name' => 'Admin', 'email' => 'admin@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_ADMIN, 'estado' => User::ESTADO_ACTIVO]);
+
+        // Sin el middleware que omite CSRF en pruebas: simula el token vencido.
+        $this->app->instance(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class, new class($this->app, $this->app['encrypter']) extends \Illuminate\Foundation\Http\Middleware\PreventRequestForgery
+        {
+            protected function runningUnitTests()
+            {
+                return false;
+            }
+        });
+        $this->actingAs($admin)->postJson('/admin/postores/1/aprobar')->assertStatus(419)
+            ->assertJson(['mensaje' => 'Tu sesión expiró. Recarga la página para continuar.']);
+    }
+
     public function test_pagina_404_en_espanol(): void
     {
         config(['colliers.acceso.clave' => null]);

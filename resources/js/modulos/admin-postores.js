@@ -90,11 +90,14 @@ export default ({ postores }) => ({
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '' },
                 body: JSON.stringify(cuerpo),
             });
-            const datos = await r.json().catch(() => ({}));
-            this.avisoError = !r.ok;
-            this.aviso = datos.mensaje || datos.message || (r.ok ? 'Listo.' : 'No se pudo completar la acción.');
-            if (r.ok && Array.isArray(datos.postores)) this.postores = datos.postores;
-            return r.ok;
+            // Solo es éxito una respuesta JSON: un redirect seguido hasta una página HTML no lo es.
+            const esJson = (r.headers.get('content-type') || '').includes('application/json');
+            const datos = esJson ? await r.json().catch(() => ({})) : {};
+            const ok = r.ok && esJson && !r.redirected;
+            this.avisoError = !ok;
+            this.aviso = datos.mensaje || datos.message || (ok ? 'Listo.' : 'No se pudo completar la acción: recarga la página e inténtalo de nuevo.');
+            if (ok && Array.isArray(datos.postores)) this.postores = datos.postores;
+            return ok;
         } catch (e) {
             this.avisoError = true;
             this.aviso = 'Sin conexión. Revisa el estado antes de reintentar.';

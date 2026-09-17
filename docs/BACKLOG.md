@@ -19,7 +19,7 @@ nota *(verifica Jonas en el sandbox)*.
 | B | Base del proyecto Laravel | **Completo** | 19/19 |
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
-| D | Autenticación y registro de postores | En progreso | 10/12 |
+| D | Autenticación y registro de postores | En progreso | 11/13 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
 | I | Remates y lotes + panel del martillero | **Completo** | 11/11 |
 | V | Configuración autoadministrable y SMTP | En progreso | 11/13 |
@@ -195,7 +195,8 @@ táctiles < 44 px en 375/760/1120/1440, y revisadas a ojo.
 - [x] Sesiones activas y cierre remoto (una, o todas las demás); nunca se cierra una sesión ajena por id
 - [x] Middleware de rol (`/admin` para admin y martillero; acciones de cuentas solo admin) y policy de documentos; consultas filtradas por dueño en lo existente *(G y H lo extienden a postores y garantías)*
 - [x] Pantallas que el diseño no tiene, con el diseño del Login: acceso de administradores, recuperar y restablecer contraseña, verificar correo, cambiar contraseña, confirmar contraseña, sesiones activas
-- [ ] En el sandbox: el primer administrador entra por `/admin/ingresar` y cambia su clave temporal *(Jonas en el sandbox)*
+- [x] **Bug del sandbox (17/09): el ingreso de administración «solo se refrescaba», sin mensaje.** La clave pasaba (`ingreso` en `access_logs`) y la sesión con usuario existía en la base, pero el navegador no la presentó en la petición siguiente; la causa exacta de eso en el servidor está sin confirmar. Corregido para que nunca falle en silencio: (1) la clave del sandbox no expulsa una sesión autenticada y le devuelve su cookie; (2) tras ingresar, si la sesión no llega, vuelve al acceso con el motivo y anota en el log el diagnóstico (nombres de cookies, esquema, host, configuración de sesión); (3) la clave del sandbox responde 403 con motivo a las peticiones JSON (antes, un redirect que el panel mostraba como «Listo.») y explica en `/acceso` por qué la pide; (4) sesión vencida en acciones por fetch: 419 con mensaje en español; (5) el login muestra cualquier error. *(`AutenticacionTest`, `InfraestructuraTest`, `tools/comparar/ingreso-sandbox.mjs`)*
+- [ ] En el sandbox: el primer administrador entra por `/admin/ingresar` y cambia su clave temporal *(Jonas en el sandbox; si vuelve a fallar, la pantalla lo dice y el log `storage/logs/laravel-AAAA-MM-DD.log` trae «Ingreso sin sesión»)*
 - [ ] Correos reales de verificación y recuperación: hoy `MAIL_MAILER=log` (el enlace queda en `storage/logs`); SMTP en el Bloque V
 
 ## K — Sala de puja conectada al motor real · En progreso

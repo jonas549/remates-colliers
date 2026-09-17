@@ -228,6 +228,8 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
                 this.error = cuerpo.mensaje || 'La puja fue rechazada.';
             } else if (r.status === 419) {
                 this.error = 'Tu sesión expiró. Recarga la página para seguir pujando.';
+            } else if (r.status === 403) {
+                this.error = cuerpo.mensaje || cuerpo.message || 'No tienes acceso para pujar. Recarga la página.';
             } else if (r.status === 429) {
                 this.error = 'Estás enviando pujas muy seguido. Espera unos segundos.';
             } else {

@@ -16,7 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(\App\Http\Middleware\HoraRecepcion::class);
 
         // Clave de acceso mientras el subdominio es un sandbox público (COLLIERS_ACCESO_CLAVE).
-        $middleware->web(append: [\App\Http\Middleware\AccesoSandbox::class]);
+        $middleware->web(append: [\App\Http\Middleware\AccesoSandbox::class, \App\Http\Middleware\SesionTrasIngreso::class]);
+        // Ambos antes de `auth`, del límite de peticiones y de los modelos de la ruta: la clave del sandbox responde
+        // primero (sin revelar si algo existe) y la marca de ingreso se revisa antes de que `auth` redirija sin decir nada.
+        $middleware->prependToPriorityList(\Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class, \App\Http\Middleware\AccesoSandbox::class);
+        $middleware->prependToPriorityList(\Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class, \App\Http\Middleware\SesionTrasIngreso::class);
 
         // Bloque D: rol y cambio de contraseña obligatorio.
         $middleware->alias([
@@ -31,4 +35,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+        // Sesión vencida en una acción por fetch (puja, panel): mensaje en español que las pantallas muestran.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, Request $request) {
+            if ($e->getStatusCode() === 419 && $request->expectsJson()) {
+                $mensaje = 'Tu sesión expiró. Recarga la página para continuar.';
+
+                return response()->json(['message' => $mensaje, 'mensaje' => $mensaje], 419);
+            }
+        });
     })->create();

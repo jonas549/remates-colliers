@@ -587,6 +587,17 @@ Remate en vivo del seeder: `/remates/apoquindo/sala`. Postores: `mpgonzalez@corr
 ### S-12 · Descargas de reportes en el sandbox
 - [ ] **Solo en sandbox** — `colliers:diagnostico` sin avisos en las extensiones nuevas (`iconv`, `simplexml`, `xmlreader`, `xmlwriter`, `zlib`) y las descargas XLSX/CSV funcionan.
 
+## 5c. Ingreso con la clave del sandbox (bug del 17/09)
+
+### QA-77 · El ingreso nunca falla en silencio
+- [x] **OK en local** (servidor con `APP_ENV=staging`, `SESSION_SECURE_COOKIE=true` y clave de acceso)
+- **Pasos:** 1) Primera visita a `/admin/ingresar`: clave del sandbox. 2) Ingresar con un administrador con clave temporal. 3) Borrar la cookie `colliers_acceso` y recargar. 4) Simular que el navegador no guarda la sesión al ingresar. 5) Clave incorrecta. 6) Borrar la cookie de la clave sin sesión y enviar el formulario.
+- **Esperado:** 1) `/acceso` sin aviso y vuelve al formulario. 2) Llega a «Cambia tu contraseña». 3) No lo expulsa y recibe la cookie de nuevo. 4) Vuelve a `/admin/ingresar?sesion=perdida` con «Tu usuario y contraseña son correctos, pero el navegador no conservó la sesión…» y el log tiene «Ingreso sin sesión». 5) «Usuario o contraseña incorrectos…». 6) `/acceso` con «Tu acceso a este sitio de prueba venció…» y, con la clave, vuelve al formulario.
+- **Evidencia:** `tools/comparar/ingreso-sandbox.mjs` (11) · `AutenticacionTest::test_ingreso_que_pierde_la_sesion_nunca_termina_en_silencio` · `InfraestructuraTest::test_la_clave_del_sandbox_no_expulsa_…`, `…test_la_clave_del_sandbox_nunca_bloquea_en_silencio`, `…test_sesion_vencida_en_una_accion_por_fetch_responde_en_espanol`.
+
+### S-13 · Ingreso de administración en el sandbox
+- [ ] **Solo en sandbox** — entrar por `/admin/ingresar` y llegar a «Cambia tu contraseña». Si la pantalla vuelve al acceso, ahora dice por qué; pasar la línea «Ingreso sin sesión» de `storage/logs/laravel-AAAA-MM-DD.log`.
+
 ## 6. Solo en sandbox (sin marcar)
 
 Estos dependen del hosting real (LiteSpeed, cron, correo saliente, límites de PHP) y no se pueden dar por probados en

@@ -9,6 +9,10 @@
                 <h1 class="acceso-sandbox__titulo">Acceso restringido</h1>
                 <p class="acceso-sandbox__texto">Este sitio es una versión de prueba de la plataforma de remates de Colliers. Ingresa la clave de acceso que te entregó el equipo del proyecto.</p>
 
+                @if (session('acceso_aviso'))
+                    <div class="acceso-sandbox__error" role="alert">{{ session('acceso_aviso') }}</div>
+                @endif
+
                 <form method="POST" action="{{ route('acceso.ingresar') }}">
                     @csrf
                     <label class="acceso-sandbox__campo">

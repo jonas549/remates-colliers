@@ -50,7 +50,7 @@ class AutenticacionTest extends TestCase
         $user = $this->postor('15482331K', 'mpgonzalez@correo.test');
 
         foreach (['MPGonzalez@correo.test', '15.482.331-K', '15482331k'] as $usuario) {
-            $this->post('/ingresar', ['usuario' => $usuario, 'password' => self::CLAVE])->assertRedirect('/mi-cuenta');
+            $this->post('/ingresar', ['usuario' => $usuario, 'password' => self::CLAVE])->assertRedirect('/mi-cuenta?ingreso=1');
             $this->assertAuthenticatedAs($user);
             $this->post('/salir');
             $this->assertGuest();
@@ -90,7 +90,7 @@ class AutenticacionTest extends TestCase
 
         // A los 15 minutos entra y el contador vuelve a cero.
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-20 15:15:00', 'UTC'));
-        $this->post('/ingresar', ['usuario' => 'ana@correo.test', 'password' => self::CLAVE])->assertRedirect('/mi-cuenta');
+        $this->post('/ingresar', ['usuario' => 'ana@correo.test', 'password' => self::CLAVE])->assertRedirect('/mi-cuenta?ingreso=1');
         $this->assertNull($user->fresh()->bloqueado_hasta);
         $this->assertSame(0, $user->fresh()->intentos_fallidos);
     }
@@ -107,11 +107,36 @@ class AutenticacionTest extends TestCase
             ->assertSessionHasErrors(['usuario' => 'Esta cuenta es de postor: ingresa por el acceso de postores.']);
         $this->assertGuest();
 
-        $this->post('/admin/ingresar', ['usuario' => 'admin@colliers.test', 'password' => self::CLAVE])->assertRedirect('/admin');
+        $this->post('/admin/ingresar', ['usuario' => 'admin@colliers.test', 'password' => self::CLAVE])->assertRedirect('/admin?ingreso=1');
         $this->assertAuthenticatedAs($admin);
         $this->post('/salir');
-        $this->post('/admin/ingresar', ['usuario' => 'martillero@colliers.test', 'password' => self::CLAVE])->assertRedirect('/admin');
+        $this->post('/admin/ingresar', ['usuario' => 'martillero@colliers.test', 'password' => self::CLAVE])->assertRedirect('/admin?ingreso=1');
         $this->assertAuthenticatedAs($martillero);
+    }
+
+    public function test_ingreso_que_pierde_la_sesion_nunca_termina_en_silencio(): void
+    {
+        $admin = $this->usuario(User::ROL_ADMIN, 'admin@colliers.test');
+        $admin->forceFill(['debe_cambiar_clave' => true])->save();
+
+        // Con sesión: la marca se quita y sigue su flujo (aquí, el cambio de clave obligatorio).
+        $this->post('/admin/ingresar', ['usuario' => 'admin@colliers.test', 'password' => self::CLAVE])->assertRedirect('/admin?ingreso=1');
+        $this->get('/admin?ingreso=1')->assertRedirect(url('/admin'));
+        $this->get('/admin')->assertRedirect(route('cuenta.clave'));
+        $this->post('/salir');
+
+        // Sin sesión en la petición siguiente (lo que pasaba en el sandbox): vuelve al acceso diciendo qué pasó y lo anota.
+        \Illuminate\Support\Facades\Log::spy();
+        $this->app['auth']->forgetGuards();
+        $this->get('/admin?ingreso=1')->assertRedirect(route('admin.ingresar', ['sesion' => 'perdida']));
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->withArgs(fn ($mensaje, $datos) => str_starts_with($mensaje, 'Ingreso sin sesión')
+            && array_key_exists('cookies_recibidas', $datos) && array_key_exists('https_detectado', $datos))->once();
+        $this->get(route('admin.ingresar', ['sesion' => 'perdida']))->assertOk()
+            ->assertSee('Tu usuario y contraseña son correctos, pero el navegador no conservó la sesión.');
+
+        // Postores: mismo resguardo, hacia su acceso.
+        $this->get('/mi-cuenta?ingreso=1')->assertRedirect(route('login', ['sesion' => 'perdida']));
+        $this->get(route('login', ['sesion' => 'perdida']))->assertOk()->assertSee('el navegador no conservó la sesión');
     }
 
     public function test_cuenta_inactiva_no_ingresa(): void
@@ -138,7 +163,7 @@ class AutenticacionTest extends TestCase
         Storage::fake('local');
         Notification::fake();
 
-        $this->post('/registro', $this->formulario())->assertRedirect(route('verification.notice'));
+        $this->post('/registro', $this->formulario())->assertRedirect(route('verification.notice') . '?ingreso=1');
 
         $user = User::where('email', 'nueva@correo.test')->sole();
         $this->assertSame(User::ROL_POSTOR, $user->rol);
@@ -179,7 +204,7 @@ class AutenticacionTest extends TestCase
         $this->post('/registro', $this->formulario([
             'tipo' => 'juridica', 'razon_social' => 'Inversiones Andes SpA', 'rut_empresa' => '76.543.210-3',
             'giro' => 'Inversiones', 'calidad' => 'Representante legal',
-        ], poder: true))->assertRedirect(route('verification.notice'));
+        ], poder: true))->assertRedirect(route('verification.notice') . '?ingreso=1');
 
         $postor = User::where('email', 'nueva@correo.test')->sole()->postor;
         $this->assertSame(Postor::TIPO_JURIDICA, $postor->tipo);
@@ -200,7 +225,7 @@ class AutenticacionTest extends TestCase
         Storage::fake('local');
         Notification::fake();
 
-        $this->post('/registro', $this->formulario(['rut' => '179982218']))->assertRedirect(route('verification.notice'));
+        $this->post('/registro', $this->formulario(['rut' => '179982218']))->assertRedirect(route('verification.notice') . '?ingreso=1');
         $this->assertSame('17.998.221-8', User::where('email', 'nueva@correo.test')->sole()->postor->rut, 'sin puntos ni guion queda normalizado');
         $this->post('/salir');
 
@@ -209,7 +234,7 @@ class AutenticacionTest extends TestCase
                 ->assertSessionHasErrors(['rut' => 'Ya existe una cuenta con este RUT. Si es tuya, ingresa o recupera tu contraseña.']);
         }
 
-        $this->post('/registro', $this->formulario(['rut' => '15.482.331-k', 'email' => 'conk@correo.test']))->assertRedirect(route('verification.notice'));
+        $this->post('/registro', $this->formulario(['rut' => '15.482.331-k', 'email' => 'conk@correo.test']))->assertRedirect(route('verification.notice') . '?ingreso=1');
         $this->assertSame('15.482.331-K', User::where('email', 'conk@correo.test')->sole()->postor->rut, 'con puntos y k minúscula');
         $this->post('/salir');
         $this->post('/registro', $this->formulario(['rut' => '15482331K', 'email' => 'otrak@correo.test']))->assertSessionHasErrors('rut');
@@ -263,7 +288,7 @@ class AutenticacionTest extends TestCase
         $this->assertTrue(Hash::check('Nueva-clave-2026', $user->password));
         $this->assertNull($user->bloqueado_hasta);
         $this->assertSame(0, DB::table('sessions')->where('user_id', $user->id)->count());
-        $this->post('/ingresar', ['usuario' => '15.482.331-K', 'password' => 'Nueva-clave-2026'])->assertRedirect('/mi-cuenta');
+        $this->post('/ingresar', ['usuario' => '15.482.331-K', 'password' => 'Nueva-clave-2026'])->assertRedirect('/mi-cuenta?ingreso=1');
     }
 
     public function test_cambiar_la_propia_contrasena_exige_la_actual_y_cierra_las_demas_sesiones(): void
@@ -356,7 +381,7 @@ class AutenticacionTest extends TestCase
 
         $this->assertNull($postor->fresh()->bloqueado_hasta);
         $this->post('/salir');
-        $this->post('/ingresar', ['usuario' => 'ana@correo.test', 'password' => self::CLAVE])->assertRedirect('/mi-cuenta');
+        $this->post('/ingresar', ['usuario' => 'ana@correo.test', 'password' => self::CLAVE])->assertRedirect('/mi-cuenta?ingreso=1');
     }
 
     // ── Sesiones activas ─────────────────────────────────────────────────────────────────────────────────────

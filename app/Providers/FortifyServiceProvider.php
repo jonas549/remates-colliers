@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Autenticacion\AutenticarUsuario;
+use App\Http\Middleware\SesionTrasIngreso;
 use App\Publico\Catalogo;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
@@ -34,8 +35,13 @@ class FortifyServiceProvider extends ServiceProvider
             public function toResponse($request)
             {
                 $destino = $request->user()?->esAdministracion() ? route('admin.dashboard') : route('cuenta.estado');
+                if ($request->wantsJson()) {
+                    return response()->json(['two_factor' => false]);
+                }
+                $redirect = redirect()->intended($destino);
 
-                return $request->wantsJson() ? response()->json(['two_factor' => false]) : redirect()->intended($destino);
+                // Marca para detectar una sesión que el navegador no conserva (SesionTrasIngreso).
+                return $redirect->setTargetUrl(SesionTrasIngreso::marcar($redirect->getTargetUrl()));
             }
         });
 
@@ -43,7 +49,7 @@ class FortifyServiceProvider extends ServiceProvider
         {
             public function toResponse($request)
             {
-                return $request->wantsJson() ? response()->json([], 201) : redirect()->route('verification.notice');
+                return $request->wantsJson() ? response()->json([], 201) : redirect()->to(SesionTrasIngreso::marcar(route('verification.notice')));
             }
         });
     }

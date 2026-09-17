@@ -1,6 +1,11 @@
 @php
     $administracion = ($portal ?? 'postores') === 'administracion';
-    $errorServidor = $errors->first('usuario') ?: $errors->first('password') ?: $errors->first('email');
+    // Ningún error queda sin mostrar: primero los del formulario y, si no, cualquier otro.
+    $errorServidor = $errors->first('usuario') ?: $errors->first('password') ?: $errors->first('email') ?: $errors->first();
+    if (! $errorServidor && request('sesion') === 'perdida') {
+        $errorServidor = 'Tu usuario y contraseña son correctos, pero el navegador no conservó la sesión. Vuelve a ingresar; si se repite, '
+            . 'permite las cookies de este sitio o prueba en otra ventana. Ya quedó registrado para revisarlo.';
+    }
 @endphp
 <x-acceso.marco
     pagina="Ingresar"

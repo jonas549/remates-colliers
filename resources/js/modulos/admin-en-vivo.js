@@ -113,9 +113,13 @@ export default ({ estado, nombres, lotes, servidorMs, urls }) => ({
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '' },
                 body: JSON.stringify(cuerpo),
             });
-            const datos = await r.json().catch(() => ({}));
-            this.avisoError = !r.ok;
-            return { ok: r.ok, datos };
+            // Solo es éxito una respuesta JSON: un redirect seguido hasta una página HTML no lo es.
+            const esJson = (r.headers.get('content-type') || '').includes('application/json');
+            const datos = esJson ? await r.json().catch(() => ({})) : {};
+            const ok = r.ok && esJson && !r.redirected;
+            if (!ok && !datos.mensaje) datos.mensaje = datos.message || 'No se pudo completar la acción: recarga la página e inténtalo de nuevo.';
+            this.avisoError = !ok;
+            return { ok, datos };
         } catch (e) {
             this.avisoError = true;
             return { ok: false, datos: { mensaje: 'Sin conexión. Revisa el estado antes de reintentar.' } };
@@ -134,6 +138,6 @@ export default ({ estado, nombres, lotes, servidorMs, urls }) => ({
     async enviarMensaje() {
         const { ok, datos } = await this.enviar(urls.mensaje, { texto: this.mensaje });
         if (ok && datos.estado) this.aplicar(datos.estado);
-        this.aviso = ok ? (this.mensaje ? 'Mensaje publicado en la sala.' : 'Mensaje quitado de la sala.') : (datos.message || 'No se pudo publicar el mensaje.');
+        this.aviso = ok ? (this.mensaje ? 'Mensaje publicado en la sala.' : 'Mensaje quitado de la sala.') : (datos.mensaje || datos.message || 'No se pudo publicar el mensaje.');
     },
 });

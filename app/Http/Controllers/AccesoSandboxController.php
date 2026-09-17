@@ -36,9 +36,7 @@ class AccesoSandboxController extends Controller
         }
 
         RateLimiter::clear($llave);
-        $minutos = max(1, (int) config('colliers.acceso.dias')) * 24 * 60;
 
-        return redirect()->intended('/')
-            ->withCookie(cookie(AccesoSandbox::COOKIE, AccesoSandbox::huella($clave), $minutos, httpOnly: true, sameSite: 'lax'));
+        return redirect()->intended('/')->withCookie(AccesoSandbox::cookie($clave));
     }
 }
