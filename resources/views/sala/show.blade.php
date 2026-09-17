@@ -139,8 +139,8 @@
                         <div class="sala-soporte__titulo">SOPORTE DURANTE EL REMATE</div>
                         <p>Si se corta la transmisión o tienes un problema para pujar, llámanos: el remate no se detiene.</p>
                         <div class="sala-soporte__enlaces">
-                            <a href="tel:+56227603535">+56 2 2760 3535</a>
-                            <a href="mailto:remates@colliers.cl">remates@colliers.cl</a>
+                            <a href="{{ \App\Support\Sitio::telefonoEnlace() }}">{{ \App\Support\Sitio::telefono() }}</a>
+                            <a href="mailto:{{ \App\Support\Sitio::correo() }}">{{ \App\Support\Sitio::correo() }}</a>
                         </div>
                     </div>
                 </div>
@@ -182,7 +182,7 @@
                     <div class="sala-modal__cuerpo">
                         <div class="sala-modal__propiedad">Vas a ofertar por {{ $propiedad['direccion'] }}</div>
                         <div class="sala-modal__monto" x-text="modalMonto"></div>
-                        <div class="sala-modal__detalle"><span x-text="modalUf"></span> · supera en <span x-text="modalDiferencia"></span> la puja actual</div>
+                        <div class="sala-modal__detalle"><span x-text="modalUf ? modalUf + ' · ' : ''"></span>supera en <span x-text="modalDiferencia"></span> la puja actual</div>
                         <div class="sala-modal__aviso">La postura es irrevocable y compromete tu garantía de {{ $clp($propiedad['garantia']) }}. Si resultas adjudicatario, deberás suscribir la escritura y pagar el saldo en el plazo de las bases. El remate cierra automáticamente al vencer el tiempo.</div>
                         <div class="sala-modal__botones">
                             <button type="button" class="sala-modal__confirmar" :disabled="enviando" @click="confirmar()">Confirmar puja</button>

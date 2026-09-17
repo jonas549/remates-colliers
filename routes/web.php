@@ -5,6 +5,7 @@ use App\Demo\DetalleDemo;
 use App\Demo\PantallasRevision;
 use App\Demo\RematesDemo;
 use App\Http\Controllers\AccesoSandboxController;
+use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentosController;
 use App\Http\Controllers\Admin\EnVivoController;
@@ -125,6 +126,12 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         Route::post('/subastas/{remate}/documentos', [DocumentosController::class, 'store'])->name('documentos.store');
         Route::get('/subastas/{remate}/documentos/{documento}', [DocumentosController::class, 'descargar'])->name('documentos.descargar');
         Route::delete('/subastas/{remate}/documentos/{documento}', [DocumentosController::class, 'destroy'])->name('documentos.destroy');
+
+        // Bloque V: configuración autoadministrable.
+        Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion');
+        Route::put('/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
+        Route::post('/configuracion/probar-correo', [ConfiguracionController::class, 'probarCorreo'])->name('configuracion.probar-correo');
+        Route::post('/configuracion/actualizar-uf', [ConfiguracionController::class, 'actualizarUf'])->name('configuracion.actualizar-uf');
 
         Route::post('/usuarios/{usuario}/restablecer-clave', [UsuariosController::class, 'restablecerClave'])->name('usuarios.restablecer-clave');
         Route::post('/usuarios/{usuario}/desbloquear', [UsuariosController::class, 'desbloquear'])->name('usuarios.desbloquear');

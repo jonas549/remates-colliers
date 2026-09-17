@@ -57,8 +57,8 @@
     @endunless
 
     <div class="acceso__contacto">
-        <a href="mailto:remates@colliers.cl">remates@colliers.cl</a>
-        <a href="tel:+56227603535">+56 2 2760 3535</a>
+        <a href="mailto:{{ \App\Support\Sitio::correo() }}">{{ \App\Support\Sitio::correo() }}</a>
+        <a href="{{ \App\Support\Sitio::telefonoEnlace() }}">{{ \App\Support\Sitio::telefono() }}</a>
         @if ($administracion)
             <a href="{{ route('login') }}" class="acceso__contacto-admin">Acceso de postores</a>
         @else

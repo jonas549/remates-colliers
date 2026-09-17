@@ -15,10 +15,10 @@
         <button type="submit" class="acceso__entrar es-listo">Reenviar el enlace</button>
     </form>
 
-    <p class="acceso__nota">¿Te equivocaste de correo? Escríbenos a remates@colliers.cl y lo corregimos.</p>
+    <p class="acceso__nota">¿Te equivocaste de correo? Escríbenos a {{ \App\Support\Sitio::correo() }} y lo corregimos.</p>
 
     <div class="acceso__contacto">
-        <a href="mailto:remates@colliers.cl">remates@colliers.cl</a>
+        <a href="mailto:{{ \App\Support\Sitio::correo() }}">{{ \App\Support\Sitio::correo() }}</a>
         <form method="POST" action="{{ route('logout') }}" class="formulario-en-linea">
             @csrf
             <button type="submit" class="boton-enlace acceso__contacto-admin">Cerrar sesión</button>

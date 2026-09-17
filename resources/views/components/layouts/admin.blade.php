@@ -12,6 +12,10 @@
         'postores' => ['03', 'Postores', route('admin.postores'), $pendientes ?: null],
         'reportes' => ['04', 'Reportes', route('admin.reportes'), null],
     ];
+    // Sin diseño: quinto ítem con el mismo estilo, solo para administradores (Bloque V).
+    if (auth()->user()?->esAdmin()) {
+        $items['configuracion'] = ['05', 'Configuración', route('admin.configuracion'), null];
+    }
 @endphp
 <x-layouts.base :titulo="$titulo . ' · Administración'" :clase-cuerpo="$claseCuerpo">
     <div class="admin" x-data="{ menu: false }" @keydown.escape.window="menu = false">

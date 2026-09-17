@@ -42,6 +42,10 @@ class DesarrolloSeeder extends Seeder
         $this->ahora = CarbonImmutable::now('UTC')->startOfMinute();
 
         Configuracion::sembrarDefectos();
+        // UF manual con el valor del prototipo: en local no se depende de mindicador.cl y las pantallas coinciden con el diseño.
+        Configuracion::guardar('uf_fuente', 'manual');
+        Configuracion::guardar('uf_valor', '39412.73');
+        Configuracion::guardar('uf_fecha', $this->ahora->setTimezone('America/Santiago')->toDateString());
         $this->personal();
         $this->postores();
         $remates = $this->remates();

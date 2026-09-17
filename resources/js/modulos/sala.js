@@ -1,7 +1,5 @@
 import { clp, dos } from './formato';
 
-// Referencia visual por defecto; el valor vigente llega desde la configuración (Bloque V).
-const UF = 39412.73;
 const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 
 // Sala de puja conectada al motor (Bloque K).
@@ -10,7 +8,7 @@ const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 // - Pasado cierra_en + margen sin liquidar, el navegador pide el estado a PHP (detector del cierre perezoso).
 // - La base de datos es la fuente de verdad: tras cada puja se vuelve a leer el estado.
 // - Varios lotes: la ficha sigue al lote vigente y un aviso cuenta cómo terminó el anterior (no hay diseño: mínimo).
-export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado, servidorMs, urls, uf = UF }) => ({
+export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado, servidorMs, urls, uf = null }) => ({
     estado,
     loteId: loteInicial,
     anterior: null,
@@ -162,7 +160,9 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
 
     formatoClp(n) { return clp(n); },
     get actualTexto() { return clp(this.actual); },
-    get actualEnUf() { return 'UF ' + (this.actual / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }); },
+    // UF: solo referencia visual y solo si hay un valor vigente (Administración → Configuración).
+    enUf(n) { return uf ? 'UF ' + (n / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }) : ''; },
+    get actualEnUf() { return this.enUf(this.actual) || '—'; },
     get sobreBase() { return '+' + Math.round((this.actual / this.lote.precio_base - 1) * 100) + '%'; },
 
     get estadoTitulo() {
@@ -194,7 +194,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         if (this.antesDeAbrir) return 'La puja abre en ' + this.hh + ':' + this.mm + ':' + this.ss + '.';
         if (this.yoGanando) return 'Tienes la puja más alta: espera a que otro postor la supere.';
         if (this.escrito > 0 && this.montoPuja < this.minimo) return 'La postura debe ser al menos ' + clp(this.minimo) + '.';
-        return 'Incremento mínimo ' + clp(this.paso) + '. Referencia: UF ' + (this.montoPuja / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }) + '.';
+        return 'Incremento mínimo ' + clp(this.paso) + '.' + (uf ? ' Referencia: ' + this.enUf(this.montoPuja) + '.' : '');
     },
     get placeholder() { return 'Mínimo ' + clp(this.minimo); },
     get botonTexto() { return this.enviando ? 'Enviando…' : 'Pujar ' + clp(this.montoPuja); },
@@ -255,7 +255,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     },
 
     get modalMonto() { return clp(this.montoPuja); },
-    get modalUf() { return 'UF ' + (this.montoPuja / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }); },
+    get modalUf() { return this.enUf(this.montoPuja); },
     get modalDiferencia() { return clp(this.montoPuja - this.actual); },
 
     get historialVista() {

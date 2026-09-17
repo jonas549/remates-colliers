@@ -166,7 +166,7 @@ class CreateNewUser implements CreatesNewUsers
     {
         return function (string $atributo, mixed $valor, \Closure $fallar) {
             if (Rut::esValido((string) $valor) && Empresa::porRut((string) $valor)->whereHas('postores')->exists()) {
-                $fallar('Esta empresa ya tiene una cuenta registrada. Escribe a remates@colliers.cl si necesitas otro representante.');
+                $fallar('Esta empresa ya tiene una cuenta registrada. Escribe a ' . \App\Support\Sitio::correo() . ' si necesitas otro representante.');
             }
         };
     }

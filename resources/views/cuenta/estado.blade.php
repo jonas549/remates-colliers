@@ -74,7 +74,7 @@
                             </div>
                             <div class="cuenta__item">
                                 <span class="cuenta__item-marca">03</span>
-                                <div class="cuenta__item-texto">Envía el comprobante a <a href="mailto:remates@colliers.cl">remates@colliers.cl</a> con tu nombre y el remate al que postulas.</div>
+                                <div class="cuenta__item-texto">Envía el comprobante a <a href="mailto:{{ \App\Support\Sitio::correo() }}">{{ \App\Support\Sitio::correo() }}</a> con tu nombre y el remate al que postulas.</div>
                             </div>
                         </div>
 
@@ -126,8 +126,8 @@
                     <div class="cuenta__contacto-titulo">CONTACTO</div>
                     <p>Si tu solicitud lleva más de 24 horas hábiles sin respuesta, escríbenos indicando tu RUT y el remate.</p>
                     <div class="cuenta__contacto-enlaces">
-                        <a href="mailto:remates@colliers.cl">remates@colliers.cl</a>
-                        <a href="tel:+56227603535">+56 2 2760 3535</a>
+                        <a href="mailto:{{ \App\Support\Sitio::correo() }}">{{ \App\Support\Sitio::correo() }}</a>
+                        <a href="{{ \App\Support\Sitio::telefonoEnlace() }}">{{ \App\Support\Sitio::telefono() }}</a>
                     </div>
                 </div>
             </div>

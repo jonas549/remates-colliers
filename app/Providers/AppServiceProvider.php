@@ -5,8 +5,10 @@ namespace App\Providers;
 use App\Listeners\RegistroDeAccesos;
 use App\Subastas\Difusion\Emisor;
 use App\Subastas\Difusion\EmisorJsonEstatico;
+use App\Support\CorreoSaliente;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
             'json' => new EmisorJsonEstatico(config('colliers.tiempo_real.carpeta')),
             default => throw new InvalidArgumentException('Driver de tiempo real desconocido: ' . config('colliers.tiempo_real.driver')),
         });
+
+        // Correo saliente del panel (Bloque V): se aplica al crear el gestor de correo, solo cuando algo se envía.
+        $this->app->resolving(MailManager::class, fn (MailManager $gestor, $app) => CorreoSaliente::aplicar($app['config']));
     }
 
     /**

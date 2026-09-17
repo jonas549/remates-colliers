@@ -27,3 +27,9 @@ Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3 --backof
     ->name('cola-por-minuto')
     ->everyMinute()
     ->withoutOverlapping(5);
+
+// UF de referencia (Bloque V): cada hora; solo consulta mindicador.cl si la fuente es automática y el valor no es de hoy.
+Schedule::command('colliers:actualizar-uf')
+    ->name('actualizar-uf')
+    ->hourly()
+    ->withoutOverlapping(10);

@@ -172,7 +172,7 @@
                                 @foreach ($r['visitas'] as [$fecha, $hora])
                                     <div class="detalle-visita"><span class="detalle-visita__fecha">{{ $fecha }}</span><span class="detalle-visita__hora">{{ $hora }}</span></div>
                                 @endforeach
-                                <a href="mailto:remates@colliers.cl?subject={{ rawurlencode('Visita a ' . $r['direccion'] . ' (' . $r['folio'] . ')') }}" class="detalle-visitas__boton">Coordinar visita</a>
+                                <a href="mailto:{{ \App\Support\Sitio::correo() }}?subject={{ rawurlencode('Visita a ' . $r['direccion'] . ' (' . $r['folio'] . ')') }}" class="detalle-visitas__boton">Coordinar visita</a>
                             </div>
                         </div>
                     @endif
@@ -298,7 +298,7 @@
                                 @foreach ($r['visitas'] as [$fecha, $hora])
                                     <div class="detalle-visita"><span class="detalle-visita__fecha">{{ $fecha }}</span><span class="detalle-visita__hora">{{ $hora }}</span></div>
                                 @endforeach
-                                <a href="mailto:remates@colliers.cl?subject={{ rawurlencode('Visita a ' . $r['direccion'] . ' (' . $r['folio'] . ')') }}" class="detalle-visitas__boton">Coordinar visita</a>
+                                <a href="mailto:{{ \App\Support\Sitio::correo() }}?subject={{ rawurlencode('Visita a ' . $r['direccion'] . ' (' . $r['folio'] . ')') }}" class="detalle-visitas__boton">Coordinar visita</a>
                             </div>
                         </div>
                     @endif
@@ -320,13 +320,13 @@
                         <h2 class="detalle-caja__titulo">¿Necesitas ayuda?</h2>
                         <p>El equipo de remates resuelve dudas sobre la propiedad, la garantía y el procedimiento.</p>
                         <div class="detalle-ayuda__enlaces">
-                            <a href="tel:+56227603535">
+                            <a href="{{ \App\Support\Sitio::telefonoEnlace() }}">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1.1 1A17 17 0 0 1 4 5.1 1 1 0 0 1 5 4Z"></path></svg>
-                                +56 2 2760 3535
+                                {{ \App\Support\Sitio::telefono() }}
                             </a>
-                            <a href="mailto:remates@colliers.cl">
+                            <a href="mailto:{{ \App\Support\Sitio::correo() }}">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><rect x="3" y="5" width="18" height="14"></rect><path d="m3 6 9 7 9-7"></path></svg>
-                                remates@colliers.cl
+                                {{ \App\Support\Sitio::correo() }}
                             </a>
                         </div>
                     </div>

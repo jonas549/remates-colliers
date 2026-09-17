@@ -10,6 +10,7 @@ use App\Models\Remate;
 use App\Subastas\Difusion\Emisor;
 use App\Subastas\EstadoRemate;
 use App\Subastas\Liquidador;
+use App\Support\Sitio;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -68,6 +69,7 @@ class SalaController extends Controller
                 'pujasRapidas' => array_map('intval', (array) Configuracion::valor('pujas_rapidas')),
                 'estado' => EstadoRemate::construir($remate),
                 'servidorMs' => (int) now('UTC')->format('Uv'),
+                'uf' => Sitio::uf(),
                 'urls' => [
                     'estadoJson' => asset('tiempo-real/' . $remate->slug . '.json'),
                     'estado' => route('tiempo-real.estado', $remate),

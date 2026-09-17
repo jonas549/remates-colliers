@@ -97,7 +97,7 @@
                     <div class="listado__hero-acciones">
                         <a href="{{ $heroCta['href'] }}" class="listado__hero-cta">{{ $heroCta['texto'] }}</a>
                         <a href="{{ route('remates.show', $hero['id']) }}" class="listado__hero-cta2">Ver bases y condiciones</a>
-                        <a href="mailto:remates@colliers.cl?subject={{ rawurlencode('Visita a ' . $hero['direccion'] . ' (' . $hero['folio'] . ')') }}" class="listado__hero-visita">Coordinar visita a la propiedad</a>
+                        <a href="mailto:{{ \App\Support\Sitio::correo() }}?subject={{ rawurlencode('Visita a ' . $hero['direccion'] . ' (' . $hero['folio'] . ')') }}" class="listado__hero-visita">Coordinar visita a la propiedad</a>
                     </div>
                     <p class="listado__hero-nota">Martillero: <span>{{ $hero['martillero'] }}</span>. La garantía se constituye por vale a la vista o transferencia y es revisada manualmente por Colliers.</p>
                 </div>

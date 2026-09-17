@@ -22,7 +22,7 @@ nota *(verifica Jonas en el sandbox)*.
 | D | Autenticación y registro de postores | En progreso | 10/12 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
 | I | Remates y lotes + panel del martillero | **Completo** | 9/9 |
-| V | Configuración autoadministrable y SMTP | Pendiente | 0/10 |
+| V | Configuración autoadministrable y SMTP | En progreso | 11/13 |
 | G | Postores | Pendiente | 0/5 |
 | H | Garantías | Pendiente | 0/7 |
 | M | Notificaciones | Pendiente | 0/7 |
@@ -237,18 +237,25 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 - [x] Dashboard y contador de pendientes del menú con datos reales (sin remates de demostración)
 - [x] Usable desde el celular (hoja de acciones del listado, formularios en una columna, táctiles ≥ 44 px)
 
-## V — Configuración autoadministrable y SMTP · Pendiente
+## V — Configuración autoadministrable y SMTP · En progreso
 
-- [ ] Incremento mínimo (global y por remate), CLP 100.000 por defecto
-- [ ] Porcentaje de garantía, 10 % por defecto
-- [ ] Margen de liquidación, 2 s por defecto
-- [ ] Intentos de login y duración del bloqueo
-- [ ] Plazos: cierre de garantías antes del remate, tiempo de revisión
-- [ ] Datos bancarios para garantías
-- [ ] Fuente y valor de la UF (solo referencia visual)
-- [ ] Textos legales y enlaces
-- [ ] SMTP completo con botón de prueba de envío
-- [ ] Filtro «Garantía requerida» del listado activable *(hoy oculto)*
+Verificado el 17/09: `ConfiguracionTest` (6) y `tools/comparar/panel-configuracion.mjs` (10/10: guardar, validación,
+correo de prueba en modo registro, usabilidad a 375–1440 px). Pantalla sin diseño (Administración → 05 Configuración,
+solo administradores) con los componentes del panel. Sin migración: todo en `configuraciones`.
+
+- [x] Incremento mínimo global (el propio por remate está en la ficha, Bloque I), CLP 100.000 por defecto; botones de puja rápida
+- [x] Porcentaje de garantía, 10 % por defecto (las garantías creadas conservan su monto)
+- [x] Margen de liquidación, 2 s por defecto (la ayuda recomienda 5 s sin OPcache)
+- [x] Intentos de login y duración del bloqueo (5 y 15 min)
+- [x] Plazos: cierre de garantías antes del remate (48 h) y tiempo de revisión informado (24 h hábiles); duración por defecto del lote
+- [x] Datos bancarios para garantías *(parten vacíos: los del diseño son de ejemplo; mientras falten, el postor ve «escríbenos»)*
+- [x] Fuente y valor de la UF: automática desde mindicador.cl cada hora (`colliers:actualizar-uf`) o manual; sin valor, el sitio no muestra UF
+- [x] Contacto (correo y teléfono en todas las pantallas), canal de YouTube, enlaces a bases, términos y privacidad, texto de condiciones de la garantía
+- [x] SMTP completo (servidor, puerto, cifrado, usuario, clave cifrada con APP_KEY, remitente) con modo «.env / SMTP / registro» y botón de correo de prueba que muestra el error
+- [x] Filtro «Garantía requerida» activable *(se conecta al listado en N)*
+- [x] Sistema visto desde la web: OPcache, PHP, memoria, cachés de optimize, latido del cron, cola de correos
+- [ ] SMTP real de Colliers: probar el envío con el botón en el sandbox *(Jonas; en local no hay servidor SMTP)*
+- [ ] UF automática en el sandbox: depende de que el hosting permita HTTP saliente *(Jonas: botón «Actualizar la UF ahora»)*
 
 ## G — Postores · Pendiente
 

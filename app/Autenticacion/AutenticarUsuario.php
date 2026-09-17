@@ -7,6 +7,7 @@ use App\Models\Configuracion;
 use App\Models\Postor;
 use App\Models\User;
 use App\Support\Rut;
+use App\Support\Sitio;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -41,7 +42,7 @@ class AutenticarUsuario
         if ($user->bloqueado_hasta !== null && $ahora->lessThan($user->bloqueado_hasta)) {
             $this->registrar($request, $user, $identificador, 'ingreso_bloqueado', ['portal' => $portal]);
             $hasta = $user->bloqueado_hasta->setTimezone(config('colliers.zona_visualizacion'))->format('H:i');
-            $this->fallar("La cuenta está bloqueada por seguridad hasta las {$hasta}. Si necesitas ingresar antes, escribe a remates@colliers.cl.");
+            $this->fallar("La cuenta está bloqueada por seguridad hasta las {$hasta}. Si necesitas ingresar antes, escribe a " . Sitio::correo() . '.');
         }
 
         if (! Hash::check($clave, $user->password)) {
@@ -60,7 +61,7 @@ class AutenticarUsuario
 
         if ($user->estado !== User::ESTADO_ACTIVO) {
             $this->registrar($request, $user, $identificador, 'ingreso_fallido', ['motivo' => 'cuenta_inactiva', 'portal' => $portal]);
-            $this->fallar('La cuenta está deshabilitada. Escribe a remates@colliers.cl.');
+            $this->fallar('La cuenta está deshabilitada. Escribe a ' . Sitio::correo() . '.');
         }
 
         if ($user->intentos_fallidos > 0 || $user->bloqueado_hasta !== null) {
