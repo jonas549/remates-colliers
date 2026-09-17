@@ -187,7 +187,7 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 | `/admin/subastas/{id}/en-vivo` | Precio, cronómetro, ganador con nombre, historial, mensaje a la sala, cerrar lote con motivo. |
 | `/admin/postores` | Filas reales, pestañas por estado y «Cuentas por aprobar», búsqueda, Aprobar/Rechazar con motivo, Ficha con documentos, Exportar listado (CSV). |
 | `/admin/configuracion` | Todos los valores del negocio, prueba de correo, UF y Sistema. |
-| `/admin/reportes` | **Todavía con datos de ejemplo** (aviso azul): se conectan en el Bloque O. |
+| `/admin/reportes` | Datos reales del mes del último cierre: KPIs, tabla por remate (base, final, sobreprecio, pujas, minutos de la primera a la última puja, resultado), participación, dinámica y categorías. El selector cambia el período (mes, trimestre, año, todo). **CSV** baja el desempeño comercial, **XLSX** el libro completo (6 hojas) y cada «Descargar» su hoja: ábrelos en Excel y revisa tildes, montos y que los postores salgan como «Postor #N». «Descargar PDF» todavía no hace nada (pendiente de decisión). |
 
 ## 10. Si algo falla
 

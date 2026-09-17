@@ -570,6 +570,23 @@ Remate en vivo del seeder: `/remates/apoquindo/sala`. Postores: `mpgonzalez@corr
 
 ---
 
+## 5b. Reportes (Bloque O, agregado el 17/09 después del QA)
+
+### QA-75 · Reportes con datos reales
+- [x] **OK en local**
+- **Pasos:** `/admin/reportes` como administración; cambiar el período a otro mes, a «Todo el historial» y a un mes sin cierres; entrar como martillero y como postor.
+- **Esperado:** sin aviso de datos de ejemplo; KPIs, tabla, participación, dinámica y categorías calculados de los remates cerrados (sin demostraciones ni cancelados); mes sin cierres: «Sin remates cerrados en …»; período inválido: 404; el martillero ve la pantalla; postor: 403; ningún correo ni nombre de postor.
+- **Evidencia:** `reportes.mjs` · `ReportesTest::test_desempeno_participacion_dinamica_y_categorias_del_mes`, `…test_periodos_en_hora_de_chile_…`, `…test_pantalla_con_datos_reales_…`.
+
+### QA-76 · Exportables XLSX y CSV
+- [x] **OK en local**
+- **Pasos:** «XLSX», «CSV» y cada «Descargar»; abrir los archivos.
+- **Esperado:** XLSX con 6 hojas (Resumen, Desempeño comercial, Por categoría, Participación, Pujas, Garantías), montos numéricos con separador de miles, postores como «Postor #N»; CSV con punto y coma y BOM (tildes correctas en Excel). El paquete de Excel no se carga en las demás pantallas.
+- **Evidencia:** `reportes.mjs` · `ReportesTest::test_exportables_xlsx_y_csv_sin_identidades`, `…test_el_paquete_de_excel_no_se_carga_en_las_demas_peticiones` · exportación comprobada también con `config:cache`, como en el servidor.
+
+### S-12 · Descargas de reportes en el sandbox
+- [ ] **Solo en sandbox** — `colliers:diagnostico` sin avisos en las extensiones nuevas (`iconv`, `simplexml`, `xmlreader`, `xmlwriter`, `zlib`) y las descargas XLSX/CSV funcionan.
+
 ## 6. Solo en sandbox (sin marcar)
 
 Estos dependen del hosting real (LiteSpeed, cron, correo saliente, límites de PHP) y no se pueden dar por probados en

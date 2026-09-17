@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\EnVivoController;
 use App\Http\Controllers\Admin\LotesController;
 use App\Http\Controllers\Admin\PostoresController;
 use App\Http\Controllers\Admin\RematesController;
+use App\Http\Controllers\Admin\ReportesController;
 use App\Http\Controllers\Admin\SalaMartilleroController;
 use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CuentaController;
@@ -101,7 +102,10 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
     Route::get('/subastas', [RematesController::class, 'index'])->name('subastas');
     // Panel del martillero: administradores y el martillero asignado a ese remate (se revisa en el controlador).
     Route::get('/subastas/{remate}/en-vivo', [EnVivoController::class, 'show'])->name('remates.en-vivo');
-    Route::view('/reportes', 'admin.reportes')->name('reportes');
+    // Bloque O: reportes con datos reales y exportables (sin datos personales).
+    Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes');
+    Route::get('/reportes/exportar/{hoja}.{formato}', [ReportesController::class, 'exportar'])
+        ->whereIn('hoja', ['libro', 'desempeno', 'participacion', 'pujas', 'garantias'])->whereIn('formato', ['xlsx', 'csv'])->name('reportes.exportar');
 
     Route::middleware('rol:admin')->group(function () {
         // Bloques G y H: postores y garantías (datos personales: solo administradores).

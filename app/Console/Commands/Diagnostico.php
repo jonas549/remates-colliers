@@ -28,7 +28,7 @@ class Diagnostico extends Command
 
         $this->seccion('PHP');
         $this->revisar(version_compare(PHP_VERSION, '8.3.0', '>='), 'PHP ' . PHP_VERSION . ' (mínimo 8.3)');
-        foreach (['pdo_mysql', 'mbstring', 'openssl', 'intl', 'gd', 'fileinfo', 'bcmath', 'ctype', 'tokenizer', 'xml', 'dom', 'curl', 'zip'] as $ext) {
+        foreach (['pdo_mysql', 'mbstring', 'openssl', 'intl', 'gd', 'fileinfo', 'bcmath', 'ctype', 'tokenizer', 'xml', 'dom', 'curl', 'zip', 'iconv', 'simplexml', 'xmlreader', 'xmlwriter', 'zlib'] as $ext) { // las cinco últimas: exportaciones XLSX (Bloque O)
             $this->revisar(extension_loaded($ext), "Extensión {$ext}");
         }
 

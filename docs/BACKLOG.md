@@ -16,7 +16,7 @@ nota *(verifica Jonas en el sandbox)*.
 |---|---|---|---|
 | A | Entorno y servidor | **Completo** | 5/5 |
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
-| B | Base del proyecto Laravel | En progreso | 18/19 |
+| B | Base del proyecto Laravel | **Completo** | 19/19 |
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
 | D | Autenticación y registro de postores | En progreso | 10/12 |
@@ -29,7 +29,7 @@ nota *(verifica Jonas en el sandbox)*.
 | N | Sitio público | En progreso | 11/12 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | Pendiente | 0/3 |
-| O | Reportes | Pendiente | 0/7 |
+| O | Reportes | En progreso | 6/8 |
 | P | Seguridad | Pendiente | 0/8 |
 | Q | QA y carga | Pendiente | 0/6 |
 | R | Despliegue a producción | Pendiente | 0/8 |
@@ -44,7 +44,7 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
-**Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) siguen con datos de ejemplo. B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
+**Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) con datos reales y exportables XLSX/CSV (falta PDF, a decidir, y probar en el sandbox). B completo. J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
 camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
 **K → I → V → G → H → M → N**, commits locales, push al terminar N → **hecho**. Ahora: Jonas prueba en el sandbox con
@@ -104,7 +104,7 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] Handler versionado en `public/.htaccess`: sitio carga tras el deploy de `4bd54c0` y `git status` limpio *(Jonas en el sandbox, 16/09)*
 - [x] Hook pre-commit (`.githooks/pre-commit`) que verifica que `public/build` corresponde a los assets del commit (5 casos probados, 16/09)
 - [x] Fortify en español (Bloque D, 16/09)
-- [ ] `maatwebsite/excel` para exportaciones *(se hace en O)*
+- [x] `maatwebsite/excel` para exportaciones *(4.0, registrado solo al exportar; Bloque O, 17/09)*
 
 ## C — Modelo de datos · Completo
 
@@ -338,15 +338,22 @@ Se completan a medida que las pantallas lo pidan.
 - [ ] Estructura del panel (navegación, permisos por rol)
 - [ ] Tablas y formularios reutilizables, adaptados a móvil
 
-## O — Reportes · Pendiente
+## O — Reportes · En progreso
 
-- [ ] Desempeño comercial: precio base vs. final, % de sobreprecio, tasa de venta
-- [ ] Participación: postores registrados, activos, pujas por remate
-- [ ] Dinámica: tiempo de cierre por remate
-- [ ] Generales: volumen total transado, desempeño por categoría de activo
-- [ ] Exportación con `maatwebsite/excel`
-- [ ] Comparación entre eventos
-- [ ] Exportar PDF *(pendiente de decisión de Jonas)*
+Verificado el 17/09: `ReportesTest` (5; 122/122 en total, remates generados con el motor de pujas y el liquidador reales) y
+`tools/comparar/reportes.mjs` en navegador real (13/13): KPIs y tabla con los remates cerrados del seeder, cambio de
+período, descargas XLSX/CSV y usabilidad a 375/760/1120/1440 px. Excluye remates de demostración y cancelados. Sin datos
+personales: los postores van como «Postor #N» (administradores y martilleros pueden verlos). Unidad del reporte: el lote
+terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto, ver Decisiones)*.
+
+- [x] Desempeño comercial: precio base vs. final, % de sobreprecio, tasa de venta (por remate/lote y KPIs del período)
+- [x] Participación: postores registrados (cuentas aprobadas), con garantía aprobada, activos, adjudicatarios, garantías rechazadas; pujas por remate
+- [x] Dinámica: minutos entre la primera y la última puja por remate (gráfico con los 12 más recientes y columna «Cierre»)
+- [x] Generales: volumen total adjudicado y desempeño por categoría de activo (volumen, sobreprecio, tasa)
+- [x] Exportación con `maatwebsite/excel` 4.0: CSV (punto y coma + BOM, abre bien en Excel de Chile) y XLSX; libro completo con 6 hojas y un XLSX por exportable. El paquete **no se autodescubre**: se registra solo al exportar, para no sumar archivos a cada petición sin OPcache
+- [x] Comparación entre eventos: tabla por remate del período elegido; períodos por mes, trimestre, año o todo el historial *(supuesto: el diseño no tiene una pantalla de comparación lado a lado)*
+- [ ] Exportar PDF *(pendiente de decisión de Jonas; el botón se ve y no hace nada)*
+- [ ] Probar las descargas en el sandbox (extensiones `zip`, `xmlwriter`, `iconv`, `simplexml`, `xmlreader`, `zlib`: `colliers:diagnostico` ahora las revisa)
 
 ## P — Seguridad · Pendiente
 
@@ -406,7 +413,8 @@ Se completan a medida que las pantallas lo pidan.
 - [x] Nombre exacto del handler PHP 8.4 en cPanel/LiteSpeed: `application/x-httpd-ea-php84` (16/09)
 - [ ] Subir el acta del 25/08 al material local de referencia
 - [ ] Idioma EN/ES (Bloque N): hoy se ve y no funciona
-- [ ] Exportar a PDF (Bloque O): hoy se ve y no funciona
+- [ ] Exportar a PDF (Bloque O): hoy se ve y no funciona. Con los datos reales listos, ¿se implementa (PDF del reporte del período) o se quita el botón? (17/09)
+- [ ] Reportes (17/09): CSV y XLSX de arriba descargan el desempeño comercial en CSV y el libro completo en XLSX; cada «Descargar» de exportables baja esa hoja en XLSX. ¿Sirve así?
 - [ ] Activar el filtro «Garantía requerida» (hoy oculto; pasa a ajuste del panel en V)
 
 ### Supuestos vigentes (16/09, mientras el cliente no defina; cambiar cualquiera no borra datos)
@@ -425,6 +433,10 @@ Se completan a medida que las pantallas lo pidan.
 | Garantía en el formulario de creación (17/09) | El diseño pide un monto; manda el acta: se ingresa el **porcentaje** (vacío = global) y el resumen muestra el monto que resulta | Solo la vista |
 | Revisión de postores (17/09) | Aprobar/Rechazar del listado actúan sobre la cuenta mientras no esté aprobada y después sobre la garantía; una cuenta bloqueada conserva sus garantías pero no puja ni se inscribe | Solo `RevisionPostores` y la vista |
 | Inscripción (17/09) | Requiere cuenta aprobada y remate próximo antes del cierre de garantías; no hay tope de inscripciones por postor | Solo `InscripcionGarantias` |
+| Unidad de los reportes (17/09) | Una fila por **lote terminado** (adjudicado o desierto), contado en el período por la hora de cierre del lote en hora de Chile; con un lote por remate es el remate. Tasa de venta = lotes adjudicados / lotes terminados; sobreprecio medio = promedio simple de (final / base − 1) de los adjudicados | Solo `App\Reportes\ReporteRemates` |
+| Indicadores de participación (17/09) | Registrados = cuentas aprobadas (o bloqueadas después) hasta el fin del período; con garantía, activos, adjudicatarios y garantías rechazadas = en los remates del período (estado actual de la garantía). «Devueltas» no existe todavía en el modelo | Solo `ReporteRemates` |
+| Dinámica de cierre (17/09) | Minutos entre la primera y la última puja del lote, como dice el diseño | Solo `ReporteRemates` |
+| Acceso a reportes (17/09) | Administradores y martilleros (no hay datos personales) | Rutas |
 | Quién gestiona remates (17/09) | Crear y editar: solo administradores. Martilleros: ven el listado y el panel en vivo de SUS remates | Rutas `rol:admin` |
 
 ### Del cliente (no bloquean; se anota y se sigue)

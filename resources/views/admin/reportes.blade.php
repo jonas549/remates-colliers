@@ -1,71 +1,66 @@
 @php
-    use App\Demo\RematesDemo;
+    use App\Support\Formato;
 
-    $clp = fn ($n) => RematesDemo::clp($n);
-    $millones = fn ($n) => '$' . number_format(round($n / 1000000), 0, ',', '.') . 'M';
+    /** @var \App\Reportes\ReporteRemates $reporte */
+    $millones = fn (int $n) => '$' . number_format(round($n / 1000000), 0, ',', '.') . 'M';
+    $porcentaje = fn (?float $v, bool $signo = false) => $v === null ? '—' : ($signo ? '+' : '') . round($v * 100) . '%';
+    $minutos = fn (?float $m) => $m === null ? '—' : ($m < 1 ? '< 1 min' : round($m) . ' min');
 
-    $remates = [
-        ['R-2026-105', 'San Martín 655, Casa A', 'Casa', '19-08-2026', 72000000, 88000000, 23, '38 min', 'Adjudicado'],
-        ['R-2026-103', 'Av. Vitacura 8720, Depto. 1105', 'Departamento', '14-08-2026', 156000000, 171500000, 17, '41 min', 'Adjudicado'],
-        ['R-2026-108', 'Av. Alemania 0980, Depto. 401', 'Departamento', '12-08-2026', 64000000, 0, 0, '—', 'No adjudicado'],
-        ['R-2026-101', 'Los Nogales 220, Casa 4', 'Casa', '05-08-2026', 118000000, 124000000, 9, '22 min', 'Cierre anticipado'],
-        ['R-2026-099', 'Santa Isabel 1450, Depto. 908', 'Departamento', '31-07-2026', 88000000, 103500000, 31, '44 min', 'Adjudicado'],
-        ['R-2026-097', 'Camino Otoñal 55, Casa 9', 'Casa', '28-07-2026', 245000000, 262000000, 14, '36 min', 'Adjudicado'],
-    ];
-    $adjudicados = array_filter($remates, fn ($r) => $r[5] > 0);
-    $volumen = array_sum(array_column($adjudicados, 5));
-    $sobreprecioMedio = array_sum(array_map(fn ($r) => $r[5] / $r[4] - 1, $adjudicados)) / count($adjudicados);
-    $tasa = round(count($adjudicados) / count($remates) * 100);
+    $t = $reporte->totales();
+    $filas = $reporte->desempeno();
+    $porLote = $t['lotes'] !== $t['remates'];
+    $promedioPujas = $t['lotes'] ? round($t['pujas'] / $t['lotes']) : 0;
 
     $kpis = [
-        ['VOLUMEN ADJUDICADO', $millones($volumen), count($adjudicados) . ' propiedades vendidas'],
-        ['TASA DE VENTA', $tasa . '%', count($adjudicados) . ' de ' . count($remates) . ' concretados'],
-        ['SOBREPRECIO MEDIO', '+' . round($sobreprecioMedio * 100) . '%', 'Final sobre precio base'],
-        ['POSTORES REGISTRADOS', '184', '96 con garantía aprobada'],
-        ['POSTORES ACTIVOS', '61', 'Ingresaron al menos una puja'],
-        ['PUJAS TOTALES', '94', 'Promedio de 16 por remate'],
+        ['VOLUMEN ADJUDICADO', $millones($t['volumen']), $t['vendidos'] === 1 ? '1 propiedad vendida' : "{$t['vendidos']} propiedades vendidas"],
+        ['TASA DE VENTA', $porcentaje($t['tasa']), "{$t['vendidos']} de {$t['lotes']} concretados"],
+        ['SOBREPRECIO MEDIO', $porcentaje($t['sobreprecio'], true), 'Final sobre precio base'],
+        ['POSTORES REGISTRADOS', (string) $t['registrados'], "{$t['con_garantia']} con garantía aprobada"],
+        ['POSTORES ACTIVOS', (string) $t['activos'], 'Ingresaron al menos una puja'],
+        ['PUJAS TOTALES', (string) $t['pujas'], "Promedio de {$promedioPujas} por " . ($porLote ? 'lote' : 'remate')],
     ];
+
+    // Barras relativas a los postores registrados, como el diseño.
+    $base = max($t['registrados'], 1);
     $participacion = [
-        ['Postores registrados', '184', 100, 'Cuentas aprobadas por Colliers'],
-        ['Con garantía aprobada', '96', 52, 'Habilitados para pujar en algún remate'],
-        ['Postores activos', '61', 33, 'Ingresaron al menos una postura'],
-        ['Adjudicatarios', '5', 3, 'Uno por remate concretado'],
-        ['Garantías rechazadas', '12', 7, 'Monto o titular incorrecto'],
+        ['Postores registrados', $t['registrados'], 'Cuentas aprobadas por Colliers'],
+        ['Con garantía aprobada', $t['con_garantia'], 'Habilitados para pujar en algún remate del período'],
+        ['Postores activos', $t['activos'], 'Ingresaron al menos una postura'],
+        ['Adjudicatarios', $t['adjudicatarios'], 'Ganaron al menos un ' . ($porLote ? 'lote' : 'remate')],
+        ['Garantías rechazadas', $t['garantias_rechazadas'], 'Comprobantes no aceptados en los remates del período'],
     ];
-    $dinamica = [['R-105', 38], ['R-103', 41], ['R-101', 22], ['R-099', 44], ['R-097', 36], ['R-094', 29]];
-    $categorias = [
-        ['Departamentos', '4', $millones(275000000), '+13%', '75%', false],
-        ['Casas', '3', $millones(474000000), '+11%', '100%', false],
-        ['Total período', '7', $millones($volumen), '+' . round($sobreprecioMedio * 100) . '%', $tasa . '%', true],
-    ];
-    $exportables = [
-        ['Desempeño comercial', 'Base, final, sobreprecio y resultado por remate'],
-        ['Participación de postores', 'Registrados, habilitados, activos y adjudicatarios'],
-        ['Detalle de pujas', 'Cada postura con hora, monto y postor anonimizado'],
-        ['Garantías del período', 'Aprobadas, rechazadas y devueltas por remate'],
-    ];
+
+    $dinamica = $reporte->dinamica();
+    $maximoMinutos = max(array_merge([1], array_column($dinamica, 'minutos')));
+    $categorias = $reporte->categorias();
+    $consulta = ['periodo' => $reporte->periodo()];
 @endphp
 <x-layouts.admin seccion="reportes" titulo="Reportes">
-    <div x-data="{ periodo: 'mes' }">
+    <div>
         <div class="admin-encabezado">
             <div>
                 <div class="admin-encabezado__kicker">REPORTES POST-EVENTO</div>
                 <h1 class="admin-encabezado__titulo admin-encabezado__titulo--con-bajada">Desempeño de los remates</h1>
-                <div class="admin-encabezado__bajada" x-text="'Remates realizados · ' + ({ mes: 'agosto 2026', trimestre: 'julio a septiembre 2026', anio: 'año 2026' })[periodo] + ' · montos en pesos'">Remates realizados · agosto 2026 · montos en pesos</div>
+                <div class="admin-encabezado__bajada">Remates realizados · {{ $reporte->etiqueta() }} · montos en pesos</div>
             </div>
             <div class="admin-encabezado__acciones" style="gap: 10px">
-                <select x-model="periodo" class="admin-reportes__periodo" aria-label="Período">
-                    <option value="mes">Agosto 2026</option>
-                    <option value="trimestre">Trimestre en curso</option>
-                    <option value="anio">Año 2026</option>
-                </select>
-                <button type="button" class="admin-reportes__formato">CSV</button>
-                <button type="button" class="admin-reportes__formato">XLSX</button>
+                <form method="GET" action="{{ route('admin.reportes') }}" class="formulario-en-linea">
+                    <select name="periodo" onchange="this.form.submit()" class="admin-reportes__periodo" aria-label="Período">
+                        @foreach ($opciones as $grupo => $valores)
+                            <optgroup label="{{ $grupo }}">
+                                @foreach ($valores as $clave => $nombre)
+                                    <option value="{{ $clave }}" @selected($clave === $reporte->periodo())>{{ $nombre }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                    <noscript><button type="submit" class="admin-reportes__formato">Ver</button></noscript>
+                </form>
+                <a href="{{ route('admin.reportes.exportar', ['desempeno', 'csv'] + $consulta) }}" class="admin-reportes__formato" title="Desempeño comercial en CSV">CSV</a>
+                <a href="{{ route('admin.reportes.exportar', ['libro', 'xlsx'] + $consulta) }}" class="admin-reportes__formato" title="Libro con todas las hojas">XLSX</a>
                 <button type="button" class="admin-reportes__pdf">Descargar PDF</button>
             </div>
         </div>
-
-        <div class="admin-avisos"><div class="admin-aviso admin-aviso--info">Datos de ejemplo del diseño: los reportes se conectan a los remates reales en el Bloque O.</div></div>
 
         <div class="admin-reportes__kpis-fondo">
             <div class="admin-reportes__kpis">
@@ -99,22 +94,24 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($remates as [$folio, $direccion, $categoria, $fecha, $base, $final, $pujas, $duracion, $resultado])
-                            @php($regla = ['No adjudicado' => 'regla-no', 'Cierre anticipado' => 'regla-anticipado'][$resultado] ?? '')
+                        @forelse ($filas as $f)
+                            @php($regla = ['No adjudicado' => 'regla-no', 'Cierre anticipado' => 'regla-anticipado'][$f['resultado']] ?? '')
                             <tr>
                                 <td class="es-primera {{ $regla }}">
-                                    <div class="admin-tabla__principal">{{ $direccion }}</div>
-                                    <div class="admin-tabla__secundario"><span>{{ $folio }}</span> · <span>{{ $fecha }}</span></div>
+                                    <div class="admin-tabla__principal">{{ $f['direccion'] }}</div>
+                                    <div class="admin-tabla__secundario"><span>{{ $f['folio'] }}{{ $f['lote'] ? ' · Lote ' . $f['lote'] : '' }}</span> · <span>{{ $f['cerrado_en']->setTimezone(Formato::ZONA)->format('d-m-Y') }}</span></div>
                                 </td>
-                                <td>{{ $categoria }}</td>
-                                <td class="es-num">{{ $clp($base) }}</td>
-                                <td class="es-fuerte">{{ $final ? $clp($final) : '—' }}</td>
-                                <td><span @class(['admin-reportes__delta', 'es-vacio' => ! $final])>{{ $final ? '+' . round(($final / $base - 1) * 100) . '%' : '—' }}</span></td>
-                                <td class="es-num">{{ $pujas ?: '0' }}</td>
-                                <td>{{ $duracion }}</td>
-                                <td><span class="badge-admin {{ ['Adjudicado' => 'badge-admin--adjudicada', 'No adjudicado' => 'badge-admin--no-adjudicado', 'Cierre anticipado' => 'badge-admin--anticipado'][$resultado] }}">{{ $resultado }}</span></td>
+                                <td>{{ $f['categoria'] }}</td>
+                                <td class="es-num">{{ Formato::clp($f['base']) }}</td>
+                                <td class="es-fuerte">{{ $f['final'] !== null ? Formato::clp($f['final']) : '—' }}</td>
+                                <td><span @class(['admin-reportes__delta', 'es-vacio' => $f['final'] === null])>{{ $porcentaje($f['sobreprecio'], true) }}</span></td>
+                                <td class="es-num">{{ $f['pujas'] }}</td>
+                                <td>{{ $minutos($f['minutos']) }}</td>
+                                <td><span class="badge-admin {{ ['Adjudicado' => 'badge-admin--adjudicada', 'No adjudicado' => 'badge-admin--no-adjudicado', 'Cierre anticipado' => 'badge-admin--anticipado'][$f['resultado']] }}">{{ $f['resultado'] }}</span></td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr><td colspan="8">Sin remates cerrados en {{ $reporte->etiqueta() }}.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -122,13 +119,13 @@
             <div class="admin-reportes__grilla">
                 <div class="admin-seccion">
                     <div class="admin-reportes__bloque-cabeza"><h2 class="admin-seccion__titulo">Participación</h2></div>
-                    @foreach ($participacion as [$label, $valor, $pct, $nota])
+                    @foreach ($participacion as [$label, $valor, $nota])
                         <div class="admin-participacion">
                             <div class="admin-participacion__fila">
                                 <span class="admin-participacion__label">{{ $label }}</span>
                                 <span class="admin-participacion__valor">{{ $valor }}</span>
                             </div>
-                            <div class="admin-participacion__barra"><div class="admin-participacion__relleno" style="width: {{ $pct }}%"></div></div>
+                            <div class="admin-participacion__barra"><div class="admin-participacion__relleno" style="width: {{ min(100, round($valor / $base * 100)) }}%"></div></div>
                             <div class="admin-participacion__nota">{{ $nota }}</div>
                         </div>
                     @endforeach
@@ -136,20 +133,24 @@
 
                 <div class="admin-seccion">
                     <div class="admin-reportes__bloque-cabeza"><h2 class="admin-seccion__titulo">Dinámica de cierre</h2></div>
-                    <div class="admin-dinamica" role="img" aria-label="Minutos entre la primera y la última puja por remate">
-                        @foreach ($dinamica as [$etiqueta, $minutos])
-                            <div class="admin-dinamica__columna">
-                                <div class="admin-dinamica__valor">{{ $minutos }}′</div>
-                                <div @class(['admin-dinamica__barra', 'es-larga' => $minutos >= 40]) style="height: {{ round($minutos / 45 * 130) }}px"></div>
-                            </div>
-                        @endforeach
-                    </div>
-                    <div class="admin-dinamica__etiquetas">
-                        @foreach ($dinamica as [$etiqueta])
-                            <div class="admin-dinamica__etiqueta">{{ $etiqueta }}</div>
-                        @endforeach
-                    </div>
-                    <p class="admin-reportes__texto">Minutos entre la primera y la última puja de cada remate. El cierre es automático al vencer el tiempo configurado: sin extensiones, la actividad se concentra en los minutos finales.</p>
+                    @if ($dinamica)
+                        <div class="admin-dinamica" role="img" aria-label="Minutos entre la primera y la última puja por remate">
+                            @foreach ($dinamica as $d)
+                                <div class="admin-dinamica__columna">
+                                    <div class="admin-dinamica__valor">{{ round($d['minutos']) }}′</div>
+                                    <div @class(['admin-dinamica__barra', 'es-larga' => $d['minutos'] >= $maximoMinutos * 0.85]) style="height: {{ max(2, round($d['minutos'] / $maximoMinutos * 130)) }}px"></div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="admin-dinamica__etiquetas">
+                            @foreach ($dinamica as $d)
+                                <div class="admin-dinamica__etiqueta">{{ $d['etiqueta'] }}</div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="admin-reportes__texto">Sin pujas en los remates de este período.</p>
+                    @endif
+                    <p class="admin-reportes__texto">Minutos entre la primera y la última puja de cada remate{{ count($dinamica) === 12 ? ' (los 12 más recientes)' : '' }}. El cierre es automático al vencer el tiempo configurado: sin extensiones, la actividad se concentra en los minutos finales.</p>
                 </div>
 
                 <div class="admin-seccion">
@@ -166,13 +167,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($categorias as [$nombre, $numero, $vol, $sobre, $tasaCat, $total])
-                                    <tr @class(['es-total' => $total])>
-                                        <td class="es-primera">{{ $nombre }}</td>
-                                        <td class="es-num">{{ $numero }}</td>
-                                        <td class="es-num">{{ $vol }}</td>
-                                        <td class="es-num">{{ $sobre }}</td>
-                                        <td class="es-num">{{ $tasaCat }}</td>
+                                @foreach ($categorias as $c)
+                                    <tr @class(['es-total' => $c['total']])>
+                                        <td class="es-primera">{{ $c['categoria'] }}</td>
+                                        <td class="es-num">{{ $c['lotes'] }}</td>
+                                        <td class="es-num">{{ $millones($c['volumen']) }}</td>
+                                        <td class="es-num">{{ $porcentaje($c['sobreprecio'], true) }}</td>
+                                        <td class="es-num">{{ $porcentaje($c['tasa']) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -185,13 +186,13 @@
             <div class="admin-exportables">
                 <h2 class="admin-seccion__titulo">Exportables disponibles</h2>
                 <div class="admin-exportables__grilla">
-                    @foreach ($exportables as [$nombre, $detalle])
+                    @foreach ($exportables as $clave => [$nombre, $detalle])
                         <div class="admin-exportable">
                             <div style="min-width: 0">
                                 <div class="admin-exportable__nombre">{{ $nombre }}</div>
                                 <div class="admin-exportable__detalle">{{ $detalle }}</div>
                             </div>
-                            <button type="button">Descargar</button>
+                            <a href="{{ route('admin.reportes.exportar', [$clave, 'xlsx'] + $consulta) }}" class="admin-exportable__descargar">Descargar</a>
                         </div>
                     @endforeach
                 </div>
