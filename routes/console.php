@@ -33,3 +33,9 @@ Schedule::command('colliers:actualizar-uf')
     ->name('actualizar-uf')
     ->hourly()
     ->withoutOverlapping(10);
+
+// Recordatorios antes del remate (Bloque M): encola los correos; la cola los envía en el minuto siguiente.
+Schedule::command('colliers:recordatorios')
+    ->name('recordatorios')
+    ->everyTenMinutes()
+    ->withoutOverlapping(10);

@@ -2,6 +2,7 @@
 
 namespace App\Remates;
 
+use App\Events\RematePublicado;
 use App\Models\Configuracion;
 use App\Models\Documento;
 use App\Models\Lote;
@@ -155,6 +156,9 @@ class GestionRemates
             $remate->programarLotes();
         });
         $this->publicarEstadoSiCorresponde($remate);
+        if (! $remate->es_demostracion) {
+            RematePublicado::dispatch($remate);
+        }
     }
 
     /** Borrador o publicado que todavía no comienza. Uno que ya comenzó se cierra lote por lote (cierre anticipado). */

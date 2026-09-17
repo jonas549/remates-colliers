@@ -18,6 +18,7 @@ use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\RevisionController;
 use App\Http\Controllers\SalaController;
+use App\Http\Controllers\SuscripcionesController;
 use App\Http\Controllers\TiempoRealController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
@@ -45,6 +46,10 @@ Route::post('/admin/remates/{remate:slug}/lotes/{lote}/cerrar', [SalaMartilleroC
     ->whereNumber('lote')->middleware(['auth', 'clave.vigente'])->name('admin.sala.cerrar-lote');
 Route::post('/admin/remates/{remate:slug}/mensaje', [SalaMartilleroController::class, 'mensaje'])
     ->middleware(['auth', 'clave.vigente'])->name('admin.sala.mensaje');
+
+// Bloque M: «Avísame» (remates nuevos o recordatorio de un remate) y baja desde el enlace del correo.
+Route::post('/avisame', [SuscripcionesController::class, 'store'])->middleware('throttle:10,1')->name('suscripciones.store');
+Route::get('/avisame/baja/{token}', [SuscripcionesController::class, 'baja'])->where('token', '[A-Za-z0-9]{40}')->name('suscripciones.baja');
 
 // ?sesion= (visitante | registrado | en-revision | aprobada) simula la sesión en las páginas públicas hasta K y N.
 $sesionDemo = fn () => in_array(request('sesion'), ['registrado', 'en-revision', 'aprobada'], true) ? request('sesion') : 'visitante';

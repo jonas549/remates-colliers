@@ -37,6 +37,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::subscribe(RegistroDeAccesos::class);
+        // Bloque M: correos por la cola y su bitácora.
+        Event::subscribe(\App\Listeners\EnviarAvisos::class);
+        Event::subscribe(\App\Listeners\RegistroDeNotificaciones::class);
 
         RateLimiter::for('pujas', fn (Request $request) => Limit::perMinute(config('colliers.limites.pujas_por_minuto'))
             ->by('puja:' . ($request->user()?->id ?? $request->ip())));

@@ -23,9 +23,9 @@ nota *(verifica Jonas en el sandbox)*.
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
 | I | Remates y lotes + panel del martillero | **Completo** | 9/9 |
 | V | Configuración autoadministrable y SMTP | En progreso | 11/13 |
-| G | Postores | En progreso | 5/6 |
+| G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 7/8 |
-| M | Notificaciones | Pendiente | 0/7 |
+| M | Notificaciones | En progreso | 7/8 |
 | N | Sitio público | Pendiente | 0/9 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | Pendiente | 0/3 |
@@ -257,7 +257,7 @@ solo administradores) con los componentes del panel. Sin migración: todo en `co
 - [ ] SMTP real de Colliers: probar el envío con el botón en el sandbox *(Jonas; en local no hay servidor SMTP)*
 - [ ] UF automática en el sandbox: depende de que el hosting permita HTTP saliente *(Jonas: botón «Actualizar la UF ahora»)*
 
-## G — Postores · En progreso
+## G — Postores · Completo
 
 Verificado el 17/09: `PostoresGarantiasTest` (6; 104/104 en total) y `tools/comparar/recorrido-garantia.mjs` reescrito con
 datos reales a 375 px (aprobar garantía desde la tarjeta y desde la ficha, aprobar y rechazar cuentas con motivo; persiste al
@@ -268,7 +268,7 @@ recargar). Pantalla del diseño «Admin Postores» ahora solo para administrador
 - [x] Revisión de cuenta: aprobar / rechazar con motivo, con quién y cuándo, en la bitácora de accesos
 - [x] Bloquear (con motivo) / desbloquear cuenta *(supuesto de la máquina de estados propuesta: aprobado ↔ bloqueado)*
 - [x] Aprobación usable desde el celular (tarjetas, botones ≥ 44 px, ficha a pantalla completa)
-- [ ] Correo de rechazo cuando corresponde *(el evento `CuentaRevisada` ya se dispara; el correo es del Bloque M)*
+- [x] Correo de aprobación, rechazo (con motivo), bloqueo y desbloqueo de la cuenta *(Bloque M, 17/09)*
 
 ## H — Garantías · En progreso
 
@@ -284,15 +284,20 @@ desde el celular, reenviar uno rechazado, cuenta aprobada con acceso a la sala a
 - [x] «Mi cuenta» con datos reales: remate, monto, plazo, estado, inscripciones múltiples y acceso a la sala *(textos del destino de la garantía neutros)*
 - [ ] Destino posterior (devolución / imputación / ejecución) *(pendiente con el cliente)*
 
-## M — Notificaciones · Pendiente
+## M — Notificaciones · En progreso
 
-- [ ] Envío por la cola del cron (`--stop-when-empty`), registrado en `notificaciones_log`
-- [ ] Cuenta aprobada / rechazada
-- [ ] Garantía aprobada / rechazada
-- [ ] Adjudicación: al adjudicatario y al administrador
-- [ ] Suscripción «avísame»
-- [ ] Recordatorio antes del remate
-- [ ] Plantillas en español
+Verificado el 17/09: `NotificacionesTest` (5; 109/109 en total) con cola síncrona y correo en memoria, y en local con la cola
+real `database` + `queue:work --stop-when-empty` (encola 1 trabajo, lo envía y la bitácora queda «enviada»). Tabla nueva
+`suscripciones` (migración aditiva).
+
+- [x] Envío por la cola del cron (`--stop-when-empty`, 3 reintentos) y bitácora `notificaciones_log` (enviada / fallida con el error, destinatario, asunto y registro relacionado)
+- [x] Cuenta aprobada / rechazada / bloqueada / desbloqueada
+- [x] Garantía aprobada / rechazada (con motivo) y comprobante recibido
+- [x] Adjudicación: al adjudicatario y a la administración (al correo de avisos de Configuración o a todos los administradores); lote desierto, solo a la administración; marca `notificado_*` en la adjudicación. Los remates de demostración no envían correos
+- [x] «Avísame»: `POST /avisame` (remates nuevos o un remate), aviso al publicar un remate, enlace de baja en cada correo *(sin doble confirmación, supuesto; el formulario del sitio es del Bloque N)*
+- [x] Recordatorios (`colliers:recordatorios` cada 10 min, una sola vez por destinatario): N horas antes del inicio a inscritos con garantía aprobada y a suscriptores del remate, «falta tu garantía» a inscritos sin aprobar, y 48 h antes del cierre de garantías a suscriptores generales
+- [x] Plantillas en español (asunto «… · Remates Colliers», saludo, pie con el contacto de Configuración y textos del correo base traducidos en `lang/es.json`)
+- [ ] Envío real por el SMTP de Colliers y entrega en bandeja (no spam) *(Jonas en el sandbox)*
 
 ## N — Sitio público · Pendiente
 
