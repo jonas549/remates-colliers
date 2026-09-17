@@ -184,10 +184,14 @@ El servidor **no es un VPS**. Es hosting compartido.
   `git config core.hooksPath .githooks` (lo hace `npm install` con el script `prepare`).
 - **El cron de deploy corre `migrate` pero no `db:seed`.** Lo que necesite datos sembrados va en un
   comando idempotente (`colliers:instalar`) que el script de deploy sí ejecuta.
-- **LiteSpeed puede requerir forzar el handler de PHP vía `.htaccess`.** El bloque está en
-  `public/.htaccess`, **comentado** hasta confirmar el nombre exacto del handler en cPanel.
-- **Límites a medir antes de cerrar el Bloque J:** procesos simultáneos (EP), CPU,
-  `max_execution_time`, frecuencia mínima de cron, HTTP saliente.
+- **Handler de PHP 8.4 forzado vía `.htaccess`:** `application/x-httpd-ea-php84`, confirmado el 16/09 y
+  **versionado** en `public/.htaccess` dentro de `<IfModule LiteSpeed>` (el deploy revierte cambios manuales).
+- **OPcache APAGADO en el sandbox** (17/09): la extensión no está cargada a nivel de servidor y no se activa
+  desde cPanel. **El código no puede depender de OPcache** ni del soporte del hosting: el camino de la puja
+  se optimiza para funcionar sin él (ver `docs/RENDIMIENTO-SIN-OPCACHE.md`). Verificarlo en el hosting de
+  producción es un riesgo del Bloque R.
+- **Límites a medir en el sandbox:** procesos simultáneos (EP), CPU, `max_execution_time`, frecuencia mínima
+  de cron, HTTP saliente.
 
 ### Deploy
 
@@ -203,8 +207,9 @@ El servidor **no es un VPS**. Es hosting compartido.
 El servidor se configura **una vez**; desde ahí todo entra por push y cron. Para que siga siendo así:
 
 - **`colliers:puede-desplegar`** se ejecuta antes de actualizar el código. Código de salida 75 = no
-  desplegar (el script termina y reintenta en el próximo ciclo). Hoy bloquea con el archivo
-  `storage/app/bloquear-deploy`; en el Bloque J se agrega el bloqueo con remate en curso.
+  desplegar (el script termina y reintenta en el próximo ciclo). Bloquea con el archivo
+  `storage/app/bloquear-deploy` y, desde el Bloque J, con un remate en curso o que abre en los próximos
+  30 minutos.
 - **`colliers:instalar`** se ejecuta después de `migrate`. Idempotente. **Todo paso de instalación futuro
   (configuración por defecto, catálogos, plantillas) se agrega a este comando, nunca como paso manual.**
 - **Una sola línea de cron para tareas:** `schedule:run` cada minuto. Toda tarea periódica nueva va en
@@ -215,8 +220,9 @@ El servidor se configura **una vez**; desde ahí todo entra por push y cron. Par
   Nunca renombrar ni eliminar columnas. Si algo cambia de significado, columna nueva y la antigua deprecada.
 - `users` guarda credenciales y rol (admin, martillero, postor). Los datos del postor van en tablas propias.
 
-**Bloqueo de deploy obligatorio:** el script no debe desplegar mientras haya un remate en curso
-(pendiente de implementar; requiere cambio en el script del servidor).
+**Bloqueo de deploy obligatorio:** el script no despliega mientras haya un remate en curso. Implementado
+en `colliers:puede-desplegar` (Bloque J) y ya llamado por el script de deploy del sandbox antes del
+`git reset --hard`; en producción hay que verificar que el script lo llame (Bloque R).
 
 ### Flujo de trabajo
 
@@ -366,7 +372,7 @@ El servidor de prueba usa la configuración en caché (como el servidor real): c
 
 ### BLOQUE T — Traspaso del diseño a Blade (1:1 en escritorio)
 
-- [x] B0: Laravel 13, Vite + Alpine, fuentes locales, `.gitignore`, `.htaccess` (handler comentado)
+- [x] B0: Laravel 13, Vite + Alpine, fuentes locales, `.gitignore`, `.htaccess` (handler versionado desde el 16/09)
 - [x] Arnés de comparación visual y de usabilidad móvil
 - [x] Login
 - [x] Registro de postor (corregido el `grid-column: span 2` que desbordaba en pantallas angostas)
@@ -389,73 +395,79 @@ El servidor de prueba usa la configuración en caché (como el servidor real): c
 - [x] Traducciones al español en `lang/es/` (validación, autenticación, contraseñas, paginación)
 - [x] `.env.example` completo y sin secretos
 - [x] `users` con rol, estado y cambio de clave obligatorio (migración aditiva)
-
-- [ ] `.env`: base de datos, correo, locale `es` (hecho en T), zona de visualización `America/Santiago`
-- [ ] Fortify, en español
-- [ ] `maatwebsite/excel` para exportaciones
-- [ ] Confirmar y activar el handler de PHP 8.4 en `.htaccess`
+- [x] Servidor conectado: `.env`, `APP_KEY` respaldada, migrate, `colliers:instalar`, crons (Jonas, 16/09)
+- [x] Fortify, en español (Bloque D)
+- [x] Handler de PHP 8.4 confirmado y versionado en `public/.htaccess`
+- [ ] `maatwebsite/excel` para exportaciones (se hace en O)
 
 ### BLOQUE C — Modelo de datos
 
-- [ ] `users` — rol, RUT cifrado + índice ciego, teléfono, estado de validación, datos extensibles
-- [ ] `remates` — nombre, fecha, estado, identificador de streaming, incremento propio (opcional)
-- [ ] `lotes` — remate, datos del activo, precio base, orden, estado, `cierra_en`, precio actual, ganador
-- [ ] `lote_imagenes`, documentos, visitas
-- [ ] `garantias` — postor, remate, monto, estado, comprobante, quién aprobó y cuándo
-- [ ] `pujas` — lote, postor, monto, timestamp de servidor, IP, user agent (solo crece)
-- [ ] `puja_intentos` — intentos rechazados con motivo
-- [ ] `adjudicaciones` — lote, ganador, monto final, fecha de cierre
-- [ ] `access_logs`, `configuraciones`, `notificaciones_log`
-- [ ] Todas las fechas en UTC; todas las migraciones con `down()`
-- [ ] Seeders de desarrollo con datos realistas
+- [x] Postores fuera de `users` (`postores`, `empresas`, `postor_documentos`); RUT cifrado + índice ciego
+- [x] `remates` — folio, estado, horario, incremento y % propios, video de YouTube, martillero
+- [x] `lotes` — remate, datos del activo, precio base, orden, estado, `abre_en`/`cierra_en`, precio actual, ganador
+- [x] `lote_imagenes`, documentos, visitas
+- [x] `garantias` — postor, remate, monto, estado, comprobante, quién aprobó y cuándo
+- [x] `pujas` — lote, postor, monto, hora de recepción, IP, user agent (solo crece)
+- [x] `puja_intentos` — intentos rechazados con motivo
+- [x] `adjudicaciones` — lote, ganador, monto final, fecha de cierre
+- [x] `access_logs`, `configuraciones`, `notificaciones_log`
+- [x] Todas las fechas en UTC; todas las migraciones con `down()`
+- [x] Seeders de desarrollo con datos realistas (solo local)
 
 ### BLOQUE J — Motor de subastas en tiempo real ⚠️ (núcleo antes que D)
 
-**Leer la sección 5 antes de empezar.**
+**Leer la sección 5 antes de empezar.** Detalle y verificaciones en `docs/BACKLOG.md`.
 
 #### Validación de la puja
-- [ ] Endpoint con transacción y `lockForUpdate` sobre la fila del lote
-- [ ] Remate en curso, lote abierto, postor aprobado, garantía aprobada
-- [ ] Monto ≥ actual + incremento; el postor no es quien va ganando
-- [ ] Validez por hora de recepción
-- [ ] Rate limiting sobre el endpoint
-- [ ] Intentos rechazados registrados fuera de la transacción
+- [x] Endpoint con transacción y `lockForUpdate` sobre la fila del lote
+- [x] Remate en curso, lote abierto, postor aprobado, garantía aprobada
+- [x] Monto ≥ actual + incremento; el postor no es quien va ganando
+- [x] Validez por hora de recepción
+- [x] Rate limiting sobre el endpoint
+- [x] Intentos rechazados registrados fuera de la transacción
 
 #### Temporizador y cierre
-- [ ] Endpoint de sincronización de reloj
-- [ ] Cierre perezoso idempotente + margen de liquidación configurable
-- [ ] Adjudicación automática; lote desierto
-- [ ] Paso al siguiente lote (cuando haya varios)
-- [ ] Cierre manual de emergencia desde el panel del martillero
+- [x] Endpoint de sincronización de reloj
+- [x] Cierre perezoso idempotente + margen de liquidación configurable
+- [x] Adjudicación automática; lote desierto
+- [x] Paso al siguiente lote (horario fijo)
+- [x] Cierre manual de emergencia (endpoint; la pantalla es del Bloque I)
 
 #### Difusión en tiempo real
-- [ ] Interfaz de emisión abstraída (implementación: JSON estático; alternativa: Pusher)
-- [ ] Escritura atómica del estado por remate; cabeceras sin caché en LiteSpeed
-- [ ] Eventos: puja nueva, cierre de lote y apertura del siguiente, mensaje del martillero
-- [ ] Reconexión recuperando el estado actual
+- [x] Interfaz de emisión abstraída (implementación: JSON estático; alternativa: Pusher)
+- [x] Escritura atómica del estado por remate; cabeceras sin caché en LiteSpeed (verificadas por Jonas el 17/09)
+- [x] Eventos: puja nueva, cierre de lote y apertura del siguiente, mensaje del martillero
+- [x] Reconexión recuperando el estado actual
 
 #### QA obligatorio del bloque
-- [ ] Medición de límites del sandbox
-- [ ] Dos pujas del mismo monto en el mismo instante: sólo una gana
-- [ ] Puja bajo el incremento / sin garantía / después del cierre: rechazadas
-- [ ] Vaciar la caché a mitad del remate no altera el estado
-- [ ] El ganador registrado coincide con la última puja válida
-- [ ] Simulación de 20 postores en paralelo (Laragon Apache/Nginx + MariaDB)
+- [ ] Medición de límites del sandbox (OPcache: apagado, ver §4)
+- [x] Dos pujas del mismo monto en el mismo instante: sólo una gana
+- [x] Puja bajo el incremento / sin garantía / después del cierre: rechazadas
+- [x] Vaciar la caché a mitad del remate no altera el estado
+- [x] El ganador registrado coincide con la última puja válida
+- [x] Simulación de 20 postores en paralelo (Apache de Laragon + MySQL 8.4)
+- [ ] Concurrencia contra MariaDB real del sandbox, sobre el remate de demostración
 - [ ] Prueba del transporte en el sandbox con espectadores simulados
-- [ ] Bloqueo de deploy con remate en curso
+- [x] Bloqueo de deploy con remate en curso
 
 ### BLOQUE D — Autenticación y registro de postores
 
-- [ ] Registro de postor; validación de RUT (formato y dígito verificador)
-- [ ] Verificación de correo
-- [ ] Login de postor y login de administrador, separados
-- [ ] Recuperación y cambio de contraseña (propia y de otros desde el admin, cerrando sesiones)
-- [ ] Registro de accesos; bloqueo tras intentos fallidos **con el contador en tabla, no en caché**
-- [ ] Sesiones activas y cierre remoto
-- [ ] Middleware de rol y policies; ninguna consulta por id sin filtrar por dueño
+- [x] Registro de postor; validación de RUT (formato y dígito verificador)
+- [x] Verificación de correo
+- [x] Login de postor y login de administrador, separados
+- [x] Recuperación y cambio de contraseña (propia y de otros desde el admin, cerrando sesiones)
+- [x] Registro de accesos; bloqueo tras intentos fallidos **con el contador en tabla, no en caché**
+- [x] Sesiones activas y cierre remoto
+- [x] Middleware de rol y policies; ninguna consulta por id sin filtrar por dueño
+- [ ] Primer ingreso del administrador en el sandbox (Jonas)
 
 ### BLOQUE K — Sala de puja conectada al motor real
+
+Ver `docs/BACKLOG.md`: conectada y probada en navegador real contra el motor en local; falta probarla en el sandbox.
+
 ### BLOQUE I — CRUD de remates y lotes, incluido el panel del martillero
+
+Ver `docs/BACKLOG.md`.
 
 ### BLOQUE V — Configuración autoadministrable
 
@@ -496,11 +508,11 @@ Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo más t
 |---|---|---|---|
 | A — Entorno y servidor | **Cerrado** | 2026-09-15 | Hecho por Jonas. PHP 8.4.24, Composer 2.10.2, BD, deploy key, script de deploy y cron cada 5 min. |
 | T — Diseño a Blade | **Cerrado** | 2026-09-15 | 11 pantallas 1:1 en escritorio; diferencias restantes son decisiones de alcance (favoritos, contador, filtros). Móvil y tablet sin desborde ni táctiles < 44 px. |
-| B — Base Laravel | Infra lista | 2026-09-15 | Contrato de deploy, comandos, cron, clave de sandbox, errores y es. Pendiente: Fortify (D), maatwebsite/excel (O). |
-| C — Modelo de datos | Pendiente | | |
-| J — Motor de subastas | Pendiente | | |
-| D — Autenticación | Pendiente | | |
-| K — Interfaz de puja | Pendiente | | |
+| B — Base Laravel | 18/19 | 2026-09-16 | Servidor conectado, handler versionado, hook de assets, Fortify. Pendiente: maatwebsite/excel (O). |
+| C — Modelo de datos | **Cerrado** | 2026-09-16 | 15 tablas aditivas con `down()`; RUT cifrado con índice ciego; migraciones corridas en MariaDB 11.4.13 del sandbox. |
+| J — Motor de subastas | 24/29 → en curso | 2026-09-16 | Motor con bloqueo del lote, cierre perezoso, JSON estático; concurrencia real con 20 y 40 postores en local. Cabeceras de LiteSpeed verificadas el 17/09. Falta: límites y pruebas en el sandbox. OPcache apagado en el sandbox (17/09). |
+| D — Autenticación | 10/12 | 2026-09-16 | Fortify, accesos separados, bloqueo en tabla, sesiones, 6 pantallas con el diseño del Login. Falta: primer ingreso admin en sandbox, SMTP real (V). |
+| K — Interfaz de puja | 10/14 | 2026-09-16 | Sala conectada al motor, 26/26 en navegador real. Falta: varios lotes, mensaje del martillero, textos de garantía, prueba en sandbox. |
 | I — Remates y lotes | Pendiente | | |
 | V — Configuración | Pendiente | | |
 | G — Postores | Pendiente | | |
