@@ -219,6 +219,10 @@ class Catalogo
                 'precioActual' => $lote->precio_actual,
                 'totalPujas' => $lote->total_pujas,
                 'uf' => Sitio::uf(),
+                // Bloque J: al cerrar, el cliente muestra el cierre al segundo y avisa una sola vez al servidor.
+                'margenMs' => (int) Configuracion::valor('margen_liquidacion_segundos') * 1000,
+                'avisoCierre' => EstadoRemate::avisoCierre(),
+                'estadoUrl' => route('tiempo-real.estado', $r->slug),
             ],
         ];
     }

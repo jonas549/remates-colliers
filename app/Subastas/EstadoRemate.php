@@ -52,12 +52,23 @@ final class EstadoRemate
             'estado' => $remate->estado,
             'incremento_minimo' => $incremento,
             'margen_liquidacion_ms' => (int) Configuracion::valor('margen_liquidacion_segundos') * 1000,
+            // Cuándo y cuántos espectadores avisan del cierre (configurable desde el panel).
+            'aviso_cierre' => self::avisoCierre(),
             'mensaje_martillero' => $remate->mensaje_martillero === null ? null : [
                 'texto' => $remate->mensaje_martillero,
                 'en_ms' => self::ms($remate->mensaje_martillero_en),
             ],
             'lotes' => $lotes->values()->all(),
             'generado_en_ms' => self::ms($ahora),
+        ];
+    }
+
+    /** @return array{espera_ms: int, porcentaje: int} */
+    public static function avisoCierre(): array
+    {
+        return [
+            'espera_ms' => max(0, (int) Configuracion::valor('cierre_aviso_espera_segundos')) * 1000,
+            'porcentaje' => max(0, min(100, (int) Configuracion::valor('cierre_aviso_porcentaje'))),
         ];
     }
 

@@ -98,7 +98,7 @@ await C0.pagina.locator('.sala-modal__confirmar').click();
 await esperar('C pasa a «Vas ganando» con $199.000.000', async () => (await texto(C0.pagina, '.sala-estado__titulo')) === 'Vas ganando');
 await A.pagina.locator('.sala-modal__confirmar').click();
 await esperar('A recibe el rechazo del motor en español', async () =>
-    (await panel(A.pagina).locator('.sala-puja__ayuda.es-invalido').innerText()) === 'El monto es menor que la puja mínima.');
+    (await panel(A.pagina).locator('.sala-puja__ayuda.es-invalido').innerText()) === 'El monto es menor que la puja mínima: $199.100.000.');
 comprobar('el rechazo no registró una puja', estadoBase().precio_actual === 199000000);
 await C0.contexto.close();
 

@@ -48,8 +48,9 @@
         <x-publico.cabecera :sesion="$sesion" :visitante="$visitante" :z-index="1200">
             @if ($vivo)
                 <div class="detalle-ticker detalle-ticker--vivo">
-                    <span class="detalle-ticker__vivo"><span class="detalle-ticker__punto"></span>EN VIVO</span>
-                    <span class="detalle-ticker__texto">{{ $r['direccion'] }} · cierra en <span x-text="tiempo"></span></span>
+                    <span class="detalle-ticker__vivo" x-show="!cerrado"><span class="detalle-ticker__punto"></span>EN VIVO</span>
+                    <span class="detalle-ticker__vivo" x-show="cerrado" x-cloak x-text="resultado ? 'CERRADO' : 'CERRANDO'">CERRADO</span>
+                    <span class="detalle-ticker__texto">{{ $r['direccion'] }} · <span x-show="!cerrado">cierra en <span x-text="tiempo"></span></span><span x-show="cerrado" x-cloak x-text="adjudicando ? 'el lote cerró: se está adjudicando' : 'el lote cerró'"></span></span>
                     <span class="detalle-ticker__fin">Puja actual <span x-text="pujaActual"></span></span>
                 </div>
             @else
@@ -207,7 +208,9 @@
                     <div class="detalle-caja">
                         @if ($vivo)
                             <div class="detalle-remate__cabeza detalle-remate__cabeza--vivo">
-                                <span class="detalle-remate__cabeza-vivo"><span></span>REMATE EN CURSO</span>
+                                {{-- Al llegar la hora de cierre el estado cambia solo, con el reloj del servidor. --}}
+                                <span class="detalle-remate__cabeza-vivo" x-show="!cerrado"><span></span>REMATE EN CURSO</span>
+                                <span class="detalle-remate__cabeza-vivo detalle-remate__cabeza-vivo--cerrado" x-show="cerrado" x-cloak x-text="textoCierre">CERRADO · ADJUDICANDO</span>
                                 <span class="detalle-remate__folio">{{ $r['folio'] }}</span>
                             </div>
                         @else
@@ -227,12 +230,13 @@
                                     <div><div class="detalle-remate__dato-etiqueta">GARANTÍA</div><div class="detalle-remate__dato-valor">{{ $clp($r['garantia']) }}</div></div>
                                     <div><div class="detalle-remate__dato-etiqueta">REFERENCIA UF</div><div class="detalle-remate__dato-valor" x-text="pujaEnUf"></div></div>
                                 </div>
-                                <div class="detalle-remate__etiqueta detalle-remate__etiqueta--cierre">CIERRA EN</div>
-                                <div class="detalle-remate__contador">
+                                <div class="detalle-remate__etiqueta detalle-remate__etiqueta--cierre" x-text="cerrado ? 'CERRADO' : 'CIERRA EN'">CIERRA EN</div>
+                                <div class="detalle-remate__contador" x-show="!cerrado">
                                     @foreach (['h' => 'HORAS', 'm' => 'MIN', 's' => 'SEG'] as $p => $etiqueta)
                                         <div class="detalle-remate__caja"><div class="detalle-remate__digito" x-text="partes.{{ $p }}"></div><div class="detalle-remate__caja-etiqueta">{{ $etiqueta }}</div></div>
                                     @endforeach
                                 </div>
+                                <div class="detalle-remate__cierre-aviso" x-show="cerrado" x-cloak x-text="adjudicando ? 'Adjudicando…' : 'Remate cerrado'"></div>
                             @elseif ($cerrado)
                                 <div class="detalle-remate__etiqueta">RESULTADO</div>
                                 <div class="detalle-remate__precio">{{ $r['resultado'] }}</div>
@@ -276,7 +280,11 @@
                                     <button type="submit" class="detalle-remate__cta">{{ $bloqueo['cta'] }}</button>
                                 </form>
                             @elseif ($bloqueo['cta'] && $ctaHref)
-                                <a href="{{ $ctaHref }}" class="detalle-remate__cta">{{ $bloqueo['cta'] }}</a>
+                                {{-- Cerrado el lote, la sala ya no acepta pujas: el enlace desaparece al segundo. --}}
+                                <a href="{{ $ctaHref }}" class="detalle-remate__cta" @if ($vivo && $sesion === 'aprobada') x-show="!cerrado" @endif>{{ $bloqueo['cta'] }}</a>
+                                @if ($vivo && $sesion === 'aprobada')
+                                    <div class="detalle-bloqueo__texto" x-show="cerrado" x-cloak x-text="adjudicando ? 'El lote cerró: se está adjudicando.' : 'El lote cerró.'"></div>
+                                @endif
                             @elseif ($bloqueo['cta'])
                                 <button type="button" class="detalle-remate__cta" @click="avisame(@js(auth()->user()?->email))" :disabled="avisoEnviando" x-text="avisoMensaje ? 'Te avisaremos' : @js($bloqueo['cta'])">{{ $bloqueo['cta'] }}</button>
                             @endif

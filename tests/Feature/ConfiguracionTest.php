@@ -153,6 +153,25 @@ class ConfiguracionTest extends TestCase
         $this->actingAs($this->admin)->post('/admin/configuracion/probar-correo', ['destino' => 'no'])->assertSessionHasErrors('destino');
     }
 
+    public function test_el_aviso_del_cierre_se_ajusta_desde_el_panel(): void
+    {
+        $this->actingAs($this->admin)->get(route('admin.configuracion.seccion', 'remates'))->assertOk()
+            ->assertSee('AVISO DEL CIERRE: ESPERA ALEATORIA (SEGUNDOS)')
+            ->assertSee('AVISO DEL CIERRE: ESPECTADORES QUE AVISAN (%)');
+
+        $this->actingAs($this->admin)->put(route('admin.configuracion.update', 'remates'),
+            $this->formulario('remates', ['cierre_aviso_espera_segundos' => '15', 'cierre_aviso_porcentaje' => '25']))
+            ->assertSessionHas('estado');
+        $this->assertSame(['espera_ms' => 15000, 'porcentaje' => 25], \App\Subastas\EstadoRemate::avisoCierre());
+
+        // Fuera de rango: no se guarda (0–60 segundos y 0–100 %).
+        foreach ([['cierre_aviso_espera_segundos' => '90'], ['cierre_aviso_porcentaje' => '150']] as $cambio) {
+            $this->actingAs($this->admin)->put(route('admin.configuracion.update', 'remates'), $this->formulario('remates', $cambio))
+                ->assertSessionHasErrors('config.' . array_key_first($cambio));
+        }
+        $this->assertSame(['espera_ms' => 15000, 'porcentaje' => 25], \App\Subastas\EstadoRemate::avisoCierre());
+    }
+
     public function test_probar_conexion_smtp_dice_exactamente_que_fallo(): void
     {
         // Modo registro: no hay servidor al que conectarse y se explica.

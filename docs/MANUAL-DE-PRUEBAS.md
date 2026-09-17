@@ -177,7 +177,7 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 |---|---|
 | `/` | Remates publicados reales (sin borradores, cancelados ni demostraciones), UF del día, hero con el próximo remate, filtros que cambian el conteo, «Suscribirme» confirma con un mensaje. |
 | `/remates/{slug}` próximo | Cuenta regresiva al inicio, precio base, garantía (10 %), incremento, cierre de garantías, ficha, mapa, visitas, documentos (los reservados dicen «Con garantía aprobada»), recomendados. El recuadro cambia según quién mira: visitante / falta garantía / en revisión / habilitado. |
-| `/remates/{slug}` en vivo | Video, «REMATE EN CURSO», precio y historial que se actualizan solos, «Postor #N» sin nombres. |
+| `/remates/{slug}` en vivo | Video, «REMATE EN CURSO», precio y historial que se actualizan solos, «Postor #N» sin nombres. Al llegar la hora de cierre pasa solo a «CERRADO · ADJUDICANDO» (sin recargar y sin esperar al cron) y, unos segundos después, muestra el resultado. La espera y el porcentaje de espectadores que avisan del cierre se ajustan en Configuración → Remates y pujas. |
 | `/remates/{slug}` cerrado | «REMATE CERRADO» y el resultado. |
 | `/remates/{slug}/sala` | Aviso «Precio y cronómetro oficiales: el video tiene 10–30 s de retraso», puja rápida 100k / 500k / 1M, modal obligatorio, «Vas ganando / Te superaron». En celular: barra fija abajo con «Pujar». |
 | `/mi-cuenta` | Banda de color con el estado, 4 pasos, monto y plazo de la garantía, datos bancarios, subir comprobante, acceso a la sala cuando está aprobada. |

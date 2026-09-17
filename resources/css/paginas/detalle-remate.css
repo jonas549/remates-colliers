@@ -1,0 +1,5 @@
+
+/* Cierre por reloj: el espectador ve el cambio al segundo, antes de que el JSON traiga el resultado (17/09). */
+.detalle-remate__cabeza-vivo--cerrado { color: #8c0f22; }
+.detalle-remate__cabeza-vivo--cerrado span { display: none; }
+.detalle-remate__cierre-aviso { font-family: 'Source Serif 4', serif; font-size: 28px; color: #16265a; margin-top: 4px; }

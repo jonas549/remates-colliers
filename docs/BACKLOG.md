@@ -177,7 +177,7 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Simulación de 20 postores en paralelo (Apache de Laragon + **MySQL 8.4**)
 - [x] Concurrencia contra **MariaDB real** del sandbox: 3 postores simultáneos al mismo monto, gana uno solo, sin doble adjudicación, confirmación en ~1,0–1,2 s *(Jonas, 17/09)*
 - [ ] En el sandbox: paso automático al siguiente lote y cierre anticipado con ganador real *(el demo tenía un solo lote; `colliers:remate-demo` ahora crea 3 por defecto)*
-- [ ] Latencia del JSON tras el cierre por temporizador: hoy la reescribe el cron (hasta 1 min). Propuesta enviada a Jonas el 17/09
+- [x] **Latencia del JSON tras el cierre** *(QA del sandbox, 17/09: el feed mostró el lote abierto durante un minuto)*. Aprobado A + B: **(A)** el espectador deduce el cierre con la hora del servidor y cambia el estado al segundo, sin pedirle nada al servidor; **(B)** pasado el margen, **un solo** aviso al endpoint de estado, con espera al azar y porcentaje de espectadores configurables desde el panel, que materializa la adjudicación y reescribe el JSON en segundos. Si el servidor responde mal (por ejemplo 429), el cliente se rinde y espera al cron, que sigue como respaldo *(`tools/comparar/cierre-espectador.mjs`, 13 comprobaciones)*
 - [x] Comando `colliers:remate-demo`: remate marcado `es_demostracion`, postores aprobados con garantía y claves aleatorias mostradas una vez; se niega con APP_ENV=production (16/09)
 - [ ] Sandbox con `APP_ENV=staging` para poder crear el remate de demostración *(Jonas en el servidor)*
 - [ ] Prueba del transporte en el sandbox con espectadores simulados, sobre el remate de demostración

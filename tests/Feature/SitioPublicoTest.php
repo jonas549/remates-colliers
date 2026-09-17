@@ -146,6 +146,37 @@ class SitioPublicoTest extends TestCase
         $this->actingAs($postor)->get('/remates/militares')->assertSee('Estás habilitado para pujar')->assertSee('Recordarme al comenzar');
     }
 
+    public function test_el_espectador_ve_el_cierre_al_segundo_y_avisa_una_sola_vez(): void
+    {
+        // A: el cliente deduce el cierre con la hora del servidor; B: un aviso al servidor, configurable desde el panel.
+        \App\Models\Configuracion::guardar('cierre_aviso_espera_segundos', '8');
+        \App\Models\Configuracion::guardar('cierre_aviso_porcentaje', '40');
+        \App\Models\Configuracion::guardar('margen_liquidacion_segundos', '5');
+
+        $remate = $this->remate('apoquindo', Remate::ESTADO_PUBLICADO, -10, ['duracion_segundos' => 3600]);
+        $remate->programarLotes();
+
+        $this->get('/remates/apoquindo')->assertOk()->assertViewHas('r', function (array $r) {
+            $tr = $r['tiempoReal'];
+            $this->assertSame(5000, $tr['margenMs']);
+            $this->assertSame(['espera_ms' => 8000, 'porcentaje' => 40], $tr['avisoCierre']);
+            $this->assertStringEndsWith('/remates/apoquindo/estado', $tr['estadoUrl']);
+
+            return true;
+        });
+
+        // El JSON estático también los trae: una página abierta hace horas se entera de un cambio del panel.
+        app(\App\Subastas\Difusion\Emisor::class)->publicarEstado($remate);
+        $json = json_decode(File::get($this->carpeta . '/apoquindo.json'), true);
+        $this->assertSame(['espera_ms' => 8000, 'porcentaje' => 40], $json['aviso_cierre']);
+        $this->assertSame(5000, $json['margen_liquidacion_ms']);
+
+        // En 0 % nadie avisa: el resultado queda para el cron.
+        \App\Models\Configuracion::guardar('cierre_aviso_porcentaje', '0');
+        app(\App\Subastas\Difusion\Emisor::class)->publicarEstado($remate->fresh());
+        $this->assertSame(0, json_decode(File::get($this->carpeta . '/apoquindo.json'), true)['aviso_cierre']['porcentaje']);
+    }
+
     public function test_detalle_en_vivo_lee_solo_el_json_estatico_con_las_pujas_publicas(): void
     {
         $remate = $this->remate('apoquindo', Remate::ESTADO_PUBLICADO, -10, ['duracion_segundos' => 3600]);
