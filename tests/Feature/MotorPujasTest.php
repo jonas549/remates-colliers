@@ -217,10 +217,67 @@ class MotorPujasTest extends TestCase
     public function test_remate_en_borrador_o_cancelado_no_acepta_pujas(): void
     {
         $ana = $this->postorHabilitado('Ana');
-        foreach ([Remate::ESTADO_BORRADOR, Remate::ESTADO_CANCELADO, Remate::ESTADO_FINALIZADO] as $estado) {
+        // Cada rechazo dice qué pasó, no una frase genérica (OBS-7 del QA del 17/09).
+        foreach ([
+            Remate::ESTADO_BORRADOR => ['remate_no_publicado', 'todavía no está publicado'],
+            Remate::ESTADO_CANCELADO => ['remate_cancelado', 'fue cancelado'],
+            Remate::ESTADO_FINALIZADO => ['remate_no_disponible', 'no está disponible'],
+        ] as $estado => [$motivo, $texto]) {
             $this->remate->update(['estado' => $estado]);
-            $this->pujaHttp($ana, 100000000)->assertStatus(422)->assertJson(['motivo' => 'remate_no_disponible']);
+            $this->pujaHttp($ana, 100000000)->assertStatus(422)
+                ->assertJson(['motivo' => $motivo])
+                ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, $texto));
         }
+    }
+
+    public function test_cada_rechazo_explica_exactamente_que_paso(): void
+    {
+        $ana = $this->postorHabilitado('Ana');
+
+        // Después del cierre: dice que el lote cerró y a qué hora, aunque el remate ya esté finalizado (OBS-7).
+        CarbonImmutable::setTestNow($this->lote->cierra_en->addMinute());
+        app(Liquidador::class)->liquidarVencidos($this->remate);
+        $this->assertSame(Remate::ESTADO_FINALIZADO, $this->remate->fresh()->estado);
+        $this->pujaHttp($ana, 200000000)->assertStatus(422)
+            ->assertJson(['motivo' => 'lote_cerrado'])
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'El lote cerró a las')
+                && str_contains($m, $this->lote->cierra_en->setTimezone(\App\Support\Formato::ZONA)->format('H:i:s')));
+
+        CarbonImmutable::setTestNow($this->t0);
+        // refresh(): la liquidación cambió el estado en la base y el modelo en memoria seguía con el anterior.
+        $this->remate->refresh()->update(['estado' => Remate::ESTADO_PUBLICADO]);
+        $this->lote->forceFill(['estado' => \App\Models\Lote::ESTADO_PROGRAMADO])->save();
+
+        // Antes de abrir: dice a qué hora abre.
+        $futuro = \App\Models\Lote::create(['remate_id' => $this->remate->id, 'orden' => 2, 'titulo' => 'Segundo', 'precio_base' => 50000000,
+            'abre_en' => $this->t0->addHour(), 'cierra_en' => $this->t0->addHours(2)]);
+        $this->actingAs($ana)->postJson("/remates/prueba/lotes/{$futuro->id}/pujas", ['monto' => 50000000])->assertStatus(422)
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'El lote abre a las'));
+
+        // Monto bajo: dice cuál es la puja mínima.
+        $this->pujaHttp($ana, 99000000)->assertStatus(422)
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'puja mínima: $100.000.000'));
+
+        // Cuenta y garantía: cada estado con su explicación.
+        $enRevision = $this->postorHabilitado('Revisión', cuenta: Postor::ESTADO_EN_REVISION);
+        $this->pujaHttp($enRevision, 100000000)->assertStatus(422)
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'está revisando tu cuenta'));
+
+        $bloqueado = $this->postorHabilitado('Bloqueado', cuenta: Postor::ESTADO_BLOQUEADO);
+        $this->pujaHttp($bloqueado, 100000000)->assertStatus(422)
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'bloqueada'));
+
+        $sinInscripcion = $this->postorHabilitado('Sin inscripción', garantia: null);
+        $this->pujaHttp($sinInscripcion, 100000000)->assertStatus(422)
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'No estás inscrito en este remate'));
+
+        $enRevisionGarantia = $this->postorHabilitado('Garantía en revisión', garantia: Garantia::ESTADO_EN_REVISION);
+        $this->pujaHttp($enRevisionGarantia, 100000000)->assertStatus(422)
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'Tu garantía está en revisión'));
+
+        $rechazada = $this->postorHabilitado('Garantía rechazada', garantia: Garantia::ESTADO_RECHAZADA);
+        $this->pujaHttp($rechazada, 100000000)->assertStatus(422)
+            ->assertJsonPath('mensaje', fn (string $m) => str_contains($m, 'garantía fue rechazada'));
     }
 
     public function test_montos_mal_formados_se_rechazan(): void

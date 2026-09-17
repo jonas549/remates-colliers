@@ -27,10 +27,10 @@ class RemateDemo extends Command
 {
     protected $signature = 'colliers:remate-demo
         {--postores=10 : Postores aprobados con garantía aprobada (1 a 50)}
-        {--lotes=1 : Cantidad de lotes (1 a 10)}
+        {--lotes=3 : Cantidad de lotes (1 a 10). Varios por defecto: así se prueba el paso al siguiente y el cierre anticipado}
         {--inicio=5 : Minutos desde ahora hasta que abre el primer lote}
-        {--duracion=30 : Minutos que dura cada lote}
-        {--pausa=2 : Minutos de pausa entre lotes}';
+        {--duracion=10 : Minutos que dura cada lote}
+        {--pausa=1 : Minutos de pausa entre lotes}';
 
     protected $description = 'Crea un remate de demostración con postores habilitados (nunca en producción)';
 

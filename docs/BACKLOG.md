@@ -142,6 +142,7 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Validez por hora de recepción (middleware global `HoraRecepcion`, antes de esperar el bloqueo)
 - [x] Rate limiting sobre el endpoint (30 por minuto por postor, en `config/colliers.php`)
 - [x] Intentos rechazados registrados fuera de la transacción, con motivo, detalle, IP y user agent
+- [x] **Cada rechazo dice exactamente qué pasó** *(OBS-7 del QA en el sandbox, 17/09: pujar después del cierre respondía «Este remate no está disponible para pujar»)*: el lote cerrado informa su hora de cierre aunque el remate ya esté finalizado; el lote que no abre, su hora de apertura; el monto bajo, la puja mínima; la cuenta, si está sin confirmar, en revisión, rechazada o bloqueada; la garantía, si falta inscripción, está pendiente, en revisión o rechazada
 
 **Temporizador y cierre**
 - [x] Endpoint de sincronización de reloj (`GET /hora`) *(el cronómetro del navegador es K)*
@@ -174,7 +175,9 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Vaciar la caché a mitad del remate no altera el estado (`optimize:clear` en PHPUnit, `cache:clear` en concurrencia)
 - [x] El ganador registrado coincide con la última puja válida (ráfagas y cierre disputado por 20 liquidaciones)
 - [x] Simulación de 20 postores en paralelo (Apache de Laragon + **MySQL 8.4**)
-- [ ] Concurrencia contra **MariaDB real** del sandbox, sobre el remate de demostración (decisión de Jonas, 16/09; el login HTTP ya existe)
+- [x] Concurrencia contra **MariaDB real** del sandbox: 3 postores simultáneos al mismo monto, gana uno solo, sin doble adjudicación, confirmación en ~1,0–1,2 s *(Jonas, 17/09)*
+- [ ] En el sandbox: paso automático al siguiente lote y cierre anticipado con ganador real *(el demo tenía un solo lote; `colliers:remate-demo` ahora crea 3 por defecto)*
+- [ ] Latencia del JSON tras el cierre por temporizador: hoy la reescribe el cron (hasta 1 min). Propuesta enviada a Jonas el 17/09
 - [x] Comando `colliers:remate-demo`: remate marcado `es_demostracion`, postores aprobados con garantía y claves aleatorias mostradas una vez; se niega con APP_ENV=production (16/09)
 - [ ] Sandbox con `APP_ENV=staging` para poder crear el remate de demostración *(Jonas en el servidor)*
 - [ ] Prueba del transporte en el sandbox con espectadores simulados, sobre el remate de demostración

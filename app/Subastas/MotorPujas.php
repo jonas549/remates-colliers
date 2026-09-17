@@ -84,8 +84,16 @@ class MotorPujas
 
     private function validar(Lote $lote, Remate $remate, User $user, int $monto, CarbonImmutable $recibidaEn): void
     {
-        if (! in_array($remate->estado, [Remate::ESTADO_PUBLICADO, Remate::ESTADO_EN_CURSO], true)) {
-            throw new PujaRechazada('remate_no_disponible', ['estado_remate' => $remate->estado]);
+        // El remate finalizado NO se rechaza aquí: el lote dirá que cerró, que es lo que el postor necesita saber (OBS-7).
+        if ($remate->estado === Remate::ESTADO_CANCELADO) {
+            throw new PujaRechazada('remate_cancelado', ['estado_remate' => $remate->estado]);
+        }
+        if ($remate->estado === Remate::ESTADO_BORRADOR) {
+            throw new PujaRechazada('remate_no_publicado', ['estado_remate' => $remate->estado]);
+        }
+        // Remate finalizado con un lote que sigue abierto: inconsistencia, no un cierre normal.
+        if ($remate->estado === Remate::ESTADO_FINALIZADO && ! in_array($lote->estado, Liquidador::ESTADOS_TERMINALES, true)) {
+            throw new PujaRechazada('remate_no_disponible', ['estado_remate' => $remate->estado, 'estado_lote' => $lote->estado]);
         }
         if (in_array($lote->estado, Liquidador::ESTADOS_TERMINALES, true) || $lote->cierra_en === null || $recibidaEn->greaterThanOrEqualTo($lote->cierra_en)) {
             throw new PujaRechazada('lote_cerrado', ['cierra_en' => $lote->cierra_en?->format('Y-m-d H:i:s'), 'estado_lote' => $lote->estado]);
@@ -97,12 +105,16 @@ class MotorPujas
         // Se relee de la base: un bloqueo o rechazo aplicado a mitad de la sesión rige desde la puja siguiente.
         $cuenta = User::with('postor')->find($user->id);
         if ($cuenta?->rol !== User::ROL_POSTOR || $cuenta->estado !== User::ESTADO_ACTIVO || $cuenta->postor?->estado !== Postor::ESTADO_APROBADO) {
-            throw new PujaRechazada('cuenta_no_habilitada');
+            // El detalle hace específico el mensaje: no es lo mismo «en revisión» que «bloqueada».
+            throw new PujaRechazada('cuenta_no_habilitada', ['cuenta' => match (true) {
+                $cuenta === null || $cuenta->rol !== User::ROL_POSTOR => 'sin_postor',
+                $cuenta->estado !== User::ESTADO_ACTIVO => 'inactiva',
+                default => $cuenta->postor?->estado ?? 'sin_postor',
+            }]);
         }
-        $garantiaAprobada = Garantia::where('user_id', $user->id)->where('remate_id', $remate->id)
-            ->where('estado', Garantia::ESTADO_APROBADA)->exists();
-        if (! $garantiaAprobada) {
-            throw new PujaRechazada('sin_garantia');
+        $garantia = Garantia::where('user_id', $user->id)->where('remate_id', $remate->id)->latest('id')->first();
+        if ($garantia?->estado !== Garantia::ESTADO_APROBADA) {
+            throw new PujaRechazada('sin_garantia', ['garantia' => $garantia?->estado]);
         }
 
         if ($lote->ganador_id === $user->id) {
