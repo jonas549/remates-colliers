@@ -8,6 +8,7 @@ use App\Models\Garantia;
 use App\Models\Remate;
 use App\Publico\Catalogo;
 use App\Publico\EstadoVisitante;
+use App\Subastas\Liquidador;
 use App\Support\Formato;
 use App\Support\Sitio;
 use Carbon\CarbonImmutable;
@@ -31,9 +32,14 @@ class PublicoController extends Controller
         ]);
     }
 
-    public function show(Request $request, Remate $remate): View
+    public function show(Request $request, Remate $remate, Liquidador $liquidador): View
     {
         abort_if(in_array($remate->estado, [Remate::ESTADO_BORRADOR, Remate::ESTADO_CANCELADO], true) || $remate->lotes()->doesntExist(), 404);
+
+        // Quien abre la ficha también materializa lo que ya ocurrió por reloj (abrir el lote siguiente, cerrar el
+        // vencido) y republica el JSON: el espectador no depende de que alguien más «toque» el sistema.
+        $liquidador->transicionesPendientes($remate);
+        $remate->refresh();
 
         return view('remates.show', [
             'r' => Catalogo::detalle($remate, $request->user()),

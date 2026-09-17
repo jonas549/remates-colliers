@@ -6,19 +6,21 @@ use App\Subastas\Liquidador;
 use Illuminate\Console\Command;
 
 /**
- * Respaldo del cierre perezoso: liquida los lotes vencidos que nadie detectó. Corre cada minuto por el
- * programador. No define cuándo cierra un lote (eso es cierra_en); solo acota la demora de las notificaciones.
+ * Respaldo de las transiciones automáticas: cierra los lotes vencidos y abre los que ya empezaron, aunque nadie
+ * tenga la sala abierta. Corre cada minuto por el programador. No define cuándo abre ni cierra un lote (eso es
+ * abre_en / cierra_en): solo acota cuánto tarda el JSON público en reflejarlo y la demora de las notificaciones.
  */
 class Liquidar extends Command
 {
     protected $signature = 'colliers:liquidar';
 
-    protected $description = 'Adjudica o declara desiertos los lotes vencidos (idempotente)';
+    protected $description = 'Abre los lotes que ya empezaron y cierra los vencidos (idempotente)';
 
     public function handle(Liquidador $liquidador): int
     {
-        $cantidad = $liquidador->liquidarVencidos();
-        $this->line($cantidad ? "Lotes liquidados: {$cantidad}" : 'Sin lotes pendientes de liquidar.');
+        ['liquidados' => $liquidados, 'abiertos' => $abiertos] = $liquidador->transicionesPendientes();
+        $this->line($liquidados ? "Lotes liquidados: {$liquidados}" : 'Sin lotes pendientes de liquidar.');
+        $this->line($abiertos ? "Lotes abiertos: {$abiertos}" : 'Sin lotes pendientes de abrir.');
 
         return self::SUCCESS;
     }

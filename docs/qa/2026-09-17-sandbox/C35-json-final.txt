@@ -1,0 +1,5 @@
+Estado final del remate (feed de tiempo real), tras cierre por temporizador (lote 1) y cierre anticipado (lote 2):
+estado_remate: finalizado
+lote 1 (Calle Segunda 456): estado=desierto, motivo_cierre=tiempo, ganador=None, precio_actual=None
+lote 2 (Av. Prueba 123): estado=desierto, motivo_cierre=anticipado, ganador=None, precio_actual=None
+Ambos lotes quedaron DESIERTOS por no existir postores habilitados (bloqueador de confirmación de correo).

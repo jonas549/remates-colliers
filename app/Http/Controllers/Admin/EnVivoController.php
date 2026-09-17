@@ -26,7 +26,7 @@ class EnVivoController extends Controller
         abort_unless($user->esAdmin() || ($user->rol === User::ROL_MARTILLERO && $remate->martillero_id === $user->id), 403);
         abort_if($remate->estado === Remate::ESTADO_BORRADOR, 404);
 
-        $liquidador->liquidarVencidos($remate);
+        $liquidador->transicionesPendientes($remate);
         try {
             $emisor->publicarEstado($remate);
         } catch (Throwable $e) {

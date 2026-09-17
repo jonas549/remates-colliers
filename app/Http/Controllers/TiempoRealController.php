@@ -33,7 +33,7 @@ class TiempoRealController extends Controller
     {
         abort_if(in_array($remate->estado, [Remate::ESTADO_BORRADOR], true), 404);
 
-        $liquidador->liquidarVencidos($remate);
+        $liquidador->transicionesPendientes($remate);
         try {
             $emisor->publicarEstado($remate);
         } catch (Throwable $e) {

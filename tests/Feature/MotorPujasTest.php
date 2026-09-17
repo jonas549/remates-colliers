@@ -337,6 +337,54 @@ class MotorPujasTest extends TestCase
         $this->assertSame([$ana->id, $beto->id], Adjudicacion::orderBy('lote_id')->pluck('user_id')->all());
     }
 
+    public function test_el_lote_siguiente_abre_solo_y_el_json_lo_publica_sin_nadie_mirando(): void
+    {
+        // QA del sandbox (17/09): el lote 2 abría por reloj, pero el JSON público seguía diciendo «programado».
+        $this->remate->update(['inicio_en' => $this->t0->subMinutes(10), 'duracion_lote_segundos' => 1800, 'pausa_entre_lotes_segundos' => 120]);
+        Lote::create(['remate_id' => $this->remate->id, 'orden' => 2, 'titulo' => 'Segundo', 'precio_base' => 50000000]);
+        $this->remate->programarLotes();
+        [$primero, $segundo] = $this->remate->lotes()->get()->all();
+        $json = fn () => json_decode(File::get($this->carpeta . '/prueba.json'), true);
+
+        // Nadie pujó en el primero y nadie tiene la sala abierta: el cron hace las dos transiciones y republica.
+        CarbonImmutable::setTestNow($segundo->abre_en->addSecond());
+        $this->artisan('colliers:liquidar')
+            ->expectsOutputToContain('Lotes liquidados: 1')->expectsOutputToContain('Lotes abiertos: 1')->assertSuccessful();
+
+        $this->assertSame(Lote::ESTADO_DESIERTO, $primero->fresh()->estado);
+        $this->assertSame(Lote::ESTADO_ABIERTO, $segundo->fresh()->estado);
+        $this->assertSame(Remate::ESTADO_EN_CURSO, $this->remate->fresh()->estado, 'el remate queda en curso al abrir su primer lote');
+        $estado = $json();
+        $this->assertSame(['desierto', 'abierto'], array_column($estado['lotes'], 'estado'), 'el JSON público refleja las dos transiciones');
+        $this->assertSame((int) $segundo->abre_en->addSecond()->format('Uv'), $estado['generado_en_ms'], 'y se reescribió recién');
+
+        // Idempotente: una segunda pasada no cambia nada.
+        $this->artisan('colliers:liquidar')->expectsOutputToContain('Sin lotes pendientes de abrir.')->assertSuccessful();
+
+        // La ficha pública del remate también materializa lo que ya ocurrió por reloj.
+        $tercero = Lote::create(['remate_id' => $this->remate->id, 'orden' => 3, 'titulo' => 'Tercero', 'precio_base' => 10000000,
+            'abre_en' => $this->t0->subMinute(), 'cierra_en' => $this->t0->addHours(2)]);
+        $this->get('/remates/prueba')->assertOk();
+        $this->assertSame(Lote::ESTADO_ABIERTO, $tercero->fresh()->estado);
+        $this->assertContains('abierto', array_column($json()['lotes'], 'estado'));
+    }
+
+    public function test_un_lote_no_abre_si_el_remate_no_esta_publicado_o_ya_vencio(): void
+    {
+        $vencido = Lote::create(['remate_id' => $this->remate->id, 'orden' => 2, 'titulo' => 'Vencido', 'precio_base' => 1000000,
+            'abre_en' => $this->t0->subHour(), 'cierra_en' => $this->t0->subMinutes(30)]);
+        $liquidador = app(Liquidador::class);
+
+        $this->assertFalse($liquidador->abrirPorId($vencido->id), 'un lote ya vencido lo cierra la liquidación, no se abre');
+        $this->assertSame(Lote::ESTADO_PROGRAMADO, $vencido->fresh()->estado);
+
+        $this->remate->update(['estado' => Remate::ESTADO_CANCELADO]);
+        $enHora = Lote::create(['remate_id' => $this->remate->id, 'orden' => 3, 'titulo' => 'En hora', 'precio_base' => 1000000,
+            'abre_en' => $this->t0->subMinute(), 'cierra_en' => $this->t0->addHour()]);
+        $this->assertSame(0, $liquidador->abrirPendientes(), 'un remate cancelado no abre lotes');
+        $this->assertSame(Lote::ESTADO_PROGRAMADO, $enHora->fresh()->estado);
+    }
+
     public function test_endpoint_de_estado_liquida_lo_vencido_y_no_se_cachea(): void
     {
         $this->pujaHttp($this->postorHabilitado('Ana'), 100000000)->assertCreated();

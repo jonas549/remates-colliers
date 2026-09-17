@@ -44,6 +44,8 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
+**QA de Jonas en el sandbox (17/09):** reporte y 48 capturas en `docs/qa/2026-09-17-sandbox/`. 37 casos pasaron. Corregidos: INC-2 (el JSON no reflejaba la apertura del lote siguiente) y OBS-4 (contador de la pestaña RECHAZADA). INC-1 (correo confirmado antes de aprobar) e INC-3 (sesión única por navegador) son comportamiento esperado. Pendiente del QA: el ciclo de pujas hasta la adjudicación, que Jonas retoma con `colliers:remate-demo`.
+
 **Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) con datos reales y exportables XLSX/CSV (falta PDF, a decidir, y probar en el sandbox). B completo. J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
 camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
@@ -145,7 +147,7 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Endpoint de sincronización de reloj (`GET /hora`) *(el cronómetro del navegador es K)*
 - [x] Cierre perezoso idempotente + margen de liquidación configurable; sin anti-sniping (una puja nunca toca `cierra_en`)
 - [x] Adjudicación automática; lote desierto; detectores: puja rechazada por cierre, endpoint de estado y `colliers:liquidar` cada minuto
-- [x] Paso al siguiente lote: horario fijo, cada lote abre a su `abre_en`; el remate se finaliza al liquidar el último
+- [x] Paso al siguiente lote: horario fijo, cada lote abre a su `abre_en`; la apertura se materializa como el cierre (idempotente) y **reescribe el JSON en cada transición**, aunque nadie tenga la sala abierta (cron cada minuto, sala, panel, endpoint de estado y ficha pública); el remate se finaliza al liquidar el último *(corregido el 17/09 por el QA del sandbox, INC-2)*
 - [x] Cierre manual de emergencia: endpoint para administrador o el martillero del remate *(la pantalla es del Bloque I)*
 
 **Difusión en tiempo real**
@@ -153,7 +155,7 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Escritura atómica (temporal + rename) bajo bloqueo de archivo por remate; el archivo nunca retrocede (probado con 300 pujas concurrentes)
 - [x] Cabeceras sin caché y sin ETag; bloqueos y temporales no descargables (403) *(verificado en Apache local)*
 - [x] Cabeceras sin caché servidas por **LiteSpeed**: HTTP/2 200, `no-store, no-cache, must-revalidate, max-age=0`, sin ETag, 403 en `.htaccess` *(Jonas en el sandbox, 17/09)*
-- [x] Eventos: puja nueva, cierre de lote (la apertura del siguiente va por horario en el mismo estado), mensaje del martillero
+- [x] Eventos: puja nueva, cierre de lote, **apertura del siguiente** (se publica aunque no haya pujas ni espectadores), mensaje del martillero
 - [x] Estado público sin identidades: «Postor #N» por orden de garantía *(supuesto vigente)*
 - [x] Reconexión recuperando el estado actual (`GET /remates/{remate}/estado`, que además liquida lo vencido) *(el cliente es K)*
 
@@ -263,6 +265,10 @@ solo administradores) con los componentes del panel. Sin migración: todo en `co
 - [ ] UF automática en el sandbox: depende de que el hosting permita HTTP saliente *(Jonas: botón «Actualizar la UF ahora»)*
 
 ## G — Postores · Completo
+
+> 17/09 (QA del sandbox, OBS-4): las pestañas son estados de la garantía, pero mientras la cuenta no está aprobada las
+> acciones van sobre la cuenta; por eso una **cuenta rechazada** ahora cuenta en la pestaña RECHAZADA. Las pestañas de
+> Subastas (Todas, En vivo, Próximas, Borradores, Cerradas) sí cubren todos los estados: se revisaron y no tenían el problema.
 
 Verificado el 17/09: `PostoresGarantiasTest` (6; 104/104 en total) y `tools/comparar/recorrido-garantia.mjs` reescrito con
 datos reales a 375 px (aprobar garantía desde la tarjeta y desde la ficha, aprobar y rechazar cuentas con motivo; persiste al

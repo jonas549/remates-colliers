@@ -12,9 +12,12 @@ export default ({ postores }) => ({
     aviso: '',
     avisoError: false,
 
+    // Las pestañas son estados de la garantía, pero mientras la cuenta no está aprobada las acciones van sobre la
+    // cuenta: una cuenta rechazada cuenta en RECHAZADA (17/09, QA: la fila decía RECHAZADO y la pestaña seguía en 0).
     coincide(p, filtro) {
         if (filtro === 'Todos') return true;
         if (filtro === 'Cuentas por aprobar') return ['en_revision', 'registrado'].includes(p.cuentaEstado);
+        if (filtro === 'Rechazada' && p.cuentaEstado === 'rechazado') return true;
         return p.garantia === filtro;
     },
 

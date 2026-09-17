@@ -1,0 +1,7 @@
+Evidencia textual (respuesta del backend)
+Acción: POST al endpoint aprobarCuenta del panel para postor2 (Inversiones QA SpA), cuenta con correo sin confirmar.
+URL panel: https://rematescolliers.sandboxdelta.com/admin/postores
+Hora: 17-09-2026 ~14:34 (Chile)
+Respuesta HTTP: 422
+Cuerpo: {"ok":false,"mensaje":"El postor todavía no confirma su correo."}
+Conclusión: la exigencia de correo confirmado es del backend, no solo del botón deshabilitado en la UI.

@@ -1,0 +1,4 @@
+Verificación mensaje a la sala en el JSON de tiempo real:
+GET /tiempo-real/av-prueba-123-depto-45.json →
+"mensaje_martillero":{"texto":"Quedan pocos minutos (mensaje de prueba QA)","en_ms":1789666623000}
+El mensaje publicado por el martillero se propaga al feed en vivo. Cache-Control: no-store confirmado.

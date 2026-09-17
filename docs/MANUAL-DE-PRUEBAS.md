@@ -194,8 +194,9 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 1. **Anota:** URL, hora exacta, usuario y lo que viste (captura).
 2. **Registro de la aplicación:**
    ```
-   tail -n 80 storage/logs/laravel.log
+   tail -n 80 storage/logs/laravel-$(date +%Y-%m-%d).log
    ```
+   (con `LOG_STACK=daily` el archivo lleva la fecha; `ls -t storage/logs | head -3` muestra los últimos)
 3. **Deploy:** `tail -n 50 ~/scripts/deploy-colliers.log`
 4. **Diagnóstico:** `php artisan colliers:diagnostico` y la sección **Sistema** de `/admin/configuracion`.
 5. **Correos que no llegan:**
@@ -217,6 +218,7 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 | La sala redirige a «Mi cuenta» | Cuenta o garantía de ESE remate sin aprobar | Pasos 4 y 5. |
 | El precio no se actualiza en vivo | El JSON no se escribe o queda en caché | Abrir `/tiempo-real/{slug}.json`: debe cambiar al pujar y responder `Cache-Control: no-store`. |
 | Queda «CERRADO · ADJUDICANDO» mucho rato | Nadie tiene la sala abierta y el cron no corre | Esperar 1 min (cron) o abrir `/remates/{slug}/estado`. |
+| El JSON dice «programado» y el lote ya abrió | El cron no corre (desde el 17/09 la apertura se publica sola) | Esperar 1 min o `php artisan colliers:liquidar`; revisar «Cron (programador)» en Sistema. |
 | «Enviando…» tarda varios segundos | Servidor sin OPcache con varias pujas juntas | Anotar el tiempo; ver `docs/RENDIMIENTO-SIN-OPCACHE.md`. No se pierden pujas. |
 | Página 419 «La sesión expiró» | Pestaña abierta mucho tiempo | Recargar e intentar de nuevo. |
 | Página 500 | Error de la aplicación | `tail -n 80 storage/logs/laravel.log` y enviarme el bloque del error. |

@@ -42,7 +42,7 @@ class SalaController extends Controller
         }
 
         // Carga de página = detector del cierre perezoso; además garantiza que exista el JSON estático.
-        $liquidador->liquidarVencidos($remate);
+        $liquidador->transicionesPendientes($remate);
         try {
             $emisor->publicarEstado($remate);
         } catch (Throwable $e) {

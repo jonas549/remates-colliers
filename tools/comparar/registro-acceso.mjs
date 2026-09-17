@@ -169,6 +169,8 @@ async function ingresar(p, usuario, clave, admin = false) {
     await p.getByRole('tab', { name: 'Cuentas por aprobar' }).click();
     const fila = (texto) => p.locator('tbody tr', { hasText: texto });
     comprobar('las dos cuentas nuevas están por aprobar', (await fila('natural@qa.test').count()) === 1 && (await fila('juridica@qa.test').count()) === 1);
+    const contador = async (pestana) => Number((await p.locator('[role=tab]', { hasText: pestana }).locator('.admin-pestana__cuenta').innerText()).trim());
+    const rechazadasAntes = await contador('Rechazada');
     await fila('natural@qa.test').getByRole('button', { name: 'Aprobar cuenta' }).click();
     await p.waitForTimeout(800);
     await fila('juridica@qa.test').locator('.admin-rechazar').click();
@@ -178,6 +180,12 @@ async function ingresar(p, usuario, clave, admin = false) {
     const estado = (correo) => execFileSync('php', ['-r', `require 'vendor/autoload.php'; $app = require 'bootstrap/app.php'; $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap(); $u = App\\Models\\User::where('email', '${correo}')->first(); echo $u->postor->estado . '|' . $u->postor->motivo_rechazo;`], { encoding: 'utf8' });
     comprobar('cuenta natural aprobada en la base', estado('natural@qa.test').startsWith('aprobado|'), estado('natural@qa.test'));
     comprobar('cuenta jurídica rechazada con su motivo', estado('juridica@qa.test') === 'rechazado|Falta el poder notarial vigente', estado('juridica@qa.test'));
+
+    // QA del sandbox (OBS-4): la pestaña RECHAZADA tiene que contar la cuenta rechazada.
+    const rechazadasDespues = await contador('Rechazada');
+    comprobar('la pestaña RECHAZADA sube al rechazar la cuenta', rechazadasDespues === rechazadasAntes + 1, `${rechazadasAntes} → ${rechazadasDespues}`);
+    await p.getByRole('tab', { name: 'Rechazada' }).click();
+    comprobar('y la fila aparece al filtrar por RECHAZADA', (await p.locator('tbody tr', { hasText: 'juridica@qa.test' }).count()) === 1);
     await p.context().close();
 
     const q = await nuevaPagina(375);

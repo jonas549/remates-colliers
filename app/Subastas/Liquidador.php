@@ -105,6 +105,69 @@ class Liquidador
     }
 
     /**
+     * Apertura del lote: materializa `programado → abierto` cuando llega su hora, sin esperar la primera puja
+     * (17/09, QA del sandbox: el lote 2 abría según el reloj pero el JSON público seguía diciendo «programado»).
+     * Idempotente y por el mismo camino que el cierre: la hace el primero que la detecta (cron, sala, panel,
+     * endpoint de estado o puja) y reescribe el JSON, aunque nadie tenga la sala abierta.
+     */
+    public function abrirPorId(int $loteId, ?CarbonImmutable $ahora = null): bool
+    {
+        $ahora ??= CarbonImmutable::now('UTC');
+
+        $lote = Lote::find($loteId);
+        if ($lote === null || ! $this->pendienteDeAbrir($lote, $ahora)) {
+            return false;
+        }
+
+        $abierto = DB::transaction(function () use ($loteId, $ahora) {
+            $lote = Lote::whereKey($loteId)->lockForUpdate()->first();
+            if (! $this->pendienteDeAbrir($lote, $ahora)) {
+                return null;
+            }
+            $lote->estado = Lote::ESTADO_ABIERTO;
+            $lote->save();
+
+            $remate = $lote->remate;
+            if ($remate->estado === Remate::ESTADO_PUBLICADO) {
+                $remate->update(['estado' => Remate::ESTADO_EN_CURSO]);
+            }
+
+            return $lote;
+        }, self::REINTENTOS);
+
+        if ($abierto === null) {
+            return false;
+        }
+
+        $this->emitir($abierto->remate->fresh());
+
+        return true;
+    }
+
+    /** Para el cron y las pantallas: abre los lotes cuya hora llegó. Devuelve cuántos abrió esta llamada. */
+    public function abrirPendientes(?Remate $remate = null, ?CarbonImmutable $ahora = null): int
+    {
+        $ahora ??= CarbonImmutable::now('UTC');
+        $ids = Lote::query()
+            ->when($remate, fn ($q) => $q->where('remate_id', $remate->id))
+            ->where('estado', Lote::ESTADO_PROGRAMADO)
+            ->whereNotNull('abre_en')
+            ->where('abre_en', '<=', $ahora->format('Y-m-d H:i:s'))
+            ->whereHas('remate', fn ($q) => $q->whereIn('estado', [Remate::ESTADO_PUBLICADO, Remate::ESTADO_EN_CURSO]))
+            ->pluck('id');
+
+        return $ids->filter(fn (int $id) => $this->abrirPorId($id, $ahora))->count();
+    }
+
+    /** Las dos transiciones automáticas, en orden: primero se cierra lo vencido y después se abre lo que corresponde. */
+    public function transicionesPendientes(?Remate $remate = null, ?CarbonImmutable $ahora = null): array
+    {
+        $ahora ??= CarbonImmutable::now('UTC');
+
+        return ['liquidados' => $this->liquidarVencidos($remate, $ahora), 'abiertos' => $this->abrirPendientes($remate, $ahora)];
+    }
+
+    /**
      * Cierre anticipado (emergencia): fija cierra_en en este momento. Las pujas recibidas antes siguen siendo
      * válidas; la adjudicación se materializa pasado el margen, por el mismo camino que un cierre por tiempo.
      */
@@ -132,6 +195,17 @@ class Liquidador
         $this->emitir($lote->remate);
 
         return $lote;
+    }
+
+    /** Un lote se abre si llegó su hora, sigue programado y todavía no vence (si venció, lo toma la liquidación). */
+    private function pendienteDeAbrir(?Lote $lote, CarbonImmutable $ahora): bool
+    {
+        return $lote !== null
+            && $lote->estado === Lote::ESTADO_PROGRAMADO
+            && $lote->abre_en !== null
+            && $ahora->greaterThanOrEqualTo($lote->abre_en)
+            && ! $lote->vencido($ahora)
+            && in_array($lote->remate->estado, [Remate::ESTADO_PUBLICADO, Remate::ESTADO_EN_CURSO], true);
     }
 
     private function pendienteDeLiquidar(Lote $lote, CarbonImmutable $ahora, int $margen): bool

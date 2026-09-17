@@ -598,6 +598,22 @@ Remate en vivo del seeder: `/remates/apoquindo/sala`. Postores: `mpgonzalez@corr
 ### S-13 · Ingreso de administración en el sandbox
 - [ ] **Solo en sandbox** — entrar por `/admin/ingresar` y llegar a «Cambia tu contraseña». Si la pantalla vuelve al acceso, ahora dice por qué; pasar la línea «Ingreso sin sesión» de `storage/logs/laravel-AAAA-MM-DD.log`.
 
+## 5d. Correcciones del QA del sandbox (17/09)
+
+Reporte y capturas: `docs/qa/2026-09-17-sandbox/`.
+
+### QA-78 · El lote siguiente abre solo y el JSON lo publica (INC-2)
+- [x] **OK en local**
+- **Pasos:** 1) `php tools/comparar/sala-ayudante.php dos-lotes 12`. 2) Esperar a que venza el lote 1 **sin abrir ninguna página**. 3) `php artisan colliers:liquidar` (lo que hace el cron cada minuto). 4) Abrir `/tiempo-real/dos-lotes.json`. 5) Abrir la ficha pública de un remate con un lote cuya hora ya llegó.
+- **Esperado:** 3) «Lotes liquidados: 1» y «Lotes abiertos: 1». 4) El JSON dice lote 1 `desierto`, lote 2 `abierto`, remate `en_curso` y `generado_en_ms` recién escrito. 5) La ficha pública también materializa la transición y republica. Un lote de un remate cancelado, o ya vencido, no se abre.
+- **Evidencia:** comprobado de punta a punta contra el servidor local · `MotorPujasTest::test_el_lote_siguiente_abre_solo_y_el_json_lo_publica_sin_nadie_mirando`, `…test_un_lote_no_abre_si_el_remate_no_esta_publicado_o_ya_vencio`.
+
+### QA-79 · Contador de la pestaña RECHAZADA (OBS-4)
+- [x] **OK en local**
+- **Pasos:** en `/admin/postores`, rechazar una cuenta con motivo, mirar el contador de la pestaña RECHAZADA y filtrar por ella.
+- **Esperado:** el contador sube en 1 y la fila aparece al filtrar. Las pestañas de Subastas cubren todos los estados (incluidos borradores y cancelados).
+- **Evidencia:** `registro-acceso.mjs` («la pestaña RECHAZADA sube al rechazar la cuenta», «y la fila aparece al filtrar por RECHAZADA»).
+
 ## 6. Solo en sandbox (sin marcar)
 
 Estos dependen del hosting real (LiteSpeed, cron, correo saliente, límites de PHP) y no se pueden dar por probados en
