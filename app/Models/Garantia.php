@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Garantía de un postor para un remate. Proceso manual y externo: sin pasarela de pago.
@@ -69,6 +70,12 @@ class Garantia extends Model
     public function revisadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'revisado_por_id');
+    }
+
+    /** El archivo existe en el disco privado (los datos de ejemplo del seeder traen rutas sin archivo). */
+    public function tieneComprobante(): bool
+    {
+        return filled($this->comprobante_ruta) && Storage::disk('local')->exists($this->comprobante_ruta);
     }
 
     public function estaAprobada(): bool

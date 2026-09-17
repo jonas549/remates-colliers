@@ -163,3 +163,24 @@
 
   .cuenta__botones { flex-direction: column; }
 }
+
+/* Bloques G y H (sin diseño): avisos de resultado, formulario del comprobante e inscripción, con los tokens de la pantalla. */
+[x-cloak] { display: none !important; }
+.cuenta__avisos { max-width: 1180px; margin: 20px auto 0; padding: 0 32px; display: flex; flex-direction: column; gap: 8px; }
+.cuenta__aviso { border-left: 3px solid #1c5330; background: #eaf4ec; color: #1c5330; padding: 12px 16px; font-size: 15px; line-height: 1.5; }
+.cuenta__aviso--error { border-left-color: #c8102e; background: #fdeef0; color: #8c0f22; }
+.cuenta__form-campos { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; border-top: 1px solid #dbe1ec; padding-top: 18px; }
+.cuenta__form-campo { display: flex; flex-direction: column; gap: 6px; font-size: 15px; color: #16265a; }
+.cuenta__form-campo span { font-size: 11px; letter-spacing: 0.12em; color: #8c95a3; font-weight: 700; }
+.cuenta__form-campo select { height: 44px; border: 1px solid #dbe1ec; background: #ffffff; padding: 0 12px; font-family: inherit; font-size: 15px; color: #16265a; }
+.cuenta__form-campo input[type="file"] { font-family: inherit; font-size: 14px; min-height: 44px; }
+.cuenta__form .cuenta__botones { margin-top: 20px; }
+button.cuenta__boton, button.cuenta__boton-secundario { font-family: inherit; cursor: pointer; border: 0; }
+button.cuenta__boton-secundario { border: 1px solid #dbe1ec; background: #ffffff; }
+.cuenta__item--remate { justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.cuenta__acceso.es-actual { color: #16265a; }
+@media (max-width: 1119.98px) {
+  .cuenta__avisos { padding: 0 20px; }
+  .cuenta__item-texto a { display: inline-block; padding-block: 10px; margin-block: -10px; }
+  button.cuenta__boton, button.cuenta__boton-secundario { min-height: 44px; }
+}

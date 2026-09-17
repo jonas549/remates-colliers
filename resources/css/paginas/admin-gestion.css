@@ -84,3 +84,13 @@ button.admin-boton-borde:disabled { color: #a3abb8; cursor: not-allowed; }
 a.admin-form__borrador { display: inline-block; text-align: center; text-decoration: none; }
 .admin-modal__confirmar:disabled, .admin-form__publicar:disabled, .admin-boton-toggle:disabled { background: #eef1f6; color: #a3abb8; cursor: not-allowed; }
 .admin-form__borrador:disabled { color: #a3abb8; border-color: #dbe1ec; cursor: not-allowed; }
+
+/* Postores (Bloques G y H): documentos y acciones secundarias de la ficha */
+.admin-ficha__documento { display: inline-block; margin: 6px 12px 0 0; font-weight: 600; }
+.admin-ficha__secundario { flex: 1; min-width: 150px; }
+.admin-aprobar:disabled, .admin-rechazar:disabled, .admin-ficha__aprobar:disabled, .admin-ficha__rechazar:disabled { cursor: not-allowed; }
+.admin-ficha__aprobar:disabled { background: #eef1f6; color: #a3abb8; }
+.admin-ficha__rechazar:disabled { border-color: #dbe1ec; color: #a3abb8; }
+@media (max-width: 1119.98px) {
+  .admin-ficha__documento { padding-block: 12px; margin-block: -6px; }
+}

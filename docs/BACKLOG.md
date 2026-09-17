@@ -23,8 +23,8 @@ nota *(verifica Jonas en el sandbox)*.
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
 | I | Remates y lotes + panel del martillero | **Completo** | 9/9 |
 | V | Configuración autoadministrable y SMTP | En progreso | 11/13 |
-| G | Postores | Pendiente | 0/5 |
-| H | Garantías | Pendiente | 0/7 |
+| G | Postores | En progreso | 5/6 |
+| H | Garantías | En progreso | 7/8 |
 | M | Notificaciones | Pendiente | 0/7 |
 | N | Sitio público | Pendiente | 0/9 |
 | L | Streaming | Pendiente | 0/4 |
@@ -44,7 +44,7 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
-**Dónde vamos:** T, C e I cerrados. B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
+**Dónde vamos:** T, C e I cerrados; V, G y H hechos salvo pruebas en el sandbox y correos (M). B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
 camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
 **K → I → V → G → H → M → N**, commits locales, push al terminar N.
@@ -257,22 +257,31 @@ solo administradores) con los componentes del panel. Sin migración: todo en `co
 - [ ] SMTP real de Colliers: probar el envío con el botón en el sandbox *(Jonas; en local no hay servidor SMTP)*
 - [ ] UF automática en el sandbox: depende de que el hosting permita HTTP saliente *(Jonas: botón «Actualizar la UF ahora»)*
 
-## G — Postores · Pendiente
+## G — Postores · En progreso
 
-- [ ] Listado y ficha de postores conectados a datos reales
-- [ ] Revisión de cuenta: aprobar / rechazar
-- [ ] Correo de rechazo cuando corresponde
-- [ ] Bloquear / desbloquear cuenta *(pendiente de la máquina de estados)*
-- [ ] Aprobación usable desde el celular
+Verificado el 17/09: `PostoresGarantiasTest` (6; 104/104 en total) y `tools/comparar/recorrido-garantia.mjs` reescrito con
+datos reales a 375 px (aprobar garantía desde la tarjeta y desde la ficha, aprobar y rechazar cuentas con motivo; persiste al
+recargar). Pantalla del diseño «Admin Postores» ahora solo para administradores (datos personales).
 
-## H — Garantías · Pendiente
+- [x] Listado real: una fila por inscripción (postor + remate) y una por postor sin inscripciones; búsqueda, filtros por estado de la garantía y pestaña «Cuentas por aprobar» (nueva); exportar listado en CSV
+- [x] Ficha con datos, domicilio, representante de la empresa, documentos del registro y comprobante descargables
+- [x] Revisión de cuenta: aprobar / rechazar con motivo, con quién y cuándo, en la bitácora de accesos
+- [x] Bloquear (con motivo) / desbloquear cuenta *(supuesto de la máquina de estados propuesta: aprobado ↔ bloqueado)*
+- [x] Aprobación usable desde el celular (tarjetas, botones ≥ 44 px, ficha a pantalla completa)
+- [ ] Correo de rechazo cuando corresponde *(el evento `CuentaRevisada` ya se dispara; el correo es del Bloque M)*
 
-- [ ] Monto calculado como % del valor mínimo (configurable en V)
-- [ ] Instrucciones de pago externo (vale a la vista o transferencia); **sin pasarela**
-- [ ] Carga de comprobante por el postor
-- [ ] Estados: pendiente, en revisión, aprobada, rechazada
-- [ ] Aprobación manual por un administrador, con registro de quién y cuándo
-- [ ] Aprobar una garantía desde el celular con datos reales
+## H — Garantías · En progreso
+
+Verificado el 17/09: `PostoresGarantiasTest`, `recorrido-garantia.mjs` y `tools/comparar/cuenta-postor.mjs` (9/9: subir comprobante
+desde el celular, reenviar uno rechazado, cuenta aprobada con acceso a la sala a 375–1440 px).
+
+- [x] Inscripción del postor en un remate (desde «Mi cuenta»; en el detalle público, Bloque N): garantía pendiente con el % vigente sobre la suma de precios base, fijado al crearla
+- [x] Instrucciones de pago externo con los datos bancarios de Configuración (vale a la vista o transferencia); **sin pasarela**. Sin datos configurados: «escríbenos»
+- [x] Carga de comprobante por el postor (PDF/JPG/PNG ≤ 10 MB, disco privado, medio), solo antes del cierre de garantías; reenvío tras rechazo conservando el anterior
+- [x] Estados: pendiente, en revisión, aprobada, rechazada (motivo visible para el postor)
+- [x] Aprobación y rechazo manual por un administrador, con quién y cuándo; exige cuenta aprobada; no se rechaza una aprobada con el remate en curso
+- [x] Aprobar una garantía desde el celular con datos reales
+- [x] «Mi cuenta» con datos reales: remate, monto, plazo, estado, inscripciones múltiples y acceso a la sala *(textos del destino de la garantía neutros)*
 - [ ] Destino posterior (devolución / imputación / ejecución) *(pendiente con el cliente)*
 
 ## M — Notificaciones · Pendiente
@@ -397,6 +406,8 @@ Se completan a medida que las pantallas lo pidan.
 | Edición de un remate publicado (17/09) | Horario, precios, incremento y % de garantía se editan solo antes de que abra el primer lote; título, descripción, martillero y video, siempre | Solo `Remate::condicionesEditables()` |
 | Cancelar (17/09) | Borrador o publicado que no ha comenzado, con motivo. Uno en vivo se cierra lote por lote (cierre anticipado). «Cerrar ahora» del listado en un remate próximo = cancelar | Solo `GestionRemates` |
 | Garantía en el formulario de creación (17/09) | El diseño pide un monto; manda el acta: se ingresa el **porcentaje** (vacío = global) y el resumen muestra el monto que resulta | Solo la vista |
+| Revisión de postores (17/09) | Aprobar/Rechazar del listado actúan sobre la cuenta mientras no esté aprobada y después sobre la garantía; una cuenta bloqueada conserva sus garantías pero no puja ni se inscribe | Solo `RevisionPostores` y la vista |
+| Inscripción (17/09) | Requiere cuenta aprobada y remate próximo antes del cierre de garantías; no hay tope de inscripciones por postor | Solo `InscripcionGarantias` |
 | Quién gestiona remates (17/09) | Crear y editar: solo administradores. Martilleros: ven el listado y el panel en vivo de SUS remates | Rutas `rol:admin` |
 
 ### Del cliente (no bloquean; se anota y se sigue)

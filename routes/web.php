@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentosController;
 use App\Http\Controllers\Admin\EnVivoController;
 use App\Http\Controllers\Admin\LotesController;
+use App\Http\Controllers\Admin\PostoresController;
 use App\Http\Controllers\Admin\RematesController;
 use App\Http\Controllers\Admin\SalaMartilleroController;
 use App\Http\Controllers\Admin\UsuariosController;
@@ -93,6 +94,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['rol:postor', 'verified', 'clave.vigente'])->group(function () {
         Route::get('/mi-cuenta', [CuentaController::class, 'estado'])->name('cuenta.estado');
         Route::get('/mi-cuenta/documentos/{documento}', [CuentaController::class, 'documento'])->name('cuenta.documento');
+        // Bloque H: inscripción en un remate y comprobante de la garantía (sin pasarela de pago).
+        Route::post('/mi-cuenta/remates/{remate:slug}/inscribirme', [CuentaController::class, 'inscribirme'])->name('cuenta.inscribirme');
+        Route::post('/mi-cuenta/garantias/{garantia}/comprobante', [CuentaController::class, 'subirComprobante'])->name('cuenta.comprobante.store');
+        Route::get('/mi-cuenta/garantias/{garantia}/comprobante', [CuentaController::class, 'comprobante'])->name('cuenta.comprobante');
     });
 });
 
@@ -102,10 +107,20 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
     Route::get('/subastas', [RematesController::class, 'index'])->name('subastas');
     // Panel del martillero: administradores y el martillero asignado a ese remate (se revisa en el controlador).
     Route::get('/subastas/{remate}/en-vivo', [EnVivoController::class, 'show'])->name('remates.en-vivo');
-    Route::get('/postores', fn () => view('admin.postores', ['postores' => AdminDemo::postores()]))->name('postores');
     Route::view('/reportes', 'admin.reportes')->name('reportes');
 
     Route::middleware('rol:admin')->group(function () {
+        // Bloques G y H: postores y garantías (datos personales: solo administradores).
+        Route::get('/postores', [PostoresController::class, 'index'])->name('postores');
+        Route::get('/postores/exportar', [PostoresController::class, 'exportar'])->name('postores.exportar');
+        Route::post('/postores/{postor}/aprobar', [PostoresController::class, 'aprobarCuenta'])->name('postores.aprobar');
+        Route::post('/postores/{postor}/rechazar', [PostoresController::class, 'rechazarCuenta'])->name('postores.rechazar');
+        Route::post('/postores/{postor}/bloquear', [PostoresController::class, 'bloquear'])->name('postores.bloquear');
+        Route::post('/postores/{postor}/desbloquear', [PostoresController::class, 'desbloquear'])->name('postores.desbloquear');
+        Route::post('/garantias/{garantia}/aprobar', [PostoresController::class, 'aprobarGarantia'])->name('garantias.aprobar');
+        Route::post('/garantias/{garantia}/rechazar', [PostoresController::class, 'rechazarGarantia'])->name('garantias.rechazar');
+        Route::get('/garantias/{garantia}/comprobante', [PostoresController::class, 'comprobante'])->name('garantias.comprobante');
+
         // Bloque I: remates y lotes.
         Route::post('/subastas', [RematesController::class, 'store'])->name('remates.store');
         Route::get('/subastas/{remate}', [RematesController::class, 'show'])->name('remates.show');

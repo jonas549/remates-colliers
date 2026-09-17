@@ -16,6 +16,28 @@ class EstadoCuentaDemo
         'rechazada' => 'Rechazada',
     ];
 
+    /** Vista completa con los datos fijos del prototipo (solo local, ?estado=): misma forma que App\Postores\EstadoCuenta. */
+    public static function vista(?string $clave): array
+    {
+        $estado = self::para($clave);
+        $sala = route('sala.show', 'apoquindo');
+
+        return [
+            'estado' => $estado,
+            'detalle' => [
+                'remate' => ['titulo' => 'Los Militares 5620, Depto. 703', 'meta' => 'R-2026-118 · Las Condes · 09-09-2026, 12:00', 'url' => route('remates.show', 'militares'),
+                    'sala' => $sala, 'abre' => '09-09-2026 a las 12:00', 'enVivo' => false],
+                'garantia' => ['id' => 0, 'monto' => '$6.000.000', 'plazo' => '07-09, 18:00', 'medio' => 'vale a la vista', 'recibido' => '29-08-2026',
+                    'aprobada' => '30-08-2026, 11:24', 'comprobante' => '#', 'subir' => null],
+                'banco' => ['banco_nombre' => 'Banco de Chile', 'banco_tipo_cuenta' => 'Cuenta corriente', 'banco_numero_cuenta' => '000-12345-67',
+                    'banco_titular' => 'Colliers International Chile S.A.', 'banco_rut_titular' => '96.123.456-7', 'vale_vista_direccion' => 'Av. Apoquindo 4499, piso 8, Las Condes'],
+                'inscripciones' => [],
+                'abiertos' => [],
+                'basesGenerales' => '#',
+            ],
+        ];
+    }
+
     public static function para(?string $clave): array
     {
         $clave = array_key_exists($clave ?? '', self::ESTADOS) ? $clave : 'aprobada';

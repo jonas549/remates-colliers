@@ -15,6 +15,8 @@
     // Sin diseño: quinto ítem con el mismo estilo, solo para administradores (Bloque V).
     if (auth()->user()?->esAdmin()) {
         $items['configuracion'] = ['05', 'Configuración', route('admin.configuracion'), null];
+    } else {
+        unset($items['postores']); // datos personales de los postores: solo administradores
     }
 @endphp
 <x-layouts.base :titulo="$titulo . ' · Administración'" :clase-cuerpo="$claseCuerpo">
