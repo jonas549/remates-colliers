@@ -36,9 +36,37 @@ class Configuracion extends Model
         return $creadas;
     }
 
+    /**
+     * Valores leídos hace menos de MEMORIA_SEGUNDOS: una puja consultaba la misma clave 3–4 veces. Vida corta a propósito:
+     * el cron y la cola viven hasta 50 s y deben ver un cambio hecho desde el panel. Guardar desde el panel la vacía.
+     *
+     * @var array<string, array{0: float, 1: ?self}>
+     */
+    private static array $memoria = [];
+
+    private const MEMORIA_SEGUNDOS = 2.0;
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => self::olvidar());
+        static::deleted(fn () => self::olvidar());
+    }
+
+    public static function olvidar(): void
+    {
+        self::$memoria = [];
+    }
+
     public static function valor(string $clave, mixed $defecto = null): mixed
     {
-        $fila = static::query()->where('clave', $clave)->first();
+        $recordada = self::$memoria[$clave] ?? null;
+        if ($recordada !== null && microtime(true) - $recordada[0] < self::MEMORIA_SEGUNDOS) {
+            $fila = $recordada[1];
+        } else {
+            $fila = static::query()->where('clave', $clave)->first();
+            self::$memoria[$clave] = [microtime(true), $fila];
+        }
+
         if ($fila === null) {
             $base = self::DEFECTOS[$clave] ?? null;
 

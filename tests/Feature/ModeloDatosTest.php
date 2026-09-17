@@ -182,7 +182,7 @@ class ModeloDatosTest extends TestCase
         $this->assertSame('10', Configuracion::valor('porcentaje_garantia'));
 
         $this->artisan('colliers:instalar')->assertSuccessful();
-        Configuracion::where('clave', 'incremento_minimo')->update(['valor' => '250000']);
+        Configuracion::where('clave', 'incremento_minimo')->first()->update(['valor' => '250000']);
         $this->artisan('colliers:instalar')->assertSuccessful();
 
         $this->assertSame(count(Configuracion::DEFECTOS), Configuracion::count());

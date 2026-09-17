@@ -15,6 +15,9 @@
  *      pujas aceptadas es válida (incrementos, sin autosuperarse) y el lote coincide con la última puja.
  *   C. Pujas en ráfaga durante el cierre + liquidación disputada por 20 peticiones: ninguna puja recibida en o
  *      después de T, nada se adjudica antes de T + margen, exactamente una adjudicación y es la última puja.
+ *   D. Cierre bajo carga: todos pujan 400 ms antes de T y, mientras esas pujas siguen en proceso, otras tantas peticiones
+ *      intentan liquidar en T + margen. Ninguna puja recibida antes de T puede perderse. Con un servidor lento (sin
+ *      OPcache) muestra si el margen de liquidación alcanza: CONCURRENCIA_MARGEN=N prueba con N segundos.
  */
 
 use App\Models\Adjudicacion;
@@ -29,11 +32,7 @@ use App\Models\User;
 use App\Subastas\EstadoRemate;
 use App\Support\Rut;
 use Carbon\CarbonImmutable;
-use Illuminate\Auth\SessionGuard;
-use Illuminate\Cookie\CookieValuePrefix;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 $e = require __DIR__ . '/entorno.php';
 $cantidad = max(2, (int) ($argv[1] ?? 20));
@@ -55,74 +54,7 @@ $app = require $e['raiz'] . '/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 Artisan::call('config:cache');
 
-$fallas = 0;
-function comprobar(string $nombre, bool $ok, string $detalle = ''): void
-{
-    global $fallas;
-    $fallas += $ok ? 0 : 1;
-    echo ($ok ? '  OK    ' : '  FALLA ') . $nombre . ($detalle !== '' ? "  ({$detalle})" : '') . "\n";
-}
-
-/** Dispara todas las peticiones a la vez y espera todas. @return array<int, array{estado:int, cuerpo:mixed, ms:float}> */
-function enParalelo(array $peticiones): array
-{
-    global $e;
-    $multi = curl_multi_init();
-    $manejadores = [];
-    foreach ($peticiones as $i => $p) {
-        $h = curl_init($e['url'] . $p['ruta']);
-        $cabeceras = ['Accept: application/json'];
-        if (isset($p['sesion'])) {
-            $cabeceras[] = 'Cookie: ' . $p['sesion']['cookie'];
-            $cabeceras[] = 'X-CSRF-TOKEN: ' . $p['sesion']['token'];
-        }
-        if (isset($p['json'])) {
-            $cabeceras[] = 'Content-Type: application/json';
-            curl_setopt($h, CURLOPT_POSTFIELDS, json_encode($p['json']));
-        }
-        curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $cabeceras, CURLOPT_TIMEOUT => 60, CURLOPT_USERAGENT => 'colliers-concurrencia']);
-        curl_multi_add_handle($multi, $h);
-        $manejadores[$i] = $h;
-    }
-    do {
-        $estado = curl_multi_exec($multi, $activos);
-        if ($activos) {
-            curl_multi_select($multi, 0.05);
-        }
-    } while ($activos && $estado === CURLM_OK);
-
-    $resultados = [];
-    foreach ($manejadores as $i => $h) {
-        $resultados[$i] = [
-            'estado' => curl_getinfo($h, CURLINFO_RESPONSE_CODE),
-            'cuerpo' => json_decode((string) curl_multi_getcontent($h), true),
-            'ms' => curl_getinfo($h, CURLINFO_TOTAL_TIME) * 1000,
-        ];
-        curl_multi_remove_handle($multi, $h);
-        curl_close($h);
-    }
-    curl_multi_close($multi);
-
-    return $resultados;
-}
-
-/** Sesión autenticada real (tabla sessions + cookie cifrada), igual a la que deja un login. */
-function sesionPara(User $user): array
-{
-    $id = Str::random(40);
-    $token = Str::random(40);
-    $datos = ['_token' => $token, 'login_web_' . sha1(SessionGuard::class) => $user->id, '_flash' => ['old' => [], 'new' => []]];
-    DB::table('sessions')->insert([
-        'id' => $id, 'user_id' => $user->id, 'ip_address' => '127.0.0.1', 'user_agent' => 'colliers-concurrencia',
-        // Mismo formato que escribe Laravel según config/session.php (este proyecto usa `json`).
-        'payload' => base64_encode(config('session.serialization') === 'json' ? json_encode($datos) : serialize($datos)),
-        'last_activity' => time(),
-    ]);
-    $nombre = config('session.cookie');
-    $valor = encrypt(CookieValuePrefix::create($nombre, app('encrypter')->getKey()) . $id, false);
-
-    return ['cookie' => $nombre . '=' . rawurlencode($valor), 'token' => $token];
-}
+require __DIR__ . '/funciones.php';
 
 function crearRemate(string $slug, CarbonImmutable $abre, CarbonImmutable $cierra, array $postores): Lote
 {
@@ -179,6 +111,13 @@ function verificarSecuencia(Lote $lote, string $prefijo): void
     comprobar("{$prefijo}: precio actual = monto máximo", $lote->precio_actual === (int) Puja::where('lote_id', $lote->id)->max('monto'));
 }
 
+/** Intentos RECIBIDOS antes de T que el motor rechazó por cierre: pujas válidas perdidas. */
+function pujasPerdidas(Lote $lote, CarbonImmutable $cierre): int
+{
+    return PujaIntento::where('lote_id', $lote->id)->whereIn('motivo', ['lote_cerrado', 'remate_no_disponible'])
+        ->where('recibida_en', '<', $cierre->format('Y-m-d H:i:s'))->count();
+}
+
 function esperarHasta(CarbonImmutable $momento): void
 {
     $faltan = $momento->getTimestampMs() - CarbonImmutable::now('UTC')->getTimestampMs();
@@ -197,6 +136,9 @@ if ($prueba === false || ! str_contains($prueba, 'servidor_ms')) {
     exit(2);
 }
 Configuracion::sembrarDefectos();
+if (getenv('CONCURRENCIA_MARGEN') !== false) {
+    Configuracion::where('clave', 'margen_liquidacion_segundos')->first()->update(['valor' => (string) (int) getenv('CONCURRENCIA_MARGEN')]);
+}
 @array_map('unlink', glob($e['variables']['COLLIERS_TIEMPO_REAL_CARPETA'] . '/*') ?: []);
 
 $postores = [];
@@ -324,9 +266,38 @@ $adj = Adjudicacion::where('lote_id', $loteC->id)->first();
 // Independiente de los tiempos de la prueba: la fila se creó en T + margen o después (precisión de segundos).
 comprobar('C: la adjudicación se materializó en T + margen o después', $adj !== null
     && $adj->created_at->greaterThanOrEqualTo($cierre->addSeconds($margen)), $adj ? 'creada ' . $adj->created_at->format('H:i:s') . ', T ' . $cierre->format('H:i:s') : 'sin adjudicación');
+// Justicia del cierre: una puja RECIBIDA antes de T nunca se pierde por llegar al bloqueo después de liquidar. Si falla,
+// el margen de liquidación es menor que la latencia real del servidor (docs/RENDIMIENTO-SIN-OPCACHE.md).
+$perdidas = pujasPerdidas($loteC, $cierre);
+comprobar('C: ninguna puja recibida antes de T se rechazó por cierre', $perdidas === 0, "{$perdidas} perdidas con margen de {$margen} s");
 comprobar('C: el adjudicado es la última puja válida', $adj !== null && $ultima !== null && $adj->puja_id === $ultima->id && $adj->user_id === $ultima->user_id && $adj->monto === $ultima->monto && $loteC->estado === Lote::ESTADO_ADJUDICADO);
 comprobar('C: todas las respuestas de estado muestran el lote adjudicado', count(array_filter($liquidacion, fn ($x) => ($x['cuerpo']['lotes'][0]['estado'] ?? '') === 'adjudicado')) === $cantidad);
 verificarSecuencia($loteC, 'C');
+
+// ── D. Cierre bajo carga ────────────────────────────────────────────────────────────────────────────────
+echo "\nD. Cierre bajo carga: {$cantidad} pujas 400 ms antes de T y {$cantidad} liquidaciones en T + {$margen} s, a la vez\n";
+$cierreD = CarbonImmutable::now('UTC')->addSeconds(3)->startOfSecond();
+$loteD = crearRemate('cierre-carga', CarbonImmutable::now('UTC')->subMinute(), $cierreD, $postores);
+$minimaD = EstadoRemate::pujaMinima($loteD, $incremento);
+$envioPujas = $cierreD->subMilliseconds(400)->getTimestampMs();
+$envioLiquidacion = $cierreD->addSeconds($margen)->addMilliseconds(50)->getTimestampMs();
+$peticionesD = [];
+foreach ($postores as $i => $u) {
+    // Montos distintos y crecientes: sin carrera de montos, todas podrían aceptarse si llegan a tiempo al bloqueo.
+    $peticionesD[] = ['ruta' => "/remates/cierre-carga/lotes/{$loteD->id}/pujas", 'sesion' => $sesiones[$u->id], 'json' => ['monto' => $minimaD + $i * $incremento], 'en_ms' => $envioPujas];
+    $peticionesD[] = ['ruta' => '/remates/cierre-carga/estado', 'en_ms' => $envioLiquidacion];
+}
+$respuestasD = enParalelo($peticionesD);
+echo '  Respuestas: ' . resumen(contar($respuestasD)) . '  · ' . percentiles(array_column($respuestasD, 'ms')) . "\n";
+$errores5xx += count(array_filter($respuestasD, fn ($x) => $x['estado'] >= 500 || $x['estado'] === 0));
+esperarHasta($cierreD->addSeconds($margen + 1));
+enParalelo([['ruta' => '/remates/cierre-carga/estado']]);
+$tardias = Puja::where('lote_id', $loteD->id)->where('recibida_en', '>=', $cierreD->format('Y-m-d H:i:s'))->count();
+comprobar('D: todas las pujas se sellaron antes de T', $tardias === 0, "{$tardias} selladas en o después de T");
+$perdidasD = pujasPerdidas($loteD, $cierreD);
+comprobar('D: ninguna puja recibida antes de T se perdió por liquidar antes de procesarla', $perdidasD === 0, "{$perdidasD} perdidas con margen de {$margen} s");
+comprobar('D: exactamente una adjudicación y es la última puja', Adjudicacion::where('lote_id', $loteD->id)->count() === 1
+    && Adjudicacion::where('lote_id', $loteD->id)->value('puja_id') === Puja::where('lote_id', $loteD->id)->max('id'));
 
 // ── Resultado ───────────────────────────────────────────────────────────────────────────────────────────
 echo "\n";

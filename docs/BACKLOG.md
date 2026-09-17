@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-09-16**.
+> **Registro vivo del avance.** Última actualización: **2026-09-17**.
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -18,7 +18,7 @@ nota *(verifica Jonas en el sandbox)*.
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
 | B | Base del proyecto Laravel | En progreso | 18/19 |
 | C | Modelo de datos | **Completo** | 12/12 |
-| J | Motor de subastas en tiempo real ⚠️ | En progreso | 24/29 |
+| J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
 | D | Autenticación y registro de postores | En progreso | 10/12 |
 | K | Sala de puja conectada al motor real | En progreso | 10/14 |
 | I | Remates y lotes + panel del martillero | Pendiente | 0/8 |
@@ -32,7 +32,7 @@ nota *(verifica Jonas en el sandbox)*.
 | O | Reportes | Pendiente | 0/7 |
 | P | Seguridad | Pendiente | 0/8 |
 | Q | QA y carga | Pendiente | 0/6 |
-| R | Despliegue a producción | Pendiente | 0/7 |
+| R | Despliegue a producción | Pendiente | 0/8 |
 | S | Documentación | Pendiente | 0/4 |
 
 ## Orden de ejecución acordado
@@ -45,8 +45,9 @@ Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes 
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
 **Dónde vamos:** T y C cerrados. B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
-(K en navegador real contra el motor); faltan sus verificaciones en el sandbox. **Siguiente: I** (remates y lotes +
-panel del martillero).
+(K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
+camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
+**K → I → V → G → H → M → N**, commits locales, push al terminar N.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -149,13 +150,21 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Interfaz de emisión abstraída (`App\Subastas\Difusion\Emisor`; implementación JSON estático; Pusher = otra clase)
 - [x] Escritura atómica (temporal + rename) bajo bloqueo de archivo por remate; el archivo nunca retrocede (probado con 300 pujas concurrentes)
 - [x] Cabeceras sin caché y sin ETag; bloqueos y temporales no descargables (403) *(verificado en Apache local)*
-- [ ] Cabeceras sin caché servidas por **LiteSpeed** *(verifica Jonas en el sandbox)*
+- [x] Cabeceras sin caché servidas por **LiteSpeed**: HTTP/2 200, `no-store, no-cache, must-revalidate, max-age=0`, sin ETag, 403 en `.htaccess` *(Jonas en el sandbox, 17/09)*
 - [x] Eventos: puja nueva, cierre de lote (la apertura del siguiente va por horario en el mismo estado), mensaje del martillero
 - [x] Estado público sin identidades: «Postor #N» por orden de garantía *(supuesto vigente)*
 - [x] Reconexión recuperando el estado actual (`GET /remates/{remate}/estado`, que además liquida lo vencido) *(el cliente es K)*
 
 **QA obligatorio**
-- [ ] Medición de límites del sandbox (EP, CPU, `max_execution_time`, cron, HTTP saliente, **OPcache activo**) *(Jonas en el servidor)*
+- [ ] Medición de límites del sandbox (EP, CPU, `max_execution_time`, cron, HTTP saliente). **OPcache: APAGADO** (Jonas, 17/09; no se activa desde cPanel). Núcleos efectivos: `php tools/sandbox/medir-servidor.php https://rematescolliers.sandboxdelta.com` *(Jonas)*
+
+**Sin OPcache** (17/09, `docs/RENDIMIENTO-SIN-OPCACHE.md`). Medido con Apache de Laragon fijado a 1 y 2 núcleos, sin OPcache:
+10 pujas simultáneas pasaban de 670 ms (con OPcache) a 5,7 s, y la hora de recepción se sellaba hasta 7,3 s tarde.
+- [x] Hora de recepción desde `REQUEST_TIME_FLOAT` (antes de arrancar Laravel): sello a 0,15 s del envío con 10 simultáneas en 1 núcleo (antes 4,5 s)
+- [x] `public/hora.php` sin framework para sincronizar el reloj: 15 ms con 10 simultáneas (antes 4 s); `/hora` queda de respaldo
+- [x] Menos consultas por puja (configuración recordada 2 s, resumen con una lectura del alias)
+- [x] Escenario D en `tools/concurrencia/prueba.php` (pujas 400 ms antes de T + liquidaciones en T + margen): verde sin OPcache en 1 núcleo, 0 pujas perdidas
+- [x] Herramientas: `tools/rendimiento/medir.php` (local, con y sin OPcache, N núcleos) y `tools/sandbox/medir-servidor.php` (servidor real, solo GET)
 - [x] Dos pujas del mismo monto en el mismo instante: solo una gana (5 rondas × 20 simultáneas)
 - [x] Puja bajo el incremento / sin garantía / después del cierre: rechazadas
 - [x] Vaciar la caché a mitad del remate no altera el estado (`optimize:clear` en PHPUnit, `cache:clear` en concurrencia)
@@ -327,6 +336,7 @@ Se completan a medida que las pantallas lo pidan.
 - [ ] Respaldo periódico de la base
 - [ ] Bloqueo de deploy con remate en curso activo en el script
 - [ ] Verificación con `colliers:diagnostico`
+- [ ] ⚠️ **Riesgo: verificar OPcache en el hosting de producción antes de comprometer rendimiento.** Sin OPcache la validez de las pujas se mantiene, pero 10 pujas en el mismo segundo tardan ~4 s en confirmarse con 1 núcleo. Medir con `tools/sandbox/medir-servidor.php` y fijar el margen de liquidación según la latencia (`docs/RENDIMIENTO-SIN-OPCACHE.md` §7)
 
 ## S — Documentación · Pendiente
 

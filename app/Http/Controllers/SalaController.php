@@ -63,7 +63,8 @@ class SalaController extends Controller
                 'urls' => [
                     'estadoJson' => asset('tiempo-real/' . $remate->slug . '.json'),
                     'estado' => route('tiempo-real.estado', $remate),
-                    'hora' => route('tiempo-real.hora'),
+                    // Sin framework (public/hora.php): la ruta /hora queda de respaldo.
+                    'hora' => asset('hora.php'),
                     'pujar' => url("/remates/{$remate->slug}/lotes/__LOTE__/pujas"),
                     'ingresar' => route('login'),
                 ],

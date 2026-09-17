@@ -68,6 +68,16 @@ class Diagnostico extends Command
         $this->revisar(is_link(public_path('storage')) || file_exists(public_path('storage')), 'Enlace public/storage (colliers:instalar lo crea)', critico: false);
         $this->revisar(file_exists(public_path('build/manifest.json')), 'Assets compilados (public/build/manifest.json)');
         $this->revisar(file_exists(base_path('vendor/autoload.php')), 'Dependencias de Composer instaladas');
+        // Sin OPcache cada archivo cargado se compila en cada petición: las de desarrollo (phpunit, var-dumper…)
+        // agregan ~200 KB por petición. Se instalan sin ellas con `composer install --no-dev`.
+        $this->revisar(! $produccion || ! class_exists(\PHPUnit\Framework\TestCase::class),
+            'Sin dependencias de desarrollo en el servidor (composer install --no-dev)', critico: false);
+        // Sin OPcache las cachés de `php artisan optimize` evitan leer .env, registrar rutas y descubrir eventos.
+        $this->revisar(! $produccion || app()->configurationIsCached(), 'Configuración en caché (php artisan optimize)', critico: false);
+        $this->revisar(! $produccion || app()->routesAreCached(), 'Rutas en caché (php artisan optimize)', critico: false);
+        $this->revisar(! $produccion || app()->eventsAreCached(), 'Eventos en caché (php artisan optimize)', critico: false);
+        $this->revisar(true, 'OPcache en consola: ' . (function_exists('opcache_get_status') && ini_get('opcache.enable_cli') ? 'activo' : 'apagado')
+            . ' (el de la web se ve en Administración → Configuración → Sistema)');
 
         $this->seccion('Cron y colas');
         $latido = config('colliers.latido_programador');

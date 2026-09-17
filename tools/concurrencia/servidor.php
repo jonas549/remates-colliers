@@ -21,9 +21,13 @@ if ($apache === null || ! file_exists($php . '/php8apache2_4.dll')) {
 $puerto = parse_url($e['url'], PHP_URL_PORT) ?: 8090;
 @mkdir($e['trabajo'], 0777, true);
 
-// php.ini propio con OPcache activo (como un hosting en producción). No toca el php.ini de Laragon.
+// php.ini propio con OPcache activo (como un hosting bien configurado). No toca el php.ini de Laragon.
+// CONCURRENCIA_OPCACHE=0 lo apaga, como en el sandbox (17/09): sirve para medir el peor caso.
+$opcache = getenv('CONCURRENCIA_OPCACHE') !== '0';
 $ini = file_get_contents($php . '/php.ini') . "\n\n; ── Agregado por tools/concurrencia/servidor.php ──\n"
-    . "zend_extension=opcache\nopcache.enable=1\nopcache.memory_consumption=128\nopcache.max_accelerated_files=20000\nopcache.validate_timestamps=1\n";
+    . ($opcache
+        ? "zend_extension=opcache\nopcache.enable=1\nopcache.memory_consumption=128\nopcache.max_accelerated_files=20000\nopcache.validate_timestamps=1\n"
+        : "opcache.enable=0\n");
 file_put_contents($e['trabajo'] . '/php.ini', $ini);
 
 $variables = '';
@@ -71,6 +75,13 @@ $archivo = $e['trabajo'] . '/httpd.conf';
 file_put_contents($archivo, $conf);
 @unlink($e['trabajo'] . '/httpd.pid');
 
-echo "Apache de prueba en {$e['url']} (PHP " . PHP_VERSION . ", mod_php multihilo, OPcache). Configuración: {$archivo}\n";
-passthru('"' . $apache . '/bin/httpd.exe" -f "' . $archivo . '"', $salida);
+// CONCURRENCIA_NUCLEOS=N limita Apache a N núcleos (afinidad de CPU, la heredan los procesos hijos): simula el
+// límite de CPU de un hosting compartido (CloudLinux suele dar 1 o 2 núcleos por cuenta).
+$nucleos = (int) getenv('CONCURRENCIA_NUCLEOS');
+$afinidad = $nucleos > 0 ? sprintf('%X', (1 << $nucleos) - 1) : null;
+
+echo "Apache de prueba en {$e['url']} (PHP " . PHP_VERSION . ', mod_php multihilo, OPcache ' . ($opcache ? 'activo' : 'APAGADO')
+    . ($afinidad ? ", {$nucleos} núcleo(s)" : ', todos los núcleos') . "). Configuración: {$archivo}\n";
+$httpd = '"' . $apache . '/bin/httpd.exe" -f "' . $archivo . '"';
+passthru($afinidad ? 'cmd /c start "apache-colliers" /b /wait /affinity ' . $afinidad . ' ' . $httpd : $httpd, $salida);
 exit($salida);
