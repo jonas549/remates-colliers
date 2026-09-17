@@ -176,6 +176,114 @@ class ConfiguracionTest extends TestCase
         $this->assertStringContainsString('Puerto 9', $mensaje);
     }
 
+    public function test_el_correo_de_prueba_solo_afirma_lo_que_dijo_el_servidor(): void
+    {
+        // Servidor SMTP falso que acepta la conexión y responde a cada comando: así se ve la respuesta literal.
+        [$puerto, $proceso] = $this->servidorFalso();
+        Configuracion::guardar('correo_modo', 'smtp');
+        Configuracion::guardar('smtp_host', '127.0.0.1');
+        Configuracion::guardar('smtp_puerto', (string) $puerto);
+        Configuracion::guardar('smtp_cifrado', 'ninguno');
+        Configuracion::guardar('smtp_usuario', '');
+        Configuracion::guardar('correo_remitente', 'remates@colliers.test');
+
+        $this->actingAs($this->admin)->post('/admin/configuracion/probar-correo', ['destino' => 'jonas@correo.test'])
+            ->assertSessionHas('estado', function (string $m) {
+                $this->assertStringContainsString('ACEPTÓ el mensaje', $m);
+                $this->assertStringContainsString('250 2.0.0 Ok: queued as PRUEBA123', $m, 'la respuesta literal del servidor, con su código');
+                $this->assertStringContainsString('no garantiza que llegue', $m);
+
+                return true;
+            });
+        proc_terminate($proceso);
+    }
+
+    public function test_avisa_cuando_el_remitente_no_es_el_usuario_autenticado(): void
+    {
+        $aviso = \App\Correo\DiagnosticoSmtp::avisoRemitente('remates@colliers.cl', 'noreply@rematescolliers.sandbox');
+        $this->assertStringContainsString('no coincide con el usuario autenticado', (string) $aviso);
+        $this->assertStringContainsString('rechaza el envío', (string) $aviso);
+        $this->assertNull(\App\Correo\DiagnosticoSmtp::avisoRemitente('remates@colliers.cl', 'remates@colliers.cl'));
+        $this->assertNull(\App\Correo\DiagnosticoSmtp::avisoRemitente('remates@colliers.cl', ''), 'sin usuario no hay nada que comparar');
+        $this->assertStringContainsString('comparten dominio', (string) \App\Correo\DiagnosticoSmtp::avisoRemitente('avisos@colliers.cl', 'remates@colliers.cl'));
+
+        // La pantalla lo avisa antes de intentar enviar.
+        Configuracion::guardar('correo_modo', 'smtp');
+        Configuracion::guardar('smtp_host', 'mail.colliers.test');
+        Configuracion::guardar('smtp_usuario', 'noreply@rematescolliers.sandbox');
+        Configuracion::guardar('correo_remitente', 'remates@colliers.cl');
+        $this->actingAs($this->admin)->get(route('admin.configuracion.seccion', 'correo'))->assertOk()
+            ->assertSee('no coincide con el usuario autenticado');
+    }
+
+    public function test_registro_de_correos_con_filtros_busqueda_y_error_completo(): void
+    {
+        $error = str_repeat('Expected response code "250" but got code "553", with message "553 Sender address rejected". ', 5);
+        \App\Models\NotificacionLog::create(['canal' => 'correo', 'tipo' => 'CuentaRevisadaAviso', 'destinatario' => 'ana@correo.test',
+            'asunto' => 'Tu cuenta fue aprobada', 'estado' => 'enviada', 'enviada_en' => now('UTC')]);
+        \App\Models\NotificacionLog::create(['canal' => 'correo', 'tipo' => 'AdjudicacionAviso', 'destinatario' => 'beto@correo.test',
+            'asunto' => 'Te adjudicaste la propiedad', 'estado' => 'fallida', 'error' => $error]);
+        \App\Models\NotificacionLog::create(['canal' => 'correo', 'tipo' => 'RecordatorioRemateAviso', 'destinatario' => 'carla@correo.test',
+            'asunto' => 'Tu remate comienza pronto', 'estado' => 'pendiente']);
+
+        $registro = route('admin.configuracion.seccion', 'correos');
+        $this->actingAs($this->admin)->get($registro)->assertOk()
+            ->assertSee('Registro de correos')->assertSee('ana@correo.test')->assertSee('beto@correo.test')->assertSee('carla@correo.test')
+            ->assertSee('aceptados por el servidor')->assertSee('553 Sender address rejected')
+            ->assertSee('no que haya llegado a la bandeja');
+
+        $this->actingAs($this->admin)->get($registro . '?estado=fallida')->assertOk()
+            ->assertSee('beto@correo.test')->assertDontSee('ana@correo.test');
+        $this->actingAs($this->admin)->get($registro . '?q=carla')->assertOk()
+            ->assertSee('carla@correo.test')->assertDontSee('beto@correo.test');
+        $this->actingAs($this->admin)->get($registro . '?tipo=AdjudicacionAviso')->assertOk()
+            ->assertSee('beto@correo.test')->assertDontSee('carla@correo.test');
+        $this->actingAs($this->admin)->get($registro . '?desde=' . now(\App\Support\Formato::ZONA)->addDay()->format('Y-m-d'))->assertOk()
+            ->assertSee('Sin correos con esos filtros');
+
+        $csv = $this->actingAs($this->admin)->get(route('admin.configuracion.correos.exportar', ['estado' => 'fallida']))->assertOk();
+        $contenido = $csv->streamedContent();
+        $this->assertStringContainsString('beto@correo.test', $contenido);
+        $this->assertStringContainsString('553 Sender address rejected', $contenido);
+        $this->assertStringNotContainsString('ana@correo.test', $contenido);
+
+        $martillero = User::create(['name' => 'M2', 'email' => 'm2@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_MARTILLERO, 'estado' => User::ESTADO_ACTIVO]);
+        $this->actingAs($martillero)->get($registro)->assertForbidden();
+    }
+
+    /** Servidor SMTP mínimo en un proceso aparte: acepta el mensaje y responde 250 con su identificador. */
+    private function servidorFalso(): array
+    {
+        $puerto = random_int(20000, 60000);
+        $guion = <<<'PHP'
+            $servidor = stream_socket_server("tcp://127.0.0.1:" . $argv[1], $e, $m);
+            $cliente = stream_socket_accept($servidor, 10);
+            fwrite($cliente, "220 prueba.colliers ESMTP\r\n");
+            while (($linea = fgets($cliente)) !== false) {
+                $linea = trim($linea);
+                if (str_starts_with($linea, 'EHLO') || str_starts_with($linea, 'HELO')) {
+                    fwrite($cliente, "250-prueba.colliers\r\n250 SIZE 10240000\r\n");
+                } elseif (str_starts_with($linea, 'DATA')) {
+                    fwrite($cliente, "354 End data with <CR><LF>.<CR><LF>\r\n");
+                    while (($cuerpo = fgets($cliente)) !== false && trim($cuerpo) !== '.') {
+                    }
+                    fwrite($cliente, "250 2.0.0 Ok: queued as PRUEBA123\r\n");
+                } elseif (str_starts_with($linea, 'QUIT')) {
+                    fwrite($cliente, "221 Bye\r\n");
+                    break;
+                } else {
+                    fwrite($cliente, "250 2.1.0 Ok\r\n");
+                }
+            }
+            PHP;
+        $archivo = tempnam(sys_get_temp_dir(), 'smtp') . '.php';
+        file_put_contents($archivo, "<?php\n" . $guion);
+        $proceso = proc_open([PHP_BINARY, $archivo, (string) $puerto], [], $tuberias);
+        usleep(400000);
+
+        return [$puerto, $proceso];
+    }
+
     public function test_plantillas_de_correo_se_editan_previsualizan_y_se_restauran(): void
     {
         $this->actingAs($this->admin)->get(route('admin.configuracion.seccion', 'plantillas'))->assertOk()

@@ -42,9 +42,9 @@ class ConfiguracionController extends Controller
             $valores[$clave] = $datos['tipo'] === 'secreto' ? filled(Configuracion::valor($clave)) : Configuracion::valor($clave);
         }
 
-        $vista = in_array($seccion, ['sistema', 'plantillas', 'notificaciones'], true) ? $seccion : 'seccion';
+        $vista = in_array($seccion, ['sistema', 'plantillas', 'notificaciones', 'correos'], true) ? $seccion : 'seccion';
 
-        return view("admin.configuracion.{$vista}", [
+        return view("admin.configuracion.{$vista}", ($seccion === 'correos' ? app(RegistroCorreosController::class)->datos(request()) : []) + [
             'seccion' => $seccion,
             'grupos' => collect($campos)->groupBy('grupo', preserveKeys: true)
                 ->sortBy(fn ($c, $grupo) => array_search($grupo, Configuracion::SECCIONES[$seccion]['grupos'], true)),
@@ -129,22 +129,40 @@ class ConfiguracionController extends Controller
         // Se aplica lo recién guardado y se descartan los transportes ya creados en esta petición.
         CorreoSaliente::aplicar(config());
         $correo->forgetMailers();
+        $datos = $this->datosSmtp();
+        $remitente = (string) config('mail.from.address');
+        $aviso = config('mail.default') === 'smtp' ? DiagnosticoSmtp::avisoRemitente($remitente, $datos['usuario']) : null;
+
         try {
-            Mail::raw("Este es un correo de prueba de Remates Colliers.\n\nSi lo recibiste, el correo saliente está bien configurado.",
+            $enviado = Mail::raw("Este es un correo de prueba de Remates Colliers.\n\nSi lo recibiste, el correo saliente llega a destino.",
                 fn ($m) => $m->to($destino)->subject('Prueba de correo · Remates Colliers'));
         } catch (Throwable $e) {
             report($e);
             // Mismo diccionario que «Probar conexión»: nada de «error al enviar».
-            $mensaje = app(DiagnosticoSmtp::class)->explicarError($e, $this->datosSmtp());
+            $mensaje = app(DiagnosticoSmtp::class)->explicarError($e, $datos);
+            $respuesta = method_exists($e, 'getDebug') ? DiagnosticoSmtp::respuestaFinal((string) $e->getDebug()) : null;
 
-            return back()->with('error', "No se pudo enviar el correo de prueba. {$mensaje}");
+            return back()->with('error', trim("El servidor rechazó el correo de prueba. {$mensaje}"
+                . ($respuesta ? " Respuesta del servidor: «{$respuesta}»." : '')
+                . ($aviso ? " {$aviso}" : '')));
         }
 
         $modo = config('mail.default');
+        if ($modo === 'log') {
+            return back()->with('estado', "Correo de prueba registrado en el log (modo «{$modo}»: no sale a Internet). En el servidor: tail -n 50 storage/logs/laravel-AAAA-MM-DD.log");
+        }
 
-        return back()->with('estado', $modo === 'log'
-            ? "Correo de prueba registrado en el log (modo «{$modo}»: no sale a Internet). En el servidor: tail -n 50 storage/logs/laravel-AAAA-MM-DD.log"
-            : "Correo de prueba enviado a {$destino} desde «" . config('mail.from.address') . "» por «{$modo}». Revisa la bandeja de entrada y la de spam.");
+        // Solo se puede afirmar lo que dijo el servidor: que ACEPTÓ el mensaje. La entrega depende de lo que pase después.
+        $symfony = $enviado?->getSymfonySentMessage();
+        $respuesta = DiagnosticoSmtp::respuestaFinal((string) $symfony?->getDebug());
+        $id = $symfony?->getMessageId();
+
+        return back()->with('estado', trim("El servidor de salida ACEPTÓ el mensaje para {$destino}, enviado desde «{$remitente}» por «{$modo}»."
+            . ($respuesta ? " Respuesta del servidor: «{$respuesta}»." : ' El transporte no devolvió una respuesta SMTP.')
+            . ($id ? " Identificador del mensaje: {$id}." : '')
+            . ' Que el servidor lo acepte no garantiza que llegue a la bandeja: puede rebotar después o quedar filtrado como spam.'
+            . ' Revisa el buzón de destino, su carpeta de spam y «Registro de correos».'
+            . ($aviso ? " Además: {$aviso}" : '')));
     }
 
     public function actualizarUf(): RedirectResponse

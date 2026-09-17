@@ -246,12 +246,13 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 
 ## V — Configuración autoadministrable y SMTP · En progreso
 
-Reestructurada el 17/09 a pedido de Jonas: Configuración pasó de una pantalla larga a **8 pantallas con submenú**
-(`/admin/configuracion/{seccion}`), cada una con lo suyo y guardando solo sus claves. Verificado con `ConfiguracionTest`
-(10) y `tools/comparar/panel-configuracion.mjs` (21 comprobaciones en navegador real, usabilidad a 375/760/1120/1440).
+Reestructurada el 17/09 a pedido de Jonas: Configuración pasó de una pantalla larga a **9 pantallas**, desplegadas como
+**sub-ítems del menú lateral** bajo «05 Configuración» (`/admin/configuracion/{seccion}`), cada una con lo suyo y
+guardando solo sus claves. Verificado con `ConfiguracionTest` (13) y `tools/comparar/panel-configuracion.mjs`
+(28 comprobaciones en navegador real, usabilidad a 375/760/1120/1440).
 
-Secciones: Remates y pujas · Garantías · Correo (SMTP) · Plantillas de correo · Notificaciones · Seguridad · Sitio ·
-Sistema (solo lectura).
+Secciones: Remates y pujas · Garantías · Correo (SMTP) · Plantillas de correo · Notificaciones · **Registro de correos** ·
+Seguridad · Sitio · Sistema (solo lectura).
 
 - [x] Incremento mínimo (global y por remate), montos de puja rápida, duración por defecto del lote y **pausa entre lotes** (nueva, 17/09)
 - [x] Porcentaje de garantía (10 % por defecto), plazos y datos bancarios, con las instrucciones que ve el postor
@@ -259,6 +260,9 @@ Sistema (solo lectura).
 - [x] Intentos de login, duración del bloqueo y **duración de la sesión** (15 min a 12 h, 2 h por defecto; antes solo en el `.env`)
 - [x] Fuente y valor de la UF, contacto, enlaces y textos legales
 - [x] SMTP completo con **dos botones separados** (17/09): «Probar conexión» comprueba DNS, puerto, cifrado y credenciales SIN enviar nada y dice exactamente qué falló; «Enviar correo de prueba» pide la dirección y manda uno real. Los errores de envío usan el mismo diccionario
+- [x] El correo de prueba **solo afirma que el servidor aceptó el mensaje**, nunca que llegó, y muestra la **respuesta literal del servidor con su código** («250 2.0.0 Ok: queued as …») y el identificador del mensaje; si el servidor rechaza, el motivo exacto *(corregido el 17/09: antes decía «enviado» sin saberlo)*
+- [x] Aviso **antes de intentar** cuando el remitente no es el usuario SMTP autenticado (causa habitual de «553 Sender address rejected» y de los correos que nunca llegan)
+- [x] **Registro de correos**: historial completo con búsqueda por destinatario o asunto, filtros por estado, tipo y fechas, el error del servidor entero y exportación a CSV
 - [x] **Plantillas de correo editables** (16): asunto, cuerpo con variables, texto del botón, vista previa con datos de ejemplo y «Restaurar la original». Migración aditiva `plantillas_correo`; sin fila se usa el texto del código
 - [x] **Notificaciones**: qué se envía, a quién y cuándo, con interruptor por correo (los de la cuenta del postor no se pueden apagar), correo de avisos, horas del recordatorio y los últimos 20 envíos de la bitácora
 - [ ] Revisión del diseño de las pantallas nuevas por Ángel *(Jonas se las pasa)*

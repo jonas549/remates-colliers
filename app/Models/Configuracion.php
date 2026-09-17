@@ -34,6 +34,8 @@ class Configuracion extends Model
             'bajada' => 'Asunto y texto de cada correo que envía la plataforma.'],
         'notificaciones' => ['titulo' => 'Notificaciones', 'grupos' => ['notificaciones'],
             'bajada' => 'Qué se envía, a quién y cuándo.'],
+        'correos' => ['titulo' => 'Registro de correos', 'grupos' => [],
+            'bajada' => 'Historial de todo lo que la plataforma intentó enviar, con el error completo cuando falla.'],
         'seguridad' => ['titulo' => 'Seguridad', 'grupos' => ['seguridad'],
             'bajada' => 'Bloqueo por intentos fallidos y duración de la sesión.'],
         'sitio' => ['titulo' => 'Sitio', 'grupos' => ['uf', 'contacto', 'sitio'],

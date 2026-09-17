@@ -4,7 +4,7 @@
     use App\Models\Configuracion;
     use App\Support\Formato;
 @endphp
-<x-layouts.admin seccion="configuracion" titulo="Configuración · Notificaciones" clase-cuerpo="placeholder-claro">
+<x-layouts.admin seccion="configuracion" subseccion="notificaciones" titulo="Configuración · Notificaciones" clase-cuerpo="placeholder-claro">
     <div class="admin-encabezado">
         <div class="admin-encabezado__texto">
             <div class="admin-encabezado__kicker">CONFIGURACIÓN</div>
@@ -12,8 +12,6 @@
             <div class="admin-encabezado__bajada">{{ Configuracion::SECCIONES['notificaciones']['bajada'] }} Los correos salen por la cola, que el cron procesa cada minuto. El texto de cada uno se edita en «Plantillas de correo».</div>
         </div>
     </div>
-
-    @include('admin.configuracion._submenu', ['actual' => 'notificaciones'])
 
     <x-admin.avisos />
 
@@ -67,7 +65,10 @@
         </form>
 
         <div class="admin-gestion__bloque">
-            <div class="admin-seccion__cabeza"><h2 class="admin-seccion__titulo">Últimos envíos</h2></div>
+            <div class="admin-seccion__cabeza">
+                <h2 class="admin-seccion__titulo">Últimos envíos</h2>
+                <a href="{{ route('admin.configuracion.seccion', 'correos') }}" class="admin-seccion__enlace">Ver el registro completo →</a>
+            </div>
             <div class="admin-tabla-scroll">
                 <table class="admin-tabla">
                     <thead>
@@ -90,7 +91,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="admin-gestion__nota">Últimos 20 registros de la bitácora. Un correo queda «pendiente» hasta que la cola lo procesa.</p>
+            <p class="admin-gestion__nota">Últimos 20 registros. El historial completo, con filtros y el error entero, está en «Registro de correos».</p>
         </div>
     </div>
 </x-layouts.admin>

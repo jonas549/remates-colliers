@@ -1,7 +1,7 @@
 @php
     use App\Models\Configuracion;
 @endphp
-<x-layouts.admin seccion="configuracion" titulo="Configuración · Sistema" clase-cuerpo="placeholder-claro">
+<x-layouts.admin seccion="configuracion" subseccion="sistema" titulo="Configuración · Sistema" clase-cuerpo="placeholder-claro">
     <div class="admin-encabezado">
         <div class="admin-encabezado__texto">
             <div class="admin-encabezado__kicker">CONFIGURACIÓN</div>
@@ -9,8 +9,6 @@
             <div class="admin-encabezado__bajada">{{ Configuracion::SECCIONES['sistema']['bajada'] }} Se mide desde la web, que es el PHP que atiende las pujas: la consola puede dar otro resultado.</div>
         </div>
     </div>
-
-    @include('admin.configuracion._submenu', ['actual' => 'sistema'])
 
     <x-admin.avisos />
 

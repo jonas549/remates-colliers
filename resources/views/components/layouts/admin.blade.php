@@ -2,7 +2,7 @@
     Layout del panel de administración. $seccion: dashboard | subastas | postores | reportes.
     El contador de Postores suma cuentas y garantías esperando revisión.
 --}}
-@props(['seccion', 'titulo', 'claseCuerpo' => ''])
+@props(['seccion', 'titulo', 'claseCuerpo' => '', 'subseccion' => null])
 @php
     $pendientes = \App\Models\Postor::where('estado', \App\Models\Postor::ESTADO_EN_REVISION)->count()
         + \App\Models\Garantia::where('estado', \App\Models\Garantia::ESTADO_EN_REVISION)->count();
@@ -31,6 +31,16 @@
             <div class="admin-lateral__menu">
                 @foreach ($items as $clave => [$num, $nombre, $ruta, $badge])
                     <a href="{{ $ruta }}" @class(['admin-lateral__item', 'es-actual' => $clave === $seccion]) @if ($clave === $seccion) aria-current="page" @endif><span class="admin-lateral__num">{{ $num }}</span> {{ $nombre }}@if ($badge) <span class="admin-lateral__badge">{{ $badge }}</span>@endif</a>
+                    {{-- Configuración tiene una pantalla por tema: sus secciones se despliegan aquí, dentro del menú. --}}
+                    @if ($clave === 'configuracion' && $seccion === 'configuracion')
+                        <div class="admin-lateral__submenu">
+                            @foreach (\App\Models\Configuracion::SECCIONES as $sub => $datos)
+                                <a href="{{ route('admin.configuracion.seccion', $sub) }}"
+                                    @class(['admin-lateral__subitem', 'es-actual' => $sub === ($subseccion ?? null)])
+                                    @if ($sub === ($subseccion ?? null)) aria-current="page" @endif>{{ $datos['titulo'] }}</a>
+                            @endforeach
+                        </div>
+                    @endif
                 @endforeach
             </div>
             <div class="admin-lateral__pie">

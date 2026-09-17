@@ -4,7 +4,7 @@
 
     $datos = Configuracion::SECCIONES[$seccion];
 @endphp
-<x-layouts.admin seccion="configuracion" :titulo="'Configuración · ' . $datos['titulo']" clase-cuerpo="placeholder-claro">
+<x-layouts.admin seccion="configuracion" :subseccion="$seccion" :titulo="'Configuración · ' . $datos['titulo']" clase-cuerpo="placeholder-claro">
     <div class="admin-encabezado">
         <div class="admin-encabezado__texto">
             <div class="admin-encabezado__kicker">CONFIGURACIÓN</div>
@@ -12,8 +12,6 @@
             <div class="admin-encabezado__bajada">{{ $datos['bajada'] }} Lo que cambies rige desde la próxima acción, sin desplegar.</div>
         </div>
     </div>
-
-    @include('admin.configuracion._submenu', ['actual' => $seccion])
 
     <x-admin.avisos />
 
@@ -31,9 +29,16 @@
         </form>
 
         @if ($seccion === 'correo')
+            @php($avisoRemitente = $valores['correo_modo'] === 'smtp'
+                ? \App\Correo\DiagnosticoSmtp::avisoRemitente($valores['correo_remitente'] ?: config('mail.from.address'), $valores['smtp_usuario'])
+                : null)
+            @if ($avisoRemitente)
+                <div class="admin-avisos"><div class="admin-aviso admin-aviso--error" role="alert">{{ $avisoRemitente }}</div></div>
+            @endif
+
             <div class="admin-gestion__bloque" x-data="{ prueba: false }">
                 <div class="admin-seccion__cabeza"><h2 class="admin-seccion__titulo">Probar el correo saliente</h2></div>
-                <p class="admin-gestion__nota">Guarda primero los cambios: las dos pruebas usan lo que está guardado. «Probar conexión» no envía nada; solo comprueba que el servidor responde y acepta las credenciales.</p>
+                <p class="admin-gestion__nota">Guarda primero los cambios: las dos pruebas usan lo que está guardado. «Probar conexión» no envía nada; solo comprueba que el servidor responde y acepta las credenciales. El correo de prueba dice lo que respondió el servidor: que lo acepte no garantiza que llegue a la bandeja.</p>
                 <div class="admin-acciones admin-acciones--bloque">
                     <form method="POST" action="{{ route('admin.configuracion.probar-conexion') }}" class="formulario-en-linea">
                         @csrf

@@ -92,6 +92,37 @@ class DiagnosticoSmtp
         return $fin(true, "Conectado a {$host}:{$puerto} con {$nombreCifrado} y {$como}.");
     }
 
+    /**
+     * Última respuesta del servidor en la transcripción SMTP («250 2.0.0 Ok: queued as 4X…»). Es lo único que
+     * sabemos con certeza: el servidor aceptó el mensaje. Que llegue a la bandeja depende de lo que pase después.
+     */
+    public static function respuestaFinal(string $transcripcion): ?string
+    {
+        preg_match_all('/^\[[^\]]+\] < (\d{3}[^\r\n]*)/m', $transcripcion, $coincidencias);
+        $respuestas = array_map('trim', $coincidencias[1] ?? []);
+
+        return $respuestas === [] ? null : end($respuestas);
+    }
+
+    /**
+     * Aviso antes de enviar: muchos servidores rechazan un remitente distinto al usuario autenticado
+     * («553 Sender address rejected»). Se avisa ANTES de intentar, no después del rebote.
+     */
+    public static function avisoRemitente(?string $remitente, ?string $usuario): ?string
+    {
+        $remitente = trim((string) $remitente);
+        $usuario = trim((string) $usuario);
+        if ($remitente === '' || $usuario === '' || ! str_contains($usuario, '@') || mb_strtolower($remitente) === mb_strtolower($usuario)) {
+            return null;
+        }
+
+        $dominio = fn (string $correo) => mb_strtolower((string) mb_substr(mb_strstr($correo, '@') ?: '', 1));
+
+        return $dominio($remitente) === $dominio($usuario)
+            ? "El remitente ({$remitente}) no es el usuario autenticado ({$usuario}), aunque comparten dominio: algunos servidores lo rechazan."
+            : "El remitente ({$remitente}) no coincide con el usuario autenticado ({$usuario}) ni comparte su dominio: la mayoría de los servidores SMTP rechaza el envío o lo marca como spam. Usa como remitente la misma dirección del usuario SMTP, o pide al proveedor que autorice esa dirección.";
+    }
+
     /** Traduce el error de un envío real con el mismo diccionario que la prueba de conexión. */
     public function explicarError(Throwable $e, array $datos): string
     {
@@ -109,6 +140,15 @@ class DiagnosticoSmtp
 
         $autenticacion = str_contains($bajo, 'authentic') || str_contains($bajo, '535') || str_contains($bajo, '534')
             || str_contains($bajo, 'username and password') || str_contains($bajo, 'credentials');
+        $remitenteRechazado = str_contains($bajo, 'sender address rejected') || str_contains($bajo, 'not owned by user')
+            || str_contains($bajo, '553') || str_contains($bajo, '5.7.1') || str_contains($bajo, 'relay access denied');
+
+        if ($remitenteRechazado) {
+            $pasos[] = ['nombre' => 'Remitente', 'ok' => false, 'detalle' => $corto];
+
+            return "El servidor {$host} rechazó el remitente del mensaje: «{$corto}». Suele pasar cuando el remitente no es la dirección del usuario autenticado"
+                . ($usuario === null ? '.' : " ({$usuario}).");
+        }
         $cifradoMal = str_contains($bajo, 'ssl') || str_contains($bajo, 'tls') || str_contains($bajo, 'crypto') || str_contains($bajo, 'certificate');
 
         if ($autenticacion) {

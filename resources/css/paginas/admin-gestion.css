@@ -97,18 +97,10 @@ a.admin-form__borrador { display: inline-block; text-align: center; text-decorat
   .admin-ficha__documento { padding-block: 12px; margin-block: -6px; }
 }
 
-/* Submenú de Configuración (17/09): una pantalla por tema, sin diseño del prototipo. */
-.admin-submenu { display: flex; flex-wrap: wrap; gap: 0 4px; padding: 0 32px; border-bottom: 1px solid #dbe1ec; background: #ffffff; }
-.admin-submenu__item { display: inline-flex; align-items: center; gap: 8px; padding: 14px 14px 12px; font-size: 14px; font-weight: 600; color: #5b6572; text-decoration: none; border-bottom: 2px solid transparent; }
-.admin-submenu__item:hover { color: #16265a; text-decoration: none; background: #f6f8fc; }
-.admin-submenu__item.es-actual { color: #16265a; border-bottom-color: #25408f; }
-.admin-submenu__num { font-size: 11px; letter-spacing: 0.08em; color: #a3abb8; }
-.admin-submenu__item.es-actual .admin-submenu__num { color: #25408f; }
+/* Acciones en bloque (por ejemplo, las dos pruebas del correo saliente). */
 .admin-acciones--bloque { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 4px; }
 
 @media (max-width: 1119.98px) {
-  .admin-submenu { padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
-  .admin-submenu__item { white-space: nowrap; min-height: 44px; }
 }
 
 /* Editor de plantillas de correo (17/09). */
@@ -125,4 +117,19 @@ a.admin-form__borrador { display: inline-block; text-align: center; text-decorat
 
 @media (max-width: 1119.98px) {
   .admin-gestion__columnas { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+}
+
+/* Registro de correos (17/09). */
+.admin-resumen-correos { display: flex; flex-wrap: wrap; gap: 24px; padding: 4px 0 18px; border-bottom: 1px solid #e6eaf1; }
+.admin-resumen-correos__valor { font-family: 'Source Serif 4', serif; font-size: 24px; color: #16265a; }
+.admin-resumen-correos__etiqueta { font-size: 13px; color: #8c95a3; }
+.admin-error-correo summary { cursor: pointer; color: #25408f; font-size: 13px; font-weight: 600; }
+.admin-error-correo__texto { white-space: pre-wrap; word-break: break-word; font-size: 12px; color: #5b6572; background: #f6f8fc; border: 1px solid #e6eaf1; padding: 10px; margin: 8px 0 0; max-width: 70ch; }
+.admin-paginacion { display: flex; align-items: center; gap: 16px; padding: 16px 0 0; font-size: 14px; }
+.admin-paginacion__item { color: #25408f; font-weight: 600; text-decoration: none; }
+.admin-paginacion__item.es-inactivo { color: #a3abb8; font-weight: 400; }
+.admin-paginacion__cuenta { color: #8c95a3; }
+
+@media (max-width: 1119.98px) {
+  .admin-paginacion__item { min-height: 44px; display: inline-flex; align-items: center; }
 }

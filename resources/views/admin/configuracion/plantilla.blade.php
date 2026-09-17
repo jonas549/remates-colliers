@@ -3,7 +3,7 @@
 
     $previa = $previa ?? $vista;
 @endphp
-<x-layouts.admin seccion="configuracion" :titulo="'Plantilla · ' . $catalogo['nombre']" clase-cuerpo="placeholder-claro">
+<x-layouts.admin seccion="configuracion" subseccion="plantillas" :titulo="'Plantilla · ' . $catalogo['nombre']" clase-cuerpo="placeholder-claro">
     <div class="admin-gestion__migas"><a href="{{ route('admin.configuracion.seccion', 'plantillas') }}">← Plantillas de correo</a></div>
 
     <div class="admin-encabezado">
@@ -22,8 +22,6 @@
             </div>
         @endif
     </div>
-
-    @include('admin.configuracion._submenu', ['actual' => 'plantillas'])
 
     <x-admin.avisos />
 

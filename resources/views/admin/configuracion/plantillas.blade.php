@@ -5,7 +5,7 @@
 
     $editadas = PlantillaCorreo::pluck('updated_at', 'clave');
 @endphp
-<x-layouts.admin seccion="configuracion" titulo="Configuración · Plantillas de correo" clase-cuerpo="placeholder-claro">
+<x-layouts.admin seccion="configuracion" subseccion="plantillas" titulo="Configuración · Plantillas de correo" clase-cuerpo="placeholder-claro">
     <div class="admin-encabezado">
         <div class="admin-encabezado__texto">
             <div class="admin-encabezado__kicker">CONFIGURACIÓN</div>
@@ -13,8 +13,6 @@
             <div class="admin-encabezado__bajada">{{ Configuracion::SECCIONES['plantillas']['bajada'] }} Cada una se edita con sus variables y una vista previa; el botón «Restaurar la original» vuelve al texto de fábrica.</div>
         </div>
     </div>
-
-    @include('admin.configuracion._submenu', ['actual' => 'plantillas'])
 
     <x-admin.avisos />
 

@@ -19,17 +19,20 @@ fs.mkdirSync(SALIDA, { recursive: true });
 
 const navegador = await chromium.launch({ channel: 'chrome' });
 const p = await (await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL' })).newPage();
+// Las secciones son sub-ítems del menú lateral (17/09): se navega por ahí, no por pestañas.
 const seccion = async (nombre) => {
-    await p.getByRole('link', { name: nombre, exact: false }).first().click();
+    await p.locator('.admin-lateral__subitem', { hasText: nombre }).first().click();
     await p.waitForLoadState('load');
 };
 
 await p.goto(`${URL}/revision/entrar/admin?a=/admin/configuracion`, { waitUntil: 'load' });
 comprobar('menú con el ítem Configuración activo', (await p.locator('.admin-lateral__item.es-actual').innerText()).includes('Configuración'));
 comprobar('abre en «Remates y pujas»', p.url().endsWith('/admin/configuracion/remates'), p.url());
-const submenu = await p.locator('.admin-submenu__item').allInnerTexts();
-comprobar('submenú con las 8 secciones', submenu.length === 8 && submenu.join(' ').includes('Plantillas de correo') && submenu.join(' ').includes('Sistema'),
-    submenu.map((s) => s.split('\n').pop().trim()).join(' · '));
+const submenu = await p.locator('.admin-lateral__subitem').allInnerTexts();
+comprobar('submenú dentro del menú lateral, con las 9 secciones', submenu.length === 9 && submenu.includes('Plantillas de correo')
+    && submenu.includes('Registro de correos') && submenu.includes('Sistema'), submenu.join(' · '));
+comprobar('el sub-ítem actual queda marcado bajo «Configuración»', (await p.locator('.admin-lateral__subitem.es-actual').innerText()) === 'Remates y pujas');
+comprobar('sin pestañas horizontales', (await p.locator('.admin-submenu').count()) === 0);
 comprobar('cada pantalla trae solo lo suyo', (await p.locator('input[name="config[margen_liquidacion_segundos]"]').count()) === 1
     && (await p.locator('input[name="config[smtp_host]"]').count()) === 0);
 
@@ -103,6 +106,21 @@ await p.waitForSelector('.admin-aviso--ok');
 comprobar('plantilla restaurada', (await p.locator('.admin-aviso--ok').innerText()).includes('restaurada')
     && (await p.inputValue('input[name=asunto]')) === 'Tu cuenta fue aprobada');
 
+// 4b. Aviso del remitente distinto al usuario autenticado, antes de intentar enviar.
+await p.goto(`${URL}/admin/configuracion/correo`, { waitUntil: 'load' });
+await p.selectOption('select[name="config[correo_modo]"]', 'smtp');
+await p.fill('input[name="config[smtp_host]"]', 'mail.colliers.test');
+await p.fill('input[name="config[smtp_usuario]"]', 'noreply@rematescolliers.sandbox');
+await p.fill('input[name="config[correo_remitente]"]', 'remates@colliers.cl');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+await p.waitForSelector('.admin-aviso');
+comprobar('avisa que el remitente no es el usuario autenticado', (await p.locator('.admin-aviso--error').innerText()).includes('no coincide con el usuario autenticado'));
+await p.selectOption('select[name="config[correo_modo]"]', 'log');
+await p.fill('input[name="config[smtp_usuario]"]', '');
+await p.fill('input[name="config[correo_remitente]"]', '');
+await p.fill('input[name="config[smtp_host]"]', '');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+
 // 5. Notificaciones: interruptores y bitácora.
 await seccion('Notificaciones');
 comprobar('tabla de avisos y últimos envíos', (await p.locator('.admin-tabla').count()) === 2
@@ -113,6 +131,16 @@ await p.waitForSelector('.admin-aviso--ok');
 comprobar('interruptor apagado queda guardado', !(await p.isChecked('input[type=checkbox][name="avisos[remate_nuevo]"]')));
 await p.check('input[type=checkbox][name="avisos[remate_nuevo]"]');
 await p.getByRole('button', { name: 'Guardar cambios' }).click();
+
+// 5b. Registro de correos: historial con filtros.
+await seccion('Registro de correos');
+comprobar('registro de correos con resumen y filtros', (await p.locator('.admin-resumen-correos').count()) === 1
+    && (await p.locator('select[name=estado]').count()) === 1 && (await p.locator('input[name=q]').count()) === 1);
+await p.selectOption('select[name=estado]', 'fallida');
+await p.getByRole('button', { name: 'Filtrar' }).click();
+await p.waitForLoadState('load');
+comprobar('el filtro viaja en la URL y la tabla responde', p.url().includes('estado=fallida')
+    && ((await p.locator('tbody tr').innerText()).includes('Sin correos con esos filtros') || (await p.locator('.badge-admin').first().innerText()) === 'FALLIDA'));
 
 // 6. Seguridad y Sistema.
 await seccion('Seguridad');
@@ -129,7 +157,7 @@ await p.goto(`${URL}/admin/configuracion/garantias`, { waitUntil: 'load' });
 await p.fill('input[name="config[porcentaje_garantia]"]', '10');
 await p.getByRole('button', { name: 'Guardar cambios' }).click();
 
-for (const [ancho, ruta] of [[375, 'remates'], [760, 'correo'], [1120, 'plantillas'], [1440, 'notificaciones']]) {
+for (const [ancho, ruta] of [[375, 'remates'], [760, 'correos'], [1120, 'plantillas'], [1440, 'notificaciones']]) {
     const c = await navegador.newContext({ viewport: { width: ancho, height: 900 }, locale: 'es-CL' });
     const q = await c.newPage();
     await q.goto(`${URL}/revision/entrar/admin?a=/admin/configuracion/${ruta}`, { waitUntil: 'load' });

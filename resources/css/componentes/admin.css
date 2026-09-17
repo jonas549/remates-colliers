@@ -83,3 +83,15 @@
 @media (prefers-reduced-motion: reduce) {
   .admin-lateral { transition: none; }
 }
+
+/* Secciones de Configuración dentro del menú lateral (17/09). */
+.admin-lateral__submenu { padding: 2px 0 8px; background: rgba(0, 0, 0, .14); }
+.admin-lateral__subitem {
+  display: block; padding: 9px 24px 9px 52px; font-size: 13.5px; color: #a8bade; border-left: 3px solid transparent;
+}
+.admin-lateral__subitem:hover { color: #ffffff; background: rgba(255, 255, 255, .06); text-decoration: none; }
+.admin-lateral__subitem.es-actual { color: #ffffff; font-weight: 700; border-left-color: #ffffff; background: rgba(255, 255, 255, .08); }
+
+@media (max-width: 1119.98px) {
+  .admin-lateral__subitem { min-height: 44px; display: flex; align-items: center; }
+}

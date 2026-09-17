@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\EnVivoController;
 use App\Http\Controllers\Admin\LotesController;
 use App\Http\Controllers\Admin\PostoresController;
 use App\Http\Controllers\Admin\PlantillasCorreoController;
+use App\Http\Controllers\Admin\RegistroCorreosController;
 use App\Http\Controllers\Admin\RematesController;
 use App\Http\Controllers\Admin\ReportesController;
 use App\Http\Controllers\Admin\SalaMartilleroController;
@@ -154,6 +155,7 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         // PUT: el formulario del editor ya viaja con method spoofing; así el botón de vista previa comparte sus campos.
         Route::put('/configuracion/plantillas/{clave}/vista-previa', [PlantillasCorreoController::class, 'previsualizar'])->name('configuracion.plantilla.previa');
         Route::delete('/configuracion/plantillas/{clave}', [PlantillasCorreoController::class, 'destroy'])->name('configuracion.plantilla.restaurar');
+        Route::get('/configuracion/correos/exportar', [RegistroCorreosController::class, 'exportar'])->name('configuracion.correos.exportar');
         Route::get('/configuracion/{seccion}', [ConfiguracionController::class, 'show'])->name('configuracion.seccion');
         Route::put('/configuracion/{seccion}', [ConfiguracionController::class, 'update'])->name('configuracion.update');
 
