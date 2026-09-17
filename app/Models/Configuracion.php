@@ -22,7 +22,8 @@ class Configuracion extends Model
         'porcentaje_garantia' => ['valor' => '10', 'tipo' => 'porcentaje', 'grupo' => 'garantias', 'descripcion' => 'Porcentaje de la garantía sobre el precio base del remate'],
         'login_intentos_maximos' => ['valor' => '5', 'tipo' => 'entero', 'grupo' => 'seguridad', 'descripcion' => 'Intentos fallidos de ingreso antes de bloquear la cuenta (diseño del Login)'],
         'login_bloqueo_minutos' => ['valor' => '15', 'tipo' => 'entero', 'grupo' => 'seguridad', 'descripcion' => 'Minutos que dura el bloqueo por intentos fallidos (decisión del 16/09)'],
-        'duracion_lote_minutos' =>['valor' => '30', 'tipo' => 'entero', 'grupo' => 'remates', 'descripcion' => 'Duración por defecto de cada lote (temporizador fijo, sin extensiones)'],
+        'duracion_lote_minutos' => ['valor' => '30', 'tipo' => 'entero', 'grupo' => 'remates', 'descripcion' => 'Duración por defecto de cada lote (temporizador fijo, sin extensiones)'],
+        'garantias_cierre_horas_antes' => ['valor' => '48', 'tipo' => 'entero', 'grupo' => 'garantias', 'descripcion' => 'Horas antes del inicio en que cierra la recepción de garantías, si el remate no fija otra fecha (diseño: «hasta 48 horas antes»)'],
     ];
 
     /** Crea las claves que faltan con su valor por defecto. Devuelve cuántas creó. Idempotente. */

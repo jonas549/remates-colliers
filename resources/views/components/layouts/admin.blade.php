@@ -1,13 +1,15 @@
 {{--
     Layout del panel de administración. $seccion: dashboard | subastas | postores | reportes.
-    Datos de usuario y contador de pendientes: demo hasta los Bloques D y G.
+    El contador de Postores suma cuentas y garantías esperando revisión.
 --}}
 @props(['seccion', 'titulo', 'claseCuerpo' => ''])
 @php
+    $pendientes = \App\Models\Postor::where('estado', \App\Models\Postor::ESTADO_EN_REVISION)->count()
+        + \App\Models\Garantia::where('estado', \App\Models\Garantia::ESTADO_EN_REVISION)->count();
     $items = [
         'dashboard' => ['01', 'Dashboard', route('admin.dashboard'), null],
         'subastas' => ['02', 'Subastas', route('admin.subastas'), null],
-        'postores' => ['03', 'Postores', route('admin.postores'), 6],
+        'postores' => ['03', 'Postores', route('admin.postores'), $pendientes ?: null],
         'reportes' => ['04', 'Reportes', route('admin.reportes'), null],
     ];
 @endphp

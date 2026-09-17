@@ -21,7 +21,7 @@ nota *(verifica Jonas en el sandbox)*.
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
 | D | Autenticación y registro de postores | En progreso | 10/12 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
-| I | Remates y lotes + panel del martillero | Pendiente | 0/8 |
+| I | Remates y lotes + panel del martillero | **Completo** | 9/9 |
 | V | Configuración autoadministrable y SMTP | Pendiente | 0/10 |
 | G | Postores | Pendiente | 0/5 |
 | H | Garantías | Pendiente | 0/7 |
@@ -44,7 +44,7 @@ T → B → C → J(núcleo) → D → K → I → V → G → H → M → N →
 Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes posible.
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
-**Dónde vamos:** T y C cerrados. B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
+**Dónde vamos:** T, C e I cerrados. B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
 camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
 **K → I → V → G → H → M → N**, commits locales, push al terminar N.
@@ -219,16 +219,23 @@ interacción idéntica; escritorio 0,05 % en 1280–1440 y 1,9 % en 1120 por el 
 - [x] Verificado en navegador real (17/09): `sala-real.mjs` 32/32, incluido un remate de dos lotes con mensaje del martillero en escritorio y 375 px
 - [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración *(Jonas)*
 
-## I — Remates y lotes, incluido el panel del martillero · Pendiente
+## I — Remates y lotes, incluido el panel del martillero · Completo
 
-- [ ] CRUD de remates (datos, fecha, estado, identificador de YouTube)
-- [ ] CRUD de lotes (activo, precio base, orden, `cierra_en`)
-- [ ] Imágenes, documentos descargables y visitas por lote
-- [ ] Incremento propio por remate (opcional; si no, el global)
-- [ ] Publicar / cancelar según la máquina de estados *(pendiente de aprobación del cliente)*
-- [ ] Panel del martillero: seguimiento en vivo y cierre anticipado
-- [ ] Un remate que no se concreta no se reabre: se crea uno nuevo
-- [ ] Usable desde el celular
+Verificado el 17/09: `RematesAdminTest` (13; 92/92 en total) y `tools/comparar/panel-remates.mjs` en navegador real (36/36):
+crear y publicar con el formulario del diseño, documento, segundo lote, foto, visita, cancelar desde el listado, panel en
+vivo con mensaje y cierre anticipado, dashboard con datos reales, y usabilidad (sin desborde, táctiles ≥ 44 px) de
+dashboard, subastas, ficha, lote y panel en vivo a 375/760/1120/1440 px. Pantallas sin diseño (ficha, lote, panel en vivo)
+con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates.motivo_cancelacion`, `remates.remate_origen_id`.
+
+- [x] Remates: crear (formulario del diseño, crea el remate con su primer lote), ficha de edición con datos, horario, duración, pausa, martillero y video de YouTube; folio `R-AAAA-NNN` y slug automáticos
+- [x] Lotes: crear y editar activo, ficha extensible (`atributos`), precio base, duración propia; horario fijo recalculado al guardar
+- [x] Fotos (reducidas a 1920 px, foto principal, eliminar), documentos (público o solo con garantía aprobada; disco privado) y horarios de visita por lote
+- [x] Incremento y porcentaje de garantía propios por remate (vacío = global)
+- [x] Publicar (revisa lo que falta y lo lista) y cancelar con motivo antes de comenzar *(supuesto: máquina de estados en revisión, ver Decisiones)*
+- [x] Panel del martillero (`/admin/subastas/{id}/en-vivo`): precio, cronómetro, ganador e historial con la identidad detrás de «Postor #N», mensaje a la sala y cierre anticipado con motivo, sin recargar; mismo transporte que la sala (JSON estático + `hora.php`)
+- [x] «Crear remate nuevo» desde uno cerrado o cancelado: borrador nuevo con los lotes no adjudicados, fotos y documentos; el original no se toca
+- [x] Dashboard y contador de pendientes del menú con datos reales (sin remates de demostración)
+- [x] Usable desde el celular (hoja de acciones del listado, formularios en una columna, táctiles ≥ 44 px)
 
 ## V — Configuración autoadministrable y SMTP · Pendiente
 
@@ -361,6 +368,7 @@ Se completan a medida que las pantallas lo pidan.
 
 - [ ] Sala con varios lotes: se implementó un aviso mínimo («El lote 1 se adjudicó en $X. Ahora se remata el lote 2.») y «LOTE N DE M» en la cabecera. ¿Sirve o se diseña una transición? (17/09)
 - [ ] Mensaje del martillero en la sala: se muestra en una franja amarilla dentro del panel de puja (escritorio) y sobre el video (móvil). ¿Sirve? (17/09)
+- [ ] Formulario «Crear subasta»: se agregó el campo REGIÓN (lo necesitan los filtros del sitio) y la garantía pasó de monto a porcentaje (acta). Ficha del remate, formulario de lote y panel del martillero no tienen diseño: se armaron con los componentes del panel (17/09)
 
 - [x] Nombre exacto del handler PHP 8.4 en cPanel/LiteSpeed: `application/x-httpd-ea-php84` (16/09)
 - [ ] Subir el acta del 25/08 al material local de referencia
@@ -379,6 +387,10 @@ Se completan a medida que las pantallas lo pidan.
 | Unicidad del RUT de la persona | Una persona = una cuenta (índice único en `postores.rut_indice`) | Quitar el índice único: no borra datos, pero no es aditivo |
 | Identidad en el feed público | «Postor #N» (orden de inscripción de la garantía), como el diseño | Solo `EstadoRemate::alias()` |
 | Mecánica del cierre anticipado | Fija `cierra_en` en ese momento y adjudica por el mismo camino que el cierre por tiempo, pasado el margen | Solo `Liquidador` |
+| Edición de un remate publicado (17/09) | Horario, precios, incremento y % de garantía se editan solo antes de que abra el primer lote; título, descripción, martillero y video, siempre | Solo `Remate::condicionesEditables()` |
+| Cancelar (17/09) | Borrador o publicado que no ha comenzado, con motivo. Uno en vivo se cierra lote por lote (cierre anticipado). «Cerrar ahora» del listado en un remate próximo = cancelar | Solo `GestionRemates` |
+| Garantía en el formulario de creación (17/09) | El diseño pide un monto; manda el acta: se ingresa el **porcentaje** (vacío = global) y el resumen muestra el monto que resulta | Solo la vista |
+| Quién gestiona remates (17/09) | Crear y editar: solo administradores. Martilleros: ven el listado y el panel en vivo de SUS remates | Rutas `rol:admin` |
 
 ### Del cliente (no bloquean; se anota y se sigue)
 

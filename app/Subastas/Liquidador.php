@@ -26,7 +26,7 @@ use Throwable;
  */
 class Liquidador
 {
-    public const ESTADOS_TERMINALES = [Lote::ESTADO_ADJUDICADO, Lote::ESTADO_DESIERTO, Lote::ESTADO_CERRADO, Lote::ESTADO_INCUMPLIDO];
+    public const ESTADOS_TERMINALES = Lote::ESTADOS_TERMINALES;
 
     private const REINTENTOS = 5;
 

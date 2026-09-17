@@ -26,9 +26,13 @@ class SalaMartilleroController extends Controller
     {
         $this->autorizar($request->user(), $remate);
         $modelo = Lote::whereKey($lote)->where('remate_id', $remate->id)->firstOrFail();
+        $motivo = $request->validate(['motivo' => ['nullable', 'string', 'max:500']])['motivo'] ?? null;
 
         try {
             $modelo = $liquidador->cerrarAnticipadamente($modelo, $request->user(), HoraRecepcion::de($request));
+            if (filled($motivo)) {
+                $modelo->forceFill(['nota_cierre' => trim($motivo)])->save();
+            }
         } catch (DomainException $e) {
             return response()->json(['cerrado' => false, 'mensaje' => $e->getMessage()], 422);
         }

@@ -5,6 +5,11 @@ use App\Demo\DetalleDemo;
 use App\Demo\PantallasRevision;
 use App\Demo\RematesDemo;
 use App\Http\Controllers\AccesoSandboxController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DocumentosController;
+use App\Http\Controllers\Admin\EnVivoController;
+use App\Http\Controllers\Admin\LotesController;
+use App\Http\Controllers\Admin\RematesController;
 use App\Http\Controllers\Admin\SalaMartilleroController;
 use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CuentaController;
@@ -92,12 +97,35 @@ Route::middleware('auth')->group(function () {
 
 // Panel: administradores y martilleros. Sin sesión redirige a /admin/ingresar.
 Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'clave.vigente'])->group(function () {
-    Route::get('/', fn () => view('admin.dashboard', ['datos' => AdminDemo::dashboard()]))->name('dashboard');
-    Route::get('/subastas', fn () => view('admin.subastas', ['subastas' => AdminDemo::subastas()]))->name('subastas');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/subastas', [RematesController::class, 'index'])->name('subastas');
+    // Panel del martillero: administradores y el martillero asignado a ese remate (se revisa en el controlador).
+    Route::get('/subastas/{remate}/en-vivo', [EnVivoController::class, 'show'])->name('remates.en-vivo');
     Route::get('/postores', fn () => view('admin.postores', ['postores' => AdminDemo::postores()]))->name('postores');
     Route::view('/reportes', 'admin.reportes')->name('reportes');
 
     Route::middleware('rol:admin')->group(function () {
+        // Bloque I: remates y lotes.
+        Route::post('/subastas', [RematesController::class, 'store'])->name('remates.store');
+        Route::get('/subastas/{remate}', [RematesController::class, 'show'])->name('remates.show');
+        Route::put('/subastas/{remate}', [RematesController::class, 'update'])->name('remates.update');
+        Route::post('/subastas/{remate}/publicar', [RematesController::class, 'publicar'])->name('remates.publicar');
+        Route::post('/subastas/{remate}/cancelar', [RematesController::class, 'cancelar'])->name('remates.cancelar');
+        Route::post('/subastas/{remate}/cerrar-ahora', [RematesController::class, 'cerrarAhora'])->name('remates.cerrar-ahora');
+        Route::post('/subastas/{remate}/republicar', [RematesController::class, 'republicar'])->name('remates.republicar');
+        Route::get('/subastas/{remate}/lotes/nuevo', [LotesController::class, 'create'])->name('lotes.create');
+        Route::post('/subastas/{remate}/lotes', [LotesController::class, 'store'])->name('lotes.store');
+        Route::get('/subastas/{remate}/lotes/{lote}', [LotesController::class, 'edit'])->name('lotes.edit');
+        Route::put('/subastas/{remate}/lotes/{lote}', [LotesController::class, 'update'])->name('lotes.update');
+        Route::post('/subastas/{remate}/lotes/{lote}/imagenes', [LotesController::class, 'subirImagenes'])->name('lotes.imagenes.store');
+        Route::post('/subastas/{remate}/lotes/{lote}/imagenes/{imagen}/portada', [LotesController::class, 'portada'])->name('lotes.imagenes.portada');
+        Route::delete('/subastas/{remate}/lotes/{lote}/imagenes/{imagen}', [LotesController::class, 'borrarImagen'])->name('lotes.imagenes.destroy');
+        Route::post('/subastas/{remate}/lotes/{lote}/visitas', [LotesController::class, 'agregarVisita'])->name('lotes.visitas.store');
+        Route::delete('/subastas/{remate}/lotes/{lote}/visitas/{visita}', [LotesController::class, 'borrarVisita'])->whereNumber('visita')->name('lotes.visitas.destroy');
+        Route::post('/subastas/{remate}/documentos', [DocumentosController::class, 'store'])->name('documentos.store');
+        Route::get('/subastas/{remate}/documentos/{documento}', [DocumentosController::class, 'descargar'])->name('documentos.descargar');
+        Route::delete('/subastas/{remate}/documentos/{documento}', [DocumentosController::class, 'destroy'])->name('documentos.destroy');
+
         Route::post('/usuarios/{usuario}/restablecer-clave', [UsuariosController::class, 'restablecerClave'])->name('usuarios.restablecer-clave');
         Route::post('/usuarios/{usuario}/desbloquear', [UsuariosController::class, 'desbloquear'])->name('usuarios.desbloquear');
         Route::delete('/usuarios/{usuario}/sesiones', [UsuariosController::class, 'cerrarSesiones'])->name('usuarios.cerrar-sesiones');

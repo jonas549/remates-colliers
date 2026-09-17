@@ -1,0 +1,86 @@
+/* Panel · gestión (Bloques I, V, G y H): pantallas que el diseño no tiene (ficha de remate, lote, panel en vivo,
+   configuración). Solo combinan los componentes y tokens del panel; no introducen colores ni tamaños nuevos.
+   Bajo 1120 px todo control táctil mide al menos 44 px. */
+
+/* Mensajes de resultado y errores */
+.admin-avisos { padding: 16px 32px 0; display: flex; flex-direction: column; gap: 8px; }
+.admin-aviso { border-left: 3px solid #1c5330; background: #eaf4ec; color: #1c5330; padding: 12px 16px; font-size: 14px; line-height: 1.5; }
+.admin-aviso--error { border-left-color: #c8102e; background: #fdeef0; color: #8c0f22; }
+.admin-aviso--info { border-left-color: #25408f; background: #f4f7fc; color: #16265a; }
+.admin-errores { border-left: 3px solid #c8102e; background: #fdeef0; color: #8c0f22; padding: 14px 18px; margin-top: 20px; font-size: 14px; line-height: 1.5; }
+.admin-errores__titulo { font-weight: 700; }
+.admin-errores ul { margin: 6px 0 0; padding-left: 18px; }
+.admin-faltan { border-left: 3px solid #e5b800; background: #fff8e0; color: #7a5c00; padding: 14px 18px; font-size: 14px; line-height: 1.55; }
+.admin-faltan ul { margin: 6px 0 0; padding-left: 18px; }
+
+.admin-form__campo.es-invalido { border-bottom-color: #c8102e; }
+.admin-form__campo.es-invalido .admin-form__etiqueta { color: #8c0f22; }
+.admin-form__campo--ancho { grid-column: 1 / -1; }
+.admin-form__ayuda { font-size: 12px; color: #8c95a3; }
+.admin-form__textarea { min-height: 110px; border: 1px solid #dbe1ec; background: #ffffff; padding: 10px 12px; font-family: inherit; font-size: 15px; color: #16265a; resize: vertical; width: 100%; box-sizing: border-box; }
+.admin-form__check { flex-direction: row; align-items: center; gap: 10px; }
+.admin-form__check input { width: 20px; height: 20px; accent-color: #25408f; }
+.admin-form input[type="file"] { font-family: inherit; font-size: 14px; }
+.admin-form--plano { background: transparent; border-bottom: 0; }
+.admin-form--plano .admin-form__interior { padding: 0; }
+.admin-form__botones--compactos { margin-top: 16px; }
+
+a.admin-accion, a.admin-boton-borde { display: inline-block; text-decoration: none; }
+a.admin-accion:hover, a.admin-boton-borde:hover { text-decoration: none; background: #f0f4fb; }
+.admin-acciones-menu__enlace { display: none; }
+button.admin-boton-borde:disabled { color: #a3abb8; cursor: not-allowed; }
+
+/* Ficha de remate, lote y configuración */
+.admin-gestion { padding: 24px 32px 56px; display: flex; flex-direction: column; gap: 44px; }
+.admin-gestion__bloque { min-width: 0; }
+.admin-gestion__nota { font-size: 13px; color: #8c95a3; line-height: 1.6; margin: 10px 0 0; max-width: 96ch; }
+.admin-gestion__migas { font-size: 13px; color: #8c95a3; margin-bottom: 8px; }
+.admin-gestion__migas a { font-weight: 600; }
+
+.admin-fila { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f2f6; flex-wrap: wrap; font-size: 14px; color: #4a5563; }
+.admin-fila__principal { font-weight: 600; color: #16265a; }
+.admin-fila__secundario { font-size: 12px; color: #a3abb8; }
+.admin-fila .admin-acciones { margin-left: auto; }
+.admin-vacio { padding: 18px 0; color: #8c95a3; font-size: 14px; border-bottom: 1px solid #f0f2f6; }
+
+.admin-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; margin-top: 12px; }
+.admin-foto { border: 1px solid #dbe1ec; min-width: 0; }
+.admin-foto img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #eef1f6; }
+.admin-foto__pie { display: flex; gap: 6px; padding: 8px; flex-wrap: wrap; align-items: center; }
+.admin-foto__principal { font-size: 11px; letter-spacing: 0.1em; font-weight: 700; color: #1c5330; }
+
+.admin-datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 32px; }
+.admin-datos .admin-ficha__dato { font-size: 14px; }
+
+/* Panel en vivo del martillero */
+.admin-vivo { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 36px; align-items: start; padding: 24px 32px 56px; }
+.admin-vivo__panel { border: 1px solid #dbe1ec; }
+.admin-vivo__cabeza { background: #c8102e; color: #ffffff; padding: 14px 20px; display: flex; justify-content: space-between; gap: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; }
+.admin-vivo__cabeza.es-cerrado { background: #16265a; }
+.admin-vivo__cuerpo { padding: 20px; }
+.admin-vivo__precio { font-family: 'Source Serif 4', serif; font-size: 44px; line-height: 1.05; color: #16265a; }
+.admin-vivo__ganador { font-size: 14px; color: #4a5563; margin: 4px 0 16px; }
+.admin-vivo__contador { display: flex; gap: 8px; margin: 8px 0 16px; }
+.admin-vivo__caja { flex: 1; border: 1px solid #dbe1ec; padding: 10px; text-align: center; }
+.admin-vivo__digito { font-family: 'Source Serif 4', serif; font-size: 26px; line-height: 1; color: #16265a; font-variant-numeric: tabular-nums; }
+.admin-vivo__caja-etiqueta { font-size: 10px; letter-spacing: 0.12em; color: #8c95a3; margin-top: 2px; }
+.admin-vivo__acciones { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.admin-vivo__acciones .admin-form__publicar, .admin-vivo__acciones .admin-modal__confirmar { width: 100%; }
+.admin-vivo__lotes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.admin-vivo__historial { max-height: 520px; overflow-y: auto; }
+
+@media (max-width: 1119.98px) {
+  .admin-avisos { padding: 16px 20px 0; }
+  .admin-gestion { padding: 20px 20px 48px; gap: 36px; }
+  .admin-accion, a.admin-accion, .admin-boton-borde, .admin-aprobar, .admin-rechazar, .admin-ver-ficha { min-height: 44px; }
+  a.admin-accion, a.admin-boton-borde { display: inline-flex; align-items: center; }
+  .admin-acciones-menu__lista .admin-acciones-menu__enlace { display: flex; align-items: center; border-bottom: 1px solid #f0f2f6; font-size: 15px; font-weight: 600; color: #25408f; min-height: 52px; }
+  .admin-acciones-menu__lista form button { width: 100%; }
+  .admin-form__check input { width: 24px; height: 24px; }
+  .admin-form__input { min-height: 44px; }
+  .admin-vivo { grid-template-columns: 1fr; padding: 20px 20px 48px; gap: 24px; }
+  .admin-gestion__migas a { display: inline-block; padding-block: 12px; margin-block: -12px; }
+}
+a.admin-form__borrador { display: inline-block; text-align: center; text-decoration: none; }
+.admin-modal__confirmar:disabled, .admin-form__publicar:disabled, .admin-boton-toggle:disabled { background: #eef1f6; color: #a3abb8; cursor: not-allowed; }
+.admin-form__borrador:disabled { color: #a3abb8; border-color: #dbe1ec; cursor: not-allowed; }

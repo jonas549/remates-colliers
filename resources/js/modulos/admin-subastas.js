@@ -1,49 +1,46 @@
 import { clp } from './formato';
 
-// Admin · Subastas: formulario de creación desplegable, pestañas de filtro con contador,
-// cierre anticipado con motivo. Bloque T: los cambios son solo en pantalla (Bloque I conecta el CRUD).
-export default ({ subastas }) => ({
+// Admin · Subastas: formulario de creación desplegable (envío real al servidor), pestañas de filtro con contador y
+// modal de cierre anticipado o cancelación con motivo (formulario real).
+export default ({ subastas, abierto = false, uf = 0, porcentajeGlobal = 10, incrementoGlobal = 100000, base = '', incremento = '', porcentaje = '' }) => ({
     subastas,
-    form: false,
+    form: abierto,
     filtro: 'Todas',
     cerrar: null,
-    cerradas: {},
     menuAbierto: null,
-    base: '',
-    incremento: '100000',
-    garantia: '',
-
-    get todas() {
-        return this.subastas.map((s) => ({ ...s, estado: this.cerradas[s.id] || s.estado }));
-    },
+    base: String(base).replace(/[^\d]/g, ''),
+    incremento: String(incremento).replace(/[^\d]/g, ''),
+    porcentaje: String(porcentaje),
 
     coincide(s, filtro) {
         if (filtro === 'Todas') return true;
-        if (filtro === 'Cerradas') return s.estado === 'Cerrada' || s.estado === 'Adjudicada';
+        if (filtro === 'Cerradas') return ['Cerrada', 'Adjudicada', 'Cancelada'].includes(s.estado);
         if (filtro === 'En vivo') return s.estado === 'En vivo';
         if (filtro === 'Próximas') return s.estado === 'Próxima';
         return s.estado === 'Borrador';
     },
 
     get filtradas() {
-        return this.todas.filter((s) => this.coincide(s, this.filtro));
+        return this.subastas.filter((s) => this.coincide(s, this.filtro));
     },
 
     cuenta(filtro) {
-        return this.todas.filter((s) => this.coincide(s, filtro)).length;
+        return this.subastas.filter((s) => this.coincide(s, filtro)).length;
     },
 
     numero(v) {
         return parseInt(String(v).replace(/[^\d]/g, ''), 10) || 0;
     },
 
+    // La garantía es un porcentaje del precio base (acta): se muestra el monto que resulta.
     get resumenMontos() {
         const base = this.numero(this.base);
-        const inc = this.numero(this.incremento);
-        const gar = this.numero(this.garantia);
         if (!base) return 'Todos los montos se publican y se cobran en pesos. La UF aparece solo como referencia informativa.';
-        return 'Precio base ' + clp(base) + ' · referencia UF ' + (base / 39412.73).toLocaleString('es-CL', { maximumFractionDigits: 0 }) +
-            ' · incremento ' + clp(inc || 100000) + (gar ? ' · garantía ' + clp(gar) : '');
+        const inc = this.numero(this.incremento) || incrementoGlobal;
+        const pct = parseFloat(String(this.porcentaje).replace(',', '.')) || porcentajeGlobal;
+        const garantia = Math.ceil((base * pct) / 100);
+        return 'Precio base ' + clp(base) + (uf ? ' · referencia UF ' + (base / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }) : '') +
+            ' · incremento ' + clp(inc) + ' · garantía ' + clp(garantia) + ' (' + pct.toLocaleString('es-CL') + ' %)';
     },
 
     soloDigitos(campo, valor) {
@@ -51,15 +48,10 @@ export default ({ subastas }) => ({
     },
 
     get enMenu() {
-        return this.menuAbierto ? this.todas.find((s) => s.id === this.menuAbierto) : null;
+        return this.menuAbierto ? this.subastas.find((s) => s.id === this.menuAbierto) : null;
     },
 
     get enCierre() {
-        return this.cerrar ? this.todas.find((s) => s.id === this.cerrar) : null;
-    },
-
-    confirmarCierre() {
-        this.cerradas = { ...this.cerradas, [this.cerrar]: 'Cerrada' };
-        this.cerrar = null;
+        return this.cerrar ? this.subastas.find((s) => s.id === this.cerrar) : null;
     },
 });

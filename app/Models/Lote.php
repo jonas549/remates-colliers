@@ -39,6 +39,35 @@ class Lote extends Model
 
     public const ESTADO_INCUMPLIDO = 'incumplido';
 
+    /**
+     * Ficha extensible del activo (`atributos`): clave => etiqueta. Son los datos del diseño que no tienen columna propia.
+     * Agregar uno nuevo no requiere migración.
+     */
+    public const ATRIBUTOS = [
+        'anio_construccion' => 'Año de construcción',
+        'orientacion' => 'Orientación',
+        'piso' => 'Piso',
+        'gastos_comunes' => 'Gastos comunes (CLP mensuales)',
+        'rol_avaluo' => 'Rol SII / avalúo',
+        'rol_estacionamiento' => 'Rol estacionamiento',
+        'rol_bodega' => 'Rol bodega',
+        'contribuciones' => 'Contribuciones',
+        'uso' => 'Uso',
+        'entrega' => 'Entrega',
+        'plazo_saldo' => 'Plazo de pago del saldo',
+        'mandante' => 'Mandante',
+        'tipo_venta' => 'Tipo de venta',
+        'ejecutivo' => 'Ejecutivo a cargo',
+        'referencia_mapa' => 'Referencia de ubicación',
+    ];
+
+    public const TIPOS_PROPIEDAD = ['Departamento', 'Casa', 'Oficina', 'Local comercial', 'Terreno', 'Bodega', 'Industrial'];
+
+    public const OCUPACIONES = ['Desocupada', 'Ocupada'];
+
+    /** Estados en que el lote ya no acepta pujas ni se liquida de nuevo. */
+    public const ESTADOS_TERMINALES = [self::ESTADO_ADJUDICADO, self::ESTADO_DESIERTO, self::ESTADO_CERRADO, self::ESTADO_INCUMPLIDO];
+
     public const CIERRE_TIEMPO = 'tiempo';
 
     public const CIERRE_ANTICIPADO = 'anticipado';
@@ -94,6 +123,11 @@ class Lote extends Model
     public function adjudicacion(): HasOne
     {
         return $this->hasOne(Adjudicacion::class);
+    }
+
+    public function cerradoPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cerrado_por_id');
     }
 
     public function loteOrigen(): BelongsTo
