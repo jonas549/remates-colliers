@@ -9,7 +9,7 @@
 ## 0. Para retomar en 30 segundos
 
 - **Estado (17/09):** T, C, I y G completos. K, V, H, M y N hechos y probados en local; B 18/19, J 30/34, D 10/12.
-  115 pruebas PHPUnit en verde; recorridos en navegador real en verde (ver `docs/progreso/2026-09-17.md` §3).
+  114 pruebas PHPUnit en verde; recorridos en navegador real en verde (ver `docs/progreso/2026-09-17.md` §3).
 - **GitHub:** todo lo del 16 y 17/09 subido a `main` al terminar N (autorizado por Jonas el 17/09).
 - **Siguiente para Jonas:** probar en el sandbox con `docs/MANUAL-DE-PRUEBAS.md` (incluye los pasos del servidor).
 - **Siguiente para Claude:** corregir lo que salga de esas pruebas → L (streaming) → E/F → O (reportes, hoy con datos de ejemplo).
