@@ -121,6 +121,18 @@
 .sala-soporte p { margin: 0 0 10px; font-size: 14px; line-height: 1.55; color: #4a5563; }
 .sala-soporte__enlaces { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
 
+/* Avisos de la sala real (sin diseño): mensaje del martillero y paso al lote siguiente.
+   Escritorio: dentro del panel de puja. Bajo 1120px: sobre el video (el panel se oculta). */
+.sala-avisos { display: flex; flex-direction: column; gap: 8px; }
+.sala-avisos--panel { margin-bottom: 16px; }
+.sala-avisos--contenido { display: none; }
+.sala-aviso { border-left: 3px solid #25408f; background: #f4f7fc; padding: 10px 14px; }
+.sala-aviso--martillero { border-left-color: #e5b800; background: #fff8e0; }
+.sala-aviso__etiqueta { font-size: 11px; letter-spacing: 0.12em; font-weight: 700; color: #25408f; }
+.sala-aviso--martillero .sala-aviso__etiqueta { color: #7a5c00; }
+.sala-aviso__etiqueta span { font-weight: 400; letter-spacing: 0; margin-left: 6px; }
+.sala-aviso__texto { font-size: 14px; line-height: 1.45; color: #1d2530; margin-top: 2px; }
+
 /* Modal de confirmación */
 .sala-modal { position: fixed; inset: 0; background: rgba(22, 38, 90, .55); z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .sala-modal__caja { background: #ffffff; border: 1px solid #dbe1ec; max-width: 460px; width: 100%; box-shadow: 0 20px 60px rgba(22, 38, 90, .3); }
@@ -147,6 +159,7 @@
   .sala__lateral { position: static; }
   /* El panel de puja vive en la barra inferior y en la hoja; queda el bloque de soporte. */
   .sala-panel { display: none; }
+  .sala-avisos--contenido { display: flex; margin-bottom: 16px; }
   .sala-soporte { margin-top: 0; }
   .sala-soporte__enlaces a { display: inline-block; width: fit-content; padding-block: 12px; margin-block: -12px; }
   .sala__antecedentes { padding-block: 13px; }

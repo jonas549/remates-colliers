@@ -4,6 +4,8 @@
      * (datos fijos del prototipo, solo local con ?demo=1, para la comparación visual 1:1).
      */
     $clp = fn ($n) => \App\Demo\RematesDemo::clp($n);
+    // Enlaces a datos que cambian con el lote vigente: solo en la sala real (la demo tiene un solo lote fijo).
+    $real = $componente === 'salaPuja';
 @endphp
 <x-layouts.base titulo="Sala de pujas" clase-cuerpo="">
     <div class="sala" x-data="{{ $componente }}(@js($config))" @keydown.escape.window="modal = false; hoja = false">
@@ -11,7 +13,7 @@
         <div class="sala-cabecera">
             <div class="sala-cabecera__nav contenedor">
                 <a href="{{ route('remates.index') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="sala-cabecera__logo"></a>
-                <div class="sala-cabecera__titulo">Sala de pujas · <span>{{ $propiedad['folio'] }}</span></div>
+                <div class="sala-cabecera__titulo">Sala de pujas · <span>{{ $propiedad['folio'] }}</span>@if ($real)<span x-show="etiquetaLote" x-text="' · ' + etiquetaLote.toUpperCase()"></span>@endif</div>
                 <div class="sala-cabecera__derecha">
                     <span class="sala-cabecera__chip">GARANTÍA APROBADA</span>
                     <span class="sala-cabecera__usuario">{{ $propiedad['usuario'] }}</span>
@@ -22,7 +24,7 @@
                     <span class="sala-ticker__punto"></span>
                     <span x-text="estadoTexto"></span>
                 </span>
-                <span class="sala-ticker__direccion">{{ $propiedad['direccion'] }}</span>
+                <span class="sala-ticker__direccion" @if ($real) x-text="info.direccion" @endif>{{ $propiedad['direccion'] }}</span>
                 <span class="sala-ticker__tiempo" x-text="tiempoTexto"></span>
             </div>
         </div>
@@ -31,6 +33,9 @@
             <div class="sala__layout">
 
                 <div class="sala__principal">
+                    @if ($real)
+                        @include('sala._avisos', ['donde' => 'contenido'])
+                    @endif
                     <div class="sala__video">
                         @if ($propiedad['video'])
                             <iframe src="https://www.youtube-nocookie.com/embed/{{ $propiedad['video'] }}?rel=0" title="Transmisión en vivo del remate" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
@@ -45,13 +50,13 @@
                     <div class="sala__ficha">
                         <div class="sala__ficha-fila">
                             <div style="min-width: 0">
-                                <h1 class="sala__titulo">{{ $propiedad['direccion'] }}</h1>
-                                <div class="sala__meta">{{ $propiedad['meta'] }}</div>
+                                <h1 class="sala__titulo" @if ($real) x-text="info.direccion" @endif>{{ $propiedad['direccion'] }}</h1>
+                                <div class="sala__meta" @if ($real) x-text="info.meta" @endif>{{ $propiedad['meta'] }}</div>
                             </div>
                             <a href="{{ route('remates.show', $propiedad['slug']) }}" class="sala__antecedentes">Ver antecedentes</a>
                         </div>
                         <div class="sala__datos">
-                            <div class="sala__dato"><div class="sala__dato-etiqueta">PRECIO BASE</div><div class="sala__dato-valor">{{ $clp($propiedad['base']) }}</div></div>
+                            <div class="sala__dato"><div class="sala__dato-etiqueta">PRECIO BASE</div><div class="sala__dato-valor" @if ($real) x-text="formatoClp(info.base)" @endif>{{ $clp($propiedad['base']) }}</div></div>
                             <div class="sala__dato"><div class="sala__dato-etiqueta">INCREMENTO MÍNIMO</div><div class="sala__dato-valor">{{ $clp($propiedad['incremento']) }}</div></div>
                             <div class="sala__dato"><div class="sala__dato-etiqueta">TU GARANTÍA</div><div class="sala__dato-valor">{{ $clp($propiedad['garantia']) }}</div></div>
                             <div class="sala__dato"><div class="sala__dato-etiqueta">REFERENCIA UF</div><div class="sala__dato-valor" x-text="actualEnUf"></div></div>
@@ -88,11 +93,14 @@
                             <span class="sala-panel__folio">{{ $propiedad['folio'] }}</span>
                         </div>
                         <div class="sala-panel__cuerpo">
+                            @if ($real)
+                                @include('sala._avisos', ['donde' => 'panel'])
+                            @endif
                             <div class="sala-panel__etiqueta">PRECIO ACTUAL</div>
                             <template x-for="precio in [actualTexto]" :key="precio">
                                 <div class="sala-panel__precio" x-text="precio"></div>
                             </template>
-                            <div class="sala-panel__base">Base {{ $clp($propiedad['base']) }} · <span x-text="sobreBase"></span> sobre el mínimo</div>
+                            <div class="sala-panel__base">Base <span @if ($real) x-text="formatoClp(info.base)" @endif>{{ $clp($propiedad['base']) }}</span> · <span x-text="sobreBase"></span> sobre el mínimo</div>
 
                             <div class="sala-estado" :class="{ 'es-ganando': yoGanando }">
                                 <template x-if="yoGanando">

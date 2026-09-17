@@ -20,7 +20,7 @@ nota *(verifica Jonas en el sandbox)*.
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
 | D | Autenticación y registro de postores | En progreso | 10/12 |
-| K | Sala de puja conectada al motor real | En progreso | 10/14 |
+| K | Sala de puja conectada al motor real | En progreso | 14/15 |
 | I | Remates y lotes + panel del martillero | Pendiente | 0/8 |
 | V | Configuración autoadministrable y SMTP | Pendiente | 0/10 |
 | G | Postores | Pendiente | 0/5 |
@@ -213,9 +213,10 @@ interacción idéntica; escritorio 0,05 % en 1280–1440 y 1,9 % en 1120 por el 
 - [x] Aviso visible: «Precio y cronómetro oficiales: el video tiene 10–30 s de retraso» *(a 1120 px ocupa una segunda línea: diferencia deliberada con el diseño)*
 - [x] Mensajes de rechazo del motor en español, más sesión vencida (419), exceso de pujas (429) y sin conexión
 - [x] Cierre: el formulario desaparece en `cierra_en` y el navegador dispara la liquidación pasado el margen; resultado para ganador y perdedores
-- [ ] Varios lotes en la sala: hoy pasa al siguiente lote al liquidarse el actual, sin navegación ni pantalla de transición *(no hay diseño)*
-- [ ] Mensaje del martillero en la sala *(el motor lo difunde; el diseño no tiene dónde mostrarlo)*
-- [ ] Textos del resultado («tu garantía se imputa / será devuelta») son del diseño y dependen de la decisión pendiente sobre la garantía del perdedor
+- [x] Varios lotes: «LOTE N DE M» en la cabecera, la ficha (dirección, datos, precio base) sigue al lote vigente y un aviso cuenta cómo terminó el anterior *(sin diseño: aviso mínimo con los tokens de la sala; ver Decisiones)*
+- [x] Mensaje del martillero en la sala, sin recargar: dentro del panel de puja en escritorio y sobre el video bajo 1120 px *(sin diseño, mismo criterio)*
+- [x] Textos del resultado neutros («Colliers te informará sobre tu garantía según las bases») mientras el cliente no defina qué pasa con la garantía del perdedor
+- [x] Verificado en navegador real (17/09): `sala-real.mjs` 32/32, incluido un remate de dos lotes con mensaje del martillero en escritorio y 375 px
 - [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración *(Jonas)*
 
 ## I — Remates y lotes, incluido el panel del martillero · Pendiente
@@ -358,8 +359,8 @@ Se completan a medida que las pantallas lo pidan.
 
 ### De Jonas
 
-- [ ] Sala con varios lotes: ¿cómo se muestra el paso de un lote al siguiente? (no hay diseño)
-- [ ] ¿Dónde se muestra el mensaje del martillero en la sala? (no hay diseño)
+- [ ] Sala con varios lotes: se implementó un aviso mínimo («El lote 1 se adjudicó en $X. Ahora se remata el lote 2.») y «LOTE N DE M» en la cabecera. ¿Sirve o se diseña una transición? (17/09)
+- [ ] Mensaje del martillero en la sala: se muestra en una franja amarilla dentro del panel de puja (escritorio) y sobre el video (móvil). ¿Sirve? (17/09)
 
 - [x] Nombre exacto del handler PHP 8.4 en cPanel/LiteSpeed: `application/x-httpd-ea-php84` (16/09)
 - [ ] Subir el acta del 25/08 al material local de referencia

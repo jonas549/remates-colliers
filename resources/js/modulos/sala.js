@@ -1,6 +1,6 @@
 import { clp, dos } from './formato';
 
-// Referencia visual (la fuente y el valor de la UF se configuran en el Bloque V).
+// Referencia visual por defecto; el valor vigente llega desde la configuración (Bloque V).
 const UF = 39412.73;
 const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 
@@ -9,9 +9,11 @@ const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 // - El estado llega por el JSON estático (~1 s, sin PHP). Si falla, se consulta el endpoint de estado.
 // - Pasado cierra_en + margen sin liquidar, el navegador pide el estado a PHP (detector del cierre perezoso).
 // - La base de datos es la fuente de verdad: tras cada puja se vuelve a leer el estado.
-export default ({ remate, loteInicial, miAlias, pujasRapidas, estado, servidorMs, urls }) => ({
+// - Varios lotes: la ficha sigue al lote vigente y un aviso cuenta cómo terminó el anterior (no hay diseño: mínimo).
+export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado, servidorMs, urls, uf = UF }) => ({
     estado,
     loteId: loteInicial,
+    anterior: null,
     miAlias,
     monto: '',
     modal: false,
@@ -92,12 +94,31 @@ export default ({ remate, loteInicial, miAlias, pujasRapidas, estado, servidorMs
         const actual = nuevo.lotes.find((l) => l.id === this.loteId);
         // Se queda en el lote actual hasta que termina; entonces pasa al siguiente sin liquidar.
         if (!actual || (TERMINALES.includes(actual.estado) && vigente && vigente.id !== actual.id && !TERMINALES.includes(vigente.estado))) {
+            if (actual) this.anterior = { orden: actual.orden, estado: actual.estado, precio: actual.precio_actual, siguiente: vigente.orden };
             this.loteId = vigente.id;
         }
     },
 
     get lote() {
         return this.estado.lotes.find((l) => l.id === this.loteId) || this.estado.lotes[0];
+    },
+    get info() { return lotes[this.lote.id] || {}; },
+    get etiquetaLote() {
+        const total = this.estado.lotes.length;
+        return total > 1 ? 'Lote ' + this.lote.orden + ' de ' + total : '';
+    },
+    get avisoLote() {
+        const a = this.anterior;
+        if (!a || a.siguiente !== this.lote.orden) return '';
+        const cierre = a.estado === 'adjudicado' ? 'se adjudicó en ' + clp(a.precio) : 'cerró sin posturas';
+        return 'El lote ' + a.orden + ' ' + cierre + '. Ahora se remata el lote ' + this.lote.orden + '.';
+    },
+    get mensajeMartillero() { return this.estado.mensaje_martillero?.texto || ''; },
+    get mensajeHace() {
+        const en = this.estado.mensaje_martillero?.en_ms;
+        if (!en) return '';
+        const seg = Math.max(0, Math.floor((this.ahora - en) / 1000));
+        return seg < 60 ? 'hace ' + seg + ' seg' : 'hace ' + Math.floor(seg / 60) + ' min';
     },
     get terminal() { return TERMINALES.includes(this.lote.estado); },
     get antesDeAbrir() { return this.lote.abre_en_ms !== null && this.ahora < this.lote.abre_en_ms; },
@@ -139,8 +160,9 @@ export default ({ remate, loteInicial, miAlias, pujasRapidas, estado, servidorMs
         return this.vencido ? 'Cerrado' : 'Cierra en ' + this.hh + ':' + this.mm + ':' + this.ss;
     },
 
+    formatoClp(n) { return clp(n); },
     get actualTexto() { return clp(this.actual); },
-    get actualEnUf() { return 'UF ' + (this.actual / UF).toLocaleString('es-CL', { maximumFractionDigits: 0 }); },
+    get actualEnUf() { return 'UF ' + (this.actual / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }); },
     get sobreBase() { return '+' + Math.round((this.actual / this.lote.precio_base - 1) * 100) + '%'; },
 
     get estadoTitulo() {
@@ -172,7 +194,7 @@ export default ({ remate, loteInicial, miAlias, pujasRapidas, estado, servidorMs
         if (this.antesDeAbrir) return 'La puja abre en ' + this.hh + ':' + this.mm + ':' + this.ss + '.';
         if (this.yoGanando) return 'Tienes la puja más alta: espera a que otro postor la supere.';
         if (this.escrito > 0 && this.montoPuja < this.minimo) return 'La postura debe ser al menos ' + clp(this.minimo) + '.';
-        return 'Incremento mínimo ' + clp(this.paso) + '. Referencia: UF ' + (this.montoPuja / UF).toLocaleString('es-CL', { maximumFractionDigits: 0 }) + '.';
+        return 'Incremento mínimo ' + clp(this.paso) + '. Referencia: UF ' + (this.montoPuja / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }) + '.';
     },
     get placeholder() { return 'Mínimo ' + clp(this.minimo); },
     get botonTexto() { return this.enviando ? 'Enviando…' : 'Pujar ' + clp(this.montoPuja); },
@@ -233,7 +255,7 @@ export default ({ remate, loteInicial, miAlias, pujasRapidas, estado, servidorMs
     },
 
     get modalMonto() { return clp(this.montoPuja); },
-    get modalUf() { return 'UF ' + (this.montoPuja / UF).toLocaleString('es-CL', { maximumFractionDigits: 0 }); },
+    get modalUf() { return 'UF ' + (this.montoPuja / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }); },
     get modalDiferencia() { return clp(this.montoPuja - this.actual); },
 
     get historialVista() {
@@ -257,8 +279,9 @@ export default ({ remate, loteInicial, miAlias, pujasRapidas, estado, servidorMs
     get resultadoTexto() {
         if (!this.terminal) return 'Estamos confirmando la adjudicación con las posturas recibidas antes del cierre.';
         if (!this.hayPujas) return 'No se registraron posturas sobre el precio base. La propiedad se publicará en un remate nuevo, con fecha y condiciones propias.';
+        // Neutro a propósito: qué pasa con la garantía (devolución o imputación) está pendiente con el cliente.
         return this.yoGanando
-            ? 'Precio final ' + clp(this.actual) + '. Un ejecutivo te contactará hoy para la firma y el pago del saldo. Tu garantía se imputa al precio.'
-            : 'Precio final ' + clp(this.actual) + '. Tu garantía será devuelta dentro de los próximos días hábiles.';
+            ? 'Precio final ' + clp(this.actual) + '. Colliers te contactará para la firma y el pago del saldo, según las bases del remate.'
+            : 'Precio final ' + clp(this.actual) + '. Colliers te informará sobre tu garantía según las bases del remate.';
     },
 });

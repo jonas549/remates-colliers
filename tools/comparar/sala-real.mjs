@@ -30,14 +30,14 @@ async function esperar(nombre, funcion, ms = 8000) {
     comprobar(nombre, false, 'último valor: ' + JSON.stringify(ultimo));
 }
 
-async function abrir(navegador, correo, { ancho = 1440, desfaseMs = 0 } = {}) {
+async function abrir(navegador, correo, { ancho = 1440, desfaseMs = 0, sala = SALA } = {}) {
     const contexto = await navegador.newContext({ viewport: { width: ancho, height: 900 }, locale: 'es-CL', timezoneId: 'America/Santiago' });
     const pagina = await contexto.newPage();
     if (desfaseMs) {
         await pagina.clock.install({ time: Date.now() + desfaseMs });
         await pagina.clock.resume();
     }
-    await pagina.goto(`${URL}/revision/entrar/postor?usuario=${encodeURIComponent(correo)}&a=${encodeURIComponent(SALA)}`, { waitUntil: 'load' });
+    await pagina.goto(`${URL}/revision/entrar/postor?usuario=${encodeURIComponent(correo)}&a=${encodeURIComponent(sala)}`, { waitUntil: 'load' });
     return { contexto, pagina };
 }
 
@@ -137,6 +137,28 @@ await esperar('el móvil (ganador) ve «Te adjudicaste la propiedad»', async ()
     (await texto(M.pagina, '.sala-resultado__titulo')) === 'Te adjudicaste la propiedad', 8000);
 const final = estadoBase();
 comprobar('la base: lote adjudicado al último postor y al último monto', final.estado === 'adjudicado' && final.adjudicado_a === 'contacto@andes.test' && final.precio_actual === 199600000, JSON.stringify(final));
+
+await Promise.all([A.contexto.close(), B.contexto.close(), M.contexto.close()]);
+
+// ── Varios lotes y mensaje del martillero (sin diseño: avisos mínimos) ───────────────────────────────────
+ayudante('dos-lotes', '12');
+const D = await abrir(navegador, 'mpgonzalez@correo.test', { sala: '/remates/dos-lotes/sala' });
+const DM = await abrir(navegador, 'contacto@andes.test', { sala: '/remates/dos-lotes/sala', ancho: 375 });
+await esperar('varios lotes: la cabecera indica «LOTE 1 DE 2» y la ficha es la del lote 1', async () =>
+    (await texto(D.pagina, '.sala-cabecera__titulo')).includes('LOTE 1 DE 2') && (await texto(D.pagina, '.sala__titulo')) === 'Dirección del lote 1');
+ayudante('mensaje', 'dos-lotes', 'Última llamada para el lote 1');
+await esperar('mensaje del martillero en el panel (escritorio) sin recargar', async () =>
+    (await D.pagina.locator('.sala-avisos--panel .sala-aviso--martillero .sala-aviso__texto').innerText()) === 'Última llamada para el lote 1', 5000);
+await esperar('mensaje del martillero sobre el video (móvil)', async () =>
+    (await DM.pagina.locator('.sala-avisos--contenido .sala-aviso--martillero').isVisible()), 5000);
+await esperar('al liquidar el lote 1 la sala pasa al lote 2 con aviso y ficha nueva', async () =>
+    (await texto(D.pagina, '.sala-cabecera__titulo')).includes('LOTE 2 DE 2')
+    && (await texto(D.pagina, '.sala__titulo')) === 'Dirección del lote 2'
+    && (await D.pagina.locator('.sala-avisos--panel').innerText()).includes('El lote 1 cerró sin posturas. Ahora se remata el lote 2.'), 25000);
+await esperar('lote 2: abre y acepta pujas desde su precio base', async () =>
+    (await texto(D.pagina, '.sala-panel__precio')) === '$100.000.000' && !(await panel(D.pagina).locator('.sala-puja__boton').isDisabled()), 10000);
+const desbordeDM = await DM.pagina.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+comprobar('móvil con avisos: sin scroll horizontal', !desbordeDM);
 
 await navegador.close();
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');

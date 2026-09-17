@@ -85,6 +85,11 @@ class SalaTest extends TestCase
         $this->assertStringEndsWith('/tiempo-real/apoquindo.json', $config['urls']['estadoJson']);
         $this->assertStringEndsWith('/remates/apoquindo/lotes/__LOTE__/pujas', $config['urls']['pujar']);
         $this->assertSame(185000000, $config['estado']['lotes'][0]['puja_minima']);
+        $this->assertStringEndsWith('/hora.php', $config['urls']['hora'], 'el reloj se sincroniza sin arrancar Laravel');
+        $this->assertSame([
+            'orden' => 1, 'direccion' => 'Av. Apoquindo 4501, Depto. 1802',
+            'meta' => 'Las Condes, Región Metropolitana · Departamento · 118 m² útiles · 3D / 2B · Desocupada', 'base' => 185000000,
+        ], $config['lotes'][$this->lote->id], 'datos de cada lote para cambiar la ficha al pasar al siguiente');
 
         // Ni el nombre ni el correo del rival viajan al navegador.
         $this->assertStringNotContainsString('Rival Secreto', $respuesta->getContent());

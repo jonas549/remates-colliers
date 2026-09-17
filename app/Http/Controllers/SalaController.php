@@ -50,12 +50,20 @@ class SalaController extends Controller
 
         $lote = $this->loteVigente($remate);
         $alias = EstadoRemate::alias($remate)[$user->id] ?? null;
+        $lotes = $remate->lotes()->get();
 
         return view('sala.show', [
             'componente' => 'salaPuja',
             'config' => [
                 'remate' => $remate->slug,
                 'loteInicial' => $lote->id,
+                // Datos fijos de cada lote: con varios lotes la ficha cambia al pasar al siguiente.
+                'lotes' => $lotes->mapWithKeys(fn (Lote $l) => [$l->id => [
+                    'orden' => $l->orden,
+                    'direccion' => $l->direccion ?: $l->titulo,
+                    'meta' => $this->meta($l),
+                    'base' => $l->precio_base,
+                ]])->all(),
                 'miAlias' => $alias,
                 'pujasRapidas' => array_map('intval', (array) Configuracion::valor('pujas_rapidas')),
                 'estado' => EstadoRemate::construir($remate),
