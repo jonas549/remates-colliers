@@ -1,6 +1,6 @@
 # PROGRESO — Remates Colliers · Fase 3
 
-> Punto de retome. Última actualización: **2026-09-16, cierre de jornada.**
+> Punto de retome. Última actualización: **2026-09-17, cierre de jornada.**
 > Leer junto con `CLAUDE.md` (reglas) y **`docs/BACKLOG.md` (estado vivo de cada tarea)**.
 > El detalle de cada jornada está en `docs/progreso/AAAA-MM-DD.md`.
 
@@ -8,13 +8,12 @@
 
 ## 0. Para retomar en 30 segundos
 
-- **Estado:** T y C completos. B 18/19, J 24/29, D 10/12, K 10/14 (ver `docs/BACKLOG.md`). 75/75 pruebas.
-- **GitHub:** `origin/main` = `0d9ae3c` (hasta el Bloque D). **Solo en local:** `6ae4366` (Bloque K) y el registro
-  del día. No hacer push sin visto bueno explícito de Jonas.
-- **Esperando a Jonas:** `APP_ENV=staging` en el sandbox, cabeceras de LiteSpeed, OPcache, primer ingreso del
-  administrador y límites del sandbox (lista en `docs/progreso/2026-09-16.md` §6).
-- **Mañana:** revisar esas salidas → remate de demostración y pruebas en el sandbox (arnés no destructivo) →
-  Bloque **I**.
+- **Estado (17/09):** T, C, I y G completos. K, V, H, M y N hechos y probados en local; B 18/19, J 30/34, D 10/12.
+  115 pruebas PHPUnit en verde; recorridos en navegador real en verde (ver `docs/progreso/2026-09-17.md` §3).
+- **GitHub:** todo lo del 16 y 17/09 subido a `main` al terminar N (autorizado por Jonas el 17/09).
+- **Siguiente para Jonas:** probar en el sandbox con `docs/MANUAL-DE-PRUEBAS.md` (incluye los pasos del servidor).
+- **Siguiente para Claude:** corregir lo que salga de esas pruebas → L (streaming) → E/F → O (reportes, hoy con datos de ejemplo).
+- OPcache está **apagado** en el sandbox: leer `docs/RENDIMIENTO-SIN-OPCACHE.md` antes de tocar el camino de la puja.
 - Antes de correr el arnés visual, **avisar a Jonas para que libere memoria** y correr un proceso por ancho.
 
 ## 1. Jornadas
@@ -23,6 +22,7 @@
 |---|---|---|
 | 2026-09-15 | [`docs/progreso/2026-09-15.md`](progreso/2026-09-15.md) | Bloque T cerrado (11 pantallas 1:1), infraestructura de deploy (B) |
 | 2026-09-16 | [`docs/progreso/2026-09-16.md`](progreso/2026-09-16.md) | Servidor conectado, hook de assets, C completo, J núcleo con concurrencia real, D, K |
+| 2026-09-17 | [`docs/progreso/2026-09-17.md`](progreso/2026-09-17.md) | Rendimiento sin OPcache, K terminado, I, V, G, H, M, N, manual de pruebas y push |
 
 ---
 
@@ -73,3 +73,12 @@
 - **`tools/concurrencia/prueba.php` recrea su base**: nunca apuntarlo al sandbox.
 - **Pantallas protegidas en local**: `/revision/entrar/{rol}` (y `?usuario=correo`), requiere `migrate:fresh --seed`.
 - La ruta `/revision` depende de `app()->isLocal()`: con la caché de rutas del servidor no existe, que es lo buscado.
+- **Bash de esta herramienta colapsa `\\` en heredocs y en `sed`:** para PHP con espacios de nombres, escribir el script con
+  Write (Python con cadenas `r'…'`) o usar Edit. Nunca `sed` con barras invertidas.
+- **Arreglos con `+` en PHP conservan la clave de la izquierda:** para sumar URL a un arreglo base usar `array_replace`
+  (así se perdieron las acciones de garantía en Postores, detectado por el recorrido en navegador).
+- **GD descomprime la foto entera** (~5 bytes por píxel): `App\Support\Imagenes` calcula la memoria antes de abrirla.
+- **Cola síncrona en pruebas:** una bitácora «pendiente» se anota ANTES de `notify()` (el envío ocurre dentro).
+- **Medición a 375 px puede dar 43,99 px** mientras cargan las fuentes: repetir antes de dar por mala un área táctil.
+- **`tools/rendimiento/medir.php` y `tools/concurrencia/prueba.php` recrean su base** (`colliers_concurrencia`): nunca
+  apuntarlos al sandbox. Para el sandbox: `tools/sandbox/medir-servidor.php` (solo GET).

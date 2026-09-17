@@ -118,6 +118,24 @@ class InfraestructuraTest extends TestCase
     {
         $this->artisan('schedule:list')
             ->expectsOutputToContain('latido-programador')
-            ->expectsOutputToContain('queue:work --stop-when-empty');
+            ->expectsOutputToContain('queue:work --stop-when-empty')
+            ->expectsOutputToContain('colliers:recordatorios')
+            ->expectsOutputToContain('colliers:actualizar-uf');
+    }
+
+    public function test_crear_martillero_con_clave_temporal_de_un_solo_uso(): void
+    {
+        $this->artisan('colliers:crear-usuario martillero m.ossandon@colliers.test M. Ossandón')
+            ->expectsOutputToContain('Martillero creado: m.ossandon@colliers.test')
+            ->expectsOutputToContain('Clave temporal')
+            ->assertSuccessful();
+
+        $user = User::where('email', 'm.ossandon@colliers.test')->sole();
+        $this->assertSame(User::ROL_MARTILLERO, $user->rol);
+        $this->assertSame('M. Ossandón', $user->name);
+        $this->assertTrue($user->debe_cambiar_clave);
+
+        $this->artisan('colliers:crear-usuario martillero m.ossandon@colliers.test Otro')->assertFailed();
+        $this->artisan('colliers:crear-usuario postor otro@colliers.test Postor')->assertFailed();
     }
 }

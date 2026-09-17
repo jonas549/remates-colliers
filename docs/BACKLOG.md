@@ -21,7 +21,7 @@ nota *(verifica Jonas en el sandbox)*.
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
 | D | Autenticación y registro de postores | En progreso | 10/12 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
-| I | Remates y lotes + panel del martillero | **Completo** | 9/9 |
+| I | Remates y lotes + panel del martillero | **Completo** | 10/10 |
 | V | Configuración autoadministrable y SMTP | En progreso | 11/13 |
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 7/8 |
@@ -47,7 +47,8 @@ A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 **Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) siguen con datos de ejemplo. B completo salvo `maatwebsite/excel` (va en O). J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
 camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
-**K → I → V → G → H → M → N**, commits locales, push al terminar N.
+**K → I → V → G → H → M → N**, commits locales, push al terminar N → **hecho**. Ahora: Jonas prueba en el sandbox con
+`docs/MANUAL-DE-PRUEBAS.md`; después L → E/F → O.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -236,6 +237,7 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 - [x] «Crear remate nuevo» desde uno cerrado o cancelado: borrador nuevo con los lotes no adjudicados, fotos y documentos; el original no se toca
 - [x] Dashboard y contador de pendientes del menú con datos reales (sin remates de demostración)
 - [x] Usable desde el celular (hoja de acciones del listado, formularios en una columna, táctiles ≥ 44 px)
+- [x] `colliers:crear-usuario admin|martillero correo nombre` con clave temporal de un solo uso (no hay pantalla de usuarios internos; publicar exige martillero) *(InfraestructuraTest, 17/09)*
 
 ## V — Configuración autoadministrable y SMTP · En progreso
 
