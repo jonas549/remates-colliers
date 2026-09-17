@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-use App\Models\Garantia;
 use App\Models\Remate;
 use App\Models\Suscripcion;
 use App\Support\Formato;
@@ -14,9 +13,9 @@ class RemateNuevoAviso extends AvisoColliers
 {
     public function __construct(public Remate $remate) {}
 
-    public function asunto(): string
+    public function plantilla(): string
     {
-        return 'Nuevo remate: ' . $this->remate->titulo;
+        return 'remate_nuevo';
     }
 
     public function notificable(): ?Model
@@ -24,16 +23,28 @@ class RemateNuevoAviso extends AvisoColliers
         return $this->remate;
     }
 
-    protected function contenido(MailMessage $correo, object $destinatario): MailMessage
+    protected function datos(?object $destinatario = null): array
     {
-        $r = $this->remate;
-
-        return self::baja($correo->line("Colliers publicó el remate {$r->folio}: {$r->titulo}.")
-            ->line('Comienza el ' . Formato::fecha($r->abreEn()) . '. Precio base ' . Formato::clp((int) $r->lotes()->sum('precio_base')) . ' · garantía ' . Formato::clp($r->montoGarantia()) . '.')
-            ->line($r->cierre_garantias_en ? 'La garantía debe estar aprobada a más tardar el ' . Formato::fecha($r->cierre_garantias_en) . '.' : '')
-            ->action('Ver el remate', route('remates.show', $r->slug)), $destinatario);
+        return [
+            'remate' => $this->remate->titulo,
+            'folio' => $this->remate->folio,
+            'inicio' => Formato::fecha($this->remate->abreEn()),
+            'base' => Formato::clp((int) $this->remate->lotes()->sum('precio_base')),
+            'baja' => $destinatario instanceof Suscripcion ? route('suscripciones.baja', $destinatario->token) : '',
+        ];
     }
 
+    protected function enlace(?object $destinatario = null): ?string
+    {
+        return route('remates.show', $this->remate->slug);
+    }
+
+    protected function pie(MailMessage $correo, object $destinatario): MailMessage
+    {
+        return self::baja($correo, $destinatario);
+    }
+
+    /** Enlace de baja al pie, solo para suscriptores. */
     public static function baja(MailMessage $correo, object $destinatario): MailMessage
     {
         return $destinatario instanceof Suscripcion

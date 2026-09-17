@@ -2,6 +2,7 @@
 
 namespace App\Remates;
 
+use App\Models\Configuracion;
 use App\Models\Lote;
 use App\Models\User;
 use App\Support\RegionesChile;
@@ -106,7 +107,11 @@ class FormularioRemate
             $datos['duracion_lote_segundos'] = $validado['duracion_minutos'] ? (int) $validado['duracion_minutos'] * 60 : null;
         }
         if (array_key_exists('pausa_minutos', $validado)) {
-            $datos['pausa_entre_lotes_segundos'] = (int) ($validado['pausa_minutos'] ?? 0) * 60;
+            // Vacío: la pausa por defecto de Configuración (17/09), como la duración del lote.
+            $minutos = $validado['pausa_minutos'] === null || $validado['pausa_minutos'] === ''
+                ? (int) Configuracion::valor('pausa_entre_lotes_minutos')
+                : (int) $validado['pausa_minutos'];
+            $datos['pausa_entre_lotes_segundos'] = $minutos * 60;
         }
 
         return $datos;

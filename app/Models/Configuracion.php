@@ -19,7 +19,30 @@ use Throwable;
 #[Fillable(['clave', 'valor', 'tipo', 'grupo', 'descripcion'])]
 class Configuracion extends Model
 {
-    /** Grupos en el orden en que se muestran en el panel. */
+    /**
+     * Una pantalla por tema (17/09, pedido de Jonas): Configuración dejó de ser una sola pantalla larga.
+     * Cada sección es una entrada del submenú; `grupos` son los subtítulos que muestra dentro.
+     */
+    public const SECCIONES = [
+        'remates' => ['titulo' => 'Remates y pujas', 'grupos' => ['pujas', 'remates'],
+            'bajada' => 'Cómo se puja y cuánto dura cada lote. Los remates ya creados conservan sus condiciones; cada remate puede fijar las suyas.'],
+        'garantias' => ['titulo' => 'Garantías', 'grupos' => ['garantias', 'banco'],
+            'bajada' => 'Monto, plazos y los datos que ve el postor para constituirla. El proceso es manual y externo: no hay pasarela de pago.'],
+        'correo' => ['titulo' => 'Correo (SMTP)', 'grupos' => ['correo'],
+            'bajada' => 'Servidor de salida y remitente. Los correos se envían por la cola, que procesa el cron cada minuto.'],
+        'plantillas' => ['titulo' => 'Plantillas de correo', 'grupos' => [],
+            'bajada' => 'Asunto y texto de cada correo que envía la plataforma.'],
+        'notificaciones' => ['titulo' => 'Notificaciones', 'grupos' => ['notificaciones'],
+            'bajada' => 'Qué se envía, a quién y cuándo.'],
+        'seguridad' => ['titulo' => 'Seguridad', 'grupos' => ['seguridad'],
+            'bajada' => 'Bloqueo por intentos fallidos y duración de la sesión.'],
+        'sitio' => ['titulo' => 'Sitio', 'grupos' => ['uf', 'contacto', 'sitio'],
+            'bajada' => 'Lo que ve el visitante: UF de referencia, contacto, enlaces y textos legales.'],
+        'sistema' => ['titulo' => 'Sistema', 'grupos' => [],
+            'bajada' => 'Solo lectura: cómo está el servidor que atiende las pujas.'],
+    ];
+
+    /** Grupos (subtítulos dentro de cada sección). */
     public const GRUPOS = [
         'pujas' => 'Pujas y cierre',
         'remates' => 'Remates',
@@ -43,6 +66,7 @@ class Configuracion extends Model
         'pujas_rapidas' => ['valor' => '[100000,500000,1000000]', 'tipo' => 'lista_montos', 'grupo' => 'pujas', 'etiqueta' => 'Botones de puja rápida (CLP)', 'descripcion' => 'Montos de los botones de puja rápida, separados por coma (acta: 100.000, 500.000 y 1.000.000).'],
         'margen_liquidacion_segundos' => ['valor' => '2', 'tipo' => 'entero', 'grupo' => 'pujas', 'etiqueta' => 'Margen de liquidación (segundos)', 'min' => 1, 'max' => 60, 'descripcion' => 'Segundos después del cierre para terminar las pujas recibidas antes de T. No extiende el remate: nadie puede pujar después del cierre. Sin OPcache conviene 5 s.'],
         // Remates
+        'pausa_entre_lotes_minutos' => ['valor' => '0', 'tipo' => 'entero', 'grupo' => 'remates', 'etiqueta' => 'Pausa entre lotes (minutos)', 'min' => 0, 'max' => 600, 'descripcion' => 'Por defecto entre el cierre de un lote y la apertura del siguiente. Cada remate puede fijar la suya.'],
         'duracion_lote_minutos' => ['valor' => '30', 'tipo' => 'entero', 'grupo' => 'remates', 'etiqueta' => 'Duración por defecto de cada lote (minutos)', 'min' => 1, 'max' => 600, 'descripcion' => 'Temporizador fijo, sin extensiones. Cada remate o lote puede fijar la suya.'],
         // Garantías
         'porcentaje_garantia' => ['valor' => '10', 'tipo' => 'porcentaje', 'grupo' => 'garantias', 'etiqueta' => 'Garantía (% del precio base)', 'min' => 0, 'max' => 100, 'descripcion' => 'Porcentaje de la garantía sobre el precio base del remate (acta: 10 %). Una garantía ya creada conserva su monto.'],
@@ -77,16 +101,25 @@ class Configuracion extends Model
         'correo_remitente' => ['valor' => '', 'tipo' => 'correo', 'grupo' => 'correo', 'etiqueta' => 'Remitente (dirección)', 'descripcion' => 'Vacío: el del .env.'],
         'correo_remitente_nombre' => ['valor' => 'Remates Colliers', 'tipo' => 'texto', 'grupo' => 'correo', 'etiqueta' => 'Remitente (nombre)', 'descripcion' => ''],
         // Notificaciones
-        'correo_avisos_admin' => ['valor' => '', 'tipo' => 'correo', 'grupo' => 'notificaciones', 'etiqueta' => 'Correo que recibe los avisos de adjudicación', 'descripcion' => 'Vacío: todos los administradores activos.'],
+        'correo_avisos_admin' => ['valor' => '', 'tipo' => 'correo', 'grupo' => 'notificaciones', 'etiqueta' => 'Correo que recibe los avisos de la administración', 'descripcion' => 'Recibe el resumen de cada remate al cerrarse. Vacío: todos los administradores activos.'],
         'recordatorio_horas_antes' => ['valor' => '24', 'tipo' => 'entero', 'grupo' => 'notificaciones', 'etiqueta' => 'Recordatorio antes del remate (horas)', 'min' => 1, 'max' => 336, 'descripcion' => 'A inscritos y a quienes pidieron «Avísame antes de que comience».'],
         // Seguridad
         'login_intentos_maximos' => ['valor' => '5', 'tipo' => 'entero', 'grupo' => 'seguridad', 'etiqueta' => 'Intentos de ingreso antes de bloquear', 'min' => 1, 'max' => 50, 'descripcion' => 'Diseño del Login: 5.'],
         'login_bloqueo_minutos' => ['valor' => '15', 'tipo' => 'entero', 'grupo' => 'seguridad', 'etiqueta' => 'Duración del bloqueo (minutos)', 'min' => 1, 'max' => 1440, 'descripcion' => 'Decisión del 16/09: 15.'],
+        'sesion_minutos' => ['valor' => '120', 'tipo' => 'entero', 'grupo' => 'seguridad', 'etiqueta' => 'Duración de la sesión (minutos)', 'min' => 15, 'max' => 720, 'descripcion' => 'Inactividad antes de pedir de nuevo la contraseña (15 min a 12 h). Al cambiar la contraseña se cierran las demás sesiones.'],
         // Sitio
         'filtro_garantia_visible' => ['valor' => '0', 'tipo' => 'booleano', 'grupo' => 'sitio', 'etiqueta' => 'Mostrar el filtro «Garantía requerida» en el listado', 'descripcion' => 'Oculto por decisión del 15/09; útil si los remates usan porcentajes distintos.'],
     ];
 
     private const COLUMNAS = ['valor', 'tipo', 'grupo', 'descripcion'];
+
+    /** Claves editables de una sección, en el orden de DEFECTOS. @return array<string, array> */
+    public static function camposDe(string $seccion): array
+    {
+        $grupos = self::SECCIONES[$seccion]['grupos'] ?? [];
+
+        return array_filter(self::DEFECTOS, fn (array $datos) => in_array($datos['grupo'], $grupos, true));
+    }
 
     /**
      * Valores leídos hace menos de MEMORIA_SEGUNDOS: una puja consultaba la misma clave 3–4 veces. Vida corta a propósito:

@@ -22,10 +22,10 @@ nota *(verifica Jonas en el sandbox)*.
 | D | Autenticación y registro de postores | En progreso | 11/13 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
 | I | Remates y lotes + panel del martillero | **Completo** | 11/11 |
-| V | Configuración autoadministrable y SMTP | En progreso | 11/13 |
+| V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 7/8 |
-| M | Notificaciones | En progreso | 7/8 |
+| M | Notificaciones | En progreso | 8/9 |
 | N | Sitio público | En progreso | 11/12 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | Pendiente | 0/3 |
@@ -246,23 +246,31 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 
 ## V — Configuración autoadministrable y SMTP · En progreso
 
-Verificado el 17/09: `ConfiguracionTest` (6) y `tools/comparar/panel-configuracion.mjs` (10/10: guardar, validación,
-correo de prueba en modo registro, usabilidad a 375–1440 px). Pantalla sin diseño (Administración → 05 Configuración,
-solo administradores) con los componentes del panel. Sin migración: todo en `configuraciones`.
+Reestructurada el 17/09 a pedido de Jonas: Configuración pasó de una pantalla larga a **8 pantallas con submenú**
+(`/admin/configuracion/{seccion}`), cada una con lo suyo y guardando solo sus claves. Verificado con `ConfiguracionTest`
+(10) y `tools/comparar/panel-configuracion.mjs` (21 comprobaciones en navegador real, usabilidad a 375/760/1120/1440).
 
-- [x] Incremento mínimo global (el propio por remate está en la ficha, Bloque I), CLP 100.000 por defecto; botones de puja rápida
-- [x] Porcentaje de garantía, 10 % por defecto (las garantías creadas conservan su monto)
-- [x] Margen de liquidación, 2 s por defecto (la ayuda recomienda 5 s sin OPcache)
-- [x] Intentos de login y duración del bloqueo (5 y 15 min)
-- [x] Plazos: cierre de garantías antes del remate (48 h) y tiempo de revisión informado (24 h hábiles); duración por defecto del lote
-- [x] Datos bancarios para garantías *(parten vacíos: los del diseño son de ejemplo; mientras falten, el postor ve «escríbenos»)*
-- [x] Fuente y valor de la UF: automática desde mindicador.cl cada hora (`colliers:actualizar-uf`) o manual; sin valor, el sitio no muestra UF
-- [x] Contacto (correo y teléfono en todas las pantallas), canal de YouTube, enlaces a bases, términos y privacidad, texto de condiciones de la garantía
-- [x] SMTP completo (servidor, puerto, cifrado, usuario, clave cifrada con APP_KEY, remitente) con modo «.env / SMTP / registro» y botón de correo de prueba que muestra el error
-- [x] Filtro «Garantía requerida» activable *(se conecta al listado en N)*
-- [x] Sistema visto desde la web: OPcache, PHP, memoria, cachés de optimize, latido del cron, cola de correos
-- [ ] SMTP real de Colliers: probar el envío con el botón en el sandbox *(Jonas; en local no hay servidor SMTP)*
-- [ ] UF automática en el sandbox: depende de que el hosting permita HTTP saliente *(Jonas: botón «Actualizar la UF ahora»)*
+Secciones: Remates y pujas · Garantías · Correo (SMTP) · Plantillas de correo · Notificaciones · Seguridad · Sitio ·
+Sistema (solo lectura).
+
+- [x] Incremento mínimo (global y por remate), montos de puja rápida, duración por defecto del lote y **pausa entre lotes** (nueva, 17/09)
+- [x] Porcentaje de garantía (10 % por defecto), plazos y datos bancarios, con las instrucciones que ve el postor
+- [x] Margen de liquidación (2 s por defecto; 5 s recomendado sin OPcache)
+- [x] Intentos de login, duración del bloqueo y **duración de la sesión** (15 min a 12 h, 2 h por defecto; antes solo en el `.env`)
+- [x] Fuente y valor de la UF, contacto, enlaces y textos legales
+- [x] SMTP completo con **dos botones separados** (17/09): «Probar conexión» comprueba DNS, puerto, cifrado y credenciales SIN enviar nada y dice exactamente qué falló; «Enviar correo de prueba» pide la dirección y manda uno real. Los errores de envío usan el mismo diccionario
+- [x] **Plantillas de correo editables** (16): asunto, cuerpo con variables, texto del botón, vista previa con datos de ejemplo y «Restaurar la original». Migración aditiva `plantillas_correo`; sin fila se usa el texto del código
+- [x] **Notificaciones**: qué se envía, a quién y cuándo, con interruptor por correo (los de la cuenta del postor no se pueden apagar), correo de avisos, horas del recordatorio y los últimos 20 envíos de la bitácora
+- [ ] Revisión del diseño de las pantallas nuevas por Ángel *(Jonas se las pasa)*
+- [ ] SMTP real probado en el sandbox (las dos pruebas y un correo que llegue)
+
+### Decisiones de Jonas sobre los correos (17/09)
+
+- **«Puja superada» queda fuera:** con la cola por cron el correo llega tarde y el aviso ya está en vivo en la sala. En su
+  lugar, al cerrar el lote se envía «Resultado del lote» a quienes pujaron y no ganaron.
+- **Resumen al administrador:** un solo correo al cerrar el remate, con todos los lotes, adjudicados y desiertos, con
+  montos (antes iba uno por lote).
+- **Bienvenida:** es el mismo correo de confirmación de correo, ahora editable. No se envían dos al registrarse.
 
 ## G — Postores · Completo
 
@@ -296,6 +304,10 @@ desde el celular, reenviar uno rechazado, cuenta aprobada con acceso a la sala a
 - [ ] Destino posterior (devolución / imputación / ejecución) *(pendiente con el cliente)*
 
 ## M — Notificaciones · En progreso
+
+> 17/09: el texto de todos los correos salió del código y pasó a **plantillas editables** (Configuración → Plantillas de
+> correo). Cambios de envío decididos por Jonas: «Resultado del lote» a quienes pujaron y no ganaron (en vez de un correo
+> por cada puja superada) y **un** resumen a la administración al cerrar el remate (antes uno por lote).
 
 Verificado el 17/09: `NotificacionesTest` (5; 109/109 en total) con cola síncrona y correo en memoria, y en local con la cola
 real `database` + `queue:work --stop-when-empty` (encola 1 trabajo, lo envía y la bitácora queda «enviada»). Tabla nueva

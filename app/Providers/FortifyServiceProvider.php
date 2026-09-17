@@ -6,6 +6,7 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Autenticacion\AutenticarUsuario;
+use App\Correo\Plantillas;
 use App\Http\Middleware\SesionTrasIngreso;
 use App\Publico\Catalogo;
 use App\Models\User;
@@ -75,20 +76,13 @@ class FortifyServiceProvider extends ServiceProvider
             return [Limit::perMinute(10)->by($clave), Limit::perMinute(30)->by('ip:' . $request->ip())];
         });
 
-        VerifyEmail::toMailUsing(fn (User $user, string $url) => (new MailMessage)
-            ->subject('Confirma tu correo · Remates Colliers')
-            ->greeting('Hola ' . $user->name)
-            ->line('Recibimos tu registro como postor. Confirma tu correo para que Colliers revise tus antecedentes.')
-            ->action('Confirmar mi correo', $url)
-            ->line('Si no te registraste en Remates Colliers, ignora este mensaje.')
-            ->salutation('Colliers Chile'));
+        VerifyEmail::toMailUsing(fn (User $user, string $url) => Plantillas::correo('bienvenida', $user->name, $url));
 
-        ResetPassword::toMailUsing(fn (User $user, string $token) => (new MailMessage)
-            ->subject('Restablecer tu contraseña · Remates Colliers')
-            ->greeting('Hola ' . $user->name)
-            ->line('Pediste restablecer la contraseña de tu cuenta.')
-            ->action('Crear una contraseña nueva', url(route('password.reset', ['token' => $token, 'email' => $user->getEmailForPasswordReset()], false)))
-            ->line('El enlace vence en ' . config('auth.passwords.users.expire') . ' minutos. Si no lo pediste, ignora este mensaje: tu contraseña no cambia.')
-            ->salutation('Colliers Chile'));
+        ResetPassword::toMailUsing(fn (User $user, string $token) => Plantillas::correo(
+            'restablecer_clave',
+            $user->name,
+            url(route('password.reset', ['token' => $token, 'email' => $user->getEmailForPasswordReset()], false)),
+            ['minutos' => config('auth.passwords.users.expire')],
+        ));
     }
 }

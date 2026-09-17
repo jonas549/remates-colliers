@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Correo\Avisos;
+use App\Correo\DiagnosticoSmtp;
+use App\Correo\Plantillas;
 use App\Http\Controllers\Controller;
 use App\Models\Configuracion;
+use App\Models\NotificacionLog;
 use App\Support\CorreoSaliente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,29 +27,41 @@ use Throwable;
  */
 class ConfiguracionController extends Controller
 {
-    public function index(): View
+    public function index(): RedirectResponse
     {
+        return redirect()->route('admin.configuracion.seccion', array_key_first(Configuracion::SECCIONES));
+    }
+
+    public function show(string $seccion): View
+    {
+        abort_unless(isset(Configuracion::SECCIONES[$seccion]), 404);
         Configuracion::sembrarDefectos();
+        $campos = Configuracion::camposDe($seccion);
         $valores = [];
-        foreach (Configuracion::DEFECTOS as $clave => $datos) {
+        foreach ($campos as $clave => $datos) {
             $valores[$clave] = $datos['tipo'] === 'secreto' ? filled(Configuracion::valor($clave)) : Configuracion::valor($clave);
         }
 
-        return view('admin.configuracion', [
-            'grupos' => collect(Configuracion::DEFECTOS)->groupBy('grupo', preserveKeys: true)
-                ->sortBy(fn ($campos, $grupo) => array_search($grupo, array_keys(Configuracion::GRUPOS), true)),
+        $vista = in_array($seccion, ['sistema', 'plantillas', 'notificaciones'], true) ? $seccion : 'seccion';
+
+        return view("admin.configuracion.{$vista}", [
+            'seccion' => $seccion,
+            'grupos' => collect($campos)->groupBy('grupo', preserveKeys: true)
+                ->sortBy(fn ($c, $grupo) => array_search($grupo, Configuracion::SECCIONES[$seccion]['grupos'], true)),
             'valores' => $valores,
-            'sistema' => $this->sistema(),
+            'sistema' => $seccion === 'sistema' ? $this->sistema() : [],
+            'envios' => $seccion === 'notificaciones' ? NotificacionLog::latest('id')->take(20)->get() : collect(),
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, string $seccion): RedirectResponse
     {
+        abort_unless(isset(Configuracion::SECCIONES[$seccion]), 404);
         $entrada = (array) $request->input('config', []);
         // Las casillas desmarcadas no viajan: se envían con un campo oculto en 0.
         $reglas = [];
         $nombres = [];
-        foreach (Configuracion::DEFECTOS as $clave => $datos) {
+        foreach (Configuracion::camposDe($seccion) as $clave => $datos) {
             if (! empty($datos['solo_lectura'])) {
                 continue;
             }
@@ -59,16 +75,51 @@ class ConfiguracionController extends Controller
             $reglas['config.pujas_rapidas.*'] = ['integer', 'min:1000'];
         }
         $validado = $request->validate($reglas, [], $nombres)['config'] ?? [];
+        $deLaSeccion = Configuracion::camposDe($seccion);
 
-        DB::transaction(function () use ($validado) {
+        // Interruptores de los avisos (pantalla Notificaciones): no son claves de DEFECTOS, se guardan aparte.
+        $avisos = [];
+        if ($seccion === 'notificaciones') {
+            foreach ((array) $request->input('avisos', []) as $plantilla => $activo) {
+                if (isset(Plantillas::CATALOGO[$plantilla]) && ! empty(Plantillas::CATALOGO[$plantilla]['activable'])) {
+                    $avisos[$plantilla] = filter_var($activo, FILTER_VALIDATE_BOOL);
+                }
+            }
+        }
+
+        DB::transaction(function () use ($validado, $deLaSeccion, $avisos) {
             foreach ($validado as $clave => $valor) {
-                if (array_key_exists($clave, Configuracion::DEFECTOS)) {
+                // Solo las claves de esta pantalla: un formulario no puede tocar valores de otra sección.
+                if (array_key_exists($clave, $deLaSeccion)) {
                     Configuracion::guardar($clave, $valor);
                 }
+            }
+            foreach ($avisos as $plantilla => $activo) {
+                Avisos::guardar($plantilla, $activo);
             }
         });
 
         return back()->with('estado', 'Configuración guardada. Rige desde la próxima acción: no hace falta desplegar.');
+    }
+
+    /** Comprueba el correo saliente SIN enviar nada (17/09): DNS, puerto, cifrado y credenciales, por separado. */
+    public function probarConexion(DiagnosticoSmtp $diagnostico): RedirectResponse
+    {
+        CorreoSaliente::aplicar(config());
+        $mailer = (string) config('mail.default');
+        $volver = back();
+
+        if ($mailer === 'log') {
+            return $volver->with('error', 'El envío está en modo «No enviar: dejar en el registro»: no hay servidor al que conectarse. Cambia el modo a SMTP para probar la conexión.');
+        }
+        if ($mailer !== 'smtp') {
+            return $volver->with('error', "El envío está en modo «{$mailer}», que no usa SMTP: no hay conexión que probar.");
+        }
+
+        $resultado = $diagnostico->probar($this->datosSmtp());
+        $detalle = collect($resultado['pasos'])->map(fn (array $p) => ($p['ok'] ? '✓' : '✗') . " {$p['nombre']}: {$p['detalle']}")->join(' · ');
+
+        return $volver->with($resultado['ok'] ? 'estado' : 'error', "{$resultado['mensaje']} ({$resultado['ms']} ms) — {$detalle}");
     }
 
     public function probarCorreo(Request $request, MailManager $correo): RedirectResponse
@@ -83,15 +134,17 @@ class ConfiguracionController extends Controller
                 fn ($m) => $m->to($destino)->subject('Prueba de correo · Remates Colliers'));
         } catch (Throwable $e) {
             report($e);
+            // Mismo diccionario que «Probar conexión»: nada de «error al enviar».
+            $mensaje = app(DiagnosticoSmtp::class)->explicarError($e, $this->datosSmtp());
 
-            return back()->with('error', 'No se pudo enviar el correo de prueba: ' . mb_substr($e->getMessage(), 0, 300));
+            return back()->with('error', "No se pudo enviar el correo de prueba. {$mensaje}");
         }
 
         $modo = config('mail.default');
 
         return back()->with('estado', $modo === 'log'
-            ? "Correo de prueba registrado en storage/logs (modo «{$modo}»: no sale a Internet)."
-            : "Correo de prueba enviado a {$destino} por «{$modo}». Revisa la bandeja de entrada y la de spam.");
+            ? "Correo de prueba registrado en el log (modo «{$modo}»: no sale a Internet). En el servidor: tail -n 50 storage/logs/laravel-AAAA-MM-DD.log"
+            : "Correo de prueba enviado a {$destino} desde «" . config('mail.from.address') . "» por «{$modo}». Revisa la bandeja de entrada y la de spam.");
     }
 
     public function actualizarUf(): RedirectResponse
@@ -100,6 +153,20 @@ class ConfiguracionController extends Controller
         $salida = trim(Artisan::output());
 
         return back()->with($codigo === 0 ? 'estado' : 'error', $salida);
+    }
+
+    /** @return array{host: string, puerto: int, cifrado: string, usuario: ?string, clave: ?string} */
+    private function datosSmtp(): array
+    {
+        $config = (array) config('mail.mailers.smtp');
+
+        return [
+            'host' => (string) ($config['host'] ?? ''),
+            'puerto' => (int) ($config['port'] ?? 0),
+            'cifrado' => ($config['scheme'] ?? 'smtp') === 'smtps' ? 'ssl' : (($config['auto_tls'] ?? true) ? 'tls' : 'ninguno'),
+            'usuario' => $config['username'] ?? null,
+            'clave' => $config['password'] ?? null,
+        ];
     }
 
     private function reglas(array $datos): array

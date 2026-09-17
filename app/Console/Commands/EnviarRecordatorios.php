@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Configuracion;
 use App\Models\Garantia;
+use App\Correo\Avisos;
 use App\Models\NotificacionLog;
 use App\Models\Remate;
 use App\Models\Suscripcion;
@@ -63,7 +64,11 @@ class EnviarRecordatorios extends Command
     /** Encola a quienes todavía no lo recibieron (por correo, sin repetir entre usuario y suscripción). */
     private function enviar(Remate $remate, string $motivo, Collection $destinatarios): int
     {
-        $asunto = (new RecordatorioRemateAviso($remate, $motivo))->asunto();
+        $aviso = new RecordatorioRemateAviso($remate, $motivo);
+        if (! Avisos::activo($aviso->plantilla())) {
+            return 0;
+        }
+        $asunto = $aviso->asunto();
         $yaRecibieron = NotificacionLog::where('tipo', 'RecordatorioRemateAviso')->where('notificable_type', $remate->getMorphClass())
             ->where('notificable_id', $remate->id)->where('asunto', $asunto)->whereIn('estado', ['enviada', 'pendiente'])
             ->pluck('destinatario')->map(fn ($c) => mb_strtolower($c))->all();

@@ -6,16 +6,15 @@ use App\Models\Garantia;
 use App\Support\Formato;
 use App\Support\Sitio;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Messages\MailMessage;
 
 /** Colliers recibió el comprobante (confirmación al postor). */
 class ComprobanteRecibidoAviso extends AvisoColliers
 {
     public function __construct(public Garantia $garantia) {}
 
-    public function asunto(): string
+    public function plantilla(): string
     {
-        return 'Recibimos tu comprobante de garantía';
+        return 'comprobante_recibido';
     }
 
     public function notificable(): ?Model
@@ -23,12 +22,18 @@ class ComprobanteRecibidoAviso extends AvisoColliers
         return $this->garantia;
     }
 
-    protected function contenido(MailMessage $correo, object $destinatario): MailMessage
+    protected function datos(?object $destinatario = null): array
     {
-        $remate = $this->garantia->remate;
+        return [
+            'remate' => $this->garantia->remate->titulo,
+            'folio' => $this->garantia->remate->folio,
+            'monto' => Formato::clp($this->garantia->monto),
+            'horas' => Sitio::horasRevision(),
+        ];
+    }
 
-        return $correo->line("Recibimos el comprobante de tu garantía por " . Formato::clp($this->garantia->monto) . " para {$remate->titulo} ({$remate->folio}).")
-            ->line('Colliers lo revisa de forma manual, normalmente dentro de ' . Sitio::horasRevision() . ' horas hábiles. Te avisaremos por correo cuando quede aprobada.')
-            ->action('Ver el estado de mi garantía', route('cuenta.estado', ['remate' => $remate->slug]));
+    protected function enlace(?object $destinatario = null): ?string
+    {
+        return route('cuenta.estado', ['remate' => $this->garantia->remate->slug]);
     }
 }

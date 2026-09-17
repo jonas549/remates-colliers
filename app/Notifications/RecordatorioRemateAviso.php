@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Remate;
 use App\Support\Formato;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Messages\MailMessage;
 
@@ -17,12 +18,12 @@ class RecordatorioRemateAviso extends AvisoColliers
 {
     public function __construct(public Remate $remate, public string $motivo) {}
 
-    public function asunto(): string
+    public function plantilla(): string
     {
         return match ($this->motivo) {
-            'garantia' => 'Falta aprobar tu garantía: ' . $this->remate->folio,
-            'cierre_garantias' => 'Cierra el plazo de garantías: ' . $this->remate->titulo,
-            default => 'El remate comienza pronto: ' . $this->remate->titulo,
+            'garantia' => 'recordatorio_garantia',
+            'cierre_garantias' => 'recordatorio_cierre_garantias',
+            default => 'recordatorio_remate',
         };
     }
 
@@ -31,23 +32,36 @@ class RecordatorioRemateAviso extends AvisoColliers
         return $this->remate;
     }
 
-    protected function contenido(MailMessage $correo, object $destinatario): MailMessage
+    protected function datos(?object $destinatario = null): array
     {
-        $r = $this->remate;
-        $inicio = Formato::fecha($r->abreEn());
+        $inicio = $this->remate->abreEn();
 
-        $correo = match ($this->motivo) {
-            'garantia' => $correo->line("El remate {$r->folio} ({$r->titulo}) comienza el {$inicio} y tu garantía todavía no está aprobada.")
-                ->line($r->cierre_garantias_en ? 'El plazo para constituirla cierra el ' . Formato::fecha($r->cierre_garantias_en) . '.' : 'Constitúyela antes del inicio.')
-                ->action('Ver mi garantía', route('cuenta.estado', ['remate' => $r->slug])),
-            'cierre_garantias' => $correo->line("El plazo para constituir la garantía del remate {$r->folio} ({$r->titulo}) cierra el " . Formato::fecha($r->cierre_garantias_en) . '.')
-                ->line("El remate comienza el {$inicio}.")
-                ->action('Ver el remate', route('remates.show', $r->slug)),
-            default => $correo->line("El remate {$r->folio} ({$r->titulo}) comienza el {$inicio} (hora de Chile).")
-                ->line('Se transmite en vivo y cierra automáticamente al vencer el tiempo, sin extensiones.')
-                ->action('Ver el remate', route('remates.show', $r->slug)),
-        };
+        return [
+            'remate' => $this->remate->titulo,
+            'folio' => $this->remate->folio,
+            'inicio' => Formato::fecha($inicio),
+            'cierre_garantias' => $this->remate->cierre_garantias_en ? Formato::fecha($this->remate->cierre_garantias_en) : 'antes del inicio',
+            'faltan' => $inicio === null ? '' : self::cuantoFalta($inicio),
+        ];
+    }
 
+    /** «en 26 horas», «en 45 minutos»: el recordatorio se envía a una hora fija antes del inicio. */
+    private static function cuantoFalta(CarbonImmutable $inicio): string
+    {
+        $minutos = max(0, (int) round(CarbonImmutable::now('UTC')->diffInMinutes($inicio, absolute: false)));
+
+        return $minutos >= 90 ? (int) round($minutos / 60) . ' horas' : "{$minutos} minutos";
+    }
+
+    protected function enlace(?object $destinatario = null): ?string
+    {
+        return $this->motivo === 'garantia'
+            ? route('cuenta.estado', ['remate' => $this->remate->slug])
+            : route('remates.show', $this->remate->slug);
+    }
+
+    protected function pie(MailMessage $correo, object $destinatario): MailMessage
+    {
         return RemateNuevoAviso::baja($correo, $destinatario);
     }
 }

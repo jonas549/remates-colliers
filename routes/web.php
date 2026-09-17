@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DocumentosController;
 use App\Http\Controllers\Admin\EnVivoController;
 use App\Http\Controllers\Admin\LotesController;
 use App\Http\Controllers\Admin\PostoresController;
+use App\Http\Controllers\Admin\PlantillasCorreoController;
 use App\Http\Controllers\Admin\RematesController;
 use App\Http\Controllers\Admin\ReportesController;
 use App\Http\Controllers\Admin\SalaMartilleroController;
@@ -142,10 +143,19 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         Route::delete('/subastas/{remate}/documentos/{documento}', [DocumentosController::class, 'destroy'])->name('documentos.destroy');
 
         // Bloque V: configuración autoadministrable.
+        // Bloque V: una pantalla por tema, con submenú (17/09).
         Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion');
-        Route::put('/configuracion', [ConfiguracionController::class, 'update'])->name('configuracion.update');
         Route::post('/configuracion/probar-correo', [ConfiguracionController::class, 'probarCorreo'])->name('configuracion.probar-correo');
+        Route::post('/configuracion/probar-conexion', [ConfiguracionController::class, 'probarConexion'])->name('configuracion.probar-conexion');
         Route::post('/configuracion/actualizar-uf', [ConfiguracionController::class, 'actualizarUf'])->name('configuracion.actualizar-uf');
+        // Editor de plantillas (va antes de {seccion} para que «plantillas/x» no se confunda con una sección).
+        Route::get('/configuracion/plantillas/{clave}', [PlantillasCorreoController::class, 'edit'])->name('configuracion.plantilla');
+        Route::put('/configuracion/plantillas/{clave}', [PlantillasCorreoController::class, 'update'])->name('configuracion.plantilla.update');
+        // PUT: el formulario del editor ya viaja con method spoofing; así el botón de vista previa comparte sus campos.
+        Route::put('/configuracion/plantillas/{clave}/vista-previa', [PlantillasCorreoController::class, 'previsualizar'])->name('configuracion.plantilla.previa');
+        Route::delete('/configuracion/plantillas/{clave}', [PlantillasCorreoController::class, 'destroy'])->name('configuracion.plantilla.restaurar');
+        Route::get('/configuracion/{seccion}', [ConfiguracionController::class, 'show'])->name('configuracion.seccion');
+        Route::put('/configuracion/{seccion}', [ConfiguracionController::class, 'update'])->name('configuracion.update');
 
         Route::post('/usuarios/{usuario}/restablecer-clave', [UsuariosController::class, 'restablecerClave'])->name('usuarios.restablecer-clave');
         Route::post('/usuarios/{usuario}/desbloquear', [UsuariosController::class, 'desbloquear'])->name('usuarios.desbloquear');

@@ -108,18 +108,24 @@ class MotorPujasTest extends TestCase
     {
         \App\Models\Configuracion::sembrarDefectos();
         $admin = User::create(['name' => 'Admin', 'email' => 'admin@colliers.test', 'password' => 'clave-de-prueba-123', 'rol' => User::ROL_ADMIN, 'estado' => User::ESTADO_ACTIVO]);
-        $config = [];
-        foreach (\App\Models\Configuracion::DEFECTOS as $clave => $datos) {
-            if (empty($datos['solo_lectura'])) {
-                $valor = \App\Models\Configuracion::valor($clave);
-                $config[$clave] = match ($datos['tipo']) {
-                    'lista_montos' => implode(', ', (array) $valor), 'booleano' => $valor ? '1' : '0', 'secreto' => '', default => $valor,
-                };
+        // Una pantalla por tema (17/09): el incremento y el margen están en «Remates y pujas»; el porcentaje, en «Garantías».
+        $formulario = function (string $seccion, array $cambios) {
+            $config = [];
+            foreach (\App\Models\Configuracion::camposDe($seccion) as $clave => $datos) {
+                if (empty($datos['solo_lectura'])) {
+                    $valor = \App\Models\Configuracion::valor($clave);
+                    $config[$clave] = match ($datos['tipo']) {
+                        'lista_montos' => implode(', ', (array) $valor), 'booleano' => $valor ? '1' : '0', 'secreto' => '', default => $valor,
+                    };
+                }
             }
-        }
-        $this->actingAs($admin)->put('/admin/configuracion', ['config' => [
-            'incremento_minimo' => '300000', 'porcentaje_garantia' => '5', 'margen_liquidacion_segundos' => '6',
-        ] + $config])->assertSessionHas('estado');
+
+            return ['config' => $cambios + $config];
+        };
+        $this->actingAs($admin)->put(route('admin.configuracion.update', 'remates'),
+            $formulario('remates', ['incremento_minimo' => '300000', 'margen_liquidacion_segundos' => '6']))->assertSessionHas('estado');
+        $this->actingAs($admin)->put(route('admin.configuracion.update', 'garantias'),
+            $formulario('garantias', ['porcentaje_garantia' => '5']))->assertSessionHas('estado');
 
         // Incremento: la segunda puja necesita 300.000 sobre la primera.
         [$ana, $beto] = [$this->postorHabilitado('Ana'), $this->postorHabilitado('Beto')];

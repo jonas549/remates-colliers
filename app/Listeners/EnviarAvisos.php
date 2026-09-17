@@ -7,16 +7,21 @@ use App\Events\CuentaRevisada;
 use App\Events\GarantiaRevisada;
 use App\Events\LoteLiquidado;
 use App\Events\RematePublicado;
+use App\Correo\Avisos;
 use App\Models\Configuracion;
 use App\Models\Lote;
+use App\Models\Puja;
+use App\Models\Remate;
 use App\Models\Suscripcion;
 use App\Models\User;
 use App\Notifications\AdjudicacionAviso;
+use App\Notifications\AvisoColliers;
 use App\Notifications\ComprobanteRecibidoAviso;
 use App\Notifications\CuentaRevisadaAviso;
 use App\Notifications\GarantiaRevisadaAviso;
+use App\Notifications\NoAdjudicadoAviso;
 use App\Notifications\RemateNuevoAviso;
-use App\Notifications\ResultadoLoteAviso;
+use App\Notifications\ResumenRemateAviso;
 use Carbon\CarbonImmutable;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Support\Facades\Notification;
@@ -41,20 +46,26 @@ class EnviarAvisos
 
     public function cuenta(CuentaRevisada $evento): void
     {
-        $this->seguro(fn () => $evento->postor->user->notify(new CuentaRevisadaAviso($evento->postor, $evento->accion)));
+        $aviso = new CuentaRevisadaAviso($evento->postor, $evento->accion);
+        $this->enviar($aviso, fn () => $evento->postor->user->notify($aviso));
     }
 
     public function garantia(GarantiaRevisada $evento): void
     {
-        $this->seguro(fn () => $evento->garantia->user->notify(new GarantiaRevisadaAviso($evento->garantia)));
+        $aviso = new GarantiaRevisadaAviso($evento->garantia);
+        $this->enviar($aviso, fn () => $evento->garantia->user->notify($aviso));
     }
 
     public function comprobante(ComprobanteRecibido $evento): void
     {
-        $this->seguro(fn () => $evento->garantia->user->notify(new ComprobanteRecibidoAviso($evento->garantia)));
+        $aviso = new ComprobanteRecibidoAviso($evento->garantia);
+        $this->enviar($aviso, fn () => $evento->garantia->user->notify($aviso));
     }
 
-    /** Al cerrar: el sistema avisa al adjudicatario y a la administración (acta). Un lote desierto, solo a la administración. */
+    /**
+     * Al cerrar un lote: al adjudicatario (acta) y a quienes pujaron y no ganaron (decisión del 17/09, en vez del
+     * correo «te superaron» por cada puja). A la administración va UN resumen cuando cierra el último lote.
+     */
     public function lote(LoteLiquidado $evento): void
     {
         $lote = $evento->lote->fresh(['remate', 'adjudicacion.user']);
@@ -63,22 +74,47 @@ class EnviarAvisos
         }
         $ahora = CarbonImmutable::now('UTC');
 
-        $this->seguro(function () use ($lote, $ahora) {
-            if ($lote->estado === Lote::ESTADO_ADJUDICADO && $lote->adjudicacion) {
-                $lote->adjudicacion->user->notify(new AdjudicacionAviso($lote->adjudicacion));
+        if ($lote->estado === Lote::ESTADO_ADJUDICADO && $lote->adjudicacion) {
+            $adjudicacion = new AdjudicacionAviso($lote->adjudicacion);
+            $this->enviar($adjudicacion, function () use ($lote, $adjudicacion, $ahora) {
+                $lote->adjudicacion->user->notify($adjudicacion);
                 $lote->adjudicacion->forceFill(['notificado_ganador_en' => $ahora])->save();
+            });
+
+            $perdedores = User::whereIn('id', Puja::where('lote_id', $lote->id)->where('user_id', '!=', $lote->adjudicacion->user_id)
+                ->distinct()->pluck('user_id'))->get();
+            if ($perdedores->isNotEmpty()) {
+                $noAdjudicado = new NoAdjudicadoAviso($lote);
+                $this->enviar($noAdjudicado, fn () => Notification::send($perdedores, $noAdjudicado));
             }
-            $this->administracion(new ResultadoLoteAviso($lote));
-            $lote->adjudicacion?->forceFill(['notificado_admin_en' => $ahora])->save();
-        });
+        }
+
+        // Un solo correo a la administración, con todos los lotes, cuando el remate queda cerrado.
+        if ($lote->remate->fresh()->estado === Remate::ESTADO_FINALIZADO) {
+            $resumen = new ResumenRemateAviso($lote->remate);
+            $this->enviar($resumen, function () use ($lote, $resumen, $ahora) {
+                $this->administracion($resumen);
+                $lote->adjudicacion?->forceFill(['notificado_admin_en' => $ahora])->save();
+            });
+        }
     }
 
     public function remateNuevo(RematePublicado $evento): void
     {
-        $this->seguro(fn () => Notification::send(
+        $aviso = new RemateNuevoAviso($evento->remate);
+        $this->enviar($aviso, fn () => Notification::send(
             Suscripcion::vigentes()->whereNull('remate_id')->get()->unique('email'),
-            new RemateNuevoAviso($evento->remate),
+            $aviso,
         ));
+    }
+
+    /** Respeta el interruptor de la pantalla Notificaciones: apagado, no se envía nada. */
+    private function enviar(AvisoColliers $aviso, callable $envio): void
+    {
+        if (! Avisos::activo($aviso->plantilla())) {
+            return;
+        }
+        $this->seguro($envio);
     }
 
     /** Al correo de avisos de Configuración o, si está vacío, a todos los administradores activos. */

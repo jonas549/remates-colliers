@@ -96,3 +96,33 @@ a.admin-form__borrador { display: inline-block; text-align: center; text-decorat
 @media (max-width: 1119.98px) {
   .admin-ficha__documento { padding-block: 12px; margin-block: -6px; }
 }
+
+/* Submenú de Configuración (17/09): una pantalla por tema, sin diseño del prototipo. */
+.admin-submenu { display: flex; flex-wrap: wrap; gap: 0 4px; padding: 0 32px; border-bottom: 1px solid #dbe1ec; background: #ffffff; }
+.admin-submenu__item { display: inline-flex; align-items: center; gap: 8px; padding: 14px 14px 12px; font-size: 14px; font-weight: 600; color: #5b6572; text-decoration: none; border-bottom: 2px solid transparent; }
+.admin-submenu__item:hover { color: #16265a; text-decoration: none; background: #f6f8fc; }
+.admin-submenu__item.es-actual { color: #16265a; border-bottom-color: #25408f; }
+.admin-submenu__num { font-size: 11px; letter-spacing: 0.08em; color: #a3abb8; }
+.admin-submenu__item.es-actual .admin-submenu__num { color: #25408f; }
+.admin-acciones--bloque { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 4px; }
+
+@media (max-width: 1119.98px) {
+  .admin-submenu { padding: 0 20px; overflow-x: auto; flex-wrap: nowrap; }
+  .admin-submenu__item { white-space: nowrap; min-height: 44px; }
+}
+
+/* Editor de plantillas de correo (17/09). */
+.admin-gestion__columnas { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); gap: 32px; align-items: start; }
+.admin-gestion__lateral { display: flex; flex-direction: column; gap: 24px; }
+.admin-form__textarea--alta { min-height: 260px; }
+.admin-form__check--fila { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+.admin-previa { border: 1px solid #dbe1ec; background: #ffffff; }
+.admin-previa__asunto { border-bottom: 1px solid #dbe1ec; padding: 12px 16px; font-weight: 700; color: #16265a; font-size: 14px; }
+.admin-previa__cuerpo { padding: 16px; font-size: 14px; color: #3b4453; line-height: 1.6; }
+.admin-previa__cuerpo p { margin: 0 0 12px; }
+.admin-previa__boton { display: inline-block; background: #25408f; color: #ffffff; padding: 10px 16px; font-weight: 700; font-size: 13px; }
+.admin-previa__firma { color: #8c95a3; font-size: 13px; margin-bottom: 0; }
+
+@media (max-width: 1119.98px) {
+  .admin-gestion__columnas { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+}

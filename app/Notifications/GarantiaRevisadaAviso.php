@@ -5,16 +5,15 @@ namespace App\Notifications;
 use App\Models\Garantia;
 use App\Support\Formato;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Messages\MailMessage;
 
 /** Garantía aprobada o rechazada. */
 class GarantiaRevisadaAviso extends AvisoColliers
 {
     public function __construct(public Garantia $garantia) {}
 
-    public function asunto(): string
+    public function plantilla(): string
     {
-        return $this->garantia->estado === Garantia::ESTADO_APROBADA ? 'Tu garantía fue aprobada' : 'No pudimos validar tu garantía';
+        return $this->garantia->estado === Garantia::ESTADO_APROBADA ? 'garantia_aprobada' : 'garantia_rechazada';
     }
 
     public function notificable(): ?Model
@@ -22,21 +21,21 @@ class GarantiaRevisadaAviso extends AvisoColliers
         return $this->garantia;
     }
 
-    protected function contenido(MailMessage $correo, object $destinatario): MailMessage
+    protected function datos(?object $destinatario = null): array
     {
         $remate = $this->garantia->remate;
-        $monto = Formato::clp($this->garantia->monto);
 
-        if ($this->garantia->estado === Garantia::ESTADO_APROBADA) {
-            return $correo->line("Tu garantía por {$monto} para {$remate->titulo} ({$remate->folio}) fue aprobada.")
-                ->line('Quedas habilitado para pujar en este remate. La sala de pujas se abre el ' . Formato::fecha($remate->abreEn()) . ' (hora de Chile), junto con la transmisión.')
-                ->line('El precio y el cronómetro de la plataforma son los oficiales: el video tiene 10 a 30 segundos de retraso.')
-                ->action('Ir a mi cuenta', route('cuenta.estado', ['remate' => $remate->slug]));
-        }
+        return [
+            'remate' => $remate->titulo,
+            'folio' => $remate->folio,
+            'monto' => Formato::clp($this->garantia->monto),
+            'inicio' => Formato::fecha($remate->abreEn()),
+            'motivo' => $this->garantia->motivo_rechazo ?: 'no indicado',
+        ];
+    }
 
-        return $correo->line("No pudimos validar tu garantía por {$monto} para {$remate->titulo} ({$remate->folio}).")
-            ->line('Motivo: ' . ($this->garantia->motivo_rechazo ?: 'no indicado') . '.')
-            ->line('Puedes corregirla y volver a enviar el comprobante' . ($remate->cierre_garantias_en ? ' hasta el ' . Formato::fecha($remate->cierre_garantias_en) : '') . '.')
-            ->action('Enviar el comprobante de nuevo', route('cuenta.estado', ['remate' => $remate->slug]));
+    protected function enlace(?object $destinatario = null): ?string
+    {
+        return route('cuenta.estado', ['remate' => $this->garantia->remate->slug]);
     }
 }

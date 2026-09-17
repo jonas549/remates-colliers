@@ -97,10 +97,10 @@ class NotificacionesTest extends TestCase
 
         $this->assertSame([
             'Tu cuenta fue aprobada · Remates Colliers → ' . $user->email,
-            'No pudimos validar tu garantía · Remates Colliers → ' . $user->email,
+            'No pudimos aprobar tu garantía · Remates Colliers → ' . $user->email,
         ], $this->asuntos());
         $html = $this->correos()[1]->getHtmlBody();
-        $this->assertStringContainsString('Motivo: El titular no coincide.', $html);
+        $this->assertStringContainsString('Motivo: El titular no coincide', $html);
         $this->assertStringContainsString('Hola Camila', $html);
         $this->assertStringContainsString('Si no puedes hacer clic en el botón', $html);
         $this->assertStringNotContainsString('Regards', $html);
@@ -112,34 +112,59 @@ class NotificacionesTest extends TestCase
         $this->assertSame($user->id, $log[1]->user_id);
     }
 
-    public function test_al_cerrar_avisa_al_adjudicatario_y_a_la_administracion(): void
+    public function test_al_cerrar_avisa_al_adjudicatario_a_quienes_no_ganaron_y_resume_a_la_administracion(): void
     {
         $remate = $this->remate([], 0);
         $lote = $remate->lotes()->first();
         $lote->forceFill(['abre_en' => CarbonImmutable::now('UTC')->subMinutes(5), 'cierra_en' => CarbonImmutable::now('UTC')->addMinutes(5)])->save();
         $ana = $this->postor();
-        Garantia::paraRemate($remate, $ana)->forceFill(['estado' => Garantia::ESTADO_APROBADA])->save();
-        app(MotorPujas::class)->pujar($ana, $lote->id, 100000000, CarbonImmutable::now('UTC'));
+        $beto = $this->postor(nombre: 'Beto');
+        foreach ([$ana, $beto] as $postor) {
+            Garantia::paraRemate($remate, $postor)->forceFill(['estado' => Garantia::ESTADO_APROBADA])->save();
+        }
+        app(MotorPujas::class)->pujar($beto, $lote->id, 100000000, CarbonImmutable::now('UTC'));
+        app(MotorPujas::class)->pujar($ana, $lote->id, 100100000, CarbonImmutable::now('UTC'));
 
         CarbonImmutable::setTestNow($lote->cierra_en->addSeconds(3));
         app(Liquidador::class)->liquidarVencidos($remate);
 
+        // Un correo al ganador, uno a quien pujó y no ganó, y UN resumen a la administración (decisión del 17/09).
         $this->assertSame([
             'Te adjudicaste la propiedad · Remates Colliers → ' . $ana->email,
-            'Lote adjudicado en ' . $remate->folio . ' · Remates Colliers → admin@colliers.test',
+            'Resultado del remate · Remates Colliers → ' . $beto->email,
+            'Remate cerrado: resumen · Remates Colliers → admin@colliers.test',
         ], $this->asuntos());
-        $this->assertStringContainsString('Precio de adjudicación: $100.000.000.', $this->correos()[0]->getHtmlBody());
+        $this->assertStringContainsString('$100.100.000', $this->correos()[0]->getHtmlBody());
+        $resumen = $this->correos()[2]->getHtmlBody();
+        $this->assertStringContainsString('adjudicado en $100.100.000', $resumen);
+        $this->assertStringContainsString('Adjudicados: 1 de 1', $resumen);
         $adjudicacion = Adjudicacion::sole();
         $this->assertNotNull($adjudicacion->notificado_ganador_en);
         $this->assertNotNull($adjudicacion->notificado_admin_en);
 
-        // Desierto: solo la administración, y al correo de avisos si está configurado.
+        // Desierto: solo el resumen, al correo de avisos si está configurado.
         Configuracion::guardar('correo_avisos_admin', 'avisos@colliers.test');
         $desierto = $this->remate([], 0);
         $l2 = $desierto->lotes()->first();
         $l2->forceFill(['abre_en' => CarbonImmutable::now('UTC')->subMinutes(10), 'cierra_en' => CarbonImmutable::now('UTC')->subMinute()])->save();
         app(Liquidador::class)->liquidarVencidos($desierto);
-        $this->assertSame('Lote cerrado sin posturas en ' . $desierto->folio . ' · Remates Colliers → avisos@colliers.test', last($this->asuntos()));
+        $this->assertSame('Remate cerrado: resumen · Remates Colliers → avisos@colliers.test', last($this->asuntos()));
+        $this->assertStringContainsString('desierto', last($this->correos())->getHtmlBody());
+    }
+
+    public function test_los_interruptores_de_notificaciones_apagan_un_correo(): void
+    {
+        \App\Correo\Avisos::guardar('cuenta_aprobada', false);
+        $user = $this->postor(Postor::ESTADO_EN_REVISION, 'Camila');
+
+        $this->actingAs($this->admin)->postJson(route('admin.postores.aprobar', $user->postor))->assertOk();
+
+        $this->assertSame([], $this->asuntos(), 'apagado no se envía');
+        $this->assertSame(0, NotificacionLog::count(), 'y no se anota en la bitácora');
+
+        // El correo de la cuenta del postor (confirmar correo) no se puede apagar.
+        \App\Correo\Avisos::guardar('bienvenida', false);
+        $this->assertTrue(\App\Correo\Avisos::activo('bienvenida'));
     }
 
     public function test_los_remates_de_demostracion_no_envian_correos(): void
@@ -164,7 +189,7 @@ class NotificacionesTest extends TestCase
         $borrador = $this->remate(['estado' => Remate::ESTADO_BORRADOR]);
         app(GestionRemates::class)->publicar($borrador);
 
-        $this->assertSame(['Nuevo remate: ' . $borrador->titulo . ' · Remates Colliers → interesado@correo.test'], $this->asuntos());
+        $this->assertSame(['Remate nuevo publicado · Remates Colliers → interesado@correo.test'], $this->asuntos());
         $suscripcion = Suscripcion::sole();
         $this->assertStringContainsString(route('suscripciones.baja', $suscripcion->token), $this->correos()[0]->getHtmlBody());
 
@@ -191,7 +216,7 @@ class NotificacionesTest extends TestCase
         // 47 h antes del cierre de garantías: aviso a suscriptores generales.
         CarbonImmutable::setTestNow($remate->cierre_garantias_en->subHours(47));
         $this->artisan('colliers:recordatorios')->assertSuccessful();
-        $this->assertSame(['Cierra el plazo de garantías: ' . $remate->titulo . ' · Remates Colliers → general@correo.test'], $this->asuntos());
+        $this->assertSame(['Cierra el plazo de garantías · Remates Colliers → general@correo.test'], $this->asuntos());
 
         // 23 h antes del inicio (recordatorio de 24 h): inscritos aprobados y suscriptores del remate; a la pendiente, que falta.
         CarbonImmutable::setTestNow($remate->abreEn()->subHours(23));
@@ -202,10 +227,10 @@ class NotificacionesTest extends TestCase
         $asuntos = $this->asuntos();
         sort($asuntos);
         $this->assertSame([
-            'Cierra el plazo de garantías: ' . $remate->titulo . ' · Remates Colliers → general@correo.test',
-            'El remate comienza pronto: ' . $remate->titulo . ' · Remates Colliers → curioso@correo.test',
-            'El remate comienza pronto: ' . $remate->titulo . ' · Remates Colliers → ' . $aprobada->email,
-            'Falta aprobar tu garantía: ' . $remate->folio . ' · Remates Colliers → ' . $pendiente->email,
+            'Cierra el plazo de garantías · Remates Colliers → general@correo.test',
+            'Falta aprobar tu garantía · Remates Colliers → ' . $pendiente->email,
+            'Tu remate comienza pronto · Remates Colliers → curioso@correo.test',
+            'Tu remate comienza pronto · Remates Colliers → ' . $aprobada->email,
         ], $asuntos);
         $this->assertSame(0, NotificacionLog::where('estado', 'pendiente')->count(), 'los pendientes pasan a enviados');
     }

@@ -1,5 +1,6 @@
-// Bloque V en navegador real: Administración → Configuración (guardar, correo de prueba en modo registro, usabilidad).
-// Requiere `php artisan serve` (APP_ENV=local) y la base local sembrada (migrate:fresh --seed). No reinicia la base.
+// Bloque V en navegador real: Administración → Configuración, ahora con una pantalla por tema (17/09).
+// Recorre el submenú, guarda valores, prueba el correo, edita y restaura una plantilla, apaga un aviso y revisa
+// usabilidad. Requiere `php artisan serve` (APP_ENV=local) y la base local sembrada. No reinicia la base.
 //
 //   node tools/comparar/panel-configuracion.mjs
 import fs from 'node:fs';
@@ -18,39 +19,124 @@ fs.mkdirSync(SALIDA, { recursive: true });
 
 const navegador = await chromium.launch({ channel: 'chrome' });
 const p = await (await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL' })).newPage();
+const seccion = async (nombre) => {
+    await p.getByRole('link', { name: nombre, exact: false }).first().click();
+    await p.waitForLoadState('load');
+};
+
 await p.goto(`${URL}/revision/entrar/admin?a=/admin/configuracion`, { waitUntil: 'load' });
-
 comprobar('menú con el ítem Configuración activo', (await p.locator('.admin-lateral__item.es-actual').innerText()).includes('Configuración'));
-comprobar('sistema visto desde la web', (await p.locator('.admin-datos').innerText()).includes('OPcache (web)'));
+comprobar('abre en «Remates y pujas»', p.url().endsWith('/admin/configuracion/remates'), p.url());
+const submenu = await p.locator('.admin-submenu__item').allInnerTexts();
+comprobar('submenú con las 8 secciones', submenu.length === 8 && submenu.join(' ').includes('Plantillas de correo') && submenu.join(' ').includes('Sistema'),
+    submenu.map((s) => s.split('\n').pop().trim()).join(' · '));
+comprobar('cada pantalla trae solo lo suyo', (await p.locator('input[name="config[margen_liquidacion_segundos]"]').count()) === 1
+    && (await p.locator('input[name="config[smtp_host]"]').count()) === 0);
 
+// 1. Remates y pujas: guardar y validar.
 await p.fill('input[name="config[margen_liquidacion_segundos]"]', '5');
 await p.fill('input[name="config[pujas_rapidas]"]', '100.000, 500.000, 2.000.000');
-await p.selectOption('select[name="config[correo_modo]"]', 'log');
-await p.getByRole('button', { name: 'Guardar configuración' }).click();
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
 comprobar('configuración guardada', (await p.locator('.admin-aviso--ok').innerText()).includes('Configuración guardada'));
 comprobar('los valores quedan en el formulario', (await p.inputValue('input[name="config[margen_liquidacion_segundos]"]')) === '5'
     && (await p.inputValue('input[name="config[pujas_rapidas]"]')) === '100.000, 500.000, 2.000.000');
 
-await p.fill('input[name="config[porcentaje_garantia]"]', '150');
-await p.getByRole('button', { name: 'Guardar configuración' }).click();
-comprobar('error de validación en español', (await p.locator('.admin-errores').innerText()).includes('garantía'));
+await p.fill('input[name="config[margen_liquidacion_segundos]"]', '0');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+comprobar('error de validación en español', (await p.locator('.admin-errores').innerText()).includes('margen de liquidación'));
 
-await p.goto(`${URL}/admin/configuracion`, { waitUntil: 'load' });
+// 2. Garantías.
+await seccion('Garantías');
+await p.fill('input[name="config[porcentaje_garantia]"]', '150');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+comprobar('garantías: validación del porcentaje', (await p.locator('.admin-errores').innerText()).includes('garantía'));
+
+// 3. Correo: los dos botones separados.
+await seccion('Correo (SMTP)');
+comprobar('correo: «Probar conexión» y «Enviar correo de prueba»', (await p.getByRole('button', { name: 'Probar conexión' }).count()) === 1
+    && (await p.getByRole('button', { name: 'Enviar correo de prueba' }).count()) === 1);
+await p.selectOption('select[name="config[correo_modo]"]', 'log');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+await p.getByRole('button', { name: 'Probar conexión' }).click();
+await p.waitForSelector('.admin-aviso');
+comprobar('probar conexión en modo registro explica el motivo', (await p.locator('.admin-aviso').innerText()).includes('Cambia el modo a SMTP'));
+
 await p.getByRole('button', { name: 'Enviar correo de prueba' }).click();
-comprobar('correo de prueba en modo registro', (await p.locator('.admin-aviso--ok').innerText()).includes('registrado en storage/logs'));
+await p.getByRole('button', { name: 'Enviar ahora' }).click();
+await p.waitForSelector('.admin-aviso--ok');
+comprobar('correo de prueba en modo registro', (await p.locator('.admin-aviso--ok').innerText()).includes('registrado en el log'));
+
+// Servidor inexistente: el mensaje dice exactamente qué falló.
+await p.selectOption('select[name="config[correo_modo]"]', 'smtp');
+await p.fill('input[name="config[smtp_host]"]', 'servidor-que-no-existe.colliers-invalido');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+await p.getByRole('button', { name: 'Probar conexión' }).click();
+await p.waitForSelector('.admin-aviso');
+comprobar('probar conexión con servidor inexistente', (await p.locator('.admin-aviso').innerText()).includes('No se pudo resolver el servidor'),
+    (await p.locator('.admin-aviso').innerText()).slice(0, 120));
+await p.selectOption('select[name="config[correo_modo]"]', 'log');
+await p.fill('input[name="config[smtp_host]"]', '');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+
+// 4. Plantillas: editar, vista previa y restaurar.
+await seccion('Plantillas de correo');
+const filas = await p.locator('tbody tr').count();
+comprobar('lista de plantillas', filas >= 14, `${filas} plantillas`);
+await p.locator('tbody tr', { hasText: 'Cuenta aprobada' }).getByRole('link', { name: 'Editar' }).click();
+await p.waitForLoadState('load');
+comprobar('editor con variables y vista previa', (await p.locator('.admin-datos').innerText()).includes('{{ contacto }}')
+    && (await p.locator('.admin-previa__asunto').innerText()).includes('Tu cuenta fue aprobada'));
+
+await p.fill('input[name=asunto]', 'Tu cuenta quedó habilitada');
+await p.fill('textarea[name=cuerpo]', 'Colliers aprobó tu cuenta.\n\nEscríbenos a {{ contacto }} si tienes dudas.');
+await p.getByRole('button', { name: 'Ver la vista previa' }).click();
+await p.waitForLoadState('load');
+const previa = await p.locator('.admin-previa__cuerpo').innerText();
+comprobar('la vista previa reemplaza las variables sin guardar', previa.includes('remates@colliers.cl') && !previa.includes('{{ contacto }}'));
+
+await p.getByRole('button', { name: 'Guardar plantilla' }).click();
+await p.waitForSelector('.admin-aviso--ok');
+comprobar('plantilla guardada', (await p.locator('.admin-aviso--ok').innerText()).includes('Plantilla guardada'));
+p.once('dialog', (d) => d.accept()); // «¿Volver al texto original?»
+await p.getByRole('button', { name: 'Restaurar la original' }).click();
+await p.waitForSelector('.admin-aviso--ok');
+comprobar('plantilla restaurada', (await p.locator('.admin-aviso--ok').innerText()).includes('restaurada')
+    && (await p.inputValue('input[name=asunto]')) === 'Tu cuenta fue aprobada');
+
+// 5. Notificaciones: interruptores y bitácora.
+await seccion('Notificaciones');
+comprobar('tabla de avisos y últimos envíos', (await p.locator('.admin-tabla').count()) === 2
+    && (await p.locator('body').innerText()).includes('Siempre (correo de la cuenta)'));
+await p.uncheck('input[type=checkbox][name="avisos[remate_nuevo]"]');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+await p.waitForSelector('.admin-aviso--ok');
+comprobar('interruptor apagado queda guardado', !(await p.isChecked('input[type=checkbox][name="avisos[remate_nuevo]"]')));
+await p.check('input[type=checkbox][name="avisos[remate_nuevo]"]');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+
+// 6. Seguridad y Sistema.
+await seccion('Seguridad');
+comprobar('seguridad: duración de la sesión', (await p.locator('input[name="config[sesion_minutos]"]').count()) === 1);
+await seccion('Sistema');
+comprobar('sistema visto desde la web', (await p.locator('.admin-datos').innerText()).includes('OPcache (web)'));
 
 // Deja los valores por defecto del acta para las demás pruebas.
+await p.goto(`${URL}/admin/configuracion/remates`, { waitUntil: 'load' });
 await p.fill('input[name="config[margen_liquidacion_segundos]"]', '2');
 await p.fill('input[name="config[pujas_rapidas]"]', '100.000, 500.000, 1.000.000');
-await p.getByRole('button', { name: 'Guardar configuración' }).click();
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+await p.goto(`${URL}/admin/configuracion/garantias`, { waitUntil: 'load' });
+await p.fill('input[name="config[porcentaje_garantia]"]', '10');
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
 
-for (const ancho of [375, 760, 1120, 1440]) {
+for (const [ancho, ruta] of [[375, 'remates'], [760, 'correo'], [1120, 'plantillas'], [1440, 'notificaciones']]) {
     const c = await navegador.newContext({ viewport: { width: ancho, height: 900 }, locale: 'es-CL' });
     const q = await c.newPage();
-    await q.goto(`${URL}/revision/entrar/admin?a=/admin/configuracion`, { waitUntil: 'load' });
+    await q.goto(`${URL}/revision/entrar/admin?a=/admin/configuracion/${ruta}`, { waitUntil: 'load' });
+    await q.evaluate(() => document.fonts.ready);
     const u = await revisarUsabilidad(q, ancho);
-    comprobar(`configuración a ${ancho}px: sin desborde, táctiles ≥ 44`, !u.desborde && u.pequenos.length === 0, u.pequenos.slice(0, 4).join('; '));
-    await q.screenshot({ path: path.join(SALIDA, `configuracion-${ancho}.png`), fullPage: true });
+    comprobar(`configuración (${ruta}) a ${ancho}px: sin desborde, táctiles ≥ 44`, !u.desborde && u.pequenos.length === 0, u.pequenos.slice(0, 4).join('; '));
+    await q.screenshot({ path: path.join(SALIDA, `configuracion-${ruta}-${ancho}.png`), fullPage: true });
     await c.close();
 }
 
