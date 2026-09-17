@@ -70,7 +70,7 @@ class EnviarRecordatorios extends Command
         }
         $asunto = $aviso->asunto();
         $yaRecibieron = NotificacionLog::where('tipo', 'RecordatorioRemateAviso')->where('notificable_type', $remate->getMorphClass())
-            ->where('notificable_id', $remate->id)->where('asunto', $asunto)->whereIn('estado', ['enviada', 'pendiente'])
+            ->where('notificable_id', $remate->id)->where('asunto', $asunto)->whereIn('estado', NotificacionLog::YA_INTENTADA)
             ->pluck('destinatario')->map(fn ($c) => mb_strtolower($c))->all();
 
         $cantidad = 0;

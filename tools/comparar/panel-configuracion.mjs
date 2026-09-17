@@ -142,6 +142,20 @@ await p.waitForLoadState('load');
 comprobar('el filtro viaja en la URL y la tabla responde', p.url().includes('estado=fallida')
     && ((await p.locator('tbody tr').innerText()).includes('Sin correos con esos filtros') || (await p.locator('.badge-admin').first().innerText()) === 'FALLIDA'));
 
+// El correo de prueba en modo registro queda como «NO SALIÓ», no como enviado, y la fila se abre con el detalle.
+await p.goto(`${URL}/admin/configuracion/correos`, { waitUntil: 'load' });
+const filaPrueba = p.locator('tbody tr').first();
+comprobar('el correo de prueba queda en el registro', (await p.locator('tbody tr').count()) >= 1 && (await filaPrueba.innerText()).includes('Prueba de correo'));
+comprobar('un correo en modo registro no figura como enviado', (await filaPrueba.locator('.badge-admin').innerText()) === 'NO SALIÓ'
+    || (await p.locator('tbody tr').innerText()).includes('Sin correos'), (await filaPrueba.innerText()).split('\n').join(' ').slice(0, 90));
+if ((await p.locator('details.admin-error-correo').count()) > 0) {
+    await p.locator('details.admin-error-correo').first().locator('summary').click();
+    const detalle = await p.locator('.admin-detalle-correo').first().innerText();
+    comprobar('la fila se abre con transporte, respuesta, Message-ID y remitente',
+        ['Transporte', 'Respuesta del servidor', 'Message-ID', 'Remitente', 'Destinatario'].every((t) => detalle.includes(t)),
+        detalle.split('\n').join(' · ').slice(0, 120));
+}
+
 // 6. Seguridad y Sistema.
 await seccion('Seguridad');
 comprobar('seguridad: duración de la sesión', (await p.locator('input[name="config[sesion_minutos]"]').count()) === 1);

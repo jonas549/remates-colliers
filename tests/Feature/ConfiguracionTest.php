@@ -220,7 +220,8 @@ class ConfiguracionTest extends TestCase
     {
         $error = str_repeat('Expected response code "250" but got code "553", with message "553 Sender address rejected". ', 5);
         \App\Models\NotificacionLog::create(['canal' => 'correo', 'tipo' => 'CuentaRevisadaAviso', 'destinatario' => 'ana@correo.test',
-            'asunto' => 'Tu cuenta fue aprobada', 'estado' => 'enviada', 'enviada_en' => now('UTC')]);
+            'asunto' => 'Tu cuenta fue aprobada', 'estado' => 'aceptada', 'transporte' => 'smtp', 'remitente' => 'remates@colliers.test',
+            'respuesta' => '250 2.0.0 Ok: queued as 4X7B2', 'message_id' => 'abc123@colliers.test', 'enviada_en' => now('UTC')]);
         \App\Models\NotificacionLog::create(['canal' => 'correo', 'tipo' => 'AdjudicacionAviso', 'destinatario' => 'beto@correo.test',
             'asunto' => 'Te adjudicaste la propiedad', 'estado' => 'fallida', 'error' => $error]);
         \App\Models\NotificacionLog::create(['canal' => 'correo', 'tipo' => 'RecordatorioRemateAviso', 'destinatario' => 'carla@correo.test',
@@ -230,8 +231,22 @@ class ConfiguracionTest extends TestCase
         $this->actingAs($this->admin)->get($registro)->assertOk()
             ->assertSee('Registro de correos')->assertSee('ana@correo.test')->assertSee('beto@correo.test')->assertSee('carla@correo.test')
             ->assertSee('aceptados por el servidor')->assertSee('553 Sender address rejected')
-            ->assertSee('no que haya llegado a la bandeja');
+            ->assertSee('no garantiza que haya llegado a la bandeja')
+            // Cada fila se abre con todo lo que respondió el transporte.
+            ->assertSee('250 2.0.0 Ok: queued as 4X7B2')->assertSee('abc123@colliers.test')->assertSee('remates@colliers.test')
+            ->assertSee('Message-ID')->assertSee('Transporte');
 
+        // Un correo que solo quedó en el archivo de registro no puede figurar como enviado.
+        \App\Models\NotificacionLog::create(['canal' => 'correo', 'tipo' => 'RemateNuevoAviso', 'destinatario' => 'dina@correo.test',
+            'asunto' => 'Remate nuevo publicado', 'estado' => 'registrada', 'transporte' => 'log']);
+        \App\Models\NotificacionLog::create(['canal' => 'correo', 'tipo' => 'CuentaRevisadaAviso', 'destinatario' => 'vieja@correo.test',
+            'asunto' => 'Correo anterior a la corrección', 'estado' => 'sin_verificar']);
+        $this->actingAs($this->admin)->get($registro)->assertOk()
+            ->assertSee('NO SALIÓ')->assertSee('No salió: quedó en el archivo de registro')
+            ->assertSee('SIN VERIFICAR')->assertSee('anteriores al');
+
+        $this->actingAs($this->admin)->get($registro . '?estado=registrada')->assertOk()
+            ->assertSee('dina@correo.test')->assertDontSee('ana@correo.test');
         $this->actingAs($this->admin)->get($registro . '?estado=fallida')->assertOk()
             ->assertSee('beto@correo.test')->assertDontSee('ana@correo.test');
         $this->actingAs($this->admin)->get($registro . '?q=carla')->assertOk()
@@ -245,10 +260,52 @@ class ConfiguracionTest extends TestCase
         $contenido = $csv->streamedContent();
         $this->assertStringContainsString('beto@correo.test', $contenido);
         $this->assertStringContainsString('553 Sender address rejected', $contenido);
+        $this->assertStringContainsString('Message-ID', $contenido);
         $this->assertStringNotContainsString('ana@correo.test', $contenido);
 
         $martillero = User::create(['name' => 'M2', 'email' => 'm2@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_MARTILLERO, 'estado' => User::ESTADO_ACTIVO]);
         $this->actingAs($martillero)->get($registro)->assertForbidden();
+    }
+
+    public function test_la_bitacora_guarda_lo_que_respondio_el_transporte(): void
+    {
+        $postor = User::create(['name' => 'Ana', 'email' => 'ana@correo.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_POSTOR, 'estado' => User::ESTADO_ACTIVO]);
+        $aviso = new \App\Notifications\CuentaRevisadaAviso(
+            \App\Models\Postor::create(['user_id' => $postor->id, 'nombres' => 'Ana', 'apellidos' => 'Prueba', 'rut' => '21345678-4']),
+            'cuenta_aprobada',
+        );
+
+        // Modo registro: el correo no sale a Internet y la bitácora lo dice.
+        config(['mail.default' => 'log']);
+        $postor->notify($aviso);
+        $fila = \App\Models\NotificacionLog::sole();
+        $this->assertSame('registrada', $fila->estado, 'con transporte log no se puede afirmar que se envió');
+        $this->assertSame('log', $fila->transporte);
+        $this->assertNull($fila->enviada_en);
+        $this->assertNull($fila->respuesta);
+
+        // Con un servidor SMTP de verdad: queda «aceptada», con su respuesta literal y el Message-ID.
+        \App\Models\NotificacionLog::query()->delete();
+        [$puerto, $proceso] = $this->servidorFalso();
+        Configuracion::guardar('correo_modo', 'smtp');
+        Configuracion::guardar('smtp_host', '127.0.0.1');
+        Configuracion::guardar('smtp_puerto', (string) $puerto);
+        Configuracion::guardar('smtp_cifrado', 'ninguno');
+        Configuracion::guardar('smtp_usuario', '');
+        Configuracion::guardar('correo_remitente', 'remates@colliers.test');
+        \App\Support\CorreoSaliente::aplicar(config());
+        $this->app->make(MailManager::class)->forgetMailers();
+
+        $postor->notify($aviso);
+        proc_terminate($proceso);
+
+        $fila = \App\Models\NotificacionLog::sole();
+        $this->assertSame('aceptada', $fila->estado);
+        $this->assertSame('smtp', $fila->transporte);
+        $this->assertStringContainsString('250 2.0.0 Ok: queued as PRUEBA123', (string) $fila->respuesta);
+        $this->assertNotNull($fila->message_id);
+        $this->assertSame('remates@colliers.test', $fila->remitente);
+        $this->assertNotNull($fila->enviada_en);
     }
 
     /** Servidor SMTP mínimo en un proceso aparte: acepta el mensaje y responde 250 con su identificador. */

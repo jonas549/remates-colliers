@@ -25,9 +25,11 @@ class RegistroCorreosController extends Controller
             'tipos' => NotificacionLog::distinct()->orderBy('tipo')->pluck('tipo'),
             'totales' => [
                 'en total' => $totales->sum(),
-                'aceptados por el servidor' => $totales['enviada'] ?? 0,
+                'aceptados por el servidor' => $totales['aceptada'] ?? 0,
+                'solo registrados (no salieron)' => $totales['registrada'] ?? 0,
                 'fallidos' => $totales['fallida'] ?? 0,
                 'pendientes en la cola' => $totales['pendiente'] ?? 0,
+                'sin verificar' => $totales['sin_verificar'] ?? 0,
             ],
         ];
     }
@@ -39,11 +41,14 @@ class RegistroCorreosController extends Controller
         return response()->streamDownload(function () use ($filas) {
             $salida = fopen('php://output', 'w');
             fwrite($salida, "\xEF\xBB\xBF");
-            fputcsv($salida, ['Fecha (hora de Chile)', 'Correo', 'Tipo', 'Destinatario', 'Estado', 'Aceptado por el servidor', 'Error'], ';');
+            fputcsv($salida, ['Fecha (hora de Chile)', 'Correo', 'Tipo', 'Remitente', 'Destinatario', 'Estado', 'Transporte',
+                'Respuesta del servidor', 'Message-ID', 'Aceptado por el servidor', 'Error'], ';');
             foreach ($filas as $c) {
                 fputcsv($salida, [
                     $c->created_at?->setTimezone(Formato::ZONA)->format('d-m-Y H:i:s'),
-                    $c->asunto, $c->tipo, $c->destinatario, $c->estado,
+                    $c->asunto, $c->tipo, $c->remitente, $c->destinatario,
+                    NotificacionLog::ESTADOS[$c->estado] ?? $c->estado,
+                    $c->transporte, $c->respuesta, $c->message_id,
                     $c->enviada_en?->setTimezone(Formato::ZONA)->format('d-m-Y H:i:s'),
                     $c->error,
                 ], ';');

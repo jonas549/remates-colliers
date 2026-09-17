@@ -107,7 +107,10 @@ class NotificacionesTest extends TestCase
 
         $log = NotificacionLog::orderBy('id')->get();
         $this->assertSame(['CuentaRevisadaAviso', 'GarantiaRevisadaAviso'], $log->pluck('tipo')->all());
-        $this->assertSame(['enviada', 'enviada'], $log->pluck('estado')->all());
+        // En pruebas el transporte es «array»: no sale a Internet, así que la bitácora NO puede decir que se envió.
+        $this->assertSame(['registrada', 'registrada'], $log->pluck('estado')->all());
+        $this->assertSame(['array', 'array'], $log->pluck('transporte')->all());
+        $this->assertNull($log[0]->enviada_en, 'solo se marca la hora cuando el servidor lo aceptó');
         $this->assertSame($garantia->id, $log[1]->notificable_id);
         $this->assertSame($user->id, $log[1]->user_id);
     }

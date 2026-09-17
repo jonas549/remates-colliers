@@ -81,8 +81,8 @@
                                 <td>{{ $envio->asunto ?: $envio->tipo }}</td>
                                 <td>{{ $envio->destinatario }}</td>
                                 <td>
-                                    <span class="badge-admin badge-admin--{{ ['enviada' => 'adjudicada', 'fallida' => 'no-adjudicado'][$envio->estado] ?? 'revision' }}">{{ mb_strtoupper($envio->estado) }}</span>
-                                    @if ($envio->error)<div class="admin-tabla__secundario">{{ mb_substr($envio->error, 0, 160) }}</div>@endif
+                                    <span class="badge-admin badge-admin--{{ ['aceptada' => 'adjudicada', 'fallida' => 'no-adjudicado', 'registrada' => 'cerrado', 'sin_verificar' => 'anticipado'][$envio->estado] ?? 'revision' }}">{{ \App\Models\NotificacionLog::ETIQUETAS[$envio->estado] ?? mb_strtoupper($envio->estado) }}</span>
+                                    <div class="admin-tabla__secundario">{{ \App\Models\NotificacionLog::ESTADOS[$envio->estado] ?? '' }}</div>
                                 </td>
                             </tr>
                         @empty

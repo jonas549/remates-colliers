@@ -133,3 +133,7 @@ a.admin-form__borrador { display: inline-block; text-align: center; text-decorat
 @media (max-width: 1119.98px) {
   .admin-paginacion__item { min-height: 44px; display: inline-flex; align-items: center; }
 }
+.admin-detalle-correo { margin-top: 10px; border-top: 1px solid #e6eaf1; padding-top: 8px; }
+.admin-detalle-correo .admin-ficha__dato { display: flex; gap: 12px; padding: 4px 0; font-size: 13px; }
+.admin-detalle-correo .admin-ficha__k { min-width: 170px; color: #8c95a3; }
+.admin-detalle-correo .admin-ficha__v { color: #16265a; word-break: break-word; }

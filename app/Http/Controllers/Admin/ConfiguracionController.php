@@ -141,6 +141,7 @@ class ConfiguracionController extends Controller
             // Mismo diccionario que «Probar conexión»: nada de «error al enviar».
             $mensaje = app(DiagnosticoSmtp::class)->explicarError($e, $datos);
             $respuesta = method_exists($e, 'getDebug') ? DiagnosticoSmtp::respuestaFinal((string) $e->getDebug()) : null;
+            $this->anotarPrueba($destino, $remitente, 'fallida', $respuesta, null, $e->getMessage());
 
             return back()->with('error', trim("El servidor rechazó el correo de prueba. {$mensaje}"
                 . ($respuesta ? " Respuesta del servidor: «{$respuesta}»." : '')
@@ -148,14 +149,16 @@ class ConfiguracionController extends Controller
         }
 
         $modo = config('mail.default');
-        if ($modo === 'log') {
-            return back()->with('estado', "Correo de prueba registrado en el log (modo «{$modo}»: no sale a Internet). En el servidor: tail -n 50 storage/logs/laravel-AAAA-MM-DD.log");
-        }
-
         // Solo se puede afirmar lo que dijo el servidor: que ACEPTÓ el mensaje. La entrega depende de lo que pase después.
         $symfony = $enviado?->getSymfonySentMessage();
         $respuesta = DiagnosticoSmtp::respuestaFinal((string) $symfony?->getDebug());
         $id = $symfony?->getMessageId();
+        // La prueba también queda en el registro de correos: es donde se mira después.
+        $this->anotarPrueba($destino, $remitente, in_array($modo, ['log', 'array', 'null'], true) ? 'registrada' : 'aceptada', $respuesta, $id, null);
+
+        if ($modo === 'log') {
+            return back()->with('estado', "Correo de prueba registrado en el log (modo «{$modo}»): NO salió a Internet. En el servidor: tail -n 50 storage/logs/laravel-AAAA-MM-DD.log");
+        }
 
         return back()->with('estado', trim("El servidor de salida ACEPTÓ el mensaje para {$destino}, enviado desde «{$remitente}» por «{$modo}»."
             . ($respuesta ? " Respuesta del servidor: «{$respuesta}»." : ' El transporte no devolvió una respuesta SMTP.')
@@ -171,6 +174,28 @@ class ConfiguracionController extends Controller
         $salida = trim(Artisan::output());
 
         return back()->with($codigo === 0 ? 'estado' : 'error', $salida);
+    }
+
+    /** El correo de prueba queda en la misma bitácora que los demás, con lo que respondió el transporte. */
+    private function anotarPrueba(string $destino, string $remitente, string $estado, ?string $respuesta, ?string $id, ?string $error): void
+    {
+        try {
+            NotificacionLog::create([
+                'canal' => 'correo',
+                'transporte' => (string) config('mail.default'),
+                'tipo' => 'PruebaDeCorreo',
+                'destinatario' => $destino,
+                'remitente' => $remitente ?: null,
+                'asunto' => 'Prueba de correo · Remates Colliers',
+                'estado' => $estado,
+                'respuesta' => $respuesta === null ? null : mb_substr($respuesta, 0, 500),
+                'message_id' => $id,
+                'error' => $error === null ? null : mb_substr($error, 0, 2000),
+                'enviada_en' => $estado === 'aceptada' ? now('UTC') : null,
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     /** @return array{host: string, puerto: int, cifrado: string, usuario: ?string, clave: ?string} */
