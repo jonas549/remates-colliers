@@ -162,5 +162,16 @@ class SitioPublicoTest extends TestCase
         $html = stripslashes($respuesta->getContent());
         $this->assertStringNotContainsString('apoquindo/estado', $html, 'los espectadores no llaman al endpoint con PHP');
         $this->assertStringNotContainsString($ana->email, $html);
+
+        // Espectador: mira el precio y el historial, pero no tiene con qué pujar ni puede hacerlo a mano.
+        $respuesta->assertSee('Solo puedes mirar este remate')->assertDontSee('Entrar a la sala de pujas');
+        $this->assertStringNotContainsString("/lotes/{$lote->id}/pujas", $html);
+        $this->postJson("/remates/apoquindo/lotes/{$lote->id}/pujas", ['monto' => 150000000])->assertUnauthorized();
+        $this->get('/remates/apoquindo/sala')->assertRedirect(route('login'));
+        $sinGarantia = $this->postor();
+        $this->actingAs($sinGarantia)->get('/remates/apoquindo')->assertOk()->assertDontSee('Entrar a la sala de pujas');
+        $this->actingAs($sinGarantia)->postJson("/remates/apoquindo/lotes/{$lote->id}/pujas", ['monto' => 150000000])
+            ->assertStatus(422)->assertJson(['motivo' => 'sin_garantia']);
+        $this->assertSame(1, \App\Models\Puja::count());
     }
 }

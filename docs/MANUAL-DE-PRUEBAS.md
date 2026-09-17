@@ -95,8 +95,9 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
    - Martillero `M. Ossandón`. Video: el ID de un video de YouTube cualquiera (por ejemplo `jfKfPfyJRdk`).
 3. **Publicar subasta** → te lleva a la ficha con «Remate R-2026-00N publicado» y el estado **PRÓXIMA**.
 4. En la ficha, **Datos y condiciones → Duración de cada lote (min):** `8` → **Guardar datos** (así no esperas 30 minutos). La tabla de lotes muestra abre y cierra con 8 minutos de diferencia.
-5. (Opcional) En **Lotes → Editar**: sube 2 fotos, agrega latitud `-33.4262` y longitud `-70.6116`, un horario de visita y, en la ficha, un documento PDF público.
-6. Abre `/` en una ventana privada: el remate aparece como PRÓXIMO con cuenta regresiva. Abre su detalle: ficha, fotos, mapa (si pusiste coordenadas), documentos y «Agregar a mi calendario» (descarga un `.ics`).
+5. (Opcional) **Reordenar:** en la ficha, **Agregar lote →** con otra dirección y precio base `50000000` → **Crear lote**. Vuelve a la ficha y en la fila del lote 2 pulsa **↑ Subir**: debe decir «Orden de los lotes actualizado; horarios reprogramados.», el lote movido queda 1.º y abre a la hora de inicio. (Si no quieres dos lotes en la prueba de pujas, carga este segundo lote en otro remate.)
+6. (Opcional) En **Lotes → Editar**: sube 2 fotos, agrega latitud `-33.4262` y longitud `-70.6116`, un horario de visita y, en la ficha, un documento PDF público.
+7. Abre `/` en una ventana privada: el remate aparece como PRÓXIMO con cuenta regresiva. Abre su detalle: ficha, fotos, mapa (si pusiste coordenadas), documentos y «Agregar a mi calendario» (descarga un `.ics`).
 
 ## 4. Registrar un postor y aprobarlo
 

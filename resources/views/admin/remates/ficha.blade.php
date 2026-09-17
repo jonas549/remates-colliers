@@ -128,7 +128,25 @@
                                     <td>{{ Formato::fechaCorta($lote->abre_en) }}</td>
                                     <td>{{ Formato::fechaCorta($lote->cierra_en) }}@if ($lote->nota_cierre)<div class="admin-tabla__secundario">Cierre anticipado: {{ $lote->nota_cierre }}</div>@endif</td>
                                     <td class="es-num">{{ $lote->imagenes->count() }}</td>
-                                    <td><a href="{{ route('admin.lotes.edit', [$remate, $lote]) }}">Editar</a></td>
+                                    <td class="admin-gestion__acciones-lote">
+                                        @if ($editable && $remate->lotes->count() > 1)
+                                            @unless ($loop->first)
+                                                <form method="POST" action="{{ route('admin.lotes.mover', [$remate, $lote]) }}" class="formulario-en-linea">
+                                                    @csrf
+                                                    <input type="hidden" name="direccion" value="subir">
+                                                    <button type="submit" class="admin-accion" aria-label="Subir lote {{ $lote->orden }}">↑ Subir</button>
+                                                </form>
+                                            @endunless
+                                            @unless ($loop->last)
+                                                <form method="POST" action="{{ route('admin.lotes.mover', [$remate, $lote]) }}" class="formulario-en-linea">
+                                                    @csrf
+                                                    <input type="hidden" name="direccion" value="bajar">
+                                                    <button type="submit" class="admin-accion" aria-label="Bajar lote {{ $lote->orden }}">↓ Bajar</button>
+                                                </form>
+                                            @endunless
+                                        @endif
+                                        <a href="{{ route('admin.lotes.edit', [$remate, $lote]) }}" class="admin-accion">Editar</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr><td colspan="8">Sin lotes todavía.</td></tr>

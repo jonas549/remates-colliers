@@ -49,7 +49,7 @@ for (const [nombre, ruta, rol] of PANTALLAS) {
                     const enLinea = estilo.display === 'inline' && padre && padre.textContent.trim().length > el.textContent.trim().length;
                     const etiqueta = ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) && el.closest('label');
                     const objetivo = etiqueta ? etiqueta.getBoundingClientRect() : caja;
-                    if (!enLinea && (objetivo.height < 44 || objetivo.width < 44)) {
+                    if (!enLinea && (objetivo.height < 43.99 || objetivo.width < 43.99)) { // 0,01 px de tolerancia: ruido de coma flotante de Chrome
                         pequenos.push(`${el.tagName.toLowerCase()} "${(el.textContent || el.placeholder || '').trim().slice(0, 30)}" ${Math.round(objetivo.width)}x${Math.round(objetivo.height)}`);
                     }
                 }

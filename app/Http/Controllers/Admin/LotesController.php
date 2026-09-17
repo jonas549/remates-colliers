@@ -42,6 +42,19 @@ class LotesController extends Controller
         return $this->guardar($request, $remate, $this->delRemate($remate, $lote));
     }
 
+    public function mover(Request $request, Remate $remate, Lote $lote): RedirectResponse
+    {
+        $direccion = $request->validate(['direccion' => ['required', 'in:subir,bajar']])['direccion'];
+
+        try {
+            $this->gestion->moverLote($remate, $this->delRemate($remate, $lote), $direccion);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('estado', 'Orden de los lotes actualizado; horarios reprogramados.');
+    }
+
     public function subirImagenes(Request $request, Remate $remate, Lote $lote): RedirectResponse
     {
         $this->delRemate($remate, $lote);

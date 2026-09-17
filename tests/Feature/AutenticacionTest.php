@@ -195,6 +195,28 @@ class AutenticacionTest extends TestCase
         $this->assertSame(1, Empresa::count());
     }
 
+    public function test_registro_acepta_rut_con_o_sin_puntos_y_detecta_el_repetido_en_cualquier_formato(): void
+    {
+        Storage::fake('local');
+        Notification::fake();
+
+        $this->post('/registro', $this->formulario(['rut' => '179982218']))->assertRedirect(route('verification.notice'));
+        $this->assertSame('17.998.221-8', User::where('email', 'nueva@correo.test')->sole()->postor->rut, 'sin puntos ni guion queda normalizado');
+        $this->post('/salir');
+
+        foreach (['17.998.221-8', '17998221-8', ' 17.998.221-8 '] as $n => $formato) {
+            $this->post('/registro', $this->formulario(['rut' => $formato, 'email' => "otra{$n}@correo.test"]))
+                ->assertSessionHasErrors(['rut' => 'Ya existe una cuenta con este RUT. Si es tuya, ingresa o recupera tu contraseña.']);
+        }
+
+        $this->post('/registro', $this->formulario(['rut' => '15.482.331-k', 'email' => 'conk@correo.test']))->assertRedirect(route('verification.notice'));
+        $this->assertSame('15.482.331-K', User::where('email', 'conk@correo.test')->sole()->postor->rut, 'con puntos y k minúscula');
+        $this->post('/salir');
+        $this->post('/registro', $this->formulario(['rut' => '15482331K', 'email' => 'otrak@correo.test']))->assertSessionHasErrors('rut');
+        $this->post('/registro', $this->formulario(['rut' => '17.998.221', 'email' => 'corto@correo.test']))->assertSessionHasErrors('rut');
+        $this->assertSame(2, User::count());
+    }
+
     public function test_registro_rechaza_rut_invalido_o_repetido_y_documentos_faltantes(): void
     {
         Storage::fake('local');

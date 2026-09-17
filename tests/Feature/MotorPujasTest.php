@@ -104,6 +104,46 @@ class MotorPujasTest extends TestCase
         $this->pujaHttp($ana, 100600000)->assertCreated();
     }
 
+    public function test_configuracion_cambiada_en_el_panel_rige_en_pujas_garantias_y_cierre(): void
+    {
+        \App\Models\Configuracion::sembrarDefectos();
+        $admin = User::create(['name' => 'Admin', 'email' => 'admin@colliers.test', 'password' => 'clave-de-prueba-123', 'rol' => User::ROL_ADMIN, 'estado' => User::ESTADO_ACTIVO]);
+        $config = [];
+        foreach (\App\Models\Configuracion::DEFECTOS as $clave => $datos) {
+            if (empty($datos['solo_lectura'])) {
+                $valor = \App\Models\Configuracion::valor($clave);
+                $config[$clave] = match ($datos['tipo']) {
+                    'lista_montos' => implode(', ', (array) $valor), 'booleano' => $valor ? '1' : '0', 'secreto' => '', default => $valor,
+                };
+            }
+        }
+        $this->actingAs($admin)->put('/admin/configuracion', ['config' => [
+            'incremento_minimo' => '300000', 'porcentaje_garantia' => '5', 'margen_liquidacion_segundos' => '6',
+        ] + $config])->assertSessionHas('estado');
+
+        // Incremento: la segunda puja necesita 300.000 sobre la primera.
+        [$ana, $beto] = [$this->postorHabilitado('Ana'), $this->postorHabilitado('Beto')];
+        $this->pujaHttp($ana, 100000000)->assertCreated()->assertJson(['lote' => ['puja_minima' => 100300000]]);
+        $this->pujaHttp($beto, 100200000)->assertStatus(422)->assertJson(['motivo' => 'monto_insuficiente']);
+        $this->pujaHttp($beto, 100300000)->assertCreated();
+
+        // Garantía: un remate nuevo inscribe al 5 % de la base.
+        $proximo = Remate::create(['folio' => 'R-2026-901', 'slug' => 'proximo', 'titulo' => 'Próximo', 'estado' => Remate::ESTADO_PUBLICADO,
+            'inicio_en' => $this->t0->addDays(3), 'cierre_garantias_en' => $this->t0->addDays(2)]);
+        Lote::create(['remate_id' => $proximo->id, 'titulo' => 'Casa', 'precio_base' => 80000000, 'abre_en' => $this->t0->addDays(3), 'cierra_en' => $this->t0->addDays(3)->addMinutes(30)]);
+        $carla = $this->postorHabilitado('Carla', garantia: null);
+        $carla->forceFill(['email_verified_at' => $this->t0, 'estado' => User::ESTADO_ACTIVO])->save();
+        $this->actingAs($carla)->post(route('cuenta.inscribirme', $proximo))->assertSessionHasNoErrors();
+        $this->assertSame(4000000, Garantia::where('user_id', $carla->id)->where('remate_id', $proximo->id)->sole()->monto);
+
+        // Margen: con 6 s, a los 5 s del cierre todavía no se adjudica; a los 6 s sí.
+        $cierre = $this->lote->cierra_en;
+        $liquidador = app(Liquidador::class);
+        $this->assertFalse($liquidador->liquidarPorId($this->lote->id, $cierre->addSeconds(5)));
+        $this->assertTrue($liquidador->liquidarPorId($this->lote->id, $cierre->addSeconds(6)));
+        $this->assertSame($beto->id, Adjudicacion::sole()->user_id);
+    }
+
     public function test_sin_garantia_aprobada_o_sin_cuenta_aprobada_se_rechaza(): void
     {
         $sinGarantia = $this->postorHabilitado('Sin garantía', garantia: null);

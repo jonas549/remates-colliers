@@ -102,6 +102,34 @@ class GestionRemates
         return $lote;
     }
 
+    /** Sube o baja un lote un puesto y reprograma los horarios. Solo antes de que abra el primer lote. */
+    public function moverLote(Remate $remate, Lote $lote, string $direccion): void
+    {
+        if ($lote->remate_id !== $remate->id) {
+            throw new DomainException('El lote no pertenece a este remate.');
+        }
+        if (! $remate->condicionesEditables()) {
+            throw new DomainException('El remate ya comenzó: el orden de los lotes no se puede cambiar.');
+        }
+
+        DB::transaction(function () use ($remate, $lote, $direccion) {
+            // Se renumera 1..N para que un orden con huecos o repetido no deje el cambio a medias.
+            $lotes = $remate->lotes()->orderBy('id')->lockForUpdate()->get()->sortBy([['orden', 'asc'], ['id', 'asc']])->values();
+            $posicion = $lotes->search(fn (Lote $l) => $l->id === $lote->id);
+            $destino = $direccion === 'subir' ? $posicion - 1 : $posicion + 1;
+            if ($destino < 0 || $destino >= $lotes->count()) {
+                return;
+            }
+            $ids = $lotes->pluck('id')->all();
+            [$ids[$posicion], $ids[$destino]] = [$ids[$destino], $ids[$posicion]];
+            foreach ($ids as $n => $id) {
+                Lote::whereKey($id)->update(['orden' => $n + 1]);
+            }
+            $remate->programarLotes();
+        });
+        $this->publicarEstadoSiCorresponde($remate);
+    }
+
     /** Lo que falta para publicar. Vacío = se puede publicar. @return list<string> */
     public function faltantesParaPublicar(Remate $remate): array
     {

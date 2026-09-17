@@ -149,7 +149,7 @@ async function capturar(navegador, url, ancho, alto, variante, esOriginal) {
                 // (tocar la etiqueta enfoca o marca el campo).
                 const etiqueta = ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) && el.closest('label');
                 const objetivo = etiqueta ? etiqueta.getBoundingClientRect() : caja;
-                if (!enLinea && (objetivo.height < 44 || objetivo.width < 44)) {
+                if (!enLinea && (objetivo.height < 43.99 || objetivo.width < 43.99)) { // 0,01 px de tolerancia: ruido de coma flotante de Chrome
                     pequenos.push({
                         elemento: el.tagName.toLowerCase() + (el.type ? '[' + el.type + ']' : ''),
                         texto: (el.textContent || el.placeholder || el.getAttribute('aria-label') || '').trim().slice(0, 40),

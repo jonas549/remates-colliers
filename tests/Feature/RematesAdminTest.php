@@ -168,6 +168,40 @@ class RematesAdminTest extends TestCase
         $this->assertSame('2026-09-25 15:35:00', $dos->cierra_en->format('Y-m-d H:i:s'), 'duración propia de 10 min');
     }
 
+    public function test_reordenar_lotes_reprograma_horarios_y_se_bloquea_al_comenzar(): void
+    {
+        $remate = $this->rematePublicado();
+        $this->actingAs($this->admin)->put(route('admin.remates.update', $remate), ['pausa_minutos' => '5', 'duracion_minutos' => '20'])->assertSessionHas('estado');
+        foreach (['Bodega 7' => '10', 'Estacionamiento 12' => '15'] as $direccion => $minutos) {
+            $this->actingAs($this->admin)->post(route('admin.lotes.store', $remate), [
+                'direccion' => $direccion, 'comuna' => 'Providencia', 'region' => 'Región Metropolitana', 'tipo_propiedad' => 'Bodega',
+                'precio_base' => '9.000.000', 'duracion_minutos' => $minutos,
+            ])->assertSessionHas('estado');
+        }
+        [$uno, $dos, $tres] = $remate->lotes()->get()->all();
+
+        $this->actingAs($this->admin)->get(route('admin.remates.show', $remate))->assertOk()->assertSee('Subir lote 3')->assertDontSee('Subir lote 1');
+
+        $this->actingAs($this->admin)->post(route('admin.lotes.mover', [$remate, $tres]), ['direccion' => 'subir'])->assertSessionHas('estado');
+        $this->assertSame([$uno->id, $tres->id, $dos->id], $remate->lotes()->pluck('id')->all());
+        $this->assertSame([1, 2, 3], $remate->lotes()->pluck('orden')->all());
+        $tres->refresh();
+        $this->assertSame('2026-09-25 15:25:00', $tres->abre_en->format('Y-m-d H:i:s'), 'el lote movido abre segundo');
+        $this->assertSame('2026-09-25 15:45:00', $dos->fresh()->abre_en->format('Y-m-d H:i:s'), 'y el desplazado después (15 min + 5 de pausa)');
+
+        $this->actingAs($this->admin)->post(route('admin.lotes.mover', [$remate, $uno]), ['direccion' => 'subir'])->assertSessionHas('estado');
+        $this->assertSame([$uno->id, $tres->id, $dos->id], $remate->lotes()->pluck('id')->all(), 'el primero no sube más');
+        $this->actingAs($this->admin)->post(route('admin.lotes.mover', [$remate, $uno]), ['direccion' => 'otra'])->assertSessionHasErrors('direccion');
+
+        $otro = $this->rematePublicado();
+        $this->actingAs($this->admin)->post(route('admin.lotes.mover', [$remate, $otro->lotes()->first()]), ['direccion' => 'bajar'])->assertNotFound();
+        $this->actingAs($this->martillero)->post(route('admin.lotes.mover', [$remate, $uno]), ['direccion' => 'bajar'])->assertForbidden();
+
+        CarbonImmutable::setTestNow($remate->fresh()->inicio_en->addMinute());
+        $this->actingAs($this->admin)->post(route('admin.lotes.mover', [$remate, $uno]), ['direccion' => 'bajar'])->assertSessionHas('error');
+        $this->assertSame([$uno->id, $tres->id, $dos->id], $remate->lotes()->pluck('id')->all(), 'con el remate comenzado no cambia');
+    }
+
     public function test_fotos_visitas_y_documentos_del_lote(): void
     {
         Storage::fake('public');

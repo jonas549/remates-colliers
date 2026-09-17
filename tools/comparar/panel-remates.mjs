@@ -79,6 +79,16 @@ const filas = await p.locator('.admin-gestion__bloque table tbody tr').allInnerT
 comprobar('la ficha lista los dos lotes con horario encadenado', filas.length === 2 && filas[1].includes('Estacionamiento 14'), filas.join(' / '));
 await p.screenshot({ path: path.join(SALIDA, 'ficha-1440.png'), fullPage: true });
 
+// Reordenar: el segundo lote sube al primer lugar y los horarios se reprograman.
+const abreAntes = (await p.locator('.admin-gestion__bloque table tbody tr').nth(0).locator('td').nth(4).innerText()).trim();
+await p.getByRole('button', { name: 'Subir lote 2' }).click();
+await p.waitForSelector('.admin-aviso--ok');
+comprobar('reordenar lotes', (await p.locator('.admin-aviso--ok').innerText()).includes('Orden de los lotes actualizado'));
+const filasOrden = await p.locator('.admin-gestion__bloque table tbody tr').allInnerTexts();
+const abreDespues = (await p.locator('.admin-gestion__bloque table tbody tr').nth(0).locator('td').nth(4).innerText()).trim();
+comprobar('el lote movido queda primero y abre a la hora de inicio', filasOrden[0].startsWith('1. Av. Italia 1180') && filasOrden[1].startsWith('2. ') && abreDespues === abreAntes,
+    `${filasOrden.map((f) => f.split('\n')[0]).join(' / ')} · abre ${abreAntes} → ${abreDespues}`);
+
 // ── Cancelar un próximo desde el listado ───────────────────────────────────────────────────────────────
 await p.goto(`${URL}/admin/subastas`, { waitUntil: 'load' });
 const filaElAlba = p.locator('tr', { hasText: 'Camino El Alba' });

@@ -16,7 +16,8 @@ export async function revisarUsabilidad(pagina, ancho) {
                 const enLinea = estilo.display === 'inline' && padre && padre.textContent.trim().length > el.textContent.trim().length;
                 const etiqueta = ['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName) && el.closest('label');
                 const objetivo = etiqueta ? etiqueta.getBoundingClientRect() : caja;
-                if (!enLinea && (objetivo.height < 44 || objetivo.width < 44)) {
+                // Tolerancia de 0,01 px: Chrome a veces entrega 43,999996 en una barra de 44 px (ruido de coma flotante, no un defecto).
+                if (!enLinea && (objetivo.height < 43.99 || objetivo.width < 43.99)) {
                     pequenos.push(`${el.tagName.toLowerCase()} "${(el.textContent || el.placeholder || el.name || '').trim().slice(0, 30)}" ${Math.round(objetivo.width)}x${Math.round(objetivo.height)}`);
                 }
             }

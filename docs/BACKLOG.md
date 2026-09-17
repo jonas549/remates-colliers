@@ -21,7 +21,7 @@ nota *(verifica Jonas en el sandbox)*.
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
 | D | Autenticación y registro de postores | En progreso | 10/12 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
-| I | Remates y lotes + panel del martillero | **Completo** | 10/10 |
+| I | Remates y lotes + panel del martillero | **Completo** | 11/11 |
 | V | Configuración autoadministrable y SMTP | En progreso | 11/13 |
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 7/8 |
@@ -48,7 +48,8 @@ A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
 camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
 **K → I → V → G → H → M → N**, commits locales, push al terminar N → **hecho**. Ahora: Jonas prueba en el sandbox con
-`docs/MANUAL-DE-PRUEBAS.md`; después L → E/F → O.
+`docs/MANUAL-DE-PRUEBAS.md`; después L → E/F → O. **QA completo en local hecho (17/09):** `docs/QA-CHECKLIST.md`, 74/74 casos en
+verde y 11 que solo se prueban en el sandbox.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -230,6 +231,7 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 
 - [x] Remates: crear (formulario del diseño, crea el remate con su primer lote), ficha de edición con datos, horario, duración, pausa, martillero y video de YouTube; folio `R-AAAA-NNN` y slug automáticos
 - [x] Lotes: crear y editar activo, ficha extensible (`atributos`), precio base, duración propia; horario fijo recalculado al guardar
+- [x] Reordenar lotes («↑ Subir» / «↓ Bajar» en la ficha): renumera, reprograma horarios y publica el JSON; bloqueado al abrir el primer lote *(faltaba; detectado en el QA del 17/09 — `RematesAdminTest`, `panel-remates.mjs`)*
 - [x] Fotos (reducidas a 1920 px, foto principal, eliminar), documentos (público o solo con garantía aprobada; disco privado) y horarios de visita por lote
 - [x] Incremento y porcentaje de garantía propios por remate (vacío = global)
 - [x] Publicar (revisa lo que falta y lo lista) y cancelar con motivo antes de comenzar *(supuesto: máquina de estados en revisión, ver Decisiones)*

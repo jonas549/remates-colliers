@@ -127,7 +127,8 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         Route::post('/subastas/{remate}/lotes', [LotesController::class, 'store'])->name('lotes.store');
         Route::get('/subastas/{remate}/lotes/{lote}', [LotesController::class, 'edit'])->name('lotes.edit');
         Route::put('/subastas/{remate}/lotes/{lote}', [LotesController::class, 'update'])->name('lotes.update');
-        Route::post('/subastas/{remate}/lotes/{lote}/imagenes', [LotesController::class, 'subirImagenes'])->name('lotes.imagenes.store');
+        Route::post('/subastas/{remate}/lotes/{lote}/mover', [LotesController::class, 'mover'])->name('lotes.mover');
+        Route::post('/subastas/{remate}/lotes/{lote}/imagenes',[LotesController::class, 'subirImagenes'])->name('lotes.imagenes.store');
         Route::post('/subastas/{remate}/lotes/{lote}/imagenes/{imagen}/portada', [LotesController::class, 'portada'])->name('lotes.imagenes.portada');
         Route::delete('/subastas/{remate}/lotes/{lote}/imagenes/{imagen}', [LotesController::class, 'borrarImagen'])->name('lotes.imagenes.destroy');
         Route::post('/subastas/{remate}/lotes/{lote}/visitas', [LotesController::class, 'agregarVisita'])->name('lotes.visitas.store');
