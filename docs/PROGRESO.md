@@ -8,14 +8,16 @@
 
 ## 0. Para retomar en 30 segundos
 
-- **Estado (17/09):** T, C, I y G completos. K, V, H, M y N hechos y probados en local; B 18/19, J 30/34, D 10/12.
-  117 pruebas PHPUnit en verde (QA local completo en `docs/QA-CHECKLIST.md`); recorridos en navegador real en verde (ver `docs/progreso/2026-09-17.md` §3).
-- **GitHub:** todo lo del 16 y 17/09 subido a `main` al terminar N (autorizado por Jonas el 17/09).
-- **Siguiente para Jonas:** probar en el sandbox con `docs/MANUAL-DE-PRUEBAS.md` (incluye los pasos del servidor).
-- **QA local completo (17/09):** `docs/QA-CHECKLIST.md`, 74/74 en verde y 11 casos solo en sandbox.
-- **Siguiente para Claude:** corregir lo que salga de esas pruebas → L (streaming) → E/F → O (reportes, hoy con datos de ejemplo).
+- **Estado (17/09, cierre):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local; en el
+  sandbox Jonas verificó el motor de pujas (3 simultáneos, gana uno, ~1,0–1,2 s) y su QA está en `docs/qa/2026-09-17-sandbox/`.
+- **140 pruebas PHPUnit** en verde y 10 recorridos en navegador real (`tools/comparar/*.mjs`).
+- **Todo subido a `main`** hasta `e21509d`.
+- **Siguiente para Jonas:** `colliers:remate-demo` (3 lotes) en el sandbox para cerrar los dos casos que faltan: paso
+  automático al siguiente lote y cierre anticipado con ganador real.
+- **Siguiente para Claude:** corregir lo que salga de eso → decisión del PDF de reportes → Bloque L → E/F.
+- **Memoria del día:** `docs/progreso/2026-09-17.md` (incluye las trampas del entorno aprendidas).
 - OPcache está **apagado** en el sandbox: leer `docs/RENDIMIENTO-SIN-OPCACHE.md` antes de tocar el camino de la puja.
-- Antes de correr el arnés visual, **avisar a Jonas para que libere memoria** y correr un proceso por ancho.
+- Antes de correr recorridos en navegador: **uno a la vez** y cerrar Chrome al terminar (se quedó sin memoria el 17/09).
 
 ## 1. Jornadas
 
