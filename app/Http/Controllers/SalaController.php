@@ -7,6 +7,7 @@ use App\Models\Configuracion;
 use App\Models\Garantia;
 use App\Models\Lote;
 use App\Models\Remate;
+use App\Postores\Habilitacion;
 use App\Subastas\Difusion\Emisor;
 use App\Subastas\EstadoRemate;
 use App\Subastas\Liquidador;
@@ -35,9 +36,8 @@ class SalaController extends Controller
         }
 
         $user = $request->user();
-        $garantia = Garantia::where('user_id', $user->id)->where('remate_id', $remate->id)
-            ->where('estado', Garantia::ESTADO_APROBADA)->first();
-        if (! $user->postor?->estaAprobado() || $garantia === null) {
+        $garantia = Habilitacion::garantia($user, $remate);
+        if (! Habilitacion::habilita($user, $garantia)) {
             return redirect()->route('cuenta.estado');
         }
 

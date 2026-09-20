@@ -9,6 +9,7 @@ use App\Models\Puja;
 use App\Models\PujaIntento;
 use App\Models\Remate;
 use App\Models\User;
+use App\Postores\Habilitacion;
 use App\Subastas\Difusion\Emisor;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -112,7 +113,7 @@ class MotorPujas
                 default => $cuenta->postor?->estado ?? 'sin_postor',
             }]);
         }
-        $garantia = Garantia::where('user_id', $user->id)->where('remate_id', $remate->id)->latest('id')->first();
+        $garantia = Habilitacion::garantia($user, $remate);
         if ($garantia?->estado !== Garantia::ESTADO_APROBADA) {
             throw new PujaRechazada('sin_garantia', ['garantia' => $garantia?->estado]);
         }

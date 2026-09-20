@@ -8,6 +8,7 @@ use App\Models\Garantia;
 use App\Models\Lote;
 use App\Models\LoteVisita;
 use App\Models\Remate;
+use App\Postores\Habilitacion;
 use App\Models\User;
 use App\Subastas\EstadoRemate;
 use App\Support\Formato;
@@ -121,7 +122,7 @@ class Catalogo
         $a = $lote->atributos ?? [];
         $enVivo = $vista === Remate::VISTA_EN_VIVO;
         $m2 = fn ($n) => $n === null ? null : Formato::numero($n, 2) . ' m²';
-        $garantiaAprobada = $user !== null && Garantia::where('user_id', $user->id)->where('remate_id', $r->id)->where('estado', Garantia::ESTADO_APROBADA)->exists();
+        $garantiaAprobada = Habilitacion::conGarantiaAprobada($user, $r);
         $fotos = $lote->imagenes->map->url()->values();
 
         $ficha = array_filter([

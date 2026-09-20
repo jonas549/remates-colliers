@@ -6,6 +6,7 @@ use App\Models\Configuracion;
 use App\Models\Documento;
 use App\Models\Garantia;
 use App\Models\Remate;
+use App\Postores\Habilitacion;
 use App\Publico\Catalogo;
 use App\Publico\EstadoVisitante;
 use App\Subastas\Liquidador;
@@ -53,8 +54,7 @@ class PublicoController extends Controller
         abort_unless($documento->remate_id === $remate->id && ! in_array($remate->estado, [Remate::ESTADO_BORRADOR, Remate::ESTADO_CANCELADO], true), 404);
         if (! $documento->publico) {
             $user = $request->user();
-            abort_unless($user !== null && ($user->esAdmin() || Garantia::where('user_id', $user->id)->where('remate_id', $remate->id)
-                ->where('estado', Garantia::ESTADO_APROBADA)->exists()), 403);
+            abort_unless($user !== null && ($user->esAdmin() || Habilitacion::conGarantiaAprobada($user, $remate)), 403);
         }
         abort_unless(Storage::disk('local')->exists($documento->ruta), 404);
 

@@ -24,7 +24,7 @@ nota *(verifica Jonas en el sandbox)*.
 | I | Remates y lotes + panel del martillero | **Completo** | 16/16 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
-| H | Garantías | En progreso | 7/8 |
+| H | Garantías | En progreso | 8/10 |
 | M | Notificaciones | En progreso | 8/9 |
 | N | Sitio público | En progreso | 11/12 |
 | L | Streaming | Pendiente | 0/4 |
@@ -59,7 +59,7 @@ internos (2) → habilitación configurable (7)**.
 | 3 | Botón «Crear subasta de prueba» en `/admin/subastas` | **Hecho (20/09)**: franja propia (fuera de producción) que crea el remate publicado con lotes, postores habilitados y la clave común; con enlaces a la sala y botón para borrarlo con todo su rastro |
 | 4 | «Inicio del remate» y «cierre de garantías» sin explicación en el formulario | **Hecho (20/09)**: ayuda bajo cada fecha y un resumen en palabras que se arma solo y avisa si el cierre de garantías queda después del inicio |
 | 2 | No hay dónde crear usuarios internos (hoy solo `colliers:crear-usuario` por terminal) | **Hecho (20/09)**: pantalla **«06 Usuarios»** en el menú lateral: crear, editar, activar/desactivar, restablecer clave, desbloquear y cerrar sesiones |
-| 7 | Inscripción por remate vs. postor habilitado una vez, configurable | Pendiente: primero la clase única `Habilitacion`; el interruptor, cuando el cliente defina el monto de la habilitación global |
+| 7 | Inscripción por remate vs. postor habilitado una vez, configurable | **A medias (20/09)**: hecha la clase única `App\Postores\Habilitacion` (la pregunta «¿puede pujar?» estaba repetida en 6 lugares). Falta el interruptor: espera que el cliente defina **sobre qué monto** se constituye una garantía que no pertenece a ningún remate |
 
 **Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) con datos reales y exportables XLSX/CSV (falta PDF, a decidir, y probar en el sandbox). B completo. J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
@@ -332,6 +332,8 @@ desde el celular, reenviar uno rechazado, cuenta aprobada con acceso a la sala a
 - [x] Aprobación y rechazo manual por un administrador, con quién y cuándo; exige cuenta aprobada; no se rechaza una aprobada con el remate en curso
 - [x] Aprobar una garantía desde el celular con datos reales
 - [x] «Mi cuenta» con datos reales: remate, monto, plazo, estado, inscripciones múltiples y acceso a la sala *(textos del destino de la garantía neutros)*
+- [x] **«¿Puede pujar?» en una sola clase** *(QA del 20/09, punto 7)*: `App\Postores\Habilitacion` responde la condición del acta (registrado + cuenta aprobada + garantía aprobada de ESE remate), que estaba repetida en el motor de pujas, la sala, la ficha pública, el catálogo, los documentos reservados y el estado de la cuenta. Sin cambio de comportamiento y sin consultas nuevas en el camino de la puja *(`HabilitacionTest`, 4 pruebas; `sala-real.mjs` en navegador real contra el motor)*
+- [ ] **Modo «postor habilitado una vez para todos los remates»**, configurable desde el panel *(pedido por Jonas el 20/09; se construye cuando el cliente defina el monto)*. Implicaciones informadas: (1) sin remate no hay base sobre la cual calcular el 10 %, así que hay que fijar un monto único o un tope; (2) un postor podría ganar varios remates respaldado por una sola garantía, y la garantía es la única palanca de cumplimiento del acta; (3) las bases de cada remate son un documento legal y constituir garantía por remate es lo habitual en martillería: la decisión es del cliente y su abogado, no técnica; (4) el cierre de garantías por remate pierde sentido para los globales, «Postor #N» se numera por inscripción en el remate y los reportes cuentan garantías por remate. Cuando llegue la definición: columna `alcance` en `garantias` (aditiva, por defecto `remate`) + el modo en `configuraciones`; solo cambia `Habilitacion`
 - [ ] Destino posterior (devolución / imputación / ejecución) *(pendiente con el cliente)*
 
 ## M — Notificaciones · En progreso
@@ -514,5 +516,6 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] Varios lotes: ¿el siguiente abre al cierre del anterior + pausa, u horario fijo?
 - [ ] ¿Se enmascara la identidad de los postores en el feed? (el diseño usa «Postor #N»)
 - [ ] Garantía del perdedor: ¿devolución? (el diseño lo afirma; el acta no lo define)
+- [ ] Habilitación única: si se quiere «un postor habilitado una vez puja en todos los remates», **sobre qué monto se constituye esa garantía** (monto fijo en CLP o tope de precio hasta el que habilita), y qué pasa si gana varios remates con una sola garantía
 - [ ] 2FA: ¿solo administradores o también postores?
 - [ ] Lista exacta de gráficos y columnas de los reportes
