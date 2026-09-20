@@ -2,7 +2,7 @@ import { clp } from './formato';
 
 // Admin · Subastas: formulario de creación desplegable (envío real al servidor), pestañas de filtro con contador y
 // modal de cierre anticipado o cancelación con motivo (formulario real).
-export default ({ subastas, abierto = false, uf = 0, porcentajeGlobal = 10, incrementoGlobal = 100000, base = '', incremento = '', porcentaje = '' }) => ({
+export default ({ subastas, abierto = false, uf = 0, porcentajeGlobal = 10, incrementoGlobal = 100000, base = '', incremento = '', porcentaje = '', inicio = '', cierreGarantias = '', duracion = 30, horasGarantia = 48, lotes = 1 }) => ({
     subastas,
     form: abierto,
     filtro: 'Todas',
@@ -11,6 +11,9 @@ export default ({ subastas, abierto = false, uf = 0, porcentajeGlobal = 10, incr
     base: String(base).replace(/[^\d]/g, ''),
     incremento: String(incremento).replace(/[^\d]/g, ''),
     porcentaje: String(porcentaje),
+    inicio,
+    cierreGarantias,
+    duracion: String(duracion),
 
     coincide(s, filtro) {
         if (filtro === 'Todas') return true;
@@ -30,6 +33,33 @@ export default ({ subastas, abierto = false, uf = 0, porcentajeGlobal = 10, incr
 
     numero(v) {
         return parseInt(String(v).replace(/[^\d]/g, ''), 10) || 0;
+    },
+
+    /** Fecha larga en español, tal como la lee alguien que no conoce el sistema. */
+    fecha(valor) {
+        const d = new Date(valor);
+        if (Number.isNaN(d.getTime())) return null;
+        const texto = d.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+        return texto + ' a las ' + d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false });
+    },
+
+    /** Las tres fechas del formulario, explicadas en una frase (QA del 20/09, punto 4). */
+    get resumenCalendario() {
+        const abre = this.fecha(this.inicio);
+        if (!abre) return 'Indica el inicio del remate y aquí aparece, en palabras, lo que va a pasar.';
+
+        const cierre = this.fecha(this.cierreGarantias);
+        const porDefecto = new Date(new Date(this.inicio).getTime() - horasGarantia * 3600000);
+        const plazo = cierre || this.fecha(porDefecto.toISOString());
+        const minutos = parseInt(this.duracion, 10) || 0;
+        const antes = !cierre ? ` (${horasGarantia} h antes, por defecto)` : '';
+
+        let frase = `Los postores pueden inscribirse y constituir la garantía hasta el ${plazo}${antes}. `
+            + `El remate abre el ${abre} y cada lote dura ${minutos} minutos, sin extensiones.`;
+        if (cierre && new Date(cierre === null ? 0 : this.cierreGarantias) >= new Date(this.inicio)) {
+            frase += ' ⚠ El cierre de garantías quedó después del inicio: nadie alcanzaría a habilitarse.';
+        }
+        return frase;
     },
 
     // La garantía es un porcentaje del precio base (acta): se muestra el monto que resulta.

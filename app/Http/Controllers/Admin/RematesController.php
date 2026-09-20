@@ -243,6 +243,8 @@ class RematesController extends Controller
             'porcentaje' => (string) Configuracion::valor('porcentaje_garantia'),
             'duracion' => (int) Configuracion::valor('duracion_lote_minutos'),
             'uf' => (float) (Configuracion::valor('uf_valor') ?? 0),
+            // Para el resumen en palabras del calendario (qué pasa si el cierre de garantías se deja vacío).
+            'horasGarantia' => (int) Configuracion::valor('garantias_cierre_horas_antes'),
         ];
     }
 }

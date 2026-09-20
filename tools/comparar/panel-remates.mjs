@@ -39,10 +39,22 @@ await p.selectOption('select[name=tipo_propiedad]', 'Departamento');
 await p.fill('input[name=superficie_util]', '71,5');
 await p.fill('input[name=precio_base]', '98000000');
 await p.fill('input[name=porcentaje_garantia]', '10');
-comprobar('el resumen muestra la garantía calculada (10 %)', (await p.locator('.admin-form__resumen').innerText()).includes('garantía $9.800.000'));
+comprobar('el resumen muestra la garantía calculada (10 %)', (await p.locator('.admin-form__resumen').first().innerText()).includes('garantía $9.800.000'));
+// QA del 20/09, punto 4: qué significa cada fecha y qué va a pasar, dicho en palabras.
+const ayudas = (await p.locator('.admin-form__ayuda').allInnerTexts()).join(' | ');
+comprobar('las fechas del formulario explican qué son',
+    ayudas.includes('abre el primer lote') && ayudas.includes('antes') && ayudas.includes('sin extensiones'), ayudas.slice(0, 160));
 const inicio = new Date(Date.now() + 3 * 86400000);
 const local = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 await p.fill('input[name=inicio_en]', local(inicio));
+const plan = await p.locator('.admin-form__resumen--plan').innerText();
+comprobar('el resumen dice en palabras qué va a pasar con esas fechas',
+    plan.includes('inscribirse y constituir la garantía hasta el') && plan.includes('El remate abre el') && plan.includes('sin extensiones'), plan.slice(0, 180));
+// El cierre de garantías después del inicio deja a todos fuera: el formulario lo advierte antes de publicar.
+await p.fill('input[name=cierre_garantias_en]', local(new Date(inicio.getTime() + 3600000)));
+comprobar('avisa si el cierre de garantías queda después del inicio',
+    (await p.locator('.admin-form__resumen--plan').innerText()).includes('nadie alcanzaría a habilitarse'));
+await p.fill('input[name=cierre_garantias_en]', '');
 await p.selectOption('select[name=martillero_id]', { label: 'M. Ossandón' });
 await p.getByRole('button', { name: 'Publicar subasta' }).click();
 await p.waitForURL(/\/admin\/subastas\/\d+$/);

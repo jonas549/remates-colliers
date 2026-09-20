@@ -21,7 +21,7 @@ nota *(verifica Jonas en el sandbox)*.
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
 | D | Autenticación y registro de postores | En progreso | 13/16 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
-| I | Remates y lotes + panel del martillero | **Completo** | 15/15 |
+| I | Remates y lotes + panel del martillero | **Completo** | 16/16 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 7/8 |
@@ -57,7 +57,7 @@ internos (2) → habilitación configurable (7)**.
 | 8 | El cierre anticipado adjudicaba sin decir a quién | **Hecho (20/09)**: el modal nombra al adjudicatario y el monto, o avisa que quedará desierto, y que no se deshace |
 | 5 | El registro de postor pierde lo escrito y los adjuntos al fallar la validación | **Hecho (20/09)**: los adjuntos se conservan entre intentos, el formulario dice qué falta y lleva el foco al error; un envío más pesado que `post_max_size` ahora se explica en vez de volver en blanco |
 | 3 | Botón «Crear subasta de prueba» en `/admin/subastas` | **Hecho (20/09)**: franja propia (fuera de producción) que crea el remate publicado con lotes, postores habilitados y la clave común; con enlaces a la sala y botón para borrarlo con todo su rastro |
-| 4 | «Inicio del remate» y «cierre de garantías» sin explicación en el formulario | Pendiente |
+| 4 | «Inicio del remate» y «cierre de garantías» sin explicación en el formulario | **Hecho (20/09)**: ayuda bajo cada fecha y un resumen en palabras que se arma solo y avisa si el cierre de garantías queda después del inicio |
 | 2 | No hay dónde crear usuarios internos (hoy solo `colliers:crear-usuario` por terminal) | Pendiente: pantalla nueva **«06 Usuarios»** |
 | 7 | Inscripción por remate vs. postor habilitado una vez, configurable | Pendiente: primero la clase única `Habilitacion`; el interruptor, cuando el cliente defina el monto de la habilitación global |
 
@@ -266,6 +266,7 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 - [x] `colliers:crear-usuario admin|martillero correo nombre` con clave temporal de un solo uso *(InfraestructuraTest, 17/09)*. La pantalla de usuarios internos es el punto 2 del QA del 20/09
 - [x] **El martillero trabaja con sus remates** *(QA del 20/09, punto 1)*: el listado del panel solo trae los remates a su cargo (antes ofrecía «Panel en vivo» de cualquiera y terminaba en 403), la ficha de los suyos la ve en **modo lectura** (horario, lotes, fotos y documentos; sin formularios ni acciones) y un remate ajeno responde 403 **diciendo de quién es y dónde están los suyos** (el 403 ahora muestra el motivo cuando quien aborta lo deja). Crear, editar, publicar, cancelar y mover lotes siguen siendo de administración *(`RematesAdminTest` 2 pruebas nuevas; `panel-remates.mjs` 5 comprobaciones nuevas en navegador real)*
 - [x] **El cierre anticipado dice a quién se adjudica y por cuánto** *(QA del 20/09, punto 8)*: el modal nombra al adjudicatario con su alias y el monto, o avisa que el lote quedará **desierto** si nadie pujó, y que la acción no se deshace *(`RematesAdminTest::test_el_modal_de_cierre_anticipado_dice_a_quien_y_por_cuanto`; `panel-remates.mjs`)*
+- [x] **Las fechas del formulario se explican solas** *(QA del 20/09, punto 4)*: ayuda bajo «Inicio del remate» (abre el primer lote), «Duración» (sin extensiones) y «Cierre de garantías» (va antes del inicio; vacío = N horas antes), más un resumen en lenguaje natural que se arma mientras se escribe: «Los postores pueden inscribirse y constituir la garantía hasta el … El remate abre el … y cada lote dura N minutos, sin extensiones», con aviso si el cierre de garantías quedó después del inicio. La ficha de edición lleva las mismas ayudas *(diferencia deliberada con el prototipo, como REGIÓN y el % de garantía; `panel-remates.mjs` 3 comprobaciones nuevas)*
 - [x] **«Crear subasta de prueba»** *(QA del 20/09, punto 3)*: franja aparte en `/admin/subastas`, solo para administradores y **solo fuera de producción**. Crea un remate publicado con lotes, horario a los minutos que se indiquen (12 por defecto), cierre de garantías unos minutos antes, y postores aprobados con garantía aprobada; la clave común se muestra **una sola vez** junto a los enlaces a la ficha pública y a la sala («Mi cuenta» no lista los remates de prueba a propósito). Queda marcado `es_demostracion`: fuera del listado real, del sitio público, de los reportes y de los correos. «Borrar» lo elimina con sus postores, su bitácora y su JSON. `colliers:remate-demo` usa el mismo servicio (`App\Remates\RemateDePrueba`) *(`RematesAdminTest` 3 pruebas nuevas; `panel-remates.mjs` 8 comprobaciones nuevas, incluida la usabilidad a 375 px y un postor de prueba entrando a la sala)*
 - [x] **«Cerrar sesión» legible con el mouse encima** *(QA del 20/09, punto 6)*: `.boton-enlace:hover` lo dejaba del color del fondo marino de la barra *(`panel-remates.mjs` compara el color del texto con el del fondo)*
 

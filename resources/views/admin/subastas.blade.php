@@ -5,7 +5,7 @@
     $campo = fn (string $nombre) => $errors->has($nombre) ? 'es-invalido' : '';
 @endphp
 <x-layouts.admin seccion="subastas" titulo="Subastas" clase-cuerpo="placeholder-claro">
-    <div x-data="adminSubastas(@js(['subastas' => $subastas, 'abierto' => $errors->any(), 'uf' => $f['uf'], 'porcentajeGlobal' => (float) $f['porcentaje'], 'incrementoGlobal' => $f['incremento'], 'base' => old('precio_base', ''), 'incremento' => old('incremento_minimo', ''), 'porcentaje' => old('porcentaje_garantia', '')]))" @keydown.escape.window="cerrar = null; menuAbierto = null">
+    <div x-data="adminSubastas(@js(['subastas' => $subastas, 'abierto' => $errors->any(), 'uf' => $f['uf'], 'porcentajeGlobal' => (float) $f['porcentaje'], 'incrementoGlobal' => $f['incremento'], 'base' => old('precio_base', ''), 'incremento' => old('incremento_minimo', ''), 'porcentaje' => old('porcentaje_garantia', ''), 'inicio' => old('inicio_en', ''), 'cierreGarantias' => old('cierre_garantias_en', ''), 'duracion' => (int) old('duracion_minutos', $f['duracion']), 'horasGarantia' => $f['horasGarantia']]))" @keydown.escape.window="cerrar = null; menuAbierto = null">
         <div class="admin-encabezado">
             <div class="admin-encabezado__texto">
                 <div class="admin-encabezado__kicker">SUBASTAS</div>
@@ -115,15 +115,17 @@
 
                         <div class="admin-form__seccion admin-form__seccion--siguiente"><span class="admin-form__num">03</span><span class="admin-form__subtitulo">Calendario y transmisión</span></div>
                         <div class="admin-form__grilla">
-                            <label class="admin-form__campo {{ $campo('inicio_en') }}"><span class="admin-form__etiqueta">INICIO DEL REMATE</span><input type="datetime-local" name="inicio_en" value="{{ old('inicio_en') }}" class="admin-form__input"></label>
+                            {{-- QA del 20/09, punto 4: qué significa cada fecha, dicho en el formulario. --}}
+                            <label class="admin-form__campo {{ $campo('inicio_en') }}"><span class="admin-form__etiqueta">INICIO DEL REMATE</span><input type="datetime-local" name="inicio_en" x-model="inicio" class="admin-form__input"><span class="admin-form__ayuda">Hora de Santiago en que abre el primer lote y empieza a correr el cronómetro.</span></label>
                             <label class="admin-form__campo {{ $campo('duracion_minutos') }}"><span class="admin-form__etiqueta">DURACIÓN</span>
-                                <select name="duracion_minutos" class="admin-form__input">
+                                <select name="duracion_minutos" x-model="duracion" class="admin-form__input">
                                     @foreach (collect([30, 45, 60, $f['duracion']])->unique()->sort() as $minutos)
                                         <option value="{{ $minutos }}" @selected((int) old('duracion_minutos', $f['duracion']) === $minutos)>{{ $minutos }} minutos</option>
                                     @endforeach
                                 </select>
+                                <span class="admin-form__ayuda">Cuánto dura la puja de cada lote. Al vencer, el lote cierra sin extensiones.</span>
                             </label>
-                            <label class="admin-form__campo {{ $campo('cierre_garantias_en') }}"><span class="admin-form__etiqueta">CIERRE DE GARANTÍAS</span><input type="datetime-local" name="cierre_garantias_en" value="{{ old('cierre_garantias_en') }}" class="admin-form__input"></label>
+                            <label class="admin-form__campo {{ $campo('cierre_garantias_en') }}"><span class="admin-form__etiqueta">CIERRE DE GARANTÍAS</span><input type="datetime-local" name="cierre_garantias_en" x-model="cierreGarantias" class="admin-form__input"><span class="admin-form__ayuda">Hasta cuándo se puede constituir la garantía. Va <strong>antes</strong> del inicio: después, nadie más queda habilitado para pujar. Vacío = {{ $f['horasGarantia'] }} h antes del inicio.</span></label>
                             <label class="admin-form__campo {{ $campo('martillero_id') }}"><span class="admin-form__etiqueta">MARTILLERO</span>
                                 <select name="martillero_id" class="admin-form__input">
                                     <option value="">Sin asignar</option>
@@ -135,6 +137,9 @@
                             <label class="admin-form__campo {{ $campo('youtube_video_id') }}"><span class="admin-form__etiqueta">ID DEL VIDEO DE YOUTUBE</span><input name="youtube_video_id" value="{{ old('youtube_video_id') }}" placeholder="jfKfPfyJRdk" class="admin-form__input"></label>
                             <label class="admin-form__campo"><span class="admin-form__etiqueta">MANDANTE</span><input name="atributos[mandante]" value="{{ old('atributos.mandante') }}" placeholder="Banco Consorcio" class="admin-form__input"></label>
                         </div>
+
+                        {{-- Lo que va a pasar, en una frase: el formulario no obliga a deducirlo de tres fechas sueltas. --}}
+                        <div class="admin-form__resumen admin-form__resumen--plan" x-text="resumenCalendario"></div>
 
                         <x-admin.errores />
 
