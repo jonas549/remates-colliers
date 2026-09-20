@@ -4,7 +4,6 @@
 .admin-reportes__formato { border: 1px solid #dbe1ec; background: #ffffff; color: #25408f; font-family: inherit; font-weight: 600; font-size: 14px; padding: 13px 18px; cursor: pointer; }
 a.admin-reportes__formato, a.admin-exportable__descargar { display: inline-flex; align-items: center; text-decoration: none; }
 a.admin-reportes__formato:hover, a.admin-exportable__descargar:hover { text-decoration: none; background: #f0f4fb; }
-.admin-reportes__pdf { background: #25408f; color: #ffffff; border: 0; font-family: inherit; font-weight: 700; font-size: 14px; padding: 14px 20px; cursor: pointer; }
 
 .admin-reportes__kpis-fondo { background: #25408f; color: #ffffff; }
 .admin-reportes__kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
@@ -61,7 +60,7 @@ a.admin-reportes__formato:hover, a.admin-exportable__descargar:hover { text-deco
 
 @media (max-width: 1119.98px) {
   .admin-reportes { padding: 24px 20px 40px; }
-  .admin-reportes__formato, .admin-reportes__pdf, .admin-exportable button, .admin-exportable__descargar { min-height: 44px; }
+  .admin-reportes__formato, .admin-exportable button, .admin-exportable__descargar { min-height: 44px; }
   .admin-tabla--reportes td.es-primera { position: sticky; left: 0; background: #ffffff; z-index: 2; }
   .admin-reportes__grilla { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 36px; }
   .admin-tabla--categorias td:first-child { position: static; box-shadow: none; }

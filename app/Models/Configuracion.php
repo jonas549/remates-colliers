@@ -74,6 +74,12 @@ class Configuracion extends Model
         'duracion_lote_minutos' => ['valor' => '30', 'tipo' => 'entero', 'grupo' => 'remates', 'etiqueta' => 'Duración por defecto de cada lote (minutos)', 'min' => 1, 'max' => 600, 'descripcion' => 'Temporizador fijo, sin extensiones. Cada remate o lote puede fijar la suya.'],
         // Garantías
         'porcentaje_garantia' => ['valor' => '10', 'tipo' => 'porcentaje', 'grupo' => 'garantias', 'etiqueta' => 'Garantía (% del precio base)', 'min' => 0, 'max' => 100, 'descripcion' => 'Porcentaje de la garantía sobre el precio base del remate (acta: 10 %). Una garantía ya creada conserva su monto.'],
+        // Decisión de Jonas (20/09): el modo se puede mostrar al cliente; viene apagado y el monto lo fija Colliers.
+        'garantia_modo' => ['valor' => 'remate', 'tipo' => 'opcion', 'grupo' => 'garantias', 'etiqueta' => 'Cómo se habilita un postor',
+            'opciones' => ['remate' => 'Una garantía por cada remate (acta)', 'unico' => 'Una sola habilitación para todos los remates'],
+            'descripcion' => 'Con «una sola habilitación», el postor constituye una garantía única y queda habilitado para pujar en todos los remates. Requiere fijar el monto de abajo.'],
+        'garantia_monto_unico' => ['valor' => '', 'tipo' => 'entero_opcional', 'grupo' => 'garantias', 'etiqueta' => 'Monto de la habilitación única (CLP)', 'min' => 0, 'max' => 9999999999,
+            'descripcion' => 'Solo se usa con «una sola habilitación». Lo define Colliers: una garantía sin remate no tiene precio base sobre el cual calcular el porcentaje.'],
         'garantias_cierre_horas_antes' => ['valor' => '48', 'tipo' => 'entero', 'grupo' => 'garantias', 'etiqueta' => 'Cierre de garantías (horas antes del inicio)', 'min' => 0, 'max' => 720, 'descripcion' => 'Plazo por defecto para recibir garantías si el remate no fija otra fecha (diseño: «hasta 48 horas antes»).'],
         'garantias_revision_horas' => ['valor' => '24', 'tipo' => 'entero', 'grupo' => 'garantias', 'etiqueta' => 'Tiempo de revisión informado (horas hábiles)', 'min' => 1, 'max' => 240, 'descripcion' => 'Plazo que se le informa al postor para revisar su cuenta o su comprobante (diseño: 24 horas hábiles).'],
         // Datos bancarios

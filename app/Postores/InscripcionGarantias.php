@@ -6,6 +6,7 @@ use App\Events\ComprobanteRecibido;
 use App\Models\Garantia;
 use App\Models\Remate;
 use App\Models\User;
+use App\Postores\Habilitacion;
 use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Http\UploadedFile;
@@ -18,12 +19,21 @@ use Illuminate\Support\Str;
  */
 class InscripcionGarantias
 {
-    /** El postor se inscribe en un remate: nace la garantía pendiente con el monto vigente (10 % por defecto). */
+    /**
+     * El postor se inscribe en un remate: nace la garantía pendiente con el monto vigente (10 % por defecto).
+     * Con el modo «habilitación única» (Configuración → Garantías) nace una sola garantía que vale para todos los
+     * remates, por el monto fijo que definió Colliers; si ya la tiene, se devuelve esa.
+     */
     public function inscribir(User $user, Remate $remate): Garantia
     {
         if (! $user->postor?->estaAprobado()) {
             throw new DomainException('Tu cuenta debe estar aprobada por Colliers para inscribirte en un remate.');
         }
+
+        if (Habilitacion::modo() === Habilitacion::MODO_UNICO) {
+            return $this->habilitacionUnica($user, $remate);
+        }
+
         if ($remate->estadoVisible() !== Remate::VISTA_PROXIMO) {
             throw new DomainException('Este remate no acepta inscripciones.');
         }
@@ -36,6 +46,22 @@ class InscripcionGarantias
         });
     }
 
+    /** Habilitación única: no vence con el remate desde el que se pide, porque no pertenece a ninguno. */
+    private function habilitacionUnica(User $user, Remate $remate): Garantia
+    {
+        $monto = Habilitacion::montoUnico();
+        if ($monto === null) {
+            throw new DomainException('Colliers todavía no fijó el monto de la habilitación. Escríbenos y te avisamos apenas esté.');
+        }
+
+        return DB::transaction(function () use ($user, $remate, $monto) {
+            $existente = Garantia::where('user_id', $user->id)->where('alcance', Garantia::ALCANCE_UNICO)
+                ->lockForUpdate()->latest('id')->first();
+
+            return $existente ?? Garantia::habilitacionUnica($remate, $user, $monto);
+        });
+    }
+
     public function subirComprobante(Garantia $garantia, UploadedFile $archivo, string $medio): void
     {
         $garantia->loadMissing('remate');
@@ -43,7 +69,10 @@ class InscripcionGarantias
             throw new DomainException($garantia->estado === Garantia::ESTADO_APROBADA
                 ? 'Tu garantía ya está aprobada.' : 'Ya recibimos tu comprobante y lo estamos revisando.');
         }
-        $this->dentroDelPlazo($garantia->remate);
+        // La habilitación única no pertenece a un remate: no la vence el plazo del remate desde donde se pidió.
+        if (! $garantia->esUnica()) {
+            $this->dentroDelPlazo($garantia->remate);
+        }
 
         $ruta = $archivo->storeAs("garantias/{$garantia->remate_id}", Str::uuid() . '.' . ($archivo->guessExtension() ?: 'pdf'), 'local');
         $anterior = $garantia->comprobante_ruta;

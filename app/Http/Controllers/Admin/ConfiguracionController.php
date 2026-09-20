@@ -7,6 +7,7 @@ use App\Correo\DiagnosticoSmtp;
 use App\Correo\Plantillas;
 use App\Http\Controllers\Controller;
 use App\Models\Configuracion;
+use App\Postores\Habilitacion;
 use App\Models\NotificacionLog;
 use App\Support\CorreoSaliente;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Throwable;
 
@@ -76,6 +78,13 @@ class ConfiguracionController extends Controller
         }
         $validado = $request->validate($reglas, [], $nombres)['config'] ?? [];
         $deLaSeccion = Configuracion::camposDe($seccion);
+
+        // La habilitación única necesita un monto: una garantía sin remate no tiene precio base que porcentuar.
+        if (($validado['garantia_modo'] ?? null) === Habilitacion::MODO_UNICO && (int) ($validado['garantia_monto_unico'] ?? 0) <= 0) {
+            throw ValidationException::withMessages([
+                'config.garantia_monto_unico' => 'Fija el monto de la habilitación única antes de activar ese modo: sin remate no hay precio base sobre el cual calcular el porcentaje.',
+            ]);
+        }
 
         // Interruptores de los avisos (pantalla Notificaciones): no son claves de DEFECTOS, se guardan aparte.
         $avisos = [];
@@ -218,6 +227,7 @@ class ConfiguracionController extends Controller
 
         return match ($datos['tipo']) {
             'entero' => ['required', 'integer', ...$rango],
+            'entero_opcional' => ['nullable', 'integer', ...$rango],
             'porcentaje' => ['required', 'numeric', ...$rango],
             'decimal' => ['nullable', 'numeric', ...$rango],
             'texto' => ['nullable', 'string', 'max:255'],

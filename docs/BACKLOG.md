@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-09-20**.
+> **Registro vivo del avance.** Última actualización: **2026-09-20** (tarde: decisiones de Jonas y push).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -24,12 +24,12 @@ nota *(verifica Jonas en el sandbox)*.
 | I | Remates y lotes + panel del martillero | **Completo** | 16/16 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
-| H | Garantías | En progreso | 8/10 |
+| H | Garantías | En progreso | 9/11 |
 | M | Notificaciones | En progreso | 8/9 |
 | N | Sitio público | En progreso | 11/12 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
-| O | Reportes | En progreso | 6/8 |
+| O | Reportes | En progreso | 7/8 |
 | P | Seguridad | Pendiente | 0/8 |
 | Q | QA y carga | Pendiente | 0/6 |
 | R | Despliegue a producción | Pendiente | 0/8 |
@@ -59,7 +59,7 @@ internos (2) → habilitación configurable (7)**.
 | 3 | Botón «Crear subasta de prueba» en `/admin/subastas` | **Hecho (20/09)**: franja propia (fuera de producción) que crea el remate publicado con lotes, postores habilitados y la clave común; con enlaces a la sala y botón para borrarlo con todo su rastro |
 | 4 | «Inicio del remate» y «cierre de garantías» sin explicación en el formulario | **Hecho (20/09)**: ayuda bajo cada fecha y un resumen en palabras que se arma solo y avisa si el cierre de garantías queda después del inicio |
 | 2 | No hay dónde crear usuarios internos (hoy solo `colliers:crear-usuario` por terminal) | **Hecho (20/09)**: pantalla **«06 Usuarios»** en el menú lateral: crear, editar, activar/desactivar, restablecer clave, desbloquear y cerrar sesiones |
-| 7 | Inscripción por remate vs. postor habilitado una vez, configurable | **A medias (20/09)**: hecha la clase única `App\Postores\Habilitacion` (la pregunta «¿puede pujar?» estaba repetida en 6 lugares). Falta el interruptor: espera que el cliente defina **sobre qué monto** se constituye una garantía que no pertenece a ningún remate |
+| 7 | Inscripción por remate vs. postor habilitado una vez, configurable | **Hecho (20/09)**: interruptor en Configuración → Garantías, **apagado por defecto**, con el monto de la habilitación única **vacío** hasta que Colliers lo fije. Activarlo sin monto no se permite |
 
 **Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) con datos reales y exportables XLSX/CSV (falta PDF, a decidir, y probar en el sandbox). B completo. J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
@@ -333,7 +333,8 @@ desde el celular, reenviar uno rechazado, cuenta aprobada con acceso a la sala a
 - [x] Aprobar una garantía desde el celular con datos reales
 - [x] «Mi cuenta» con datos reales: remate, monto, plazo, estado, inscripciones múltiples y acceso a la sala *(textos del destino de la garantía neutros)*
 - [x] **«¿Puede pujar?» en una sola clase** *(QA del 20/09, punto 7)*: `App\Postores\Habilitacion` responde la condición del acta (registrado + cuenta aprobada + garantía aprobada de ESE remate), que estaba repetida en el motor de pujas, la sala, la ficha pública, el catálogo, los documentos reservados y el estado de la cuenta. Sin cambio de comportamiento y sin consultas nuevas en el camino de la puja *(`HabilitacionTest`, 4 pruebas; `sala-real.mjs` en navegador real contra el motor)*
-- [ ] **Modo «postor habilitado una vez para todos los remates»**, configurable desde el panel *(pedido por Jonas el 20/09; se construye cuando el cliente defina el monto)*. Implicaciones informadas: (1) sin remate no hay base sobre la cual calcular el 10 %, así que hay que fijar un monto único o un tope; (2) un postor podría ganar varios remates respaldado por una sola garantía, y la garantía es la única palanca de cumplimiento del acta; (3) las bases de cada remate son un documento legal y constituir garantía por remate es lo habitual en martillería: la decisión es del cliente y su abogado, no técnica; (4) el cierre de garantías por remate pierde sentido para los globales, «Postor #N» se numera por inscripción en el remate y los reportes cuentan garantías por remate. Cuando llegue la definición: columna `alcance` en `garantias` (aditiva, por defecto `remate`) + el modo en `configuraciones`; solo cambia `Habilitacion`
+- [x] **Modo «postor habilitado una vez para todos los remates»** *(decisión de Jonas, 20/09: interruptor apagado por defecto y monto configurable, vacío, para poder mostrarle la opción a Colliers y que ellos definan el monto)*. Configuración → Garantías: «Cómo se habilita un postor» (por remate / habilitación única) y «Monto de la habilitación única (CLP)». El panel **no deja activar el modo sin monto**: una garantía que no pertenece a un remate no tiene precio base que porcentuar. Con el modo activo, el postor constituye **una** garantía (`garantias.alcance = unico`, migración aditiva) que la administración aprueba como cualquier otra y que lo habilita en todos los remates; «Mi cuenta» lo explica y deja de pedir inscripción por remate, el plazo de un remate no la vence, y el feed numera «Postor #N» de los que pujan sin garantía de ese remate por el orden de su primera puja. Volver al modo por remate no borra nada: cada garantía sigue valiendo para su remate *(`HabilitacionTest` 8 pruebas; `tools/comparar/habilitacion-unica.mjs`, 9 comprobaciones en navegador real, incluidas la validación del monto, la puja en un remate donde nunca se inscribió y la vuelta atrás)*
+- [ ] **Monto de la habilitación única**: lo fija Colliers desde el panel cuando decida usar el modo *(hoy vacío, modo apagado)*
 - [ ] Destino posterior (devolución / imputación / ejecución) *(pendiente con el cliente)*
 
 ## M — Notificaciones · En progreso
@@ -413,7 +414,7 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [x] Generales: volumen total adjudicado y desempeño por categoría de activo (volumen, sobreprecio, tasa)
 - [x] Exportación con `maatwebsite/excel` 4.0: CSV (punto y coma + BOM, abre bien en Excel de Chile) y XLSX; libro completo con 6 hojas y un XLSX por exportable. El paquete **no se autodescubre**: se registra solo al exportar, para no sumar archivos a cada petición sin OPcache
 - [x] Comparación entre eventos: tabla por remate del período elegido; períodos por mes, trimestre, año o todo el historial *(supuesto: el diseño no tiene una pantalla de comparación lado a lado)*
-- [ ] Exportar PDF *(pendiente de decisión de Jonas; el botón se ve y no hace nada)*
+- [x] **Exportar PDF: fuera del alcance** *(decisión de Jonas, 20/09: no está en el acta; si el cliente lo pide, se agrega)*. Se quitó el botón «Descargar PDF», que se veía y no hacía nada. Quedan CSV y XLSX
 - [ ] Probar las descargas en el sandbox (extensiones `zip`, `xmlwriter`, `iconv`, `simplexml`, `xmlreader`, `zlib`: `colliers:diagnostico` ahora las revisa)
 
 ## P — Seguridad · Pendiente
@@ -474,14 +475,14 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 
 ### De Jonas
 
-- [ ] Sala con varios lotes: se implementó un aviso mínimo («El lote 1 se adjudicó en $X. Ahora se remata el lote 2.») y «LOTE N DE M» en la cabecera. ¿Sirve o se diseña una transición? (17/09)
+- [x] Sala con varios lotes: el aviso mínimo («El lote 1 se adjudicó en $X. Ahora se remata el lote 2.») y «LOTE N DE M» **quedan como están** *(Jonas, 20/09)*
 - [ ] Mensaje del martillero en la sala: se muestra en una franja amarilla dentro del panel de puja (escritorio) y sobre el video (móvil). ¿Sirve? (17/09)
 - [ ] Formulario «Crear subasta»: se agregó el campo REGIÓN (lo necesitan los filtros del sitio) y la garantía pasó de monto a porcentaje (acta). Ficha del remate, formulario de lote y panel del martillero no tienen diseño: se armaron con los componentes del panel (17/09)
 
 - [x] Nombre exacto del handler PHP 8.4 en cPanel/LiteSpeed: `application/x-httpd-ea-php84` (16/09)
 - [ ] Subir el acta del 25/08 al material local de referencia
 - [ ] Idioma EN/ES (Bloque N): hoy se ve y no funciona
-- [ ] Exportar a PDF (Bloque O): hoy se ve y no funciona. Con los datos reales listos, ¿se implementa (PDF del reporte del período) o se quita el botón? (17/09)
+- [x] Exportar a PDF (Bloque O): **se quita** *(Jonas, 20/09: no está en el acta; es alcance extra)*
 - [ ] Reportes (17/09): CSV y XLSX de arriba descargan el desempeño comercial en CSV y el libro completo en XLSX; cada «Descargar» de exportables baja esa hoja en XLSX. ¿Sirve así?
 - [ ] Activar el filtro «Garantía requerida» (hoy oculto; pasa a ajuste del panel en V)
 
@@ -516,6 +517,6 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] Varios lotes: ¿el siguiente abre al cierre del anterior + pausa, u horario fijo?
 - [ ] ¿Se enmascara la identidad de los postores en el feed? (el diseño usa «Postor #N»)
 - [ ] Garantía del perdedor: ¿devolución? (el diseño lo afirma; el acta no lo define)
-- [ ] Habilitación única: si se quiere «un postor habilitado una vez puja en todos los remates», **sobre qué monto se constituye esa garantía** (monto fijo en CLP o tope de precio hasta el que habilita), y qué pasa si gana varios remates con una sola garantía
+- [ ] Habilitación única: el modo ya está construido y apagado. Si Colliers lo quiere, debe fijar **el monto** en Configuración → Garantías y decidir qué pasa si un postor gana varios remates respaldado por una sola garantía
 - [ ] 2FA: ¿solo administradores o también postores?
 - [ ] Lista exacta de gráficos y columnas de los reportes

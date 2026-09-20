@@ -58,7 +58,6 @@
                 </form>
                 <a href="{{ route('admin.reportes.exportar', ['desempeno', 'csv'] + $consulta) }}" class="admin-reportes__formato" title="Desempeño comercial en CSV">CSV</a>
                 <a href="{{ route('admin.reportes.exportar', ['libro', 'xlsx'] + $consulta) }}" class="admin-reportes__formato" title="Libro con todas las hojas">XLSX</a>
-                <button type="button" class="admin-reportes__pdf">Descargar PDF</button>
             </div>
         </div>
 

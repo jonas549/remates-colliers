@@ -41,6 +41,9 @@ class EstadoCuenta
         };
 
         $remate = $garantia?->remate;
+        // Habilitación única (modo del panel): la garantía no pertenece a un remate, habilita todos.
+        $unica = $garantia?->esUnica() === true;
+        $modoUnico = Habilitacion::modo() === Habilitacion::MODO_UNICO;
         $horas = Sitio::horasRevision();
         $montoTexto = $garantia ? Formato::clp($garantia->monto) : '';
         $nombreRemate = $remate?->titulo ?? '';
@@ -49,16 +52,22 @@ class EstadoCuenta
             'cuenta-revision' => ['CUENTA EN REVISIÓN', 'Estamos revisando tu registro', "Recibimos tus antecedentes. Un ejecutivo de Colliers los valida de forma manual y te informará por correo, normalmente dentro de {$horas} horas hábiles. Hasta entonces no puedes inscribirte en un remate.", '#25408f', 1, 'No iniciada'],
             'cuenta-rechazada' => ['CUENTA NO APROBADA', 'No pudimos aprobar tu cuenta', 'Colliers revisó tus antecedentes y no aprobó la cuenta' . ($postor?->motivo_rechazo ? ': ' . $postor->motivo_rechazo : '.') . ' Escríbenos si quieres corregir algún dato.', '#8c0f22', 1, 'No iniciada'],
             'cuenta-bloqueada' => ['CUENTA BLOQUEADA', 'Tu cuenta está bloqueada', 'No puedes inscribirte ni pujar mientras la cuenta esté bloqueada' . ($postor?->motivo_rechazo ? ' (' . $postor->motivo_rechazo . ')' : '') . '. Escríbenos para revisarlo.', '#8c0f22', 2, 'Bloqueada'],
-            'sin-inscripcion' => ['CUENTA APROBADA · SIN INSCRIPCIONES', 'Tu cuenta está aprobada', 'Para pujar, inscríbete en un remate y constituye su garantía por vale a la vista o transferencia. Es un trámite externo a la plataforma: Colliers lo revisa y marca tu inscripción como aprobada o rechazada.', '#25408f', 2, 'Pendiente'],
+            'sin-inscripcion' => ['CUENTA APROBADA · SIN INSCRIPCIONES', 'Tu cuenta está aprobada', $modoUnico
+                ? 'Para pujar necesitas constituir la habilitación' . (Habilitacion::montoUnico() ? ' de ' . Formato::clp(Habilitacion::montoUnico()) : '') . ' por vale a la vista o transferencia: con ella quedas habilitado en todos los remates. Es un trámite externo a la plataforma, que Colliers revisa y aprueba.'
+                : 'Para pujar, inscríbete en un remate y constituye su garantía por vale a la vista o transferencia. Es un trámite externo a la plataforma: Colliers lo revisa y marca tu inscripción como aprobada o rechazada.', '#25408f', 2, 'Pendiente'],
             'garantia-pendiente' => ['CUENTA APROBADA · GARANTÍA PENDIENTE', 'Tu cuenta está aprobada, falta la garantía', 'Para pujar debes constituir la garantía por vale a la vista o transferencia y enviarnos el comprobante. Es un trámite externo a la plataforma: Colliers lo revisa y marca tu inscripción como aprobada o rechazada.', '#25408f', 2, 'Pendiente'],
-            'garantia-revision' => ['GARANTÍA EN REVISIÓN', 'Recibimos tu comprobante de garantía', "Estamos verificando el comprobante. Te avisaremos por correo apenas quede aprobada, normalmente dentro de {$horas} horas hábiles; recién ahí se habilita la sala de pujas para este remate.", '#16265a', 3, 'En revisión'],
-            'aprobada' => ['GARANTÍA APROBADA · HABILITADO PARA PUJAR', 'Estás habilitado para pujar', "Tu garantía por {$montoTexto} fue aprobada para {$nombreRemate}. Podrás ingresar posturas en pesos cuando comience la transmisión del remate.", '#1c5330', 4, 'Aprobada'],
+            'garantia-revision' => ['GARANTÍA EN REVISIÓN', 'Recibimos tu comprobante de garantía', "Estamos verificando el comprobante. Te avisaremos por correo apenas quede aprobada, normalmente dentro de {$horas} horas hábiles; recién ahí se habilita la sala de pujas" . ($unica ? '.' : ' para este remate.'), '#16265a', 3, 'En revisión'],
+            'aprobada' => ['GARANTÍA APROBADA · HABILITADO PARA PUJAR', 'Estás habilitado para pujar', $unica
+                ? "Tu habilitación por {$montoTexto} fue aprobada: te sirve para todos los remates publicados. Podrás ingresar posturas en pesos cuando comience cada transmisión."
+                : "Tu garantía por {$montoTexto} fue aprobada para {$nombreRemate}. Podrás ingresar posturas en pesos cuando comience la transmisión del remate.", '#1c5330', 4, 'Aprobada'],
             'rechazada' => ['GARANTÍA RECHAZADA', 'No pudimos validar tu garantía', 'Colliers no aprobó el comprobante' . ($garantia?->motivo_rechazo ? ': ' . $garantia->motivo_rechazo : '.') . ' Puedes corregirlo y volver a enviarlo antes del cierre de garantías, o escribirnos si crees que se trata de un error.', '#8c0f22', 2, 'Rechazada'],
         ][$clave];
 
+        // Solo la habilitación ÚNICA aprobada sirve para todos los remates.
+        $habilitadoEnTodos = $modoUnico && $unica && $garantia?->estado === Garantia::ESTADO_APROBADA;
         $estado = self::armar($clave, ...$textos);
         $puedeSubir = $garantia !== null && $postor?->estaAprobado() && in_array($garantia->estado, [Garantia::ESTADO_PENDIENTE, Garantia::ESTADO_RECHAZADA], true)
-            && ($remate->cierre_garantias_en === null || $ahora->lessThan($remate->cierre_garantias_en)) && ! $remate->yaComenzo($ahora);
+            && ($unica || (($remate->cierre_garantias_en === null || $ahora->lessThan($remate->cierre_garantias_en)) && ! $remate->yaComenzo($ahora)));
         $vista = $remate?->estadoVisible($ahora);
 
         return [
@@ -75,7 +84,8 @@ class EstadoCuenta
                 'garantia' => $garantia ? [
                     'id' => $garantia->id,
                     'monto' => $montoTexto,
-                    'plazo' => $remate->cierre_garantias_en ? Formato::fechaCorta($remate->cierre_garantias_en, $ahora) : 'Hasta el inicio',
+                    'plazo' => $unica ? 'Sin plazo: vale para todos los remates'
+                        : ($remate->cierre_garantias_en ? Formato::fechaCorta($remate->cierre_garantias_en, $ahora) : 'Hasta el inicio'),
                     'medio' => ['vale_vista' => 'vale a la vista', 'transferencia' => 'transferencia'][$garantia->medio] ?? null,
                     'recibido' => $garantia->comprobante_subido_en ? Formato::fecha($garantia->comprobante_subido_en, $ahora) : null,
                     'aprobada' => $garantia->estado === Garantia::ESTADO_APROBADA && $garantia->revisado_en ? Formato::fecha($garantia->revisado_en, $ahora) : null,
@@ -89,7 +99,9 @@ class EstadoCuenta
                     'url' => route('cuenta.estado', ['remate' => $g->remate->slug]),
                     'actual' => $garantia?->id === $g->id,
                 ])->all(),
-                'abiertos' => $postor?->estaAprobado() ? self::rematesAbiertos($garantias, $ahora) : [],
+                'abiertos' => $postor?->estaAprobado() && ! $habilitadoEnTodos
+                    ? self::rematesAbiertos($garantias, $ahora, $modoUnico) : [],
+                'habilitadoEnTodos' => $habilitadoEnTodos,
                 'basesGenerales' => Sitio::valor('enlace_bases_generales') ?: null,
             ],
         ];
@@ -107,8 +119,12 @@ class EstadoCuenta
     }
 
     /** Remates próximos con inscripción abierta, en los que el postor todavía no está inscrito. */
-    private static function rematesAbiertos(Collection $garantias, CarbonImmutable $ahora): array
+    private static function rematesAbiertos(Collection $garantias, CarbonImmutable $ahora, bool $modoUnico = false): array
     {
+        // En modo único, una habilitación ya constituida cubre cualquier remate: no se ofrece constituirla de nuevo.
+        if ($modoUnico) {
+            return $garantias->contains(fn (Garantia $g) => $g->esUnica()) ? [] : self::rematesParaHabilitar($ahora);
+        }
         $inscritos = $garantias->pluck('remate_id')->all();
 
         return Remate::with('lotes')->whereIn('estado', [Remate::ESTADO_PUBLICADO])->where('es_demostracion', false)
@@ -120,6 +136,19 @@ class EstadoCuenta
                 'titulo' => $r->titulo, 'folio' => $r->folio, 'fecha' => Formato::fecha($r->abreEn(), $ahora),
                 'garantia' => Formato::clp($r->montoGarantia()), 'url' => route('remates.show', $r->slug),
                 'inscribir' => route('cuenta.inscribirme', $r->slug),
+            ])->values()->all();
+    }
+
+    /** Modo único: cualquier remate publicado sirve de punto de partida para constituir la habilitación. */
+    private static function rematesParaHabilitar(CarbonImmutable $ahora): array
+    {
+        return Remate::with('lotes')->where('estado', Remate::ESTADO_PUBLICADO)->where('es_demostracion', false)->get()
+            ->filter(fn (Remate $r) => in_array($r->estadoVisible($ahora), [Remate::VISTA_PROXIMO, Remate::VISTA_EN_VIVO], true))
+            ->sortBy(fn (Remate $r) => $r->abreEn()?->getTimestamp())->take(5)
+            ->map(fn (Remate $r) => [
+                'titulo' => $r->titulo, 'folio' => $r->folio, 'fecha' => Formato::fecha($r->abreEn(), $ahora),
+                'garantia' => Formato::clp(Habilitacion::montoUnico() ?? 0) . ' (habilitación única)',
+                'url' => route('remates.show', $r->slug), 'inscribir' => route('cuenta.inscribirme', $r->slug),
             ])->values()->all();
     }
 

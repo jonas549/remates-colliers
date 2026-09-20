@@ -164,6 +164,9 @@
                             <p class="cuenta__nota">Si te adjudicas la propiedad, Colliers te contactará para la firma y el pago del saldo. El destino de la garantía se rige por las bases del remate.</p>
                         </div>
                     @endunless
+                @elseif ($d['habilitadoEnTodos'] ?? false)
+                    {{-- Modo «habilitación única»: no hay nada que inscribir, la garantía ya sirve para todos. --}}
+                    <p class="cuenta__lateral-texto">Con tu habilitación aprobada puedes pujar en cualquier remate publicado: no tienes que inscribirte uno por uno. Entra al remate que te interese y usa «Entrar a la sala de pujas».</p>
                 @elseif ($d['abiertos'])
                     <div class="cuenta__lista">
                         @foreach ($d['abiertos'] as $abierto)

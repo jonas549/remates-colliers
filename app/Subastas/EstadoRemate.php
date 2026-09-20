@@ -81,12 +81,20 @@ final class EstadoRemate
      * «Postor #N»: N es el orden en que el postor inscribió su garantía en el remate. Estable, porque las
      * garantías no se borran y los ids solo crecen.
      *
+     * Con la habilitación única (modo del panel) hay postores que pujan sin garantía de ESTE remate: esos se
+     * numeran a continuación, por el orden de su primera puja, que también es estable.
+     *
      * @return array<int, string> user_id => alias
      */
     public static function alias(Remate $remate): array
     {
+        $ids = Garantia::where('remate_id', $remate->id)->orderBy('id')->pluck('user_id');
+
+        $sinGarantia = Puja::whereIn('lote_id', $remate->lotes()->select('id'))
+            ->whereNotIn('user_id', $ids)->orderBy('id')->pluck('user_id');
+
         $alias = [];
-        foreach (Garantia::where('remate_id', $remate->id)->orderBy('id')->pluck('user_id')->unique()->values() as $i => $userId) {
+        foreach ($ids->concat($sinGarantia)->unique()->values() as $i => $userId) {
             $alias[$userId] = 'Postor #' . ($i + 1);
         }
 

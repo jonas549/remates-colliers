@@ -4,6 +4,7 @@ namespace App\Publico;
 
 use App\Models\Garantia;
 use App\Models\Remate;
+use App\Postores\Habilitacion;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 
@@ -34,11 +35,16 @@ class EstadoVisitante
             return $datos;
         }
 
+        // Con el modo «habilitación única» la garantía no pertenece a este remate: igual habilita, así que entra.
+        $unico = Habilitacion::modo() === Habilitacion::MODO_UNICO;
         $garantias = Garantia::with('remate.lotes')->where('user_id', $user->id)
-            ->when($remate, fn ($q) => $q->where('remate_id', $remate->id))->get()
+            ->when($remate && ! $unico, fn ($q) => $q->where('remate_id', $remate->id))
+            ->when($remate && $unico, fn ($q) => $q->where(fn ($s) => $s->where('remate_id', $remate->id)->orWhere('alcance', Garantia::ALCANCE_UNICO)))
+            ->get()
             ->filter(fn (Garantia $g) => ! $g->remate->es_demostracion || $remate !== null);
         $ahora = CarbonImmutable::now('UTC');
-        $abiertas = $garantias->filter(fn (Garantia $g) => in_array($g->remate->estadoVisible($ahora), [Remate::VISTA_EN_VIVO, Remate::VISTA_PROXIMO], true));
+        $abiertas = $garantias->filter(fn (Garantia $g) => $g->esUnica()
+            || in_array($g->remate->estadoVisible($ahora), [Remate::VISTA_EN_VIVO, Remate::VISTA_PROXIMO], true));
         $garantia = $abiertas->firstWhere('estado', Garantia::ESTADO_APROBADA)
             ?? $abiertas->firstWhere('estado', Garantia::ESTADO_EN_REVISION)
             ?? ($remate ? $garantias->first() : null);

@@ -2,24 +2,26 @@
 
 namespace App\Postores;
 
+use App\Models\Configuracion;
 use App\Models\Garantia;
 use App\Models\Remate;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 /**
- * «¿Este postor puede pujar en este remate?», en un solo lugar.
+ * «¿Este postor puede pujar en este remate?», en un solo lugar. La pregunta estaba repetida en el motor de pujas,
+ * la sala, la ficha pública, el catálogo, los documentos reservados y el estado de la cuenta.
  *
- * La pregunta estaba repetida en el motor de pujas, la sala, la ficha pública, el catálogo, los documentos
- * reservados y el estado de la cuenta: seis copias de la misma condición. Ahora la responde esta clase.
+ * Dos modos, elegibles desde el panel (Configuración → Garantías):
  *
- * Hoy rige el **modo por remate** (acta y decisión del cliente): la garantía se constituye para CADA remate.
- * Jonas pidió (20/09) poder ofrecer además el modo «postor habilitado una vez para todos los remates». Ese modo
- * está pendiente de una definición del cliente —**sobre qué monto se constituye una garantía que no pertenece a
- * ningún remate**— y de sus consecuencias (una sola garantía respaldando varias adjudicaciones, las bases de cada
- * remate como documento legal, el cierre de garantías por remate y la numeración «Postor #N»).
+ * - **Por remate** (por defecto, y lo que dice el acta): la garantía se constituye para CADA remate.
+ * - **Habilitación única**: el postor constituye UNA garantía, por un monto fijo que define Colliers, y queda
+ *   habilitado para pujar en todos los remates.
  *
- * Cuando esa definición llegue, el cambio es: agregar la clave de configuración con el modo y hacer que
- * `garantia()` acepte, en modo único, una garantía aprobada de cualquier remate. Nada más consulta la tabla.
+ * El modo único exige el monto (`garantia_monto_unico`): una garantía que no pertenece a un remate no tiene precio
+ * base sobre el cual calcular el porcentaje. Sin monto, el panel no deja activarlo.
+ *
+ * Cambiar de modo no borra nada: las garantías por remate ya aprobadas siguen habilitando su remate.
  */
 final class Habilitacion
 {
@@ -31,7 +33,15 @@ final class Habilitacion
 
     public static function modo(): string
     {
-        return self::MODO_POR_REMATE;
+        return Configuracion::valor('garantia_modo') === self::MODO_UNICO ? self::MODO_UNICO : self::MODO_POR_REMATE;
+    }
+
+    /** Monto de la habilitación única, o null si Colliers todavía no lo fijó. */
+    public static function montoUnico(): ?int
+    {
+        $monto = (int) Configuracion::valor('garantia_monto_unico');
+
+        return $monto > 0 ? $monto : null;
     }
 
     /**
@@ -44,7 +54,21 @@ final class Habilitacion
             return null;
         }
 
+        // Modo único: la habilitación del postor, venga del remate que venga. Si además tiene una garantía de ESTE
+        // remate (constituida antes de cambiar el modo), vale la que esté aprobada.
+        if (self::modo() === self::MODO_UNICO) {
+            return self::mejor(Garantia::where('user_id', $user->id)
+                ->where(fn ($q) => $q->where('alcance', Garantia::ALCANCE_UNICO)->orWhere('remate_id', $remate->id))
+                ->orderByDesc('id')->get());
+        }
+
         return Garantia::where('user_id', $user->id)->where('remate_id', $remate->id)->latest('id')->first();
+    }
+
+    /** La aprobada manda; si no hay, la más reciente (para poder explicar en qué estado quedó). */
+    private static function mejor(Collection $garantias): ?Garantia
+    {
+        return $garantias->firstWhere('estado', Garantia::ESTADO_APROBADA) ?? $garantias->first();
     }
 
     /** ¿Tiene la garantía de ESTE remate aprobada? No revisa el estado de la cuenta. */
@@ -54,8 +78,11 @@ final class Habilitacion
             return false;
         }
 
-        return Garantia::where('user_id', $user->id)->where('remate_id', $remate->id)
-            ->where('estado', Garantia::ESTADO_APROBADA)->exists();
+        return Garantia::where('user_id', $user->id)->where('estado', Garantia::ESTADO_APROBADA)
+            ->when(self::modo() === self::MODO_UNICO,
+                fn ($q) => $q->where(fn ($s) => $s->where('alcance', Garantia::ALCANCE_UNICO)->orWhere('remate_id', $remate->id)),
+                fn ($q) => $q->where('remate_id', $remate->id))
+            ->exists();
     }
 
     /** Las tres condiciones del acta: registrado, cuenta aprobada por Colliers y garantía aprobada del remate. */

@@ -28,6 +28,11 @@ class Garantia extends Model
 
     public const ESTADO_RECHAZADA = 'rechazada';
 
+    /** Alcance: la garantía vale para su remate (acta) o habilita al postor en todos (modo único del panel). */
+    public const ALCANCE_REMATE = 'remate';
+
+    public const ALCANCE_UNICO = 'unico';
+
     public const MEDIO_VALE_VISTA = 'vale_vista';
 
     public const MEDIO_TRANSFERENCIA = 'transferencia';
@@ -55,6 +60,31 @@ class Garantia extends Model
             'porcentaje' => $remate->porcentajeGarantia(),
             'base_calculo' => $remate->baseGarantia(),
         ]);
+    }
+
+    /**
+     * Habilitación única (modo del panel): un solo monto fijo, definido por Colliers, que vale para todos los
+     * remates. Se guarda el remate desde el que se constituyó, para saber de dónde salió y para que la revisión
+     * y el comprobante funcionen igual que siempre.
+     */
+    public static function habilitacionUnica(Remate $origen, User $postor, int $monto): self
+    {
+        $garantia = self::create([
+            'user_id' => $postor->id,
+            'remate_id' => $origen->id,
+            'monto' => $monto,
+            // Sin remate no hay precio base que porcentuar: van en 0 («no aplica»); `alcance` distingue el caso.
+            'porcentaje' => 0,
+            'base_calculo' => 0,
+        ]);
+        $garantia->forceFill(['alcance' => self::ALCANCE_UNICO])->save();
+
+        return $garantia;
+    }
+
+    public function esUnica(): bool
+    {
+        return $this->alcance === self::ALCANCE_UNICO;
     }
 
     public function user(): BelongsTo
