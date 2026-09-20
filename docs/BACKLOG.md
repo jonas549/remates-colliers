@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-09-17**.
+> **Registro vivo del avance.** Última actualización: **2026-09-20**.
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -21,7 +21,7 @@ nota *(verifica Jonas en el sandbox)*.
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
 | D | Autenticación y registro de postores | En progreso | 11/13 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
-| I | Remates y lotes + panel del martillero | **Completo** | 11/11 |
+| I | Remates y lotes + panel del martillero | **Completo** | 14/14 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 7/8 |
@@ -45,6 +45,21 @@ Primero lo visible para mostrarlo al cliente; después lo riesgoso (J) lo antes 
 A está fuera de la secuencia: lo hizo Jonas antes de empezar.
 
 **QA de Jonas en el sandbox (17/09):** reporte y 48 capturas en `docs/qa/2026-09-17-sandbox/`. 37 casos pasaron. Corregidos: INC-2 (el JSON no reflejaba la apertura del lote siguiente) y OBS-4 (contador de la pestaña RECHAZADA). INC-1 (correo confirmado antes de aprobar) e INC-3 (sesión única por navegador) son comportamiento esperado. Pendiente del QA: el ciclo de pujas hasta la adjudicación, que Jonas retoma con `colliers:remate-demo`.
+
+**QA de Jonas en el sandbox (20/09): ciclo completo de punta a punta.** Funciona; salieron 8 puntos, ordenados por él.
+Orden acordado: **correcciones (1, 6, 8) → registro (5) → subasta de prueba (3) → ayudas del formulario (4) → usuarios
+internos (2) → habilitación configurable (7)**.
+
+| # | Qué | Estado |
+|---|---|---|
+| 1 | El martillero no podía abrir su panel en vivo | **Hecho (20/09)**: el listado le muestra solo sus remates, la ficha la ve en modo lectura y el 403 de un remate ajeno dice de quién es |
+| 6 | «Cerrar sesión» desaparecía con el mouse encima | **Hecho (20/09)**: `.boton-enlace:hover` lo pintaba del azul del propio fondo (`#16265a`) |
+| 8 | El cierre anticipado adjudicaba sin decir a quién | **Hecho (20/09)**: el modal nombra al adjudicatario y el monto, o avisa que quedará desierto, y que no se deshace |
+| 5 | El registro de postor pierde lo escrito y los adjuntos al fallar la validación | Siguiente |
+| 3 | Botón «Crear subasta de prueba» en `/admin/subastas` | Pendiente |
+| 4 | «Inicio del remate» y «cierre de garantías» sin explicación en el formulario | Pendiente |
+| 2 | No hay dónde crear usuarios internos (hoy solo `colliers:crear-usuario` por terminal) | Pendiente: pantalla nueva **«06 Usuarios»** |
+| 7 | Inscripción por remate vs. postor habilitado una vez, configurable | Pendiente: primero la clase única `Habilitacion`; el interruptor, cuando el cliente defina el monto de la habilitación global |
 
 **Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) con datos reales y exportables XLSX/CSV (falta PDF, a decidir, y probar en el sandbox). B completo. J, D y K hechos y probados en local
 (K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
@@ -245,7 +260,10 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 - [x] «Crear remate nuevo» desde uno cerrado o cancelado: borrador nuevo con los lotes no adjudicados, fotos y documentos; el original no se toca
 - [x] Dashboard y contador de pendientes del menú con datos reales (sin remates de demostración)
 - [x] Usable desde el celular (hoja de acciones del listado, formularios en una columna, táctiles ≥ 44 px)
-- [x] `colliers:crear-usuario admin|martillero correo nombre` con clave temporal de un solo uso (no hay pantalla de usuarios internos; publicar exige martillero) *(InfraestructuraTest, 17/09)*
+- [x] `colliers:crear-usuario admin|martillero correo nombre` con clave temporal de un solo uso *(InfraestructuraTest, 17/09)*. La pantalla de usuarios internos es el punto 2 del QA del 20/09
+- [x] **El martillero trabaja con sus remates** *(QA del 20/09, punto 1)*: el listado del panel solo trae los remates a su cargo (antes ofrecía «Panel en vivo» de cualquiera y terminaba en 403), la ficha de los suyos la ve en **modo lectura** (horario, lotes, fotos y documentos; sin formularios ni acciones) y un remate ajeno responde 403 **diciendo de quién es y dónde están los suyos** (el 403 ahora muestra el motivo cuando quien aborta lo deja). Crear, editar, publicar, cancelar y mover lotes siguen siendo de administración *(`RematesAdminTest` 2 pruebas nuevas; `panel-remates.mjs` 5 comprobaciones nuevas en navegador real)*
+- [x] **El cierre anticipado dice a quién se adjudica y por cuánto** *(QA del 20/09, punto 8)*: el modal nombra al adjudicatario con su alias y el monto, o avisa que el lote quedará **desierto** si nadie pujó, y que la acción no se deshace *(`RematesAdminTest::test_el_modal_de_cierre_anticipado_dice_a_quien_y_por_cuanto`; `panel-remates.mjs`)*
+- [x] **«Cerrar sesión» legible con el mouse encima** *(QA del 20/09, punto 6)*: `.boton-enlace:hover` lo dejaba del color del fondo marino de la barra *(`panel-remates.mjs` compara el color del texto con el del fondo)*
 
 ## V — Configuración autoadministrable y SMTP · En progreso
 
@@ -430,6 +448,13 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - 16/09: bloqueo por intentos fallidos de 15 minutos por defecto (5 intentos, según el diseño); editable en V.
 - 16/09: el JSON público de estado de remates no pasa por la clave del sandbox (las subastas son públicas).
 - 16/09: la concurrencia contra MariaDB se prueba en el sandbox sobre el remate de demostración.
+- 20/09: el **martillero** ve solo los remates a su cargo (listado y panel en vivo) y la ficha de esos, en modo lectura.
+- 20/09: los **usuarios internos** van en una pantalla propia, **«06 Usuarios»** del menú lateral, solo para administradores.
+- 20/09: el modo «**postor habilitado una vez para todos los remates**» se construye **después** de que el cliente defina
+  sobre qué monto se constituye esa garantía global. Implicaciones informadas: una sola garantía respaldando varios
+  remates adjudicados, el monto sin base cuando no hay remate, las bases de cada remate como documento legal, y los
+  efectos en «Postor #N», en el cierre de garantías y en los reportes. Mientras tanto se unifica la pregunta «¿puede
+  pujar?» en una sola clase (hoy repetida en 8 lugares) para que el interruptor sea un cambio de una línea.
 
 ### De Jonas
 

@@ -57,6 +57,8 @@
 .admin-modal__cuerpo { padding: 26px; }
 .admin-modal__texto { margin: 0 0 18px; font-size: 15px; line-height: 1.65; color: #4a5563; }
 .admin-modal__texto strong { color: #16265a; }
+/* Lo que el cierre anticipado va a hacer (a quién y por cuánto): tiene que leerse antes que el motivo. */
+.admin-modal__texto--destacado { background: #f4f6fb; border-left: 3px solid #25408f; padding: 12px 14px; color: #1d2530; }
 .admin-modal__etiqueta { display: block; font-size: 11px; letter-spacing: 0.12em; font-weight: 700; color: #8c95a3; margin-bottom: 8px; }
 .admin-modal__textarea { width: 100%; box-sizing: border-box; border: 1px solid #dbe1ec; min-height: 96px; padding: 12px 14px; font-family: inherit; font-size: 14px; resize: vertical; }
 .admin-modal__botones { display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap; }

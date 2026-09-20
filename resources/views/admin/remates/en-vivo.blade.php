@@ -99,7 +99,15 @@
                         <h2 class="admin-modal__titulo" id="titulo-cierre-vivo">Cerrar el lote anticipadamente</h2>
                     </div>
                     <div class="admin-modal__cuerpo">
-                        <p class="admin-modal__texto">Vas a cerrar <strong x-text="'el lote ' + lote.orden"></strong> antes de que venza el tiempo. La puja más alta al momento del cierre queda como adjudicada y no se aceptan nuevas posturas.</p>
+                        <p class="admin-modal__texto">Vas a cerrar <strong x-text="'el lote ' + lote.orden"></strong><span x-show="info.direccion" x-text="' · ' + (info.direccion || '')"></span> antes de que venza el tiempo.</p>
+                        {{-- Es irreversible y son millones: el modal dice a quién se adjudica y por cuánto antes de confirmar. --}}
+                        <p class="admin-modal__texto admin-modal__texto--destacado" x-show="lote.ganador">
+                            Se adjudica a <strong x-text="quien(lote.ganador)"></strong> por <strong x-text="precioTexto"></strong>.
+                        </p>
+                        <p class="admin-modal__texto admin-modal__texto--destacado" x-show="!lote.ganador">
+                            Nadie ha pujado: el lote queda <strong>DESIERTO</strong> y no se adjudica a nadie.
+                        </p>
+                        <p class="admin-modal__texto">No se aceptan nuevas posturas y <strong>la acción no se puede deshacer</strong>.</p>
                         <label>
                             <span class="admin-modal__etiqueta">MOTIVO DEL CIERRE ANTICIPADO</span>
                             <textarea x-model="motivo" required maxlength="500" class="admin-modal__textarea" placeholder="Ej.: instrucción del mandante"></textarea>

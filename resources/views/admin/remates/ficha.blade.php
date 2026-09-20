@@ -4,6 +4,9 @@
     use App\Support\Formato;
 
     $f = $formulario;
+    // El martillero del remate abre esta ficha en modo lectura: ve horario, lotes y documentos, no los edita.
+    $puedeEditar = $puedeEditar ?? true;
+    $editable = $editable && $puedeEditar;
     $campo = fn (string $nombre) => $errors->has($nombre) ? 'es-invalido' : '';
     $estadoLote = ['programado' => ['Programado', 'proximo'], 'abierto' => ['Abierto', 'vivo'], 'liquidando' => ['Liquidando', 'revision'], 'adjudicado' => ['Adjudicado', 'adjudicada'], 'desierto' => ['Desierto', 'cerrado'], 'cerrado' => ['Cerrado', 'cerrado'], 'incumplido' => ['Incumplido', 'rechazada']];
     $puedeCancelar = in_array($vista, [Remate::VISTA_BORRADOR, Remate::VISTA_PROXIMO], true);
@@ -24,7 +27,7 @@
                 </div>
             </div>
             <div class="admin-encabezado__acciones">
-                @if ($remate->estado === Remate::ESTADO_BORRADOR)
+                @if ($puedeEditar && $remate->estado === Remate::ESTADO_BORRADOR)
                     <form method="POST" action="{{ route('admin.remates.publicar', $remate) }}" class="formulario-en-linea">
                         @csrf
                         <button type="submit" class="admin-boton-toggle" @disabled($faltan !== [])>Publicar</button>
@@ -36,13 +39,13 @@
                 @if ($publico)
                     <a href="{{ route('remates.show', $remate->slug) }}" class="admin-boton-borde" target="_blank" rel="noopener">Ver en el sitio</a>
                 @endif
-                @if ($puedeRepublicar)
+                @if ($puedeEditar && $puedeRepublicar)
                     <form method="POST" action="{{ route('admin.remates.republicar', $remate) }}" class="formulario-en-linea">
                         @csrf
                         <button type="submit" class="admin-boton-borde">Crear remate nuevo</button>
                     </form>
                 @endif
-                @if ($puedeCancelar)
+                @if ($puedeEditar && $puedeCancelar)
                     <button type="button" class="admin-accion admin-accion--peligro" @click="cancelar = true">Cancelar remate</button>
                 @endif
             </div>
@@ -69,8 +72,26 @@
             <div class="admin-gestion__bloque">
                 <div class="admin-seccion__cabeza"><h2 class="admin-seccion__titulo">Datos y condiciones</h2></div>
                 @unless ($editable)
-                    <p class="admin-gestion__nota">El remate ya comenzó o terminó: el horario y las condiciones económicas quedan fijos. Se pueden cambiar el título, la descripción, el martillero y el video.</p>
+                    @if ($puedeEditar)
+                        <p class="admin-gestion__nota">El remate ya comenzó o terminó: el horario y las condiciones económicas quedan fijos. Se pueden cambiar el título, la descripción, el martillero y el video.</p>
+                    @endif
                 @endunless
+                @unless ($puedeEditar)
+                    {{-- Martillero: los mismos datos, sin formulario. Crear y editar remates es de administración. --}}
+                    <p class="admin-gestion__nota">Estás a cargo de este remate. Los datos los edita la administración; desde aquí trabajas con el panel en vivo.</p>
+                    <div class="admin-gestion__lectura">
+                        <div class="admin-ficha__dato"><span class="admin-ficha__k">Título</span><span class="admin-ficha__v">{{ $remate->titulo }}</span></div>
+                        <div class="admin-ficha__dato"><span class="admin-ficha__k">Inicio del remate</span><span class="admin-ficha__v">{{ Formato::fecha($remate->inicio_en) }}</span></div>
+                        <div class="admin-ficha__dato"><span class="admin-ficha__k">Cierre de garantías</span><span class="admin-ficha__v">{{ $remate->cierre_garantias_en ? Formato::fecha($remate->cierre_garantias_en) : 'Sin fijar' }}</span></div>
+                        <div class="admin-ficha__dato"><span class="admin-ficha__k">Duración de cada lote</span><span class="admin-ficha__v">{{ $remate->duracion_lote_segundos ? intdiv($remate->duracion_lote_segundos, 60) . ' min' : $f['duracion'] . ' min (global)' }}</span></div>
+                        <div class="admin-ficha__dato"><span class="admin-ficha__k">Pausa entre lotes</span><span class="admin-ficha__v">{{ intdiv($remate->pausa_entre_lotes_segundos, 60) }} min</span></div>
+                        <div class="admin-ficha__dato"><span class="admin-ficha__k">Incremento mínimo</span><span class="admin-ficha__v">{{ Formato::clp($remate->incremento_minimo ?: $f['incremento']) }}</span></div>
+                        <div class="admin-ficha__dato"><span class="admin-ficha__k">Video de YouTube</span><span class="admin-ficha__v">{{ $remate->youtube_video_id ?: 'Sin cargar' }}</span></div>
+                        @if ($remate->descripcion)
+                            <p class="admin-gestion__nota">{{ $remate->descripcion }}</p>
+                        @endif
+                    </div>
+                @else
                 <form method="POST" action="{{ route('admin.remates.update', $remate) }}" class="admin-form admin-form--plano">
                     @csrf
                     @method('PUT')
@@ -100,6 +121,7 @@
                         </div>
                     </div>
                 </form>
+                @endunless
             </div>
 
             {{-- 02 · Lotes --}}
@@ -145,7 +167,9 @@
                                                 </form>
                                             @endunless
                                         @endif
-                                        <a href="{{ route('admin.lotes.edit', [$remate, $lote]) }}" class="admin-accion">Editar</a>
+                                        @if ($puedeEditar)
+                                            <a href="{{ route('admin.lotes.edit', [$remate, $lote]) }}" class="admin-accion">Editar</a>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
@@ -172,16 +196,19 @@
                         </div>
                         <div class="admin-acciones">
                             <a href="{{ route('admin.documentos.descargar', [$remate, $documento]) }}" class="admin-accion">Descargar</a>
-                            <form method="POST" action="{{ route('admin.documentos.destroy', [$remate, $documento]) }}" class="formulario-en-linea" onsubmit="return confirm('¿Eliminar este documento?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="admin-accion admin-accion--peligro">Eliminar</button>
-                            </form>
+                            @if ($puedeEditar)
+                                <form method="POST" action="{{ route('admin.documentos.destroy', [$remate, $documento]) }}" class="formulario-en-linea" onsubmit="return confirm('¿Eliminar este documento?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="admin-accion admin-accion--peligro">Eliminar</button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 @empty
                     <div class="admin-vacio">Sin documentos. Las bases del remate, el procedimiento y los certificados se suben aquí.</div>
                 @endforelse
+                @if ($puedeEditar)
                 <form method="POST" action="{{ route('admin.documentos.store', $remate) }}" enctype="multipart/form-data" class="admin-form admin-form--plano">
                     @csrf
                     <div class="admin-form__interior">
@@ -203,9 +230,11 @@
                         </div>
                     </div>
                 </form>
+                @endif
             </div>
         </div>
 
+        @if ($puedeEditar)
         <template x-if="cancelar">
             <div class="admin-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-cancelar">
                 <form method="POST" action="{{ route('admin.remates.cancelar', $remate) }}" class="admin-modal__caja" x-init="$nextTick(() => $el.querySelector('.admin-modal__cancelar').focus())">
@@ -228,5 +257,6 @@
                 </form>
             </div>
         </template>
+        @endif
     </div>
 </x-layouts.admin>

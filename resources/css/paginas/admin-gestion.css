@@ -137,3 +137,6 @@ a.admin-form__borrador { display: inline-block; text-align: center; text-decorat
 .admin-detalle-correo .admin-ficha__dato { display: flex; gap: 12px; padding: 4px 0; font-size: 13px; }
 .admin-detalle-correo .admin-ficha__k { min-width: 170px; color: #8c95a3; }
 .admin-detalle-correo .admin-ficha__v { color: #16265a; word-break: break-word; }
+
+/* Ficha en modo lectura (martillero a cargo del remate): los mismos datos, sin formulario. */
+.admin-gestion__lectura { margin-top: 14px; max-width: 720px; }

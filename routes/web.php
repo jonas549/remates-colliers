@@ -104,6 +104,8 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
     Route::get('/subastas', [RematesController::class, 'index'])->name('subastas');
     // Panel del martillero: administradores y el martillero asignado a ese remate (se revisa en el controlador).
     Route::get('/subastas/{remate}/en-vivo', [EnVivoController::class, 'show'])->name('remates.en-vivo');
+    // Ficha: administración la edita; el martillero del remate la ve en modo lectura (se revisa en el controlador).
+    Route::get('/subastas/{remate}', [RematesController::class, 'show'])->name('remates.show');
     // Bloque O: reportes con datos reales y exportables (sin datos personales).
     Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes');
     Route::get('/reportes/exportar/{hoja}.{formato}', [ReportesController::class, 'exportar'])
@@ -123,7 +125,6 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
 
         // Bloque I: remates y lotes.
         Route::post('/subastas', [RematesController::class, 'store'])->name('remates.store');
-        Route::get('/subastas/{remate}', [RematesController::class, 'show'])->name('remates.show');
         Route::put('/subastas/{remate}', [RematesController::class, 'update'])->name('remates.update');
         Route::post('/subastas/{remate}/publicar', [RematesController::class, 'publicar'])->name('remates.publicar');
         Route::post('/subastas/{remate}/cancelar', [RematesController::class, 'cancelar'])->name('remates.cancelar');

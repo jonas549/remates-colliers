@@ -27,12 +27,16 @@ class RematesController extends Controller
 {
     public function __construct(private readonly GestionRemates $gestion) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $ahora = CarbonImmutable::now('UTC');
         $prioridad = [Remate::VISTA_EN_VIVO => 0, Remate::VISTA_PROXIMO => 1, Remate::VISTA_BORRADOR => 2];
+        // El martillero solo ve los remates a su cargo: ofrecerle el panel en vivo de otro terminaba en un 403.
+        $user = $request->user();
+        $esMartillero = $user->rol === User::ROL_MARTILLERO;
         // En vivo primero, luego próximas por fecha, borradores y al final lo cerrado (lo más reciente arriba).
-        $remates = Remate::with(['lotes', 'martillero', 'garantias'])->where('es_demostracion', false)->get()
+        $remates = Remate::with(['lotes', 'martillero', 'garantias'])->where('es_demostracion', false)
+            ->when($esMartillero, fn ($q) => $q->where('martillero_id', $user->id))->get()
             ->sortBy(fn (Remate $r) => [$prioridad[$r->estadoVisible($ahora)] ?? 3,
                 ($prioridad[$r->estadoVisible($ahora)] ?? 3) === 3 ? -($r->abreEn()?->getTimestamp() ?? 0) : ($r->abreEn()?->getTimestamp() ?? PHP_INT_MAX)]);
 
@@ -72,13 +76,21 @@ class RematesController extends Controller
         return redirect()->route('admin.remates.show', $remate)->with('estado', "Remate {$remate->folio} publicado.");
     }
 
-    public function show(Remate $remate): View
+    public function show(Request $request, Remate $remate): View
     {
         $remate->load(['lotes.imagenes', 'martillero', 'documentos.lote', 'garantias', 'remateOrigen', 'republicaciones']);
         $ahora = CarbonImmutable::now('UTC');
+        // El martillero abre la ficha de SUS remates en modo lectura: necesita el horario, las fotos y los documentos
+        // para preparar el remate, pero crear y editar es de administración.
+        $user = $request->user();
+        $puedeEditar = $user->esAdmin();
+        abort_unless($puedeEditar || $remate->martillero_id === $user->id, 403,
+            'El remate ' . $remate->folio . ' está a cargo de ' . ($remate->martillero?->name ?? 'otro martillero')
+                . '. En «Subastas» aparecen los remates asignados a ti.');
 
         return view('admin.remates.ficha', [
             'remate' => $remate,
+            'puedeEditar' => $puedeEditar,
             'fila' => PresentacionRemate::fila($remate, $ahora),
             'vista' => $remate->estadoVisible($ahora),
             'editable' => $remate->condicionesEditables($ahora),

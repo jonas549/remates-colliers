@@ -109,11 +109,32 @@ await p.getByRole('button', { name: 'Publicar mensaje' }).click();
 await p.waitForSelector('.admin-aviso');
 comprobar('mensaje publicado a la sala', (await p.locator('.admin-aviso').innerText()).includes('Mensaje publicado'));
 await p.getByRole('button', { name: 'Cerrar este lote ahora' }).click();
+await p.waitForSelector('.admin-modal__texto--destacado:visible');
+const avisoCierre = await p.locator('.admin-modal__texto--destacado:visible').innerText();
+comprobar('el modal de cierre anticipado dice a quién se adjudica y por cuánto',
+    avisoCierre.includes('María Paz González Soto (Postor #1)') && avisoCierre.includes('$198.500.000'), avisoCierre);
+comprobar('con pujas, el modal no muestra el texto de lote desierto',
+    !(await p.locator('.admin-modal__texto--destacado', { hasText: 'Nadie ha pujado' }).isVisible()));
+comprobar('el modal avisa que no se puede deshacer',
+    (await p.locator('.admin-modal__cuerpo').innerText()).includes('no se puede deshacer'));
 await p.fill('textarea[x-model=motivo]', 'Instrucción del mandante');
 await p.getByRole('button', { name: 'Cerrar lote', exact: true }).click();
 await p.waitForFunction(() => document.querySelector('.admin-vivo__cabeza')?.textContent.includes('ADJUDICADO'), null, { timeout: 15000 }).catch(() => {});
 comprobar('cierre anticipado: el panel pasa a ADJUDICADO sin recargar', (await p.locator('.admin-vivo__cabeza').innerText()).includes('ADJUDICADO'));
 await p.screenshot({ path: path.join(SALIDA, 'en-vivo-1440.png'), fullPage: true });
+
+// ── «Cerrar sesión» legible también con el mouse encima (el hover lo pintaba del color del fondo) ──────
+const salir = p.locator('.admin-lateral__salir');
+const colores = async () => p.evaluate(() => {
+    const b = document.querySelector('.admin-lateral__salir');
+    const fondo = getComputedStyle(document.querySelector('.admin-lateral')).backgroundColor;
+    return { texto: getComputedStyle(b).color, fondo };
+});
+const normal = await colores();
+await salir.hover();
+const encima = await colores();
+comprobar('«Cerrar sesión» se sigue viendo con el mouse encima',
+    encima.texto !== encima.fondo && encima.texto !== normal.fondo, JSON.stringify(encima));
 
 // ── Dashboard con datos reales ─────────────────────────────────────────────────────────────────────────
 await p.goto(`${URL}/admin`, { waitUntil: 'load' });
@@ -146,6 +167,37 @@ for (const ancho of [375, 760, 1120, 1440]) {
     }
     await c.close();
 }
+
+// ── El martillero trabaja con sus remates (antes el listado le ofrecía los de otros y devolvía 403) ────
+const cm = await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL', timezoneId: 'America/Santiago' });
+const m = await cm.newPage();
+await m.goto(`${URL}/revision/entrar/martillero?usuario=mossandon@colliers.test&a=/admin/subastas`, { waitUntil: 'load' });
+await m.waitForSelector('.admin-tabla--subastas tbody tr');
+const suyos = (await m.locator('.admin-tabla--subastas tbody tr').allInnerTexts()).join(' | ');
+comprobar('el listado del martillero solo trae sus remates', suyos.includes('Apoquindo') && !suyos.includes('Camino El Alba'), suyos.slice(0, 160));
+comprobar('el martillero no ve «Crear subasta»', !(await m.locator('.admin-encabezado').innerText()).includes('Crear subasta'));
+
+// Apoquindo (id 1) es suyo; a esta altura del recorrido ya lo cerró la administración, así que se abre por URL.
+const panelSuyo = await m.goto(`${URL}/admin/subastas/1/en-vivo`, { waitUntil: 'load' });
+await m.waitForSelector('.admin-vivo__precio');
+comprobar('el martillero entra al panel en vivo de su remate',
+    panelSuyo.status() === 200 && (await m.locator('.admin-vivo__precio').innerText()).startsWith('$'));
+
+// La ficha de su remate: los mismos datos, sin formulario ni acciones de administración.
+await m.goto(`${URL}/admin/subastas/1`, { waitUntil: 'load' });
+const ficha = await m.locator('.admin-gestion').innerText();
+comprobar('el martillero ve la ficha de su remate en modo lectura',
+    ficha.includes('Estás a cargo de este remate') && !ficha.includes('Guardar datos') && !ficha.includes('Subir documento'), ficha.slice(0, 120));
+await m.screenshot({ path: path.join(SALIDA, 'martillero-ficha-1440.png'), fullPage: true });
+
+// Un remate de otro martillero: 403 que explica de quién es y dónde están los suyos.
+const ajeno = await m.goto(`${URL}/admin/subastas/3`, { waitUntil: 'load' });
+const texto403 = await m.locator('body').innerText();
+comprobar('el remate de otro martillero responde 403 y dice por qué',
+    ajeno.status() === 403 && texto403.includes('está a cargo de') && texto403.includes('los remates asignados a ti'),
+    `HTTP ${ajeno.status()} · ${texto403.slice(0, 140).replace(/\s+/g, ' ')}`);
+await m.screenshot({ path: path.join(SALIDA, 'martillero-403-1440.png'), fullPage: true });
+await cm.close();
 
 await navegador.close();
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');

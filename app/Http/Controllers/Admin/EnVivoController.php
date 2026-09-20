@@ -23,7 +23,12 @@ class EnVivoController extends Controller
     public function show(Request $request, Remate $remate, Liquidador $liquidador, Emisor $emisor): View
     {
         $user = User::find($request->user()->id);
-        abort_unless($user->esAdmin() || ($user->rol === User::ROL_MARTILLERO && $remate->martillero_id === $user->id), 403);
+        // El martillero entra al panel de SUS remates. Si abre el de otro, el 403 dice por qué y a quién está asignado.
+        abort_unless($user->esAdmin() || ($user->rol === User::ROL_MARTILLERO && $remate->martillero_id === $user->id), 403,
+            $user->rol === User::ROL_MARTILLERO
+                ? 'El remate ' . $remate->folio . ' está a cargo de ' . ($remate->martillero?->name ?? 'otro martillero')
+                    . '. En «Subastas» aparecen los remates asignados a ti.'
+                : '');
         abort_if($remate->estado === Remate::ESTADO_BORRADOR, 404);
 
         $liquidador->transicionesPendientes($remate);

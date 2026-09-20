@@ -111,16 +111,38 @@ class RematesAdminTest extends TestCase
         $this->assertStringContainsString('precio base', session('errors')->first('precio_base'));
     }
 
-    public function test_solo_administracion_gestiona_y_el_martillero_ve_solo_su_panel_en_vivo(): void
+    public function test_solo_administracion_gestiona_y_el_martillero_trabaja_con_sus_remates(): void
     {
         $remate = $this->rematePublicado();
         $otro = User::create(['name' => 'C. Vergara', 'email' => 'c@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_MARTILLERO, 'estado' => User::ESTADO_ACTIVO]);
 
+        // Crear y editar es de administración.
         $this->actingAs($this->martillero)->post('/admin/subastas', $this->formulario())->assertForbidden();
-        $this->actingAs($this->martillero)->get(route('admin.remates.show', $remate))->assertForbidden();
+        $this->actingAs($this->martillero)->put(route('admin.remates.update', $remate), $this->formulario())->assertForbidden();
         $this->actingAs($this->martillero)->get('/admin/subastas')->assertOk()->assertDontSee('Crear subasta');
+
+        // El martillero a cargo entra al panel en vivo y ve la ficha en modo lectura (sin formulario ni acciones).
         $this->actingAs($this->martillero)->get(route('admin.remates.en-vivo', $remate))->assertOk()->assertSee('adminEnVivo(', false);
-        $this->actingAs($otro)->get(route('admin.remates.en-vivo', $remate))->assertForbidden();
+        $this->actingAs($this->martillero)->get(route('admin.remates.show', $remate))->assertOk()
+            ->assertSee($remate->folio)->assertSee('Estás a cargo de este remate')
+            ->assertDontSee('Guardar datos')->assertDontSee('Subir documento')->assertDontSee('Cancelar remate');
+    }
+
+    public function test_el_martillero_solo_ve_los_remates_a_su_cargo_y_el_403_dice_por_que(): void
+    {
+        $remate = $this->rematePublicado();
+        $otro = User::create(['name' => 'C. Vergara', 'email' => 'c@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_MARTILLERO, 'estado' => User::ESTADO_ACTIVO]);
+
+        // El listado no le ofrece remates de otros: antes mostraba «Panel en vivo» y terminaba en un 403 sin explicación.
+        $this->actingAs($otro)->get('/admin/subastas')->assertOk()
+            ->assertViewHas('subastas', fn (array $filas) => $filas === []);
+        $this->actingAs($this->martillero)->get('/admin/subastas')->assertOk()
+            ->assertViewHas('subastas', fn (array $filas) => count($filas) === 1 && $filas[0]['folio'] === $remate->folio);
+
+        foreach ([route('admin.remates.en-vivo', $remate), route('admin.remates.show', $remate)] as $url) {
+            $this->actingAs($otro)->get($url)->assertForbidden()
+                ->assertSee('está a cargo de M. Ossandón')->assertSee('los remates asignados a ti');
+        }
     }
 
     public function test_listado_y_dashboard_con_datos_reales(): void
@@ -305,6 +327,19 @@ class RematesAdminTest extends TestCase
         $this->assertStringContainsString('Ana Postora', html_entity_decode($html));
         $this->assertStringContainsString('/hora.php', $html);
         $this->assertStringNotContainsString('Ana Postora', (string) file_get_contents("{$this->carpeta}/{$remate->slug}.json"));
+    }
+
+    public function test_el_modal_de_cierre_anticipado_dice_a_quien_y_por_cuanto(): void
+    {
+        $remate = $this->rematePublicado();
+        $html = html_entity_decode($this->actingAs($this->admin)->get(route('admin.remates.en-vivo', $remate))->assertOk()->getContent());
+
+        // Es irreversible y son millones: el modal nombra al adjudicatario, el monto y el caso sin pujas.
+        $this->assertStringContainsString('Se adjudica a', $html);
+        $this->assertStringContainsString('quien(lote.ganador)', $html);
+        $this->assertStringContainsString('precioTexto', $html);
+        $this->assertStringContainsString('Nadie ha pujado', $html);
+        $this->assertStringContainsString('no se puede deshacer', $html);
     }
 
     private function rematePublicado(string $sufijo = ''): Remate
