@@ -8,19 +8,143 @@ use App\Models\AccessLog;
 use App\Models\Postor;
 use App\Models\PostorDocumento;
 use App\Models\User;
+use App\Support\Formato;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Acciones de administración sobre cuentas (solo rol admin). Los botones van en la ficha del postor (Bloque G);
- * hasta entonces son endpoints.
+ * Usuarios internos del panel: administradores y martilleros (Bloque E/F, pedido en el QA del 20/09). Crear, editar,
+ * desactivar y restablecer la clave desde la pantalla «06 Usuarios», para no depender de `colliers:crear-usuario`
+ * por terminal. Los postores NO se administran aquí: van en «03 Postores», con sus datos personales y su garantía.
+ *
+ * Reglas: las cuentas internas no se borran (dejan remates y bitácora detrás), se desactivan; nadie se desactiva ni
+ * se cambia el rol a sí mismo; y siempre queda al menos un administrador activo.
  */
 class UsuariosController extends Controller
 {
+    public function index(Request $request): View
+    {
+        $usuarios = User::whereIn('rol', [User::ROL_ADMIN, User::ROL_MARTILLERO])
+            ->withCount(['rematesComoMartillero as remates'])
+            ->orderBy('rol')->orderBy('name')->get();
+
+        $ahora = CarbonImmutable::now('UTC');
+
+        return view('admin.usuarios', [
+            'usuarios' => $usuarios->map(fn (User $u) => [
+                'id' => $u->id,
+                'nombre' => $u->name,
+                'email' => $u->email,
+                'rol' => $u->rol,
+                'rolTexto' => $u->rol === User::ROL_ADMIN ? 'Administración' : 'Martillero/a',
+                'activo' => $u->estado === User::ESTADO_ACTIVO,
+                'estadoTexto' => $u->estado === User::ESTADO_ACTIVO ? 'Activo' : 'Inactivo',
+                'bloqueado' => $u->bloqueado_hasta !== null && $u->bloqueado_hasta->greaterThan($ahora),
+                'debeCambiarClave' => (bool) $u->debe_cambiar_clave,
+                'remates' => $u->remates,
+                'ultimoIngreso' => ($fecha = AccessLog::where('user_id', $u->id)->where('evento', 'ingreso')->max('created_at'))
+                    ? Formato::fechaCorta(CarbonImmutable::parse($fecha, 'UTC')) : null,
+                'esTu' => $u->is($request->user()),
+                'urls' => [
+                    'actualizar' => route('admin.usuarios.update', $u),
+                    'estado' => route('admin.usuarios.estado', $u),
+                    'clave' => route('admin.usuarios.restablecer-clave', $u),
+                    'desbloquear' => route('admin.usuarios.desbloquear', $u),
+                    'sesiones' => route('admin.usuarios.cerrar-sesiones', $u),
+                ],
+            ])->values()->all(),
+        ]);
+    }
+
+    /** Crea un administrador o martillero con clave temporal de un solo uso (la misma regla que el comando). */
+    public function store(Request $request): RedirectResponse
+    {
+        $datos = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')],
+            'rol' => ['required', Rule::in([User::ROL_ADMIN, User::ROL_MARTILLERO])],
+        ], [], ['name' => 'nombre', 'email' => 'correo', 'rol' => 'rol']);
+
+        $temporal = Str::password(14, symbols: false);
+        $user = User::create([
+            'name' => $datos['name'],
+            'email' => mb_strtolower($datos['email']),
+            'password' => $temporal,
+            'rol' => $datos['rol'],
+            'estado' => User::ESTADO_ACTIVO,
+            'debe_cambiar_clave' => true,
+        ]);
+        // Las cuentas internas no confirman correo: las crea un administrador.
+        $user->forceFill(['email_verified_at' => CarbonImmutable::now('UTC')])->save();
+        $this->anotar($request, $user, 'usuario_interno_creado', ['rol' => $user->rol]);
+
+        return back()->with('estado', ($user->rol === User::ROL_ADMIN ? 'Administrador' : 'Martillero') . " {$user->name} creado.")
+            ->with('clave_temporal', ['email' => $user->email, 'clave' => $temporal]);
+    }
+
+    public function update(Request $request, User $usuario): RedirectResponse
+    {
+        $this->soloInternos($usuario);
+        $datos = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($usuario->id)],
+            'rol' => ['required', Rule::in([User::ROL_ADMIN, User::ROL_MARTILLERO])],
+        ], [], ['name' => 'nombre', 'email' => 'correo', 'rol' => 'rol']);
+
+        if ($usuario->is($request->user()) && $datos['rol'] !== $usuario->rol) {
+            return back()->with('error', 'No puedes cambiarte el rol a ti mismo: pídeselo a otro administrador.');
+        }
+        if ($datos['rol'] !== User::ROL_ADMIN && $this->esElUltimoAdmin($usuario)) {
+            return back()->with('error', 'Es el único administrador activo: primero crea o activa otro.');
+        }
+
+        $usuario->update($datos + ['email' => mb_strtolower($datos['email'])]);
+        $this->anotar($request, $usuario, 'usuario_interno_editado', ['rol' => $usuario->rol]);
+
+        return back()->with('estado', "Datos de {$usuario->name} guardados.");
+    }
+
+    /** Activar o desactivar: nunca se borra una cuenta interna (queda en remates y en la bitácora). */
+    public function estado(Request $request, User $usuario): RedirectResponse
+    {
+        $this->soloInternos($usuario);
+        $activar = $request->boolean('activar');
+
+        if (! $activar && $usuario->is($request->user())) {
+            return back()->with('error', 'No puedes desactivar tu propia cuenta.');
+        }
+        if (! $activar && $this->esElUltimoAdmin($usuario)) {
+            return back()->with('error', 'Es el único administrador activo: primero crea o activa otro.');
+        }
+
+        $usuario->forceFill(['estado' => $activar ? User::ESTADO_ACTIVO : User::ESTADO_INACTIVO])->save();
+        $cerradas = $activar ? 0 : Sesiones::cerrarTodas($usuario);
+        $this->anotar($request, $usuario, $activar ? 'usuario_interno_activado' : 'usuario_interno_desactivado', ['sesiones_cerradas' => $cerradas]);
+
+        return back()->with('estado', $activar
+            ? "{$usuario->name} vuelve a tener acceso al panel."
+            : "{$usuario->name} queda sin acceso" . ($cerradas ? " y se cerraron {$cerradas} sesión(es)." : '.'));
+    }
+
+    private function soloInternos(User $usuario): void
+    {
+        abort_unless($usuario->esAdministracion(), 404);
+    }
+
+    private function esElUltimoAdmin(User $usuario): bool
+    {
+        return $usuario->rol === User::ROL_ADMIN && $usuario->estado === User::ESTADO_ACTIVO
+            && User::where('rol', User::ROL_ADMIN)->where('estado', User::ESTADO_ACTIVO)->where('id', '!=', $usuario->id)->doesntExist();
+    }
+
     /**
      * Restablece la contraseña de otra cuenta: genera una clave temporal que se muestra UNA vez, obliga a cambiarla
      * al ingresar, levanta el bloqueo y cierra todas sus sesiones.

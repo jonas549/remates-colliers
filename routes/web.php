@@ -163,6 +163,11 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         Route::get('/configuracion/{seccion}', [ConfiguracionController::class, 'show'])->name('configuracion.seccion');
         Route::put('/configuracion/{seccion}', [ConfiguracionController::class, 'update'])->name('configuracion.update');
 
+        // Bloque E/F: usuarios internos (administradores y martilleros). Los postores se administran en «03 Postores».
+        Route::get('/usuarios', [UsuariosController::class, 'index'])->name('usuarios');
+        Route::post('/usuarios', [UsuariosController::class, 'store'])->name('usuarios.store');
+        Route::put('/usuarios/{usuario}', [UsuariosController::class, 'update'])->name('usuarios.update');
+        Route::post('/usuarios/{usuario}/estado', [UsuariosController::class, 'estado'])->name('usuarios.estado');
         Route::post('/usuarios/{usuario}/restablecer-clave', [UsuariosController::class, 'restablecerClave'])->name('usuarios.restablecer-clave');
         Route::post('/usuarios/{usuario}/desbloquear', [UsuariosController::class, 'desbloquear'])->name('usuarios.desbloquear');
         Route::delete('/usuarios/{usuario}/sesiones', [UsuariosController::class, 'cerrarSesiones'])->name('usuarios.cerrar-sesiones');

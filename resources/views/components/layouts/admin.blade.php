@@ -15,6 +15,8 @@
     // Sin diseño: quinto ítem con el mismo estilo, solo para administradores (Bloque V).
     if (auth()->user()?->esAdmin()) {
         $items['configuracion'] = ['05', 'Configuración', route('admin.configuracion'), null];
+        // Usuarios internos (administradores y martilleros); los postores van en «03 Postores».
+        $items['usuarios'] = ['06', 'Usuarios', route('admin.usuarios'), null];
     } else {
         unset($items['postores']); // datos personales de los postores: solo administradores
     }

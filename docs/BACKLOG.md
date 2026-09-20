@@ -28,7 +28,7 @@ nota *(verifica Jonas en el sandbox)*.
 | M | Notificaciones | En progreso | 8/9 |
 | N | Sitio público | En progreso | 11/12 |
 | L | Streaming | Pendiente | 0/4 |
-| E/F | Componentes y estructura del panel | Pendiente | 0/3 |
+| E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 6/8 |
 | P | Seguridad | Pendiente | 0/8 |
 | Q | QA y carga | Pendiente | 0/6 |
@@ -58,7 +58,7 @@ internos (2) → habilitación configurable (7)**.
 | 5 | El registro de postor pierde lo escrito y los adjuntos al fallar la validación | **Hecho (20/09)**: los adjuntos se conservan entre intentos, el formulario dice qué falta y lleva el foco al error; un envío más pesado que `post_max_size` ahora se explica en vez de volver en blanco |
 | 3 | Botón «Crear subasta de prueba» en `/admin/subastas` | **Hecho (20/09)**: franja propia (fuera de producción) que crea el remate publicado con lotes, postores habilitados y la clave común; con enlaces a la sala y botón para borrarlo con todo su rastro |
 | 4 | «Inicio del remate» y «cierre de garantías» sin explicación en el formulario | **Hecho (20/09)**: ayuda bajo cada fecha y un resumen en palabras que se arma solo y avisa si el cierre de garantías queda después del inicio |
-| 2 | No hay dónde crear usuarios internos (hoy solo `colliers:crear-usuario` por terminal) | Pendiente: pantalla nueva **«06 Usuarios»** |
+| 2 | No hay dónde crear usuarios internos (hoy solo `colliers:crear-usuario` por terminal) | **Hecho (20/09)**: pantalla **«06 Usuarios»** en el menú lateral: crear, editar, activar/desactivar, restablecer clave, desbloquear y cerrar sesiones |
 | 7 | Inscripción por remate vs. postor habilitado una vez, configurable | Pendiente: primero la clase única `Habilitacion`; el interruptor, cuando el cliente defina el monto de la habilitación global |
 
 **Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) con datos reales y exportables XLSX/CSV (falta PDF, a decidir, y probar en el sandbox). B completo. J, D y K hechos y probados en local
@@ -380,10 +380,19 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [ ] Aviso de retraso del video (10–30 s) visible en pantalla
 - [ ] Estado sin transmisión (antes de empezar / video no disponible)
 
-## E/F — Componentes y estructura del panel · Pendiente
+## E/F — Componentes y estructura del panel · En progreso
 
 Se completan a medida que las pantallas lo pidan.
 
+- [x] **Usuarios internos: «06 Usuarios»** *(QA del 20/09, punto 2)*. Pantalla nueva, sin diseño, armada con los
+  componentes del panel y **solo para administradores**. Crea administradores y martilleros con **clave temporal de un
+  solo uso** (misma regla que `colliers:crear-usuario`, que se conserva para el primer arranque del servidor), edita
+  nombre, correo y rol, **activa y desactiva** (nunca borra: quedan remates y bitácora a su nombre; al desactivar se
+  cierran sus sesiones), restablece la clave, desbloquea tras intentos fallidos y cierra sesiones. Reglas: nadie se
+  desactiva ni se cambia el rol a sí mismo, y siempre queda un administrador activo. Muestra el rol, el estado, los
+  remates a cargo y el último ingreso. Los postores siguen en «03 Postores», con sus datos personales
+  *(`UsuariosInternosTest`, 7 pruebas; `tools/comparar/panel-usuarios.mjs`, 14 comprobaciones en navegador real
+  incluidas 375/760/1120/1440 px)*
 - [ ] Componentes Blade comunes extraídos de las pantallas de T
 - [ ] Estructura del panel (navegación, permisos por rol)
 - [ ] Tablas y formularios reutilizables, adaptados a móvil

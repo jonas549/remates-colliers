@@ -75,4 +75,10 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Puja::class);
     }
+
+    /** Remates a cargo de este usuario como martillero (pantalla de usuarios internos). */
+    public function rematesComoMartillero(): HasMany
+    {
+        return $this->hasMany(Remate::class, 'martillero_id');
+    }
 }
