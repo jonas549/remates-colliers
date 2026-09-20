@@ -125,6 +125,9 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
 
         // Bloque I: remates y lotes.
         Route::post('/subastas', [RematesController::class, 'store'])->name('remates.store');
+        // Subasta de prueba lista para usar (fuera de producción): el servicio se niega si APP_ENV=production.
+        Route::post('/subastas/prueba', [RematesController::class, 'crearPrueba'])->name('remates.crear-prueba');
+        Route::delete('/subastas/{remate}/prueba', [RematesController::class, 'borrarPrueba'])->name('remates.borrar-prueba');
         Route::put('/subastas/{remate}', [RematesController::class, 'update'])->name('remates.update');
         Route::post('/subastas/{remate}/publicar', [RematesController::class, 'publicar'])->name('remates.publicar');
         Route::post('/subastas/{remate}/cancelar', [RematesController::class, 'cancelar'])->name('remates.cancelar');

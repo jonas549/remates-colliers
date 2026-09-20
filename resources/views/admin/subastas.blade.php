@@ -21,6 +21,50 @@
 
         <x-admin.avisos />
 
+        {{-- Subastas de prueba (QA del 20/09, punto 3). Solo fuera de producción: no existen para el cliente. --}}
+        @if ($esAdmin && ! app()->isProduction())
+            <div class="admin-pruebas">
+                <div class="admin-pruebas__texto">
+                    <strong>Subastas de prueba.</strong> Crean un remate publicado con 2 lotes, postores habilitados y
+                    el inicio en 12 minutos. No aparecen en el sitio público, no entran en los reportes y no envían correos.
+                </div>
+                <form method="POST" action="{{ route('admin.remates.crear-prueba') }}" class="admin-pruebas__acciones">
+                    @csrf
+                    <label class="admin-pruebas__campo">MINUTOS HASTA EL INICIO
+                        <input type="number" name="inicio" value="12" min="1" max="120" inputmode="numeric">
+                    </label>
+                    <label class="admin-pruebas__campo">LOTES
+                        <input type="number" name="lotes" value="2" min="1" max="10" inputmode="numeric">
+                    </label>
+                    <label class="admin-pruebas__campo">POSTORES
+                        <input type="number" name="postores" value="3" min="1" max="20" inputmode="numeric">
+                    </label>
+                    <button type="submit" class="admin-boton-borde">Crear subasta de prueba</button>
+                </form>
+                @if ($pruebas)
+                    <table class="admin-pruebas__tabla">
+                        <tbody>
+                            @foreach ($pruebas as $prueba)
+                                <tr>
+                                    <td><strong>{{ $prueba['folio'] }}</strong> · {{ $prueba['lotes'] }} lote(s) · inicio {{ $prueba['inicio'] }}</td>
+                                    <td class="admin-pruebas__enlaces">
+                                        <a href="{{ $prueba['ficha'] }}" class="admin-accion">Ficha</a>
+                                        <a href="{{ $prueba['enVivo'] }}" class="admin-accion">Panel en vivo</a>
+                                        <form method="POST" action="{{ $prueba['borrar'] }}" class="formulario-en-linea"
+                                            onsubmit="return confirm('¿Borrar {{ $prueba['folio'] }} con sus postores de prueba?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="admin-accion admin-accion--peligro">Borrar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
+        @endif
+
         @if ($esAdmin)
             <template x-if="form">
                 <div class="admin-form">

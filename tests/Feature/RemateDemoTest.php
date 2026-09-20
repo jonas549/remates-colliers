@@ -68,8 +68,8 @@ class RemateDemoTest extends TestCase
 
         // Un postor de demostración puja cuando abre el lote.
         $lote = $remate->lotes->first();
-        app(MotorPujas::class)->pujar($usuario, $lote->id, 100000000, $lote->abre_en->addSecond());
-        $this->assertSame(100000000, $lote->fresh()->precio_actual);
+        app(MotorPujas::class)->pujar($usuario, $lote->id, $lote->precio_base, $lote->abre_en->addSecond());
+        $this->assertSame($lote->precio_base, $lote->fresh()->precio_actual);
     }
 
     public function test_opciones_fuera_de_rango(): void

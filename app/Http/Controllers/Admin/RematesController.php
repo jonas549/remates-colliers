@@ -11,7 +11,9 @@ use App\Models\User;
 use App\Remates\FormularioRemate;
 use App\Remates\GestionRemates;
 use App\Remates\PresentacionRemate;
+use App\Remates\RemateDePrueba;
 use App\Subastas\Liquidador;
+use App\Support\Formato;
 use App\Support\RegionesChile;
 use Carbon\CarbonImmutable;
 use DomainException;
@@ -50,6 +52,17 @@ class RematesController extends Controller
                 ],
             ])->values()->all(),
             'formulario' => $this->datosFormulario(),
+            // Fuera de producción, las subastas de prueba van en una franja aparte: no ensucian el listado real.
+            'pruebas' => app()->isProduction() || $esMartillero ? [] : Remate::with('lotes')->where('es_demostracion', true)
+                ->orderByDesc('id')->get()
+                ->map(fn (Remate $r) => [
+                    'folio' => $r->folio,
+                    'inicio' => Formato::fechaCorta($r->inicio_en),
+                    'lotes' => $r->lotes->count(),
+                    'ficha' => route('admin.remates.show', $r),
+                    'enVivo' => route('admin.remates.en-vivo', $r),
+                    'borrar' => route('admin.remates.borrar-prueba', $r),
+                ])->all(),
         ]);
     }
 
@@ -74,6 +87,48 @@ class RematesController extends Controller
         }
 
         return redirect()->route('admin.remates.show', $remate)->with('estado', "Remate {$remate->folio} publicado.");
+    }
+
+    /**
+     * «Crear subasta de prueba» (QA del 20/09, punto 3): un remate publicado, con lotes, con postores habilitados y
+     * con el inicio a unos minutos de ahora, para probar sin llenar quince campos. Queda marcado como prueba: fuera
+     * del sitio público y de los reportes. No existe en producción.
+     */
+    public function crearPrueba(Request $request, RemateDePrueba $prueba): RedirectResponse
+    {
+        try {
+            $creado = $prueba->crear(
+                postores: (int) $request->integer('postores', 3),
+                lotes: (int) $request->integer('lotes', 2),
+                inicioMinutos: (int) $request->integer('inicio', 12),
+            );
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        // Las credenciales se muestran UNA vez, en la ficha del remate recién creado.
+        return redirect()->route('admin.remates.show', $creado['remate'])
+            ->with('estado', "Subasta de prueba {$creado['remate']->folio} creada y publicada.")
+            ->with('credenciales_prueba', [
+                'clave' => $creado['clave'],
+                'postores' => $creado['postores'],
+                // «Mi cuenta» no lista los remates de prueba (para no ensuciar la cuenta de un postor real):
+                // estos enlaces son la forma de entrar directo a mirar y a pujar.
+                'publica' => route('remates.show', $creado['remate']->slug),
+                'sala' => route('sala.show', $creado['remate']->slug),
+            ]);
+    }
+
+    public function borrarPrueba(Remate $remate, RemateDePrueba $prueba): RedirectResponse
+    {
+        try {
+            $folio = $remate->folio;
+            $prueba->borrar($remate);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('admin.subastas')->with('estado', "Subasta de prueba {$folio} borrada con sus postores.");
     }
 
     public function show(Request $request, Remate $remate): View

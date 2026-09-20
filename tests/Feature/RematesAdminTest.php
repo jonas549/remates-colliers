@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AccessLog;
 use App\Models\Adjudicacion;
 use App\Models\Configuracion;
 use App\Models\Documento;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Subastas\Liquidador;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -340,6 +342,66 @@ class RematesAdminTest extends TestCase
         $this->assertStringContainsString('precioTexto', $html);
         $this->assertStringContainsString('Nadie ha pujado', $html);
         $this->assertStringContainsString('no se puede deshacer', $html);
+    }
+
+    public function test_crear_subasta_de_prueba_deja_todo_listo_para_pujar(): void
+    {
+        $respuesta = $this->actingAs($this->admin)->post(route('admin.remates.crear-prueba'), ['lotes' => 2, 'postores' => 3, 'inicio' => 12]);
+
+        $remate = Remate::where('es_demostracion', true)->sole();
+        $respuesta->assertRedirect(route('admin.remates.show', $remate))->assertSessionHas('estado');
+
+        // Publicado, con lotes programados y el inicio a los minutos pedidos.
+        $this->assertSame(Remate::ESTADO_PUBLICADO, $remate->estado);
+        $this->assertSame(2, $remate->lotes()->count());
+        $this->assertSame(12, (int) round(CarbonImmutable::now('UTC')->diffInMinutes($remate->inicio_en)));
+        $this->assertTrue($remate->cierre_garantias_en->lessThan($remate->inicio_en));
+        $this->assertNotNull($remate->lotes()->first()->abre_en);
+
+        // Tres postores aprobados con garantía aprobada y la clave común, mostrada una sola vez.
+        $credenciales = session('credenciales_prueba');
+        $this->assertCount(3, $credenciales['postores']);
+        $this->assertNotEmpty($credenciales['clave']);
+        $this->assertSame(3, $remate->garantias()->where('estado', Garantia::ESTADO_APROBADA)->count());
+        $primero = User::where('email', $credenciales['postores'][0]['email'])->sole();
+        $this->assertTrue(Hash::check($credenciales['clave'], $primero->password));
+        $this->assertSame(Postor::ESTADO_APROBADO, $primero->postor->estado);
+
+        // Fuera del listado real y del sitio público; el JSON de estado sí existe (para probar el tiempo real).
+        $this->actingAs($this->admin)->get('/admin/subastas')->assertOk()
+            ->assertViewHas('subastas', fn (array $filas) => $filas === [])
+            ->assertViewHas('pruebas', fn (array $filas) => count($filas) === 1 && $filas[0]['folio'] === $remate->folio)
+            ->assertSee('Crear subasta de prueba');
+        $this->get('/')->assertOk()->assertDontSee($remate->folio);
+        $this->assertFileExists("{$this->carpeta}/{$remate->slug}.json");
+    }
+
+    public function test_la_subasta_de_prueba_se_borra_con_sus_postores_y_la_real_no(): void
+    {
+        $this->actingAs($this->admin)->post(route('admin.remates.crear-prueba'), ['lotes' => 1, 'postores' => 2]);
+        $prueba = Remate::where('es_demostracion', true)->sole();
+        $real = $this->rematePublicado();
+
+        // Un remate real no se borra por esta vía, aunque se pida a mano.
+        $this->actingAs($this->admin)->delete(route('admin.remates.borrar-prueba', $real))->assertSessionHas('error');
+        $this->assertNotNull($real->fresh());
+
+        // Como en el navegador: el postor de prueba ya entró, así que hay bitácora de accesos apuntando a su usuario.
+        $postorPrueba = User::where('email', 'like', '%@demo.colliers.test')->first();
+        AccessLog::create(['user_id' => $postorPrueba->id, 'evento' => 'ingreso', 'ip' => '127.0.0.1', 'user_agent' => 'prueba']);
+
+        $this->actingAs($this->admin)->delete(route('admin.remates.borrar-prueba', $prueba))
+            ->assertRedirect(route('admin.subastas'))->assertSessionHas('estado');
+
+        $this->assertNull($prueba->fresh());
+        $this->assertSame(0, User::where('email', 'like', '%@demo.colliers.test')->count());
+        $this->assertFileDoesNotExist("{$this->carpeta}/{$prueba->slug}.json");
+    }
+
+    public function test_la_subasta_de_prueba_es_solo_para_administracion(): void
+    {
+        $this->actingAs($this->martillero)->post(route('admin.remates.crear-prueba'))->assertForbidden();
+        $this->assertSame(0, Remate::where('es_demostracion', true)->count());
     }
 
     private function rematePublicado(string $sufijo = ''): Remate

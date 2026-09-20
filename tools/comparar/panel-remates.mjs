@@ -32,7 +32,7 @@ p.on('dialog', (d) => d.accept());
 await p.goto(`${URL}/revision/entrar/admin?a=/admin/subastas`, { waitUntil: 'load' });
 
 // ── Crear con el formulario del diseño ──────────────────────────────────────────────────────────────────
-await p.getByRole('button', { name: 'Crear subasta' }).click();
+await p.getByRole('button', { name: 'Crear subasta', exact: true }).click();
 await p.fill('input[name=direccion]', 'Av. Italia 1180, Depto. 402');
 await p.fill('input[name=comuna]', 'Ñuñoa');
 await p.selectOption('select[name=tipo_propiedad]', 'Departamento');
@@ -167,6 +167,67 @@ for (const ancho of [375, 760, 1120, 1440]) {
     }
     await c.close();
 }
+
+// ── Botón «Crear subasta de prueba»: deja todo listo para probar sin llenar el formulario ──────────────
+await p.goto(`${URL}/admin/subastas`, { waitUntil: 'load' });
+comprobar('el listado ofrece crear una subasta de prueba', await p.getByRole('button', { name: 'Crear subasta de prueba' }).isVisible());
+await p.fill('.admin-pruebas__acciones input[name=inicio]', '12');
+await p.fill('.admin-pruebas__acciones input[name=lotes]', '2');
+await p.fill('.admin-pruebas__acciones input[name=postores]', '3');
+await p.getByRole('button', { name: 'Crear subasta de prueba' }).click();
+await p.waitForSelector('.admin-pruebas--credenciales');
+const credenciales = await p.locator('.admin-pruebas--credenciales').innerText();
+const correoPrueba = credenciales.match(/\S+@demo\.colliers\.test/)?.[0];
+const clavePrueba = credenciales.match(/solo se muestra ahora[^:]*:\s*(\S+)/)?.[1];
+comprobar('la subasta de prueba se crea publicada y muestra la clave una vez',
+    (await p.locator('.admin-aviso--ok').innerText()).includes('creada y publicada') && !!correoPrueba && !!clavePrueba,
+    `${correoPrueba} · clave ${clavePrueba ? 'sí' : 'no'}`);
+comprobar('la ficha de la prueba trae sus lotes programados',
+    (await p.locator('.admin-gestion__bloque table tbody tr').count()) === 2);
+await p.screenshot({ path: path.join(SALIDA, 'subasta-de-prueba-1440.png'), fullPage: true });
+
+// Un postor de prueba entra con esa clave y llega a la sala del remate.
+const cp = await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL' });
+const q = await cp.newPage();
+await q.goto(`${URL}/ingresar`, { waitUntil: 'load' });
+await q.fill('input[name=usuario]', correoPrueba);
+await q.fill('input[name=password]', clavePrueba);
+await q.getByRole('button', { name: 'Ingresar' }).click();
+await q.waitForLoadState('load');
+comprobar('el postor de prueba entra con la clave que mostró el panel', q.url().endsWith('/mi-cuenta'), q.url());
+const salaPrueba = await p.locator('.admin-pruebas--credenciales a', { hasText: 'sala de pujas' }).getAttribute('href');
+await q.goto(salaPrueba, { waitUntil: 'load' });
+const textoSala = (await q.locator('body').innerText()).replace(/\s+/g, ' ');
+comprobar('y entra a la sala del remate de prueba', q.url().includes('/sala') && /PUJA|Lote/i.test(textoSala),
+    q.url() + ' · ' + textoSala.slice(0, 140));
+await cp.close();
+
+// La franja de pruebas también se usa desde el celular.
+{
+    const cmovil = await navegador.newContext({ viewport: { width: 375, height: 800 }, locale: 'es-CL' });
+    const r = await cmovil.newPage();
+    await r.goto(`${URL}/revision/entrar/admin?a=/admin/subastas`, { waitUntil: 'load' });
+    await r.waitForTimeout(400);
+    const u = await revisarUsabilidad(r, 375);
+    comprobar('la franja de subastas de prueba se usa a 375px (sin desborde, táctiles >= 44)',
+        !u.desborde && u.pequenos.length === 0, `desborde:${u.desborde} ${u.pequenos.slice(0, 3).join('; ')}`);
+    await r.screenshot({ path: path.join(SALIDA, 'pruebas-375.png'), fullPage: true });
+    await cmovil.close();
+}
+
+// El sitio público no la muestra y el listado real tampoco.
+const publico = await p.goto(`${URL}/`, { waitUntil: 'load' });
+comprobar('la subasta de prueba no aparece en el sitio público',
+    publico.status() === 200 && !(await p.locator('body').innerText()).includes('PRUEBA ·'));
+
+// Y se borra con sus postores desde la misma franja.
+await p.goto(`${URL}/admin/subastas`, { waitUntil: 'load' });
+p.on('dialog', (d) => d.accept().catch(() => {}));
+await p.locator('.admin-pruebas__tabla').getByRole('button', { name: 'Borrar' }).first().click();
+await p.waitForSelector('.admin-aviso--ok');
+comprobar('la subasta de prueba se borra con sus postores',
+    (await p.locator('.admin-aviso--ok').innerText()).includes('borrada con sus postores')
+    && (await p.locator('.admin-pruebas__tabla').count()) === 0);
 
 // ── El martillero trabaja con sus remates (antes el listado le ofrecía los de otros y devolvía 403) ────
 const cm = await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL', timezoneId: 'America/Santiago' });

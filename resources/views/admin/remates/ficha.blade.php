@@ -54,6 +54,27 @@
         <x-admin.avisos />
 
         <div class="admin-gestion">
+            {{-- Postores de la subasta de prueba: la clave se muestra UNA sola vez, igual que en el comando. --}}
+            @if (session('credenciales_prueba'))
+                @php($cred = session('credenciales_prueba'))
+                <div class="admin-pruebas admin-pruebas--credenciales">
+                    <div class="admin-pruebas__texto">
+                        <strong>Postores de prueba listos para pujar.</strong> Entran por «Ingresar» con estos correos y
+                        esta clave común, que <strong>solo se muestra ahora</strong>: <code>{{ $cred['clave'] }}</code>
+                    </div>
+                    <div class="admin-pruebas__texto">
+                        Con la sesión de un postor de prueba: <a href="{{ $cred['publica'] }}">ficha pública del remate</a> ·
+                        <a href="{{ $cred['sala'] }}">sala de pujas</a>. «Mi cuenta» no lista los remates de prueba a propósito.
+                    </div>
+                    <table class="admin-pruebas__tabla">
+                        <tbody>
+                            @foreach ($cred['postores'] as $postor)
+                                <tr><td>Postor {{ $postor['numero'] }}</td><td><code>{{ $postor['email'] }}</code></td><td>{{ $postor['rut'] }}</td></tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
             @if ($faltan !== [])
                 <div class="admin-faltan">
                     <strong>Para publicar falta:</strong>

@@ -100,3 +100,27 @@
   .admin-form__grilla { grid-template-columns: 1fr; }
   .admin-modal__cuerpo { padding: 20px; }
 }
+
+/* Subastas de prueba: franja aparte del listado real, solo fuera de producción (QA del 20/09). */
+.admin-pruebas { border: 1px dashed #8c95a3; background: #fafbfd; padding: 18px 20px; margin: 0 32px 24px; }
+.admin-pruebas--credenciales { border-color: #25408f; background: #f4f6fb; margin: 0 0 24px; }
+.admin-pruebas__texto { font-size: 14px; line-height: 1.6; color: #4a5563; max-width: 90ch; }
+.admin-pruebas__texto strong { color: #16265a; }
+.admin-pruebas__acciones { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin-top: 14px; }
+.admin-pruebas__campo { font-size: 10px; letter-spacing: 0.14em; color: #8c95a3; font-weight: 700; display: flex; flex-direction: column; gap: 6px; }
+.admin-pruebas__campo input { border: 1px solid #d5dae3; padding: 10px 12px; font: inherit; font-size: 14px; letter-spacing: normal; color: #1d2530; width: 120px; min-height: 44px; }
+.admin-pruebas__tabla { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+.admin-pruebas__tabla td { border-top: 1px solid #e6e9ef; padding: 10px 8px; color: #4a5563; }
+.admin-pruebas__tabla code { font-size: 13px; color: #16265a; }
+.admin-pruebas__enlaces { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+
+@media (max-width: 1119.98px) {
+  /* Las acciones de la franja de pruebas no pasan por la hoja móvil: se tocan directo, así que ≥ 44 px. */
+  .admin-pruebas__enlaces .admin-accion { min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+@media (max-width: 759.98px) {
+  .admin-pruebas { margin: 0 20px 20px; }
+  .admin-pruebas__campo input { width: 100%; }
+  .admin-pruebas__enlaces { justify-content: flex-start; }
+}
