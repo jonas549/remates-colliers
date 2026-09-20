@@ -10,18 +10,20 @@
 
 - **Estado (20/09, cierre):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local.
   E/F empezado: la pantalla **«06 Usuarios»**.
-- **159 pruebas PHPUnit** en verde y los recorridos en navegador real al día (`tools/comparar/*.mjs`).
+- **163 pruebas PHPUnit** en verde y los recorridos en navegador real al día (`tools/comparar/*.mjs`).
 - **Jonas probó el ciclo completo en el sandbox el 20/09** y trajo 8 puntos: los ocho están atendidos (el 7 a medias,
   por decisión suya). Detalle en `docs/progreso/2026-09-20.md` y en la tabla del comienzo de `docs/BACKLOG.md`.
-- **6 commits locales sin subir** (`5b318b9` … `f459161`): esperan su visto bueno para el push.
+- **Subido a `main` hasta `31db759`** (9 commits, con su aprobación del 20/09). **`bf27a21` queda local**: es la
+  habilitación única configurable y la salida del PDF; espera su visto bueno.
 - **Siguiente para Jonas en el sandbox:**
   1. Subir `post_max_size` y `upload_max_filesize` (cPanel → MultiPHP INI Editor; recomendado 64M / 20M). Sin eso, un
      registro con tres documentos no llega nunca: PHP descarta el envío entero. Confirmar con `colliers:diagnostico`.
   2. Probar el ciclo de pujas con el botón **«Crear subasta de prueba»** de `/admin/subastas` (ya no hace falta la
      terminal) y crear al martillero desde **«06 Usuarios»**.
-- **Siguiente para Claude:** lo que salga de esas pruebas → decisión del PDF de reportes → Bloque L → resto de E/F.
-- **Decisión del cliente que bloquea el punto 7:** sobre qué monto se constituye la garantía de un «postor habilitado
-  una vez para todos los remates».
+- **Siguiente para Claude:** lo que salga de esas pruebas → Bloque L (streaming) → resto de E/F.
+- **Decisiones cerradas el 20/09:** el aviso de cambio de lote queda como está; el **PDF de reportes sale del alcance**
+  (no está en el acta); la **habilitación única** se construyó configurable, apagada y con el monto vacío, para poder
+  mostrársela a Colliers. Si la eligen, fijan el monto en Configuración → Garantías.
 - OPcache está **apagado** en el sandbox: leer `docs/RENDIMIENTO-SIN-OPCACHE.md` antes de tocar el camino de la puja.
 - Antes de correr recorridos en navegador: **uno a la vez** y cerrar Chrome al terminar.
 
@@ -32,7 +34,7 @@
 | 2026-09-15 | [`docs/progreso/2026-09-15.md`](progreso/2026-09-15.md) | Bloque T cerrado (11 pantallas 1:1), infraestructura de deploy (B) |
 | 2026-09-16 | [`docs/progreso/2026-09-16.md`](progreso/2026-09-16.md) | Servidor conectado, hook de assets, C completo, J núcleo con concurrencia real, D, K |
 | 2026-09-17 | [`docs/progreso/2026-09-17.md`](progreso/2026-09-17.md) | Rendimiento sin OPcache, K terminado, I, V, G, H, M, N, manual de pruebas y push |
-| 2026-09-20 | [`docs/progreso/2026-09-20.md`](progreso/2026-09-20.md) | Los 8 puntos del QA de Jonas: martillero, cierre anticipado, hover, registro que no pierde nada, subasta de prueba, ayudas del formulario, «06 Usuarios» y la clase `Habilitacion` |
+| 2026-09-20 | [`docs/progreso/2026-09-20.md`](progreso/2026-09-20.md) | Los 8 puntos del QA de Jonas: martillero, cierre anticipado, hover, registro que no pierde nada, subasta de prueba, ayudas del formulario, «06 Usuarios» y `Habilitacion`. Tarde: push, habilitación única configurable y PDF fuera de alcance |
 
 ---
 
