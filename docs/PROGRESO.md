@@ -1,6 +1,6 @@
 # PROGRESO — Remates Colliers · Fase 3
 
-> Punto de retome. Última actualización: **2026-09-17, cierre de jornada.**
+> Punto de retome. Última actualización: **2026-09-20, cierre de jornada.**
 > Leer junto con `CLAUDE.md` (reglas) y **`docs/BACKLOG.md` (estado vivo de cada tarea)**.
 > El detalle de cada jornada está en `docs/progreso/AAAA-MM-DD.md`.
 
@@ -8,16 +8,22 @@
 
 ## 0. Para retomar en 30 segundos
 
-- **Estado (17/09, cierre):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local; en el
-  sandbox Jonas verificó el motor de pujas (3 simultáneos, gana uno, ~1,0–1,2 s) y su QA está en `docs/qa/2026-09-17-sandbox/`.
-- **140 pruebas PHPUnit** en verde y 10 recorridos en navegador real (`tools/comparar/*.mjs`).
-- **Todo subido a `main`** hasta `e21509d`.
-- **Siguiente para Jonas:** `colliers:remate-demo` (3 lotes) en el sandbox para cerrar los dos casos que faltan: paso
-  automático al siguiente lote y cierre anticipado con ganador real.
-- **Siguiente para Claude:** corregir lo que salga de eso → decisión del PDF de reportes → Bloque L → E/F.
-- **Memoria del día:** `docs/progreso/2026-09-17.md` (incluye las trampas del entorno aprendidas).
+- **Estado (20/09, cierre):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local.
+  E/F empezado: la pantalla **«06 Usuarios»**.
+- **159 pruebas PHPUnit** en verde y los recorridos en navegador real al día (`tools/comparar/*.mjs`).
+- **Jonas probó el ciclo completo en el sandbox el 20/09** y trajo 8 puntos: los ocho están atendidos (el 7 a medias,
+  por decisión suya). Detalle en `docs/progreso/2026-09-20.md` y en la tabla del comienzo de `docs/BACKLOG.md`.
+- **6 commits locales sin subir** (`5b318b9` … `f459161`): esperan su visto bueno para el push.
+- **Siguiente para Jonas en el sandbox:**
+  1. Subir `post_max_size` y `upload_max_filesize` (cPanel → MultiPHP INI Editor; recomendado 64M / 20M). Sin eso, un
+     registro con tres documentos no llega nunca: PHP descarta el envío entero. Confirmar con `colliers:diagnostico`.
+  2. Probar el ciclo de pujas con el botón **«Crear subasta de prueba»** de `/admin/subastas` (ya no hace falta la
+     terminal) y crear al martillero desde **«06 Usuarios»**.
+- **Siguiente para Claude:** lo que salga de esas pruebas → decisión del PDF de reportes → Bloque L → resto de E/F.
+- **Decisión del cliente que bloquea el punto 7:** sobre qué monto se constituye la garantía de un «postor habilitado
+  una vez para todos los remates».
 - OPcache está **apagado** en el sandbox: leer `docs/RENDIMIENTO-SIN-OPCACHE.md` antes de tocar el camino de la puja.
-- Antes de correr recorridos en navegador: **uno a la vez** y cerrar Chrome al terminar (se quedó sin memoria el 17/09).
+- Antes de correr recorridos en navegador: **uno a la vez** y cerrar Chrome al terminar.
 
 ## 1. Jornadas
 
@@ -26,6 +32,7 @@
 | 2026-09-15 | [`docs/progreso/2026-09-15.md`](progreso/2026-09-15.md) | Bloque T cerrado (11 pantallas 1:1), infraestructura de deploy (B) |
 | 2026-09-16 | [`docs/progreso/2026-09-16.md`](progreso/2026-09-16.md) | Servidor conectado, hook de assets, C completo, J núcleo con concurrencia real, D, K |
 | 2026-09-17 | [`docs/progreso/2026-09-17.md`](progreso/2026-09-17.md) | Rendimiento sin OPcache, K terminado, I, V, G, H, M, N, manual de pruebas y push |
+| 2026-09-20 | [`docs/progreso/2026-09-20.md`](progreso/2026-09-20.md) | Los 8 puntos del QA de Jonas: martillero, cierre anticipado, hover, registro que no pierde nada, subasta de prueba, ayudas del formulario, «06 Usuarios» y la clase `Habilitacion` |
 
 ---
 
@@ -83,5 +90,16 @@
 - **GD descomprime la foto entera** (~5 bytes por píxel): `App\Support\Imagenes` calcula la memoria antes de abrirla.
 - **Cola síncrona en pruebas:** una bitácora «pendiente» se anota ANTES de `notify()` (el envío ocurre dentro).
 - **Medición a 375 px puede dar 43,99 px** mientras cargan las fuentes: repetir antes de dar por mala un área táctil.
+- **Blade no reconoce una directiva pegada a una palabra:** `texto@endif` queda literal y rompe el compilado. Usar un
+  ternario dentro de `{{ }}`.
+- **En las pruebas, `assertSessionHasErrors` reinicia la sesión** y envejece el flash: un `get()` posterior ya no ve los
+  errores. Las aserciones de sesión van después de la petición siguiente, o se comprueban sobre la página renderizada.
+- **`$request->file()` deja en caché los archivos convertidos:** lo que se agregue después con `files->set()` no llega a
+  la validación (hay que leer de `$request->files` y descartar esa caché).
+- **`UploadedFile::fake()->create('x.pdf')` son bytes al azar** y la regla `mimes` mira el contenido: para probar un
+  adjunto guardado y repuesto hace falta un PDF real.
+- **Los mensajes de PHPUnit dicen la condición esperada, no la real:** «Failed asserting that '…' contains "X"» es un
+  `assertSee` que falló.
+- **Borrar un usuario exige borrar su rastro:** `access_logs` y `notificaciones_log` apuntan a `users` con `restrict`.
 - **`tools/rendimiento/medir.php` y `tools/concurrencia/prueba.php` recrean su base** (`colliers_concurrencia`): nunca
   apuntarlos al sandbox. Para el sandbox: `tools/sandbox/medir-servidor.php` (solo GET).
