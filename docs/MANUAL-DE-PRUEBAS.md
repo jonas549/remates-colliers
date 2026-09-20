@@ -34,11 +34,16 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 | Panel del martillero | `/admin/subastas/{id}/en-vivo` |
 | Postores y garantías | `/admin/postores` |
 | Configuración (9 secciones en el menú lateral) | `/admin/configuracion` |
+| Usuarios internos (administradores y martilleros) | `/admin/usuarios` |
 
 ---
 
 ## 1. Preparar el servidor (una vez, después del push)
 
+0. **Límites de subida (nuevo, 20/09).** En cPanel → MultiPHP INI Editor, subir `post_max_size` a `64M` y
+   `upload_max_filesize` a `20M`. Con valores menores, un registro con tres documentos de 5 MB **no llega**: PHP
+   descarta el envío completo y el formulario vuelve vacío (ahora se explica con una página 413).
+   `colliers:diagnostico` avisa si el límite no alcanza.
 1. Esperar el deploy (cron cada 5 min) y revisar el registro:
    ```
    tail -n 30 ~/scripts/deploy-colliers.log
@@ -59,11 +64,12 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
    grep -n composer ~/scripts/deploy-colliers.sh
    ```
    Lo ideal es `composer install --no-dev --optimize-autoloader`. Sin `--no-dev`, cada petición compila ~200 KB de más (no rompe nada).
-5. Crear el martillero:
+5. Crear el martillero. Desde el 20/09 se hace **desde el panel**: `/admin/usuarios` → «Crear usuario» → rol
+   Martillero/a; la clave temporal se muestra una sola vez. Por terminal sigue existiendo, para un servidor recién
+   instalado donde todavía no hay con quién entrar:
    ```
    php artisan colliers:crear-usuario martillero martillero@colliers.test M. Ossandón
    ```
-   Copia la **clave temporal** que muestra (solo aparece una vez).
 6. Medir el servidor desde tu PC (no toca datos; necesitas PHP en el PC y el repositorio):
    ```
    php tools/sandbox/medir-servidor.php https://rematescolliers.sandboxdelta.com
@@ -85,6 +91,12 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
    - **Sistema:** anota «OPcache (web)», «Cron» (último latido < 3 min) y «Cola de correos».
 
 ## 3. Cargar un remate de prueba
+
+> **Atajo (20/09):** en `/admin/subastas` hay una franja «Subastas de prueba» con el botón **«Crear subasta de prueba»**.
+> Crea el remate publicado, con lotes, con postores habilitados y con la clave común —que se muestra una sola vez—, y
+> trae los enlaces a la ficha pública y a la sala. Sirve para los pasos 6 y 7 sin llenar el formulario ni usar la
+> terminal, y se borra con un botón. Los pasos de abajo son para cargar un remate **a mano**, que es lo que hará el
+> cliente.
 
 1. `/admin/subastas` → **Crear subasta**.
 2. Completa:
@@ -187,6 +199,7 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 | `/admin/subastas/{id}/en-vivo` | Precio, cronómetro, ganador con nombre, historial, mensaje a la sala, cerrar lote con motivo. |
 | `/admin/postores` | Filas reales, pestañas por estado y «Cuentas por aprobar», búsqueda, Aprobar/Rechazar con motivo, Ficha con documentos, Exportar listado (CSV). |
 | `/admin/configuracion` | Al entrar, «05 Configuración» despliega sus 9 secciones en el menú lateral: Remates y pujas · Garantías · Correo (SMTP) · Plantillas de correo · Notificaciones · Registro de correos · Seguridad · Sitio · Sistema. Cada pantalla guarda solo lo suyo. En Correo hay **dos** botones: «Probar conexión» (no envía nada y dice qué falla: nombre del servidor, puerto, cifrado o credenciales) y «Enviar correo de prueba», que informa la **respuesta literal del servidor** y aclara que aceptar no es entregar. Si el remitente no es el usuario SMTP, lo avisa antes de intentar. En Plantillas se edita el texto de cada correo con sus variables, vista previa y «Restaurar la original». En Notificaciones se decide qué se envía y a quién. En Registro de correos está el historial con filtros; **cada fila se abre** y muestra transporte, respuesta literal del servidor, Message-ID, remitente y el error completo. Los estados son: ACEPTADA (el servidor lo recibió), NO SALIÓ (modo registro), FALLIDA, EN LA COLA y SIN VERIFICAR (anteriores al 17/09). |
+| `/admin/usuarios` | Administradores y martilleros con su rol, estado, remates a cargo y último ingreso. «Crear usuario» entrega una clave temporal de un solo uso; «Editar» cambia nombre, correo y rol; «Desactivar» quita el acceso y cierra sus sesiones (no borra: quedan remates a su nombre); «Restablecer clave» genera otra temporal. No puedes desactivarte ni cambiarte el rol a ti mismo. |
 | `/admin/reportes` | Datos reales del mes del último cierre: KPIs, tabla por remate (base, final, sobreprecio, pujas, minutos de la primera a la última puja, resultado), participación, dinámica y categorías. El selector cambia el período (mes, trimestre, año, todo). **CSV** baja el desempeño comercial, **XLSX** el libro completo (6 hojas) y cada «Descargar» su hoja: ábrelos en Excel y revisa tildes, montos y que los postores salgan como «Postor #N». «Descargar PDF» todavía no hace nada (pendiente de decisión). |
 
 ## 10. Si algo falla
