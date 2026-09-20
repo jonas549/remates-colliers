@@ -12,6 +12,8 @@ import { chromium } from 'playwright';
 
 const URL = process.env.LARAVEL_URL || 'http://127.0.0.1:8000';
 const LOG = path.resolve('storage/logs/laravel.log');
+const SALIDA = path.resolve('tools/comparar/salida/registro-acceso');
+fs.mkdirSync(SALIDA, { recursive: true });
 let fallas = 0;
 const comprobar = (nombre, ok, detalle = '') => {
     if (!ok) fallas++;
@@ -52,11 +54,13 @@ async function llenarRegistro(p, datos) {
         await p.setInputFiles('input[name="documentos[poder]"]', pdf);
     }
     await p.fill('input[name=email]', datos.email);
-    await p.fill('input[name=telefono]', '+56 9 5555 0000');
+    await p.fill('input[name=telefono]', datos.telefono ?? '+56 9 5555 0000');
     await p.fill('input[name=direccion]', 'Av. Providencia 1234');
     await p.fill('input[name=comuna]', 'Providencia');
-    for (const doc of ['ci-frente', 'ci-dorso', 'domicilio']) {
-        await p.setInputFiles(`input[name="documentos[${doc}]"]`, pdf);
+    if (!datos.sinDocumentos) {
+        for (const doc of ['ci-frente', 'ci-dorso', 'domicilio']) {
+            await p.setInputFiles(`input[name="documentos[${doc}]"]`, pdf);
+        }
     }
     await p.fill('input[name=password]', 'Clave-QA-2026');
     await p.fill('input[name=password_confirmation]', 'Clave-QA-2026');
@@ -91,6 +95,33 @@ async function ingresar(p, usuario, clave, admin = false) {
     await p.goto(enlace, { waitUntil: 'load' });
     await p.goto(`${URL}/mi-cuenta`, { waitUntil: 'load' });
     comprobar('confirmado: la cuenta queda en revisión de Colliers', (await p.content()).includes('Estamos revisando tu registro'));
+    await p.context().close();
+}
+
+// ── 1b. Al fallar la validación no se pierde lo escrito ni los documentos adjuntados ──────────────────────
+{
+    const p = await nuevaPagina(375);
+    // Teléfono inválido: lo único malo de un formulario completo, con los tres documentos ya adjuntados.
+    await llenarRegistro(p, { nombres: 'Conserva', rut: '18.765.432-7', email: 'conserva@qa.test', telefono: 'nueve nueve' });
+
+    comprobar('al fallar, el formulario dice qué falta', (await p.locator('.registro__errores').innerText()).includes('Revisa lo que falta'));
+    comprobar('al fallar, no pierde lo escrito', (await p.inputValue('input[name=nombres]')) === 'Conserva'
+        && (await p.inputValue('input[name=email]')) === 'conserva@qa.test' && (await p.inputValue('input[name=rut]')) === '18.765.432-7');
+    const documentos = await p.locator('.registro__documento-detalle').allInnerTexts();
+    comprobar('al fallar, los documentos siguen adjuntados', documentos.filter((t) => t.includes('Ya adjuntado')).length === 3, documentos.join(' / '));
+    comprobar('el botón del documento pasa a «Reemplazar»',
+        (await p.locator('.registro__documento-boton').first().innerText()).trim() === 'Reemplazar');
+    comprobar('la contraseña no vuelve al navegador', (await p.inputValue('input[name=password]')) === '');
+    await p.screenshot({ path: path.join(SALIDA, 'registro-con-errores-375.png'), fullPage: true });
+
+    // Segundo intento: solo se corrige el teléfono, sin volver a adjuntar nada.
+    await p.fill('input[name=telefono]', '+56 9 5555 0000');
+    await p.fill('input[name=password]', 'Clave-QA-2026');
+    await p.fill('input[name=password_confirmation]', 'Clave-QA-2026');
+    await p.getByRole('button', { name: 'Enviar solicitud de registro' }).click();
+    await p.waitForLoadState('load');
+    comprobar('corrigiendo solo el campo malo, el registro entra con los documentos del primer intento',
+        p.url().includes('/verificar-correo'), p.url() + ' · ' + (await p.locator('.registro__errores').allInnerTexts()).join(' | ').replace(/\s+/g, ' ').slice(0, 200));
     await p.context().close();
 }
 

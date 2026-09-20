@@ -102,7 +102,8 @@ return [
     |
     */
 
-    'middleware' => ['web'],
+    // DocumentosDelRegistro conserva los adjuntos del registro cuando la validación falla (se limita a esa ruta).
+    'middleware' => ['web', \App\Http\Middleware\DocumentosDelRegistro::class],
 
     /*
     |--------------------------------------------------------------------------

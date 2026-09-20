@@ -31,6 +31,9 @@ class AutenticacionTest extends TestCase
 
     private const CLAVE = 'Clave-de-prueba-2026';
 
+    /** @var list<string> archivos temporales creados por pdf() */
+    private array $temporales = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -40,6 +43,10 @@ class AutenticacionTest extends TestCase
     protected function tearDown(): void
     {
         CarbonImmutable::setTestNow();
+        foreach ($this->temporales as $ruta) {
+            @unlink($ruta);
+        }
+        $this->temporales = [];
         parent::tearDown();
     }
 
@@ -252,18 +259,109 @@ class AutenticacionTest extends TestCase
         $this->post('/registro', $this->formulario(['rut' => '17998221-8']))
             ->assertSessionHasErrors(['rut' => 'Ya existe una cuenta con este RUT. Si es tuya, ingresa o recupera tu contraseña.']);
 
+        // Sesión limpia: sin documentos conservados de los intentos anteriores (ver la prueba de más abajo).
+        $this->flushSession();
         $sinCedula = $this->formulario(['rut' => '16.774.203-3']);
         unset($sinCedula['documentos']['ci-frente']);
         $this->post('/registro', $sinCedula)->assertSessionHasErrors('documentos.ci-frente');
 
+        $this->flushSession();
         $exe = $this->formulario(['rut' => '16.774.203-3']);
         $exe['documentos']['domicilio'] = UploadedFile::fake()->create('virus.exe', 10, 'application/octet-stream');
         $this->post('/registro', $exe)->assertSessionHasErrors('documentos.domicilio');
 
+        $this->flushSession();
         $this->post('/registro', $this->formulario(['rut' => '16.774.203-3', 'acepta' => null]))->assertSessionHasErrors('acepta');
 
         $this->assertSame(1, User::count());
-        $this->assertSame([], Storage::disk('local')->allFiles());
+        // No se creó ninguna cuenta: nada en postores/. Lo que quede en registro-temporal/ es del intento siguiente.
+        $this->assertSame([], Storage::disk('local')->files('postores'));
+    }
+
+    public function test_al_fallar_la_validacion_conserva_lo_escrito_y_los_documentos_adjuntados(): void
+    {
+        Storage::fake('local');
+
+        // Falla por teléfono: todo lo demás estaba bien.
+        $completo = $this->formulario(['telefono' => 'nueve nueve']);
+        $completo['documentos']['ci-frente'] = $this->pdf('cedula-frente.pdf');
+        $completo['documentos']['domicilio'] = $this->pdf('cuenta-luz.pdf');
+        $this->from('/registro')->post('/registro', $completo)->assertRedirect('/registro');
+
+        // El formulario vuelve con el motivo, con lo escrito y con los documentos ya adjuntados.
+        // (Las aserciones de sesión van después: en las pruebas reinician la sesión y envejecen el flash.)
+        $this->get('/registro')->assertOk()
+            ->assertSee('Revisa lo que falta')
+            ->assertSee('Ingresa un teléfono válido, por ejemplo +56 9 1234 5678.')
+            ->assertSee('value="Camila"', false)
+            ->assertSee('value="nueva@correo.test"', false)
+            ->assertSee('Ya adjuntado: cuenta-luz.pdf')
+            ->assertSee('Ya adjuntado: cedula-frente.pdf')
+            ->assertDontSee('Clave-segura-2026');
+
+        // Los tres quedaron guardados en el disco privado, nunca en public.
+        $archivos = Storage::disk('local')->allFiles();
+        $this->assertCount(3, $archivos);
+        $this->assertStringStartsWith('registro-temporal/', $archivos[0]);
+
+        // Segundo intento sin volver a adjuntar: el registro entra con los documentos del primero.
+        $sinDocumentos = $this->formulario();
+        unset($sinDocumentos['documentos']);
+        $this->post('/registro', $sinDocumentos)->assertSessionHasNoErrors()->assertRedirectContains('/verificar-correo');
+
+        $postor = User::where('email', 'nueva@correo.test')->sole()->postor;
+        $this->assertSame(['ci-dorso', 'ci-frente', 'domicilio'], $postor->documentos->pluck('tipo')->sort()->values()->all());
+        $this->assertSame('cuenta-luz.pdf', $postor->documentos->firstWhere('tipo', 'domicilio')->nombre_original);
+        foreach ($postor->documentos as $documento) {
+            $this->assertStringStartsWith("postores/{$postor->id}/", $documento->ruta);
+            Storage::disk('local')->assertExists($documento->ruta);
+        }
+        // Los temporales se borran al registrarse: solo quedan los definitivos del postor.
+        $this->assertSame([], Storage::disk('local')->allFiles('registro-temporal'));
+    }
+
+    public function test_un_envio_mas_pesado_que_el_limite_del_servidor_lo_dice_en_vez_de_volver_en_blanco(): void
+    {
+        // Cuando el envío supera post_max_size, PHP descarta campos, archivos y token: el formulario volvía vacío
+        // (o con un 419) sin explicación. Se simula con el límite configurado y un cuerpo que ya llegó vacío.
+        config(['colliers.limite_post' => '1M']);
+
+        $respuesta = $this->withServerVariables(['CONTENT_LENGTH' => (string) (3 * 1024 * 1024)])
+            ->from('/registro')->post('/registro');
+
+        // Explica el motivo y cuánto acepta el servidor, en vez del 419 «sesión expirada» o el formulario en blanco.
+        $respuesta->assertStatus(413)
+            ->assertSee('El envío es demasiado pesado')
+            ->assertSee('este servidor acepta hasta 1 MB')
+            ->assertSee('Volver al formulario');
+        $this->assertSame(0, User::count());
+
+        // Un envío normal sigue pasando.
+        config(['colliers.limite_post' => '32M']);
+        $this->post('/registro', $this->formulario())->assertSessionHasNoErrors();
+    }
+
+    public function test_un_documento_rechazado_no_se_conserva_pero_los_validos_si(): void
+    {
+        Storage::fake('local');
+
+        $malo = $this->formulario();
+        $malo['documentos']['ci-frente'] = $this->pdf('cedula-frente.pdf');
+        $malo['documentos']['domicilio'] = UploadedFile::fake()->create('virus.exe', 10, 'application/octet-stream');
+        $this->post('/registro', $malo)->assertSessionHasErrors('documentos.domicilio');
+
+        // Se guardaron los dos válidos; el rechazado no (habría vuelto a fallar).
+        $this->assertSame(2, count(Storage::disk('local')->allFiles()));
+        $this->get('/registro')->assertOk()->assertSee('Ya adjuntado: cedula-frente.pdf')->assertDontSee('virus.exe');
+
+        // Hay que adjuntar el que faltaba; los otros dos ya no.
+        $segundo = $this->formulario();
+        $segundo['documentos'] = ['domicilio' => $this->pdf('cuenta-agua.pdf')];
+        $this->post('/registro', $segundo)->assertSessionHasNoErrors()->assertRedirectContains('/verificar-correo');
+
+        $postor = User::where('email', 'nueva@correo.test')->sole()->postor;
+        $this->assertSame('cuenta-agua.pdf', $postor->documentos->firstWhere('tipo', 'domicilio')->nombre_original);
+        $this->assertSame('cedula-frente.pdf', $postor->documentos->firstWhere('tipo', 'ci-frente')->nombre_original);
     }
 
     // ── Contraseñas ──────────────────────────────────────────────────────────────────────────────────────────
@@ -470,6 +568,16 @@ class AutenticacionTest extends TestCase
             'id' => $id, 'user_id' => $user->id, 'ip_address' => '10.0.0.' . random_int(2, 250), 'user_agent' => $agente,
             'payload' => base64_encode('{}'), 'last_activity' => CarbonImmutable::now('UTC')->getTimestamp(),
         ]);
+    }
+
+    /** PDF real (mínimo válido): la validación `mimes` mira el contenido, no el nombre ni el mime declarado. */
+    private function pdf(string $nombre): UploadedFile
+    {
+        $ruta = tempnam(sys_get_temp_dir(), 'colliers-pdf-');
+        file_put_contents($ruta, "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n");
+        $this->temporales[] = $ruta;
+
+        return new UploadedFile($ruta, $nombre, 'application/pdf', null, true);
     }
 
     private function formulario(array $cambios = [], bool $poder = false): array

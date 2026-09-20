@@ -76,6 +76,35 @@ class Diagnostico extends Command
         $this->revisar(! $produccion || app()->configurationIsCached(), 'Configuración en caché (php artisan optimize)', critico: false);
         $this->revisar(! $produccion || app()->routesAreCached(), 'Rutas en caché (php artisan optimize)', critico: false);
         $this->revisar(! $produccion || app()->eventsAreCached(), 'Eventos en caché (php artisan optimize)', critico: false);
+        // Límites de subida: el registro admite 4 documentos de 5 MB. Si post_max_size es menor que la suma, PHP
+        // descarta el cuerpo entero de la petición y el formulario vuelve VACÍO, sin errores que mostrar.
+        $bytes = static function (string $valor): int {
+            $valor = trim($valor);
+            $unidad = strtolower(substr($valor, -1));
+            $numero = (float) $valor;
+
+            return (int) match ($unidad) {
+                'g' => $numero * 1024 ** 3,
+                'm' => $numero * 1024 ** 2,
+                'k' => $numero * 1024,
+                default => $numero,
+            };
+        };
+        $necesarios = (\App\Actions\Fortify\CreateNewUser::MAX_DOCUMENTO_KB * 1024)
+            * count(\App\Actions\Fortify\CreateNewUser::DOCUMENTOS) + 512 * 1024;
+        $post = $bytes((string) ini_get('post_max_size'));
+        $subida = $bytes((string) ini_get('upload_max_filesize'));
+        $mb = fn (int $b) => round($b / 1024 ** 2, 1) . ' MB';
+        $this->revisar($post === 0 || $post >= $necesarios,
+            "post_max_size ({$mb($post)}) alcanza para el registro completo (" . $mb($necesarios) . ')', critico: false);
+        $this->revisar($subida === 0 || $subida >= \App\Actions\Fortify\CreateNewUser::MAX_DOCUMENTO_KB * 1024,
+            "upload_max_filesize ({$mb($subida)}) admite un documento de " . (\App\Actions\Fortify\CreateNewUser::MAX_DOCUMENTO_KB / 1024) . ' MB', critico: false);
+        $this->revisar($post === 0 || $subida === 0 || $post >= $subida,
+            'post_max_size no es menor que upload_max_filesize', critico: false);
+        // El panel acepta documentos de 20 MB y fotos de 15 MB: con un límite menor el envío no llega nunca.
+        $this->revisar($subida === 0 || $subida >= 20 * 1024 ** 2,
+            "upload_max_filesize ({$mb($subida)}) admite los documentos de 20 MB del panel", critico: false);
+
         $this->revisar(true, 'OPcache en consola: ' . (function_exists('opcache_get_status') && ini_get('opcache.enable_cli') ? 'activo' : 'apagado')
             . ' (el de la web se ve en Administración → Configuración → Sistema)');
 

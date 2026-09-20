@@ -19,7 +19,7 @@ nota *(verifica Jonas en el sandbox)*.
 | B | Base del proyecto Laravel | **Completo** | 19/19 |
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
-| D | Autenticación y registro de postores | En progreso | 11/13 |
+| D | Autenticación y registro de postores | En progreso | 13/16 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
 | I | Remates y lotes + panel del martillero | **Completo** | 14/14 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
@@ -55,7 +55,7 @@ internos (2) → habilitación configurable (7)**.
 | 1 | El martillero no podía abrir su panel en vivo | **Hecho (20/09)**: el listado le muestra solo sus remates, la ficha la ve en modo lectura y el 403 de un remate ajeno dice de quién es |
 | 6 | «Cerrar sesión» desaparecía con el mouse encima | **Hecho (20/09)**: `.boton-enlace:hover` lo pintaba del azul del propio fondo (`#16265a`) |
 | 8 | El cierre anticipado adjudicaba sin decir a quién | **Hecho (20/09)**: el modal nombra al adjudicatario y el monto, o avisa que quedará desierto, y que no se deshace |
-| 5 | El registro de postor pierde lo escrito y los adjuntos al fallar la validación | Siguiente |
+| 5 | El registro de postor pierde lo escrito y los adjuntos al fallar la validación | **Hecho (20/09)**: los adjuntos se conservan entre intentos, el formulario dice qué falta y lleva el foco al error; un envío más pesado que `post_max_size` ahora se explica en vez de volver en blanco |
 | 3 | Botón «Crear subasta de prueba» en `/admin/subastas` | Pendiente |
 | 4 | «Inicio del remate» y «cierre de garantías» sin explicación en el formulario | Pendiente |
 | 2 | No hay dónde crear usuarios internos (hoy solo `colliers:crear-usuario` por terminal) | Pendiente: pantalla nueva **«06 Usuarios»** |
@@ -217,7 +217,10 @@ táctiles < 44 px en 375/760/1120/1440, y revisadas a ojo.
 - [x] Pantallas que el diseño no tiene, con el diseño del Login: acceso de administradores, recuperar y restablecer contraseña, verificar correo, cambiar contraseña, confirmar contraseña, sesiones activas
 - [x] **Bug del sandbox (17/09): el ingreso de administración «solo se refrescaba», sin mensaje.** La clave pasaba (`ingreso` en `access_logs`) y la sesión con usuario existía en la base, pero el navegador no la presentó en la petición siguiente; la causa exacta de eso en el servidor está sin confirmar. Corregido para que nunca falle en silencio: (1) la clave del sandbox no expulsa una sesión autenticada y le devuelve su cookie; (2) tras ingresar, si la sesión no llega, vuelve al acceso con el motivo y anota en el log el diagnóstico (nombres de cookies, esquema, host, configuración de sesión); (3) la clave del sandbox responde 403 con motivo a las peticiones JSON (antes, un redirect que el panel mostraba como «Listo.») y explica en `/acceso` por qué la pide; (4) sesión vencida en acciones por fetch: 419 con mensaje en español; (5) el login muestra cualquier error. *(`AutenticacionTest`, `InfraestructuraTest`, `tools/comparar/ingreso-sandbox.mjs`)*
 - [ ] En el sandbox: el primer administrador entra por `/admin/ingresar` y cambia su clave temporal *(Jonas en el sandbox; si vuelve a fallar, la pantalla lo dice y el log `storage/logs/laravel-AAAA-MM-DD.log` trae «Ingreso sin sesión»)*
+- [x] **El registro no pierde nada al fallar la validación** *(QA del 20/09, punto 5)*: los documentos válidos se guardan en el disco privado y se reponen en el intento siguiente (`DocumentosDelRegistro`), el formulario abre con un resumen de lo que falta y el foco en el primer error, cada documento dice «Ya adjuntado: archivo» y el botón pasa a «Reemplazar». La contraseña nunca vuelve al navegador (Laravel la excluye a propósito) y el aviso lo dice. `colliers:limpiar-temporales` (programador, 04:10) borra los de registros abandonados a las 24 h *(`AutenticacionTest` 3 pruebas nuevas; `registro-acceso.mjs` 6 comprobaciones nuevas)*
+- [x] **Un envío más pesado que `post_max_size` se explica** *(misma causa raíz)*: PHP descarta el cuerpo entero —campos, archivos y token—, así que el formulario volvía vacío o con un 419 «sesión expirada». `SubidaDemasiadoGrande` (antes del CSRF) responde la página 413 diciendo cuánto pesó el envío y cuánto acepta el servidor. `colliers:diagnostico` avisa si `post_max_size` no alcanza para el registro completo (3 documentos de 5 MB) ni para los documentos de 20 MB del panel
 - [ ] Correos reales de verificación y recuperación: hoy `MAIL_MAILER=log` (el enlace queda en `storage/logs`); SMTP en el Bloque V
+- [ ] **Subir `post_max_size` y `upload_max_filesize` en el sandbox** *(Jonas, cPanel → MultiPHP INI Editor)*: hoy el local tiene 12 MB / 8 MB y el registro necesita ~21 MB; con menos, el envío no llega nunca. Recomendado: `post_max_size=64M`, `upload_max_filesize=20M`. Verificar después con `colliers:diagnostico`
 
 ## K — Sala de puja conectada al motor real · En progreso
 

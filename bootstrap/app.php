@@ -18,7 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Clave de acceso mientras el subdominio es un sandbox público (COLLIERS_ACCESO_CLAVE).
         $middleware->web(append: [\App\Http\Middleware\AccesoSandbox::class, \App\Http\Middleware\SesionTrasIngreso::class]);
         // Duración de la sesión desde el panel: tiene que aplicarse antes de que StartSession lea session.lifetime.
-        $middleware->web(prepend: [\App\Http\Middleware\DuracionSesion::class]);
+        // SubidaDemasiadoGrande va antes del CSRF: si PHP descartó el cuerpo por tamaño, no hay token que verificar.
+        $middleware->web(prepend: [\App\Http\Middleware\SubidaDemasiadoGrande::class, \App\Http\Middleware\DuracionSesion::class]);
         // Ambos antes de `auth`, del límite de peticiones y de los modelos de la ruta: la clave del sandbox responde
         // primero (sin revelar si algo existe) y la marca de ingreso se revisa antes de que `auth` redirija sin decir nada.
         $middleware->prependToPriorityList(\Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class, \App\Http\Middleware\AccesoSandbox::class);

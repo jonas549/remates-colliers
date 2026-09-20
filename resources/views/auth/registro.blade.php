@@ -5,6 +5,9 @@
         ['id' => 'domicilio', 'nombre' => 'Comprobante de domicilio', 'detalle' => 'Cuenta de servicios de los últimos 3 meses'],
         ['id' => 'poder', 'nombre' => 'Poder o mandato', 'detalle' => 'Solo si actúas en representación de un tercero o una empresa'],
     ];
+    // Adjuntos que sobrevivieron a un intento fallido: el navegador no puede prellenar un <input type=file>,
+    // así que los guarda el servidor (App\Http\Middleware\DocumentosDelRegistro) y aquí se muestran como ya cargados.
+    $guardados = \App\Http\Middleware\DocumentosDelRegistro::guardados(request());
     $pasos = [
         ['titulo' => 'Revisamos tus antecedentes', 'texto' => 'Un ejecutivo valida los documentos de forma manual.'],
         ['titulo' => 'Te avisamos por correo', 'texto' => 'Recibirás la aprobación o el rechazo con el detalle de lo que falte.'],
@@ -32,8 +35,19 @@
 
         <div class="registro__cuerpo">
 
-            <form class="registro__formulario" method="POST" action="{{ route('register.store') }}" enctype="multipart/form-data" x-data="registro(@js(old('tipo', 'natural')), @js(old('rut', '')), @js((bool) old('acepta')))">
+            <form class="registro__formulario" method="POST" action="{{ route('register.store') }}" enctype="multipart/form-data" x-data="registro(@js(old('tipo', 'natural')), @js(old('rut', '')), @js((bool) old('acepta')), @js(collect($guardados)->map(fn ($d) => $d['nombre'])->all()))">
                 @csrf
+                @if ($errors->any())
+                    {{-- Al fallar la validación: qué falta, arriba y a la vista; el foco va al primer campo con error. --}}
+                    <div class="registro__errores" role="alert" tabindex="-1" x-init="$nextTick(() => { $el.focus(); const malo = document.querySelector('.es-invalido')?.closest('label, .registro__documento'); malo?.scrollIntoView({ block: 'center' }); malo?.querySelector('input, select, textarea')?.focus(); })">
+                        <strong>Revisa lo que falta.</strong> Lo que ya escribiste se conservó{{ $guardados ? ', y los documentos que adjuntaste siguen cargados' : '' }}. Vuelve a escribir la contraseña antes de enviar.
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 <div class="registro__tipo">
                     <button type="button" class="registro__tipo-opcion" :class="{ 'es-activa': !juridica }" @click="tipo = 'natural'">Persona natural</button>
                     <button type="button" class="registro__tipo-opcion" :class="{ 'es-activa': juridica }" @click="tipo = 'juridica'">Persona jurídica</button>
@@ -103,14 +117,14 @@
                 <div class="registro__documentos">
                     @foreach ($documentos as $doc)
                         <div class="registro__documento">
-                            <div class="registro__documento-marca" :class="{ 'es-cargado': cargados['{{ $doc['id'] }}'] }" x-text="cargados['{{ $doc['id'] }}'] ? '✓' : '+'">+</div>
+                            <div class="registro__documento-marca" :class="{ 'es-cargado': cargados['{{ $doc['id'] }}'] }" x-text="cargados['{{ $doc['id'] }}'] ? '✓' : '+'">{{ isset($guardados[$doc['id']]) ? '✓' : '+' }}</div>
                             <div class="registro__documento-texto">
                                 <div class="registro__documento-nombre">{{ $doc['nombre'] }}</div>
-                                <div class="registro__documento-detalle" x-text="cargados['{{ $doc['id'] }}'] ? 'Archivo cargado · pendiente de revisión' : @js($doc['detalle'])">{{ $doc['detalle'] }}</div>
+                                <div class="registro__documento-detalle" x-text="detalle('{{ $doc['id'] }}', @js($doc['detalle']))">{{ isset($guardados[$doc['id']]) ? 'Ya adjuntado: ' . $guardados[$doc['id']]['nombre'] : $doc['detalle'] }}</div>
                                 @error('documentos.' . $doc['id'])<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
                             </div>
                             <input type="file" name="documentos[{{ $doc['id'] }}]" accept=".jpg,.jpeg,.png,.pdf" class="registro__documento-archivo" x-ref="archivo-{{ $doc['id'] }}" @change="archivoElegido('{{ $doc['id'] }}', $event)">
-                            <button type="button" class="registro__documento-boton" :class="{ 'es-cargado': cargados['{{ $doc['id'] }}'] }" @click="elegirArchivo('{{ $doc['id'] }}')" x-text="cargados['{{ $doc['id'] }}'] ? 'Reemplazar' : 'Adjuntar'">Adjuntar</button>
+                            <button type="button" class="registro__documento-boton" :class="{ 'es-cargado': cargados['{{ $doc['id'] }}'] }" @click="elegirArchivo('{{ $doc['id'] }}')" x-text="cargados['{{ $doc['id'] }}'] ? 'Reemplazar' : 'Adjuntar'">{{ isset($guardados[$doc['id']]) ? 'Reemplazar' : 'Adjuntar' }}</button>
                         </div>
                     @endforeach
                 </div>

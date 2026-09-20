@@ -39,3 +39,9 @@ Schedule::command('colliers:recordatorios')
     ->name('recordatorios')
     ->everyTenMinutes()
     ->withoutOverlapping(10);
+
+// Documentos de registros abandonados (Bloque D): el formulario los conserva entre intentos; a las 24 h se borran.
+Schedule::command('colliers:limpiar-temporales')
+    ->name('limpiar-temporales')
+    ->dailyAt('04:10')
+    ->withoutOverlapping(10);

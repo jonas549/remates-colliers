@@ -37,6 +37,12 @@ return [
     'latido_programador' => storage_path('framework/latido-programador'),
 
     /*
+     * Límite real de `post_max_size` del servidor. Vacío = el que informa PHP. Se declara aquí porque cuando un envío
+     * lo supera, PHP descarta el cuerpo entero y el formulario volvería vacío: `SubidaDemasiadoGrande` lo explica.
+     */
+    'limite_post' => env('COLLIERS_LIMITE_POST'),
+
+    /*
      * Tiempo real (Bloque J). `json`: estado del remate como archivo estático en `carpeta`, servido por
      * LiteSpeed sin ejecutar PHP. La capa está abstraída (App\Subastas\Difusion\Emisor) para cambiar a Pusher.
      */
