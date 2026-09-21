@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-09-21** (folio de la subasta de prueba, suite en MySQL, riesgo de conexiones).
+> **Registro vivo del avance.** Última actualización: **2026-09-21** (folio de la subasta de prueba, suite en MySQL, riesgo de conexiones y reintento en la puja).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -18,7 +18,7 @@ nota *(verifica Jonas en el sandbox)*.
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
 | B | Base del proyecto Laravel | **Completo** | 19/19 |
 | C | Modelo de datos | **Completo** | 12/12 |
-| J | Motor de subastas en tiempo real ⚠️ | En progreso | 30/34 |
+| J | Motor de subastas en tiempo real ⚠️ | En progreso | 31/35 |
 | D | Autenticación y registro de postores | En progreso | 13/16 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
 | I | Remates y lotes + panel del martillero | **Completo** | 16/16 |
@@ -194,6 +194,7 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [ ] En el sandbox: paso automático al siguiente lote y cierre anticipado con ganador real *(el demo tenía un solo lote; `colliers:remate-demo` ahora crea 3 por defecto)*
 - [x] **Latencia del JSON tras el cierre** *(QA del sandbox, 17/09: el feed mostró el lote abierto durante un minuto)*. Aprobado A + B: **(A)** el espectador deduce el cierre con la hora del servidor y cambia el estado al segundo, sin pedirle nada al servidor; **(B)** pasado el margen, **un solo** aviso al endpoint de estado, con espera al azar y porcentaje de espectadores configurables desde el panel, que materializa la adjudicación y reescribe el JSON en segundos. Si el servidor responde mal (por ejemplo 429), el cliente se rinde y espera al cron, que sigue como respaldo *(`tools/comparar/cierre-espectador.mjs`, 13 comprobaciones)*
 - [x] Comando `colliers:remate-demo`: remate marcado `es_demostracion`, postores aprobados con garantía y claves aleatorias mostradas una vez; se niega con APP_ENV=production (16/09)
+- [x] **Reintento de conexión en la puja** *(21/09, aprobado por Jonas; riesgo de R)*: solo en `POST …/pujas` y solo ante errores de conexión (1040, 1203, 1226, 2002, 2006), cada 0,5 s hasta 1,5 s. La hora de recepción no cambia (sellada por PHP antes de Laravel). **Margen de liquidación seguro = 5 s** (reintento + procesamiento sin OPcache): el panel exige confirmar un margen menor y lo advierte mientras siga bajo; `colliers:diagnostico` también. *(`ConexionPujaTest` 7; `ConexionPujaMysqlTest` 2 con una conexión rechazada de verdad: la puja llega antes del cierre, la base vuelve después y la puja entra con su hora; `panel-configuracion.mjs`)*
 - [ ] Sandbox con `APP_ENV=staging` para poder crear el remate de demostración *(Jonas en el servidor)*
 - [ ] Prueba del transporte en el sandbox con espectadores simulados, sobre el remate de demostración
 - [x] Bloqueo de deploy con remate en curso o por comenzar (30 min antes; `colliers:puede-desplegar` sale 75)
@@ -447,7 +448,7 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] Respaldo periódico de la base
 - [ ] Bloqueo de deploy con remate en curso activo en el script
 - [ ] Verificación con `colliers:diagnostico`
-- [ ] ⚠️ **Riesgo: la base compartida del hosting deja de aceptar conexiones** *(sandbox, 21/09: `1040 Too many connections` a las 16:14 UTC y `2002 No such file or directory` —MariaDB caída o reiniciando— a las 16:24 UTC, ambos en el cron)*. Si pasa durante un remate: **ninguna puja queda a medias** (la transacción es todo o nada) pero **ninguna puja entra** mientras dure; el postor ve «No pudimos confirmar tu puja», el precio del JSON queda congelado, el cronómetro sigue (`hora.php` no usa la base) y **el lote cierra igual en `cierra_en`** (no hay anti-sniping ni se reabre). Hay que: (1) medir `max_connections`, `max_user_connections` y el reinicio en el sandbox y pedir al hosting de producción el límite por cuenta; (2) definir con Colliers qué dicen las bases si la plataforma falla durante un remate; (3) bajar «espectadores que avisan» del 100 % (cada aviso abre una conexión en el mismo segundo del cierre). Análisis completo en `docs/progreso/2026-09-21.md`
+- [ ] ⚠️ **Riesgo: la base compartida del hosting deja de aceptar conexiones** *(sandbox, 21/09: `1040 Too many connections` a las 16:14 UTC y `2002 No such file or directory` —MariaDB caída o reiniciando— a las 16:24 UTC, ambos en el cron)*. Si pasa durante un remate: **ninguna puja queda a medias** (la transacción es todo o nada) pero **ninguna puja entra** mientras dure; el postor ve «No pudimos confirmar tu puja», el precio del JSON queda congelado, el cronómetro sigue (`hora.php` no usa la base) y **el lote cierra igual en `cierra_en`** (no hay anti-sniping ni se reabre). Hay que: (1) medir `max_connections`, `max_user_connections` y el reinicio en el sandbox y pedir al hosting de producción el límite por cuenta; (2) definir con Colliers qué dicen las bases si la plataforma falla durante un remate; (3) bajar «espectadores que avisan» del 100 % (cada aviso abre una conexión en el mismo segundo del cierre). Análisis completo en `docs/progreso/2026-09-21.md`. **Mitigado en parte (21/09):** la puja reintenta la conexión hasta 1,5 s (ver J); una caída larga sigue siendo este riesgo
 - [ ] ⚠️ **Riesgo: verificar OPcache en el hosting de producción antes de comprometer rendimiento.** Sin OPcache la validez de las pujas se mantiene, pero 10 pujas en el mismo segundo tardan ~4 s en confirmarse con 1 núcleo. Medir con `tools/sandbox/medir-servidor.php` y fijar el margen de liquidación según la latencia (`docs/RENDIMIENTO-SIN-OPCACHE.md` §7)
 
 ## S — Documentación · Pendiente

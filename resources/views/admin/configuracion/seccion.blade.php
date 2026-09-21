@@ -15,13 +15,38 @@
 
     <x-admin.avisos />
 
+    @php
+        // Margen de liquidación bajo lo seguro (21/09): la puja reintenta la conexión y tiene que alcanzar el lote
+        // antes de T + margen (App\Subastas\ConexionPuja).
+        $margenSeguro = \App\Subastas\ConexionPuja::margenSeguroSegundos();
+        $margenActual = $seccion === 'remates' ? (int) $valores['margen_liquidacion_segundos'] : null;
+    @endphp
+    @if ($margenActual !== null && $margenActual < $margenSeguro)
+        <div class="admin-avisos"><div class="admin-aviso admin-aviso--error" role="alert" data-aviso-margen>
+            El margen de liquidación está en {{ $margenActual }} s, por debajo de los {{ $margenSeguro }} s seguros. Si la base de datos se sobrecarga durante un remate, una puja recibida a tiempo puede reintentar la conexión y no alcanzar el lote antes de que se adjudique: se rechazaría como «lote cerrado» siendo válida. Súbelo a {{ $margenSeguro }} s o más.
+        </div></div>
+    @endif
+
     <div class="admin-gestion">
-        <form method="POST" action="{{ route('admin.configuracion.update', $seccion) }}" class="admin-form admin-form--plano">
+        <form method="POST" action="{{ route('admin.configuracion.update', $seccion) }}" class="admin-form admin-form--plano"
+              @if ($margenActual !== null)
+                  x-data="{ margen: {{ (int) old('config.margen_liquidacion_segundos', $margenActual) }}, guardado: {{ $margenActual }}, seguro: {{ $margenSeguro }} }"
+                  @input="if ($event.target.name === 'config[margen_liquidacion_segundos]') margen = parseInt($event.target.value, 10) || 0"
+              @endif>
             @csrf
             @method('PUT')
             <div class="admin-form__interior">
                 <x-admin.errores />
                 @include('admin.configuracion._campos')
+                @if ($margenActual !== null)
+                    <label class="admin-form__campo admin-form__check admin-form__campo--ancho {{ $errors->has('config.margen_liquidacion_segundos') ? 'es-invalido' : '' }}"
+                           x-show="margen < seguro && margen !== guardado" x-cloak data-confirmar-margen>
+                        <input type="checkbox" name="confirmar_margen" value="1" @checked(old('confirmar_margen'))>
+                        <span>Confirmo un margen de liquidación menor a {{ $margenSeguro }} s
+                            <span class="admin-form__ayuda" style="display: block">Durante una sobrecarga de la base de datos, una puja recibida antes del cierre podría rechazarse: la puja reintenta la conexión hasta {{ number_format(config('colliers.conexion_puja.reintento_ms') / 1000, 1, ',', '') }} s y el lote se adjudica al terminar el margen. Úsalo solo si el servidor tiene OPcache y la latencia medida lo permite.</span>
+                        </span>
+                    </label>
+                @endif
                 <div class="admin-form__botones">
                     <button type="submit" class="admin-form__publicar">Guardar cambios</button>
                 </div>

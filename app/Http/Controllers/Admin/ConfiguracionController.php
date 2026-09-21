@@ -8,6 +8,7 @@ use App\Correo\Plantillas;
 use App\Http\Controllers\Controller;
 use App\Models\Configuracion;
 use App\Postores\Habilitacion;
+use App\Subastas\ConexionPuja;
 use App\Models\NotificacionLog;
 use App\Support\CorreoSaliente;
 use Illuminate\Http\RedirectResponse;
@@ -84,6 +85,19 @@ class ConfiguracionController extends Controller
             throw ValidationException::withMessages([
                 'config.garantia_monto_unico' => 'Fija el monto de la habilitación única antes de activar ese modo: sin remate no hay precio base sobre el cual calcular el porcentaje.',
             ]);
+        }
+
+        // Margen de liquidación bajo lo seguro (21/09): la puja reintenta la conexión hasta N s y una recibida antes de T
+        // tiene que tomar el bloqueo antes de T + margen. Bajarlo de ahí exige confirmarlo; dejarlo como estaba, no.
+        if (isset($validado['margen_liquidacion_segundos'])) {
+            $nuevo = (int) $validado['margen_liquidacion_segundos'];
+            $seguro = ConexionPuja::margenSeguroSegundos();
+            if ($nuevo < $seguro && $nuevo !== (int) Configuracion::valor('margen_liquidacion_segundos') && ! $request->boolean('confirmar_margen')) {
+                throw ValidationException::withMessages([
+                    'config.margen_liquidacion_segundos' => "Con menos de {$seguro} s, una puja válida podría rechazarse durante una sobrecarga de la base: "
+                        . 'la puja reintenta la conexión y puede no alcanzar el lote antes de que se adjudique. Si igual quieres este valor, marca la confirmación.',
+                ]);
+            }
         }
 
         // Interruptores de los avisos (pantalla Notificaciones): no son claves de DEFECTOS, se guardan aparte.

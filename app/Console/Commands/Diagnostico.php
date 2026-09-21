@@ -57,6 +57,21 @@ class Diagnostico extends Command
             if (Schema::hasColumn('users', 'rol')) {
                 $this->revisar(User::where('rol', User::ROL_ADMIN)->exists(), 'Existe un administrador (colliers:instalar lo crea)', critico: false);
             }
+            // Una puja que tuvo que reintentar la conexión tiene que alcanzar el bloqueo antes de T + margen (21/09).
+            if (Schema::hasTable('configuraciones')) {
+                $margen = (int) \App\Models\Configuracion::valor('margen_liquidacion_segundos');
+                $seguro = \App\Subastas\ConexionPuja::margenSeguroSegundos();
+                $this->revisar($margen >= $seguro, "Margen de liquidación {$margen} s (seguro: {$seguro} s o más; con menos, una puja válida puede rechazarse durante una sobrecarga de la base)", critico: false);
+            }
+            // Límites de conexiones (hosting compartido, 21/09): informativo; en SQLite no aplica.
+            if (in_array(DB::connection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+                $variables = collect(DB::select("SHOW VARIABLES WHERE Variable_name IN ('max_connections','max_user_connections')"))->pluck('Value', 'Variable_name');
+                $estado = collect(DB::select("SHOW GLOBAL STATUS WHERE Variable_name IN ('Threads_connected','Max_used_connections','Uptime')"))->pluck('Value', 'Variable_name');
+                $this->revisar(true, sprintf('Conexiones de la base: %s en uso ahora, máximo usado %s, límite del servidor %s, límite de la cuenta %s; en marcha hace %s h',
+                    $estado['Threads_connected'] ?? '?', $estado['Max_used_connections'] ?? '?', $variables['max_connections'] ?? '?',
+                    ($variables['max_user_connections'] ?? '0') === '0' ? 'sin tope propio' : $variables['max_user_connections'],
+                    isset($estado['Uptime']) ? round((int) $estado['Uptime'] / 3600, 1) : '?'));
+            }
         } catch (\Throwable $e) {
             $this->revisar(false, 'Conexión a la base de datos: ' . $e->getMessage());
         }

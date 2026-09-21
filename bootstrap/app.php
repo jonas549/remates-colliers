@@ -13,7 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Hora de recepción de cada petición, antes de cualquier otro trabajo (validez de pujas por recepción).
-        $middleware->prepend(\App\Http\Middleware\HoraRecepcion::class);
+        // Después, solo en la puja: abrir la conexión a la base con reintento, antes que la sesión (la hora ya quedó sellada).
+        $middleware->prepend([\App\Http\Middleware\HoraRecepcion::class, \App\Http\Middleware\ConexionPujaConReintento::class]);
 
         // Clave de acceso mientras el subdominio es un sandbox público (COLLIERS_ACCESO_CLAVE).
         $middleware->web(append: [\App\Http\Middleware\AccesoSandbox::class, \App\Http\Middleware\SesionTrasIngreso::class]);

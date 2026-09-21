@@ -8,13 +8,15 @@
 
 ## 0. Para retomar en 30 segundos
 
-- **Estado (20/09, cierre):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local.
+- **Estado (21/09):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local.
   E/F empezado: la pantalla **«06 Usuarios»**.
-- **163 pruebas PHPUnit** en verde y los recorridos en navegador real al día (`tools/comparar/*.mjs`).
-- **Jonas probó el ciclo completo en el sandbox el 20/09** y trajo 8 puntos: los ocho están atendidos (el 7 a medias,
-  por decisión suya). Detalle en `docs/progreso/2026-09-20.md` y en la tabla del comienzo de `docs/BACKLOG.md`.
-- **Subido a `main` hasta `31db759`** (9 commits, con su aprobación del 20/09). **`bf27a21` queda local**: es la
-  habilitación única configurable y la salida del PDF; espera su visto bueno.
+- **172 pruebas PHPUnit**: en SQLite (`php artisan test`, 2 se saltan) y en MySQL (`composer test:mysql`, 172/172).
+  Recorridos en navegador real al día (`tools/comparar/*.mjs`).
+- **21/09:** folio de la subasta de prueba corregido (500 en el sandbox), suite contra MySQL, análisis del
+  `1040 Too many connections` del hosting y **reintento de conexión en la puja** con margen seguro de 5 s vigilado por el
+  panel. Detalle en `docs/progreso/2026-09-21.md`.
+- **Subido a `main` hasta `1a8767c`** (aprobado el 21/09). El reintento de conexión queda **local** hasta su visto bueno.
+- **Pendiente de Jonas (21/09):** mediciones de conexiones del sandbox, margen a 5 s y aviso del cierre al 10 %.
 - **Siguiente para Jonas en el sandbox:**
   1. Subir `post_max_size` y `upload_max_filesize` (cPanel → MultiPHP INI Editor; recomendado 64M / 20M). Sin eso, un
      registro con tres documentos no llega nunca: PHP descarta el envío entero. Confirmar con `colliers:diagnostico`.

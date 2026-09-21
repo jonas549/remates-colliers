@@ -61,6 +61,24 @@ return [
     ],
 
     /*
+     * Reintento de la conexión a la base en la petición de puja (21/09). En un hosting compartido MariaDB puede rechazar
+     * conexiones unos segundos (1040 Too many connections) o reiniciarse (2002). La hora de recepción ya está sellada
+     * antes de arrancar Laravel (HoraRecepcion), así que esperar no cambia la validez de la puja.
+     *
+     * Estos valores fijan el MARGEN DE LIQUIDACIÓN SEGURO: una puja recibida antes de T tiene que tomar el bloqueo del
+     * lote antes de T + margen, o la adjudicación se le adelanta. Seguro = reintento + procesamiento, redondeado arriba
+     * (App\Subastas\ConexionPuja::margenSeguroSegundos). El panel advierte y pide confirmación por debajo de eso.
+     * `procesamiento_ms`: desde que llega la puja hasta que toma el bloqueo, sin OPcache, 1 núcleo y 10 simultáneas. El
+     * 17/09 se midió una mediana de ~4 s hasta la RESPUESTA (docs/RENDIMIENTO-SIN-OPCACHE.md); el bloqueo se toma antes de
+     * responder, de ahí 3,5 s. Con OPcache en producción se puede bajar.
+     */
+    'conexion_puja' => [
+        'reintento_ms' => (int) env('COLLIERS_PUJA_REINTENTO_MS', 1500),
+        'espera_ms' => (int) env('COLLIERS_PUJA_REINTENTO_ESPERA_MS', 500),
+        'procesamiento_ms' => (int) env('COLLIERS_PUJA_PROCESAMIENTO_MS', 3500),
+    ],
+
+    /*
      * Bloqueo automático de deploy: no se despliega desde estos minutos antes de que abra un lote hasta que
      * todos los lotes del remate estén liquidados.
      */

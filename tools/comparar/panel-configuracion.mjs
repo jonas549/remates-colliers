@@ -48,6 +48,22 @@ await p.fill('input[name="config[margen_liquidacion_segundos]"]', '0');
 await p.getByRole('button', { name: 'Guardar cambios' }).click();
 comprobar('error de validación en español', (await p.locator('.admin-errores').innerText()).includes('margen de liquidación'));
 
+// 1b. Margen bajo lo seguro (21/09): pide confirmación al bajarlo y lo advierte mientras siga bajo.
+await p.goto(`${URL}/admin/configuracion/remates`, { waitUntil: 'load' });
+const confirmar = p.locator('[data-confirmar-margen]');
+comprobar('con 5 s no hay aviso ni casilla', (await p.locator('[data-aviso-margen]').count()) === 0 && !(await confirmar.isVisible()));
+await p.fill('input[name="config[margen_liquidacion_segundos]"]', '3');
+comprobar('al escribir 3 s aparece la casilla de confirmación', await confirmar.isVisible());
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+comprobar('sin confirmar no se guarda y explica el riesgo', (await p.locator('.admin-errores').innerText()).includes('una puja válida podría rechazarse'));
+comprobar('la casilla sigue a la vista tras el error', await confirmar.isVisible());
+await confirmar.locator('input[type=checkbox]').check();
+await p.getByRole('button', { name: 'Guardar cambios' }).click();
+comprobar('confirmado: se guarda', (await p.locator('.admin-aviso--ok').innerText()).includes('Configuración guardada'));
+comprobar('aviso fijo mientras el margen esté bajo lo seguro', (await p.locator('[data-aviso-margen]').innerText()).includes('por debajo de los 5 s seguros'));
+comprobar('sin cambiar el margen no vuelve a pedir la casilla', !(await confirmar.isVisible()));
+await p.screenshot({ path: path.join(SALIDA, 'margen-bajo.png'), fullPage: true });
+
 // 2. Garantías.
 await seccion('Garantías');
 await p.fill('input[name="config[porcentaje_garantia]"]', '150');
@@ -165,6 +181,7 @@ comprobar('sistema visto desde la web', (await p.locator('.admin-datos').innerTe
 // Deja los valores por defecto del acta para las demás pruebas.
 await p.goto(`${URL}/admin/configuracion/remates`, { waitUntil: 'load' });
 await p.fill('input[name="config[margen_liquidacion_segundos]"]', '2');
+await p.locator('[data-confirmar-margen] input[type=checkbox]').check();
 await p.fill('input[name="config[pujas_rapidas]"]', '100.000, 500.000, 1.000.000');
 await p.getByRole('button', { name: 'Guardar cambios' }).click();
 await p.goto(`${URL}/admin/configuracion/garantias`, { waitUntil: 'load' });
