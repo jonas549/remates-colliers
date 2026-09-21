@@ -101,7 +101,9 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         const actual = nuevo.lotes.find((l) => l.id === this.loteId);
         // Se queda en el lote actual hasta que termina; entonces pasa al siguiente sin liquidar.
         if (!actual || (TERMINALES.includes(actual.estado) && vigente && vigente.id !== actual.id && !TERMINALES.includes(vigente.estado))) {
-            if (actual) this.anterior = { orden: actual.orden, estado: actual.estado, precio: actual.precio_actual, siguiente: vigente.orden };
+            // Cómo terminó el lote anterior PARA ESTE POSTOR (21/09): el ganador tiene que seguir viendo que lo ganó.
+            if (actual) this.anterior = { orden: actual.orden, estado: actual.estado, precio: actual.precio_actual, siguiente: vigente.orden,
+                gane: !!this.miAlias && actual.ganador === this.miAlias };
             this.loteId = vigente.id;
         }
     },
@@ -114,12 +116,22 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         const total = this.estado.lotes.length;
         return total > 1 ? 'Lote ' + this.lote.orden + ' de ' + total : '';
     },
+    // Cambio de lote (21/09, Jonas: «que sea evidente»): resultado del lote anterior para este postor y qué se remata ahora.
     get avisoLote() {
         const a = this.anterior;
         if (!a || a.siguiente !== this.lote.orden) return '';
-        const cierre = a.estado === 'adjudicado' ? 'se adjudicó en ' + clp(a.precio) : 'cerró sin posturas';
-        return 'El lote ' + a.orden + ' ' + cierre + '. Ahora se remata el lote ' + this.lote.orden + '.';
+        const resultado = a.estado !== 'adjudicado' ? 'El lote ' + a.orden + ' cerró sin posturas.'
+            : (a.gane ? 'Te adjudicaste el lote ' + a.orden + ' en ' + clp(a.precio) + '. Colliers te contactará para la firma y el pago del saldo.'
+                : 'El lote ' + a.orden + ' se adjudicó a otro postor en ' + clp(a.precio) + '.');
+        const ahora = 'Ahora se remata el lote ' + this.lote.orden + (this.info.direccion ? ': ' + this.info.direccion : '')
+            + (this.antesDeAbrir ? ', abre a las ' + this.horaDe(this.lote.abre_en_ms) + '.' : ', en vivo.');
+        return resultado + ' ' + ahora;
     },
+    get avisoLoteGanado() { return !!this.anterior?.gane && this.anterior.siguiente === this.lote.orden; },
+    get avisoLoteEtiqueta() { return 'CAMBIO DE LOTE · AHORA ' + this.etiquetaLote.toUpperCase(); },
+    horaDe(ms) { return new Date(ms).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false }); },
+    // Estado con el lote delante cuando hay varios: «LOTE 2 DE 2 · EN VIVO · PUJA ABIERTA».
+    get estadoConLote() { return (this.etiquetaLote && !this.retirado ? this.etiquetaLote.toUpperCase() + ' · ' : '') + this.estadoTexto; },
     get mensajeMartillero() { return this.estado.mensaje_martillero?.texto || ''; },
     get mensajeHace() {
         const en = this.estado.mensaje_martillero?.en_ms;

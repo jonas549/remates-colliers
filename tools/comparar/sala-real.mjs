@@ -2,10 +2,14 @@
 // Requiere `php artisan serve` (local, APP_ENV=local). Reinicia la base local con el seeder.
 //
 //   node tools/comparar/sala-real.mjs
+import fs from 'node:fs';
+import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const URL = process.env.LARAVEL_URL || 'http://127.0.0.1:8000';
+const SALIDA = path.resolve('tools/comparar/salida/sala-real');
+fs.mkdirSync(SALIDA, { recursive: true });
 const SALA = '/remates/apoquindo/sala';
 let fallas = 0;
 
@@ -154,9 +158,22 @@ await esperar('mensaje del martillero sobre el video (móvil)', async () =>
 await esperar('al liquidar el lote 1 la sala pasa al lote 2 con aviso y ficha nueva', async () =>
     (await texto(D.pagina, '.sala-cabecera__titulo')).includes('LOTE 2 DE 2')
     && (await texto(D.pagina, '.sala__titulo')) === 'Dirección del lote 2'
-    && (await D.pagina.locator('.sala-avisos--panel').innerText()).includes('El lote 1 cerró sin posturas. Ahora se remata el lote 2.'), 25000);
+    && (await D.pagina.locator('.sala-avisos--panel [data-aviso-lote]').innerText()).includes('El lote 1 cerró sin posturas. Ahora se remata el lote 2: Dirección del lote 2'), 25000);
+// Cambio de lote evidente (21/09): arriba de los avisos, con el lote en la franja y en la cabecera del panel.
+await esperar('cambio de lote: el aviso va primero, dice «CAMBIO DE LOTE · AHORA LOTE 2 DE 2» y la cabecera del panel nombra el lote', async () =>
+    (await D.pagina.locator('.sala-avisos--panel .sala-aviso').first().getAttribute('data-aviso-lote')) !== null
+    && (await texto(D.pagina, '.sala-avisos--panel [data-aviso-lote] .sala-aviso__etiqueta')) === 'CAMBIO DE LOTE · AHORA LOTE 2 DE 2'
+    && (await texto(D.pagina, '.sala-panel__estado')).startsWith('LOTE 2 DE 2 ·')
+    && (await texto(D.pagina, '.sala-ticker__estado')).startsWith('LOTE 2 DE 2 ·'), 5000);
+await esperar('cambio de lote en el celular: el aviso se ve sobre el video', async () =>
+    (await DM.pagina.locator('.sala-avisos--contenido [data-aviso-lote]').isVisible()), 5000);
 await esperar('lote 2: abre y acepta pujas desde su precio base', async () =>
     (await texto(D.pagina, '.sala-panel__precio')) === '$100.000.000' && !(await panel(D.pagina).locator('.sala-puja__boton').isDisabled()), 10000);
+await esperar('lote 2 abierto: la cabecera dice «LOTE 2 DE 2 · EN VIVO · PUJA ABIERTA» y el aviso «en vivo»', async () =>
+    (await texto(D.pagina, '.sala-panel__estado')) === 'LOTE 2 DE 2 · EN VIVO · PUJA ABIERTA'
+    && (await texto(D.pagina, '[data-aviso-lote] .sala-aviso__texto')).endsWith(', en vivo.'), 5000);
+await D.pagina.screenshot({ path: path.join(SALIDA, 'cambio-de-lote-1440.png'), fullPage: true });
+await DM.pagina.screenshot({ path: path.join(SALIDA, 'cambio-de-lote-375.png'), fullPage: true });
 const desbordeDM = await DM.pagina.evaluate(() => document.documentElement.scrollWidth > innerWidth);
 comprobar('móvil con avisos: sin scroll horizontal', !desbordeDM);
 

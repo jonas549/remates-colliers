@@ -27,7 +27,7 @@
             <div class="sala-ticker" :class="{ 'es-cerrado': vencido }">
                 <span class="sala-ticker__estado">
                     <span class="sala-ticker__punto"></span>
-                    <span x-text="estadoTexto"></span>
+                    <span @if ($real) x-text="estadoConLote" @else x-text="estadoTexto" @endif></span>
                 </span>
                 <span class="sala-ticker__direccion" @if ($real) x-text="info.direccion" @endif>{{ $propiedad['direccion'] }}</span>
                 <span class="sala-ticker__tiempo" x-text="tiempoTexto"></span>
@@ -94,7 +94,7 @@
                 <div class="sala__lateral">
                     <div class="sala-panel">
                         <div class="sala-panel__cabeza" :class="{ 'es-cerrado': vencido }">
-                            <span class="sala-panel__estado" x-text="estadoTexto"></span>
+                            <span class="sala-panel__estado" @if ($real) x-text="estadoConLote" @else x-text="estadoTexto" @endif></span>
                             <span class="sala-panel__folio">{{ $propiedad['folio'] }}</span>
                         </div>
                         <div class="sala-panel__cuerpo">

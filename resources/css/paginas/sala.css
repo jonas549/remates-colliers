@@ -222,3 +222,9 @@
 .sala-cabecera__usuario--enlace:hover { color: #25408f; text-decoration: underline; }
 .sala-resultado__enlace { display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; padding: 0 18px; background: #25408f; color: #ffffff; font-weight: 700; font-size: 14px; text-decoration: none; }
 .sala-barra__boton--enlace { display: inline-flex; align-items: center; text-decoration: none; }
+
+/* Cambio de lote (21/09): destacado, arriba de los avisos; en verde si el postor ganó el lote anterior. */
+.sala-aviso--lote { border-left-width: 5px; background: #e9effa; padding: 12px 16px; }
+.sala-aviso--lote .sala-aviso__texto { font-size: 15px; font-weight: 600; color: #16265a; }
+.sala-aviso--lote.es-ganado { border-left-color: #1c5330; background: #e8f3ec; }
+.sala-aviso--lote.es-ganado .sala-aviso__etiqueta, .sala-aviso--lote.es-ganado .sala-aviso__texto { color: #1c5330; }

@@ -225,9 +225,17 @@ await P1.waitForTimeout(1500); // animación de entrada
 await P1.screenshot({ path: path.join(SALIDA, '05-sala-postor1-cerrado.png'), fullPage: true });
 
 // Pasado el margen (5 s): adjudicado, ganador y perdedor lo saben sin recargar; la sala pasa al lote 2.
-comprobar('el ganador ve «Te adjudicaste la propiedad»', await esperar(async () => (await texto(P2)).includes('Te adjudicaste la propiedad') || (await texto(P2)).includes('se adjudicó en'), 20000),
-    (await texto(P2)).slice(0, 160));
-comprobar('el otro postor ve que se adjudicó a otro', await esperar(async () => (await texto(P1)).includes('Adjudicado a otro postor') || (await texto(P1)).includes('se adjudicó en'), 20000));
+// Cambio de lote evidente (21/09): el resultado del lote 1 PARA CADA POSTOR sigue a la vista al pasar al lote 2.
+const avisoLote = (p) => texto(p, '.sala-avisos--panel [data-aviso-lote]');
+comprobar('el ganador ve «Te adjudicaste el lote 1» (en verde) al pasar al lote 2',
+    await esperar(async () => (await avisoLote(P2)).includes('Te adjudicaste el lote 1')
+        && (await P2.locator('.sala-avisos--panel [data-aviso-lote]').getAttribute('class')).includes('es-ganado'), 20000),
+    (await avisoLote(P2).catch(() => '')).slice(0, 160));
+comprobar('el otro postor ve que el lote 1 se adjudicó a otro postor', await esperar(async () => (await avisoLote(P1)).includes('se adjudicó a otro postor'), 20000));
+comprobar('el aviso dice qué se remata ahora y a qué hora abre', await esperar(async () => /Ahora se remata el lote 2: .+, abre a las \d{2}:\d{2}\./.test(await avisoLote(P1)), 5000),
+    (await avisoLote(P1).catch(() => '')).slice(0, 200));
+comprobar('la cabecera del panel y la franja nombran el lote', await esperar(async () =>
+    (await texto(P1, '.sala-panel__estado')).startsWith('LOTE 2 DE 2 ·') && (await texto(P1, '.sala-ticker__estado')).startsWith('LOTE 2 DE 2 ·'), 5000));
 comprobar('la sala pasa sola al lote 2, que todavía no abre', await esperar(async () => (await estadoSala(P1)).includes('PUJA AÚN NO ABRE'), 20000),
     (await estadoSala(P1)).slice(0, 120));
 comprobar('el martillero ve el lote 1 adjudicado', await esperar(async () => /ADJUDICADO/i.test(await texto(M)), 20000));

@@ -20,7 +20,7 @@ nota *(verifica Jonas en el sandbox)*.
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 31/35 |
 | D | Autenticación y registro de postores | En progreso | 13/16 |
-| K | Sala de puja conectada al motor real | En progreso | 15/16 |
+| K | Sala de puja conectada al motor real | En progreso | 16/17 |
 | I | Remates y lotes + panel del martillero | **Completo** | 20/20 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
@@ -245,6 +245,7 @@ interacción idéntica; escritorio 0,05 % en 1280–1440 y 1,9 % en 1120 por el 
 - [x] Textos del resultado neutros («Colliers te informará sobre tu garantía según las bases») mientras el cliente no defina qué pasa con la garantía del perdedor
 - [x] Verificado en navegador real (17/09): `sala-real.mjs` 32/32, incluido un remate de dos lotes con mensaje del martillero en escritorio y 375 px
 - [x] **La sala nunca muestra «PUJA ABIERTA» en un remate que ya no se puede pujar** *(21/09)*. Reproducido con los tres roles: el cierre anticipado del martillero llega a los postores en ~1–2 s sin recargar (luego la adjudicación y el paso al lote 2). Lo que sí fallaba: con el remate **borrado** la sala seguía como si nada, y con el remate **cancelado** la sala, al llegar la hora, habría calculado «PUJA ABIERTA» por reloj. Ahora dice «REMATE NO DISPONIBLE» / «REMATE CANCELADO», quita el formulario y ofrece la salida (remates publicados / «Mi cuenta»); el nombre del postor en la cabecera lleva a «Mi cuenta» *(`tools/comparar/recorrido-roles.mjs`: administrador, martillero, dos postores y un espectador en sesiones separadas, solo con clics; 48/48 en tres corridas seguidas)*
+- [x] **El cambio de lote es evidente** *(Jonas, 21/09: cerró el lote 1 con «Cerrar este lote ahora», el lote 2 abrió a su hora y la sala no dejó claro que había cambiado de lote)*: la franja y la cabecera del panel nombran el lote («LOTE 2 DE 2 · PRÓXIMO · PUJA AÚN NO ABRE»); el aviso «CAMBIO DE LOTE · AHORA LOTE 2 DE 2» va primero, dice el resultado del lote anterior **para ese postor** («Te adjudicaste el lote 1 en $X…», en verde; «se adjudicó a otro postor»; «cerró sin posturas») y qué se remata ahora, con la hora de apertura o «en vivo». Antes, al pasar al lote 2, el ganador del lote 1 dejaba de ver que lo había ganado *(`sala-real.mjs` con un remate de dos lotes en escritorio y 375 px; `recorrido-roles.mjs` 50/50)*
 - [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración *(Jonas)*
 
 ## I — Remates y lotes, incluido el panel del martillero · Completo
@@ -485,7 +486,8 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 
 ### De Jonas
 
-- [x] Sala con varios lotes: el aviso mínimo («El lote 1 se adjudicó en $X. Ahora se remata el lote 2.») y «LOTE N DE M» **quedan como están** *(Jonas, 20/09)*
+- [x] Sala con varios lotes: el aviso mínimo («El lote 1 se adjudicó en $X. Ahora se remata el lote 2.») y «LOTE N DE M» **quedan como están** *(Jonas, 20/09)*. El 21/09 pidió que el cambio de lote sea evidente: el aviso se destacó y dice el resultado para cada postor (ver K)
+- [ ] **«Cerrar el remate completo»** (hoy el panel cierra el lote que corre y los siguientes abren a su hora fija): **lo decide Jonas después; no implementar todavía** *(21/09)*
 - [ ] Mensaje del martillero en la sala: se muestra en una franja amarilla dentro del panel de puja (escritorio) y sobre el video (móvil). ¿Sirve? (17/09)
 - [ ] Formulario «Crear subasta»: se agregó el campo REGIÓN (lo necesitan los filtros del sitio) y la garantía pasó de monto a porcentaje (acta). Ficha del remate, formulario de lote y panel del martillero no tienen diseño: se armaron con los componentes del panel (17/09)
 
