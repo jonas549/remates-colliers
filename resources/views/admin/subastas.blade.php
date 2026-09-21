@@ -27,6 +27,7 @@
                 <div class="admin-pruebas__texto">
                     <strong>Subastas de prueba.</strong> Crean un remate publicado con 2 lotes, postores habilitados y
                     el inicio en 12 minutos. No aparecen en el sitio público, no entran en los reportes y no envían correos.
+                    Al crearla ves el correo y la clave de cada postor, con un enlace para ingresar como cada uno.
                 </div>
                 <form method="POST" action="{{ route('admin.remates.crear-prueba') }}" class="admin-pruebas__acciones">
                     @csrf
@@ -48,6 +49,7 @@
                                 <tr>
                                     <td><strong>{{ $prueba['folio'] }}</strong> · {{ $prueba['lotes'] }} lote(s) · inicio {{ $prueba['inicio'] }}</td>
                                     <td class="admin-pruebas__enlaces">
+                                        <a href="{{ $prueba['ficha'] }}#postores-prueba" class="admin-accion">Postores y claves</a>
                                         <a href="{{ $prueba['ficha'] }}" class="admin-accion">Ficha</a>
                                         <a href="{{ $prueba['enVivo'] }}" class="admin-accion">Panel en vivo</a>
                                         <form method="POST" action="{{ $prueba['borrar'] }}" class="formulario-en-linea"
@@ -109,7 +111,7 @@
                             <label class="admin-form__campo {{ $campo('precio_base') }}"><span class="admin-form__etiqueta">PRECIO BASE</span><input name="precio_base" :value="base" @input="soloDigitos('base', $event.target.value); $event.target.value = base" inputmode="numeric" placeholder="120000000" class="admin-form__input" required></label>
                             <label class="admin-form__campo {{ $campo('incremento_minimo') }}"><span class="admin-form__etiqueta">INCREMENTO MÍNIMO</span><input name="incremento_minimo" :value="incremento" @input="soloDigitos('incremento', $event.target.value); $event.target.value = incremento" inputmode="numeric" placeholder="{{ $f['incremento'] }} (global)" class="admin-form__input"></label>
                             {{-- Acta: la garantía es un % del valor mínimo, configurable (10 % por defecto). El diseño pedía un monto. --}}
-                            <label class="admin-form__campo {{ $campo('porcentaje_garantia') }}"><span class="admin-form__etiqueta">GARANTÍA (% DEL PRECIO BASE)</span><input name="porcentaje_garantia" :value="porcentaje" @input="porcentaje = $event.target.value.replace(/[^\d.,]/g, ''); $event.target.value = porcentaje" inputmode="decimal" placeholder="{{ rtrim(rtrim($f['porcentaje'], '0'), '.') }} (global)" class="admin-form__input"></label>
+                            <label class="admin-form__campo {{ $campo('porcentaje_garantia') }}"><span class="admin-form__etiqueta">GARANTÍA (% DEL PRECIO BASE)</span><input name="porcentaje_garantia" :value="porcentaje" @input="porcentaje = $event.target.value.replace(/[^\d.,]/g, ''); $event.target.value = porcentaje" inputmode="decimal" placeholder="{{ \App\Support\Formato::campo($f['porcentaje']) }} (global)" class="admin-form__input"></label>
                         </div>
                         <div class="admin-form__resumen" x-text="resumenMontos"></div>
 

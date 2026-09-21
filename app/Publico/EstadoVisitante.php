@@ -40,8 +40,7 @@ class EstadoVisitante
         $garantias = Garantia::with('remate.lotes')->where('user_id', $user->id)
             ->when($remate && ! $unico, fn ($q) => $q->where('remate_id', $remate->id))
             ->when($remate && $unico, fn ($q) => $q->where(fn ($s) => $s->where('remate_id', $remate->id)->orWhere('alcance', Garantia::ALCANCE_UNICO)))
-            ->get()
-            ->filter(fn (Garantia $g) => ! $g->remate->es_demostracion || $remate !== null);
+            ->get();
         $ahora = CarbonImmutable::now('UTC');
         $abiertas = $garantias->filter(fn (Garantia $g) => $g->esUnica()
             || in_array($g->remate->estadoVisible($ahora), [Remate::VISTA_EN_VIVO, Remate::VISTA_PROXIMO], true));

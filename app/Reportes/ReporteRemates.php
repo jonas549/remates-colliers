@@ -309,7 +309,7 @@ class ReporteRemates
     /** Cuentas aprobadas por Colliers hasta el cierre del período (las bloqueadas después también cuentan). */
     private function postoresRegistrados(): int
     {
-        return Postor::whereIn('estado', [Postor::ESTADO_APROBADO, Postor::ESTADO_BLOQUEADO])
+        return Postor::reales()->whereIn('estado', [Postor::ESTADO_APROBADO, Postor::ESTADO_BLOQUEADO])
             ->where(fn ($q) => $q->whereNull('revisado_en')->orWhere('revisado_en', '<', $this->fin->format('Y-m-d H:i:s')))
             ->count();
     }

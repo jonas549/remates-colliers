@@ -180,41 +180,110 @@ for (const ancho of [375, 760, 1120, 1440]) {
     await c.close();
 }
 
-// ── Botón «Crear subasta de prueba»: deja todo listo para probar sin llenar el formulario ──────────────
+// ── Botón «Crear subasta de prueba»: de punta a punta como lo haría una persona (21/09) ─────────────────────
+// Nada de escribir URL: se copia con los botones de la pantalla, se hace clic en los enlaces y se pega lo copiado.
+// Única excepción, la que la pantalla indica: pegar el enlace copiado en una ventana privada (aquí, otro contexto).
+const esperarHasta = async (nombre, condicion, ms = 10000) => {
+    const hasta = Date.now() + ms;
+    while (Date.now() < hasta) {
+        if (await condicion().catch(() => false)) return true;
+        await new Promise((r) => setTimeout(r, 250));
+    }
+    comprobar(nombre, false, `no pasó en ${ms / 1000} s`);
+    return false;
+};
+await contexto.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: URL });
+const portapapeles = (pagina) => pagina.evaluate(() => navigator.clipboard.readText());
+
 await p.goto(`${URL}/admin/subastas`, { waitUntil: 'load' });
 comprobar('el listado ofrece crear una subasta de prueba', await p.getByRole('button', { name: 'Crear subasta de prueba' }).isVisible());
-await p.fill('.admin-pruebas__acciones input[name=inicio]', '12');
+// Inicio en 1 minuto: el recorrido llega a pujar de verdad.
+await p.fill('.admin-pruebas__acciones input[name=inicio]', '1');
 await p.fill('.admin-pruebas__acciones input[name=lotes]', '2');
 await p.fill('.admin-pruebas__acciones input[name=postores]', '3');
 await p.getByRole('button', { name: 'Crear subasta de prueba' }).click();
-await p.waitForSelector('.admin-pruebas--credenciales');
-const credenciales = await p.locator('.admin-pruebas--credenciales').innerText();
-const correoPrueba = credenciales.match(/\S+@demo\.colliers\.test/)?.[0];
-const clavePrueba = credenciales.match(/solo se muestra ahora[^:]*:\s*(\S+)/)?.[1];
-comprobar('la subasta de prueba se crea publicada y muestra la clave una vez',
-    (await p.locator('.admin-aviso--ok').innerText()).includes('creada y publicada') && !!correoPrueba && !!clavePrueba,
-    `${correoPrueba} · clave ${clavePrueba ? 'sí' : 'no'}`);
-comprobar('la ficha de la prueba trae sus lotes programados',
-    (await p.locator('.admin-gestion__bloque table tbody tr').count()) === 2);
+await p.waitForSelector('[data-postores-prueba]');
+const fichaPrueba = p.url().split('#')[0];
+const filasPrueba = p.locator('[data-postor-prueba]');
+comprobar('la subasta de prueba se crea publicada', (await p.locator('.admin-aviso--ok').innerText()).includes('creada y publicada'));
+comprobar('aviso claro de que la clave solo se muestra esta vez',
+    await p.locator('.admin-pruebas__alerta').isVisible() && (await p.locator('.admin-pruebas__alerta').innerText()).includes('La clave solo se muestra esta vez'));
+comprobar('una fila por postor, con el correo y la clave a la vista en la misma fila', (await filasPrueba.count()) === 3
+    && await filasPrueba.first().locator('[data-correo]').isVisible() && await filasPrueba.first().locator('[data-clave]').isVisible());
+const correoPrueba = (await filasPrueba.first().locator('[data-correo]').innerText()).trim();
+const clavePrueba = (await filasPrueba.first().locator('[data-clave]').innerText()).trim();
+comprobar('la ficha de la prueba trae sus lotes programados', (await p.locator('.admin-gestion__bloque table tbody tr').count()) === 2);
+await p.waitForTimeout(1500);
 await p.screenshot({ path: path.join(SALIDA, 'subasta-de-prueba-1440.png'), fullPage: true });
 
-// Un postor de prueba entra con esa clave y llega a la sala del remate.
-const cp = await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL' });
+// Copiar el correo y la clave con sus botones.
+await filasPrueba.first().getByRole('button', { name: /Copiar el correo/ }).click();
+comprobar('«Copiar» copia el correo', (await portapapeles(p)) === correoPrueba, correoPrueba);
+await filasPrueba.first().getByRole('button', { name: /Copiar la clave/ }).click();
+comprobar('«Copiar» copia la clave y lo confirma en el botón', (await portapapeles(p)) === clavePrueba
+    && (await filasPrueba.first().getByRole('button', { name: /Copiar la clave/ }).innerText()).includes('Copiado'));
+
+// «Ingresar como este postor» con la sesión de administración abierta: la pantalla lo explica en vez de volver al panel.
+const [intermedia] = await Promise.all([p.context().waitForEvent('page'), filasPrueba.first().getByRole('link', { name: 'Ingresar como este postor' }).click()]);
+await intermedia.waitForLoadState('load');
+comprobar('el enlace abre en otra pestaña y explica que hay una sesión abierta',
+    (await intermedia.locator('.acceso__titulo').innerText()).includes(correoPrueba)
+    && await intermedia.getByRole('button', { name: /Cerrar esta sesión e ingresar como/ }).isVisible());
+await intermedia.getByRole('button', { name: 'Copiar enlace' }).click();
+const enlaceCopiado = await portapapeles(intermedia);
+comprobar('ofrece copiar el enlace para abrirlo en una ventana privada', enlaceCopiado.includes('/ingresar/como?usuario='), enlaceCopiado);
+
+// Ventana privada: se pega el enlace copiado y se pega la clave copiada.
+const cp = await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL', timezoneId: 'America/Santiago' });
 const q = await cp.newPage();
-await q.goto(`${URL}/ingresar`, { waitUntil: 'load' });
-await q.fill('input[name=usuario]', correoPrueba);
+await q.goto(enlaceCopiado, { waitUntil: 'load' });
+comprobar('el acceso abre con el correo del postor ya escrito', (await q.inputValue('input[name=usuario]')) === correoPrueba, await q.inputValue('input[name=usuario]'));
 await q.fill('input[name=password]', clavePrueba);
 await q.getByRole('button', { name: 'Ingresar' }).click();
 await q.waitForLoadState('load');
-comprobar('el postor de prueba entra con la clave que mostró el panel', q.url().endsWith('/mi-cuenta'), q.url());
-const salaPrueba = await p.locator('.admin-pruebas--credenciales a', { hasText: 'sala de pujas' }).getAttribute('href');
-await q.goto(salaPrueba, { waitUntil: 'load' });
-const textoSala = (await q.locator('body').innerText()).replace(/\s+/g, ' ');
-comprobar('y entra a la sala del remate de prueba', q.url().includes('/sala') && /PUJA|Lote/i.test(textoSala),
-    q.url() + ' · ' + textoSala.slice(0, 140));
+comprobar('el postor de prueba entra y llega a «Mi cuenta»', q.url().endsWith('/mi-cuenta'), q.url());
+const cuentaPrueba = (await q.locator('body').innerText()).replace(/\s+/g, ' ');
+comprobar('«Mi cuenta» dice la verdad: garantía aprobada y habilitado para pujar',
+    cuentaPrueba.includes('HABILITADO PARA PUJAR') && cuentaPrueba.includes('Habilitado')
+    && !cuentaPrueba.includes('SIN INSCRIPCIONES') && !cuentaPrueba.includes('Bloqueado'), cuentaPrueba.slice(0, 200));
+comprobar('«Mi cuenta» explica que es una cuenta de prueba y dónde está su remate', await q.locator('[data-cuenta-prueba]').isVisible());
+await q.waitForTimeout(1500); // animación de entrada de la página
+await q.screenshot({ path: path.join(SALIDA, 'cuenta-postor-prueba-1440.png'), fullPage: true });
+
+// Desde «Mi cuenta», con un clic, a la sala; se espera a que abra el lote y se puja con el modal.
+await q.getByRole('link', { name: 'Entrar a la sala de pujas' }).first().click();
+await q.waitForLoadState('load');
+comprobar('«Entrar a la sala de pujas» lleva a la sala del remate de prueba', q.url().includes('/sala'), q.url());
+const panelPrueba = q.locator('.sala-panel');
+const abierto = await esperarHasta('el lote de prueba abre (inicio en 1 minuto)', async () => {
+    await panelPrueba.locator('.sala-puja__rapida').first().click();
+    return panelPrueba.locator('.sala-puja__boton').isEnabled();
+}, 100000);
+if (abierto) {
+    await panelPrueba.locator('.sala-puja__boton').click();
+    comprobar('la puja pide confirmación en el modal', await q.locator('.sala-modal').isVisible());
+    await q.locator('.sala-modal__confirmar').click();
+    await esperarHasta('el postor de prueba puja y pasa a «Vas ganando»',
+        async () => (await q.locator('.sala-estado__titulo').first().innerText()) === 'Vas ganando', 10000)
+        && comprobar('el postor de prueba puja y pasa a «Vas ganando»', true);
+}
 await cp.close();
 
-// La franja de pruebas también se usa desde el celular.
+// Misma pestaña: «Cerrar esta sesión e ingresar como…» cierra la de administración y abre el acceso con el correo.
+await intermedia.getByRole('button', { name: /Cerrar esta sesión e ingresar como/ }).click();
+await intermedia.waitForLoadState('load');
+comprobar('cambiar de sesión deja el acceso listo con el correo escrito', intermedia.url().includes('/ingresar')
+    && (await intermedia.inputValue('input[name=usuario]')) === correoPrueba, intermedia.url());
+await intermedia.close();
+// El panel vuelve a entrar como administración para seguir el recorrido.
+await p.goto(`${URL}/revision/entrar/admin?a=/admin/subastas`, { waitUntil: 'load' });
+
+// La ficha de la prueba, después: la clave ya no se ve y la pantalla dice cómo conseguir otra.
+await p.goto(fichaPrueba, { waitUntil: 'load' });
+comprobar('al volver a la ficha la clave ya no se muestra y se ofrece «Generar clave nueva»',
+    (await p.locator('[data-clave]').count()) === 0 && await p.getByRole('button', { name: 'Generar clave nueva' }).isVisible());
+
+// La franja de pruebas y la ficha con sus postores también se usan desde el celular.
 {
     const cmovil = await navegador.newContext({ viewport: { width: 375, height: 800 }, locale: 'es-CL' });
     const r = await cmovil.newPage();
@@ -224,6 +293,12 @@ await cp.close();
     comprobar('la franja de subastas de prueba se usa a 375px (sin desborde, táctiles >= 44)',
         !u.desborde && u.pequenos.length === 0, `desborde:${u.desborde} ${u.pequenos.slice(0, 3).join('; ')}`);
     await r.screenshot({ path: path.join(SALIDA, 'pruebas-375.png'), fullPage: true });
+    await r.goto(fichaPrueba, { waitUntil: 'load' });
+    await r.waitForTimeout(400);
+    const uf = await revisarUsabilidad(r, 375);
+    comprobar('los postores de prueba se usan a 375px (sin desborde, táctiles >= 44)',
+        !uf.desborde && uf.pequenos.length === 0, `desborde:${uf.desborde} ${uf.pequenos.slice(0, 3).join('; ')}`);
+    await r.locator('[data-postores-prueba]').screenshot({ path: path.join(SALIDA, 'postores-prueba-375.png') });
     await cmovil.close();
 }
 

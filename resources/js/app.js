@@ -9,6 +9,7 @@ import adminSubastas from './modulos/admin-subastas';
 import adminPostores from './modulos/admin-postores';
 import adminEnVivo from './modulos/admin-en-vivo';
 import adminUsuarios from './modulos/admin-usuarios';
+import copiar from './modulos/copiar';
 import { iniciarImagenesSlot } from './modulos/imagen-slot';
 
 Alpine.data('acceso', acceso);
@@ -21,6 +22,7 @@ Alpine.data('adminSubastas', adminSubastas);
 Alpine.data('adminPostores', adminPostores);
 Alpine.data('adminEnVivo', adminEnVivo);
 Alpine.data('adminUsuarios', adminUsuarios);
+Alpine.data('copiar', copiar);
 
 window.Alpine = Alpine;
 Alpine.start();

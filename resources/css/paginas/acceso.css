@@ -228,3 +228,7 @@
   .acceso__titulo { font-size: 32px; } /* mismo tamaño que usa el prototipo para el h1 móvil del listado */
   .acceso__input { font-size: 17px; }
 }
+
+/* «Ingresar como» (postores de prueba, 21/09): enlace para abrir en una ventana privada, con botón de copiar. */
+.acceso__enlace-copiar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.acceso__enlace { font-size: 13px; color: #16265a; background: #f4f6fb; border: 1px solid #d5dae3; padding: 8px 10px; overflow-wrap: anywhere; flex: 1 1 240px; }

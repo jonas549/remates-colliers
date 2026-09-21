@@ -30,6 +30,15 @@ class InscripcionGarantias
             throw new DomainException('Tu cuenta debe estar aprobada por Colliers para inscribirte en un remate.');
         }
 
+        // Los remates de prueba y sus postores son un mundo aparte (21/09): un postor real que llegue al enlace de uno no
+        // queda con una garantía que nadie va a revisar, y un postor de prueba no se inscribe en remates reales.
+        if ($remate->es_demostracion && ! $user->esDePrueba()) {
+            throw new DomainException('Este es un remate de prueba de Colliers: no recibe inscripciones. Revisa los remates publicados en el sitio.');
+        }
+        if ($user->esDePrueba() && ! $remate->es_demostracion) {
+            throw new DomainException('Esta es una cuenta de prueba: solo puede pujar en su remate de prueba, que ya aparece en «Mi cuenta».');
+        }
+
         if (Habilitacion::modo() === Habilitacion::MODO_UNICO) {
             return $this->habilitacionUnica($user, $remate);
         }

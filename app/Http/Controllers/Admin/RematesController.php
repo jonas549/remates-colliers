@@ -106,17 +106,24 @@ class RematesController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        // Las credenciales se muestran UNA vez, en la ficha del remate recién creado.
-        return redirect()->route('admin.remates.show', $creado['remate'])
+        // La clave se muestra UNA vez, en la ficha del remate recién creado, junto a cada postor (21/09).
+        return redirect()->to(route('admin.remates.show', $creado['remate']) . '#postores-prueba')
             ->with('estado', "Subasta de prueba {$creado['remate']->folio} creada y publicada.")
-            ->with('credenciales_prueba', [
-                'clave' => $creado['clave'],
-                'postores' => $creado['postores'],
-                // «Mi cuenta» no lista los remates de prueba (para no ensuciar la cuenta de un postor real):
-                // estos enlaces son la forma de entrar directo a mirar y a pujar.
-                'publica' => route('remates.show', $creado['remate']->slug),
-                'sala' => route('sala.show', $creado['remate']->slug),
-            ]);
+            ->with('clave_prueba', ['remate' => $creado['remate']->id, 'clave' => $creado['clave']]);
+    }
+
+    /** Clave común nueva para los postores de un remate de prueba, si la que se mostró al crearlo se perdió. */
+    public function nuevaClavePrueba(Remate $remate, RemateDePrueba $prueba): RedirectResponse
+    {
+        try {
+            $clave = $prueba->nuevaClave($remate);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->to(route('admin.remates.show', $remate) . '#postores-prueba')
+            ->with('estado', "Clave nueva para los postores de prueba de {$remate->folio}. La anterior ya no sirve.")
+            ->with('clave_prueba', ['remate' => $remate->id, 'clave' => $clave]);
     }
 
     public function borrarPrueba(Remate $remate, RemateDePrueba $prueba): RedirectResponse
@@ -145,6 +152,9 @@ class RematesController extends Controller
 
         return view('admin.remates.ficha', [
             'remate' => $remate,
+            // Postores de prueba con su clave (solo recién creada o regenerada: no se guarda en claro).
+            'postoresPrueba' => $remate->es_demostracion && $puedeEditar ? app(RemateDePrueba::class)->postores($remate) : [],
+            'clavePrueba' => (session('clave_prueba')['remate'] ?? null) === $remate->id ? session('clave_prueba')['clave'] : null,
             'puedeEditar' => $puedeEditar,
             'fila' => PresentacionRemate::fila($remate, $ahora),
             'vista' => $remate->estadoVisible($ahora),

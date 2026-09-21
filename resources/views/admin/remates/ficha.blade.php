@@ -54,26 +54,9 @@
         <x-admin.avisos />
 
         <div class="admin-gestion">
-            {{-- Postores de la subasta de prueba: la clave se muestra UNA sola vez, igual que en el comando. --}}
-            @if (session('credenciales_prueba'))
-                @php($cred = session('credenciales_prueba'))
-                <div class="admin-pruebas admin-pruebas--credenciales">
-                    <div class="admin-pruebas__texto">
-                        <strong>Postores de prueba listos para pujar.</strong> Entran por «Ingresar» con estos correos y
-                        esta clave común, que <strong>solo se muestra ahora</strong>: <code>{{ $cred['clave'] }}</code>
-                    </div>
-                    <div class="admin-pruebas__texto">
-                        Con la sesión de un postor de prueba: <a href="{{ $cred['publica'] }}">ficha pública del remate</a> ·
-                        <a href="{{ $cred['sala'] }}">sala de pujas</a>. «Mi cuenta» no lista los remates de prueba a propósito.
-                    </div>
-                    <table class="admin-pruebas__tabla">
-                        <tbody>
-                            @foreach ($cred['postores'] as $postor)
-                                <tr><td>Postor {{ $postor['numero'] }}</td><td><code>{{ $postor['email'] }}</code></td><td>{{ $postor['rut'] }}</td></tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+            {{-- Postores de la subasta de prueba, con su clave al lado solo recién creada o regenerada (21/09). --}}
+            @if ($postoresPrueba !== [])
+                @include('admin.remates._postores-prueba', ['postores' => $postoresPrueba, 'clave' => $clavePrueba])
             @endif
             @if ($faltan !== [])
                 <div class="admin-faltan">
@@ -134,7 +117,7 @@
                             <label class="admin-form__campo {{ $campo('duracion_minutos') }}"><span class="admin-form__etiqueta">DURACIÓN DE CADA LOTE (MIN)</span><input name="duracion_minutos" value="{{ old('duracion_minutos', $remate->duracion_lote_segundos ? intdiv($remate->duracion_lote_segundos, 60) : '') }}" placeholder="{{ $f['duracion'] }} (global)" inputmode="numeric" class="admin-form__input" @disabled(! $editable)></label>
                             <label class="admin-form__campo {{ $campo('pausa_minutos') }}"><span class="admin-form__etiqueta">PAUSA ENTRE LOTES (MIN)</span><input name="pausa_minutos" value="{{ old('pausa_minutos', intdiv($remate->pausa_entre_lotes_segundos, 60)) }}" inputmode="numeric" class="admin-form__input" @disabled(! $editable)></label>
                             <label class="admin-form__campo {{ $campo('incremento_minimo') }}"><span class="admin-form__etiqueta">INCREMENTO MÍNIMO (CLP)</span><input name="incremento_minimo" value="{{ old('incremento_minimo', $remate->incremento_minimo) }}" placeholder="{{ $f['incremento'] }} (global)" inputmode="numeric" class="admin-form__input" @disabled(! $editable)></label>
-                            <label class="admin-form__campo {{ $campo('porcentaje_garantia') }}"><span class="admin-form__etiqueta">GARANTÍA (% DEL PRECIO BASE)</span><input name="porcentaje_garantia" value="{{ old('porcentaje_garantia', $remate->porcentaje_garantia !== null ? rtrim(rtrim($remate->porcentaje_garantia, '0'), '.') : '') }}" placeholder="{{ rtrim(rtrim($f['porcentaje'], '0'), '.') }} (global)" inputmode="decimal" class="admin-form__input" @disabled(! $editable)></label>
+                            <label class="admin-form__campo {{ $campo('porcentaje_garantia') }}"><span class="admin-form__etiqueta">GARANTÍA (% DEL PRECIO BASE)</span><input name="porcentaje_garantia" value="{{ old('porcentaje_garantia', Formato::campo($remate->porcentaje_garantia)) }}" placeholder="{{ Formato::campo($f['porcentaje']) }} (global)" inputmode="decimal" class="admin-form__input" @disabled(! $editable)></label>
                         </div>
                         <x-admin.errores />
                         <div class="admin-form__botones admin-form__botones--compactos">

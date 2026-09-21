@@ -31,6 +31,9 @@ use Throwable;
  */
 class RemateDePrueba
 {
+    /** Dominio de los correos de los postores de prueba: así se reconocen (User::esDePrueba) y se borran con su remate. */
+    public const DOMINIO_CORREO = 'demo.colliers.test';
+
     public function __construct(private readonly Emisor $emisor) {}
 
     /**
@@ -95,7 +98,7 @@ class RemateDePrueba
 
             $credenciales = [];
             for ($i = 1; $i <= $postores; $i++) {
-                $email = "prueba{$i}-{$sufijo}@demo.colliers.test";
+                $email = "prueba{$i}-{$sufijo}@" . self::DOMINIO_CORREO;
                 $user = User::create(['name' => "Postor de prueba {$i}", 'email' => $email, 'password' => $clave, 'rol' => User::ROL_POSTOR, 'estado' => User::ESTADO_ACTIVO]);
                 $user->forceFill(['email_verified_at' => $ahora])->save();
                 $postor = Postor::create(['user_id' => $user->id, 'nombres' => 'Postor de prueba', 'apellidos' => (string) $i, 'rut' => $this->rutLibre()]);
@@ -110,6 +113,38 @@ class RemateDePrueba
         $this->emisor->publicarEstado($remate);
 
         return ['remate' => $remate->fresh(['lotes']), 'clave' => $clave, 'postores' => $credenciales];
+    }
+
+    /**
+     * Postores de prueba del remate, en orden, para la ficha del panel (la clave no se guarda en claro: no está aquí).
+     *
+     * @return list<array{numero: int, email: string, rut: string}>
+     */
+    public function postores(Remate $remate): array
+    {
+        return User::with('postor')->whereIn('id', $remate->garantias()->pluck('user_id'))
+            ->where('email', 'like', '%@' . self::DOMINIO_CORREO)->orderBy('id')->get()
+            ->values()->map(fn (User $u, int $i) => ['numero' => $i + 1, 'email' => $u->email, 'rut' => (string) $u->postor?->rut])
+            ->all();
+    }
+
+    /**
+     * Clave común nueva para los postores de prueba del remate, por si la que se mostró al crearlo se perdió.
+     * Se muestra una sola vez, igual que la original. Las sesiones abiertas de esos postores se cierran.
+     */
+    public function nuevaClave(Remate $remate): string
+    {
+        if (! $remate->es_demostracion) {
+            throw new DomainException('Solo los remates de prueba tienen postores de prueba.');
+        }
+        $clave = Str::password(16, symbols: false);
+        $usuarios = User::whereIn('id', $remate->garantias()->pluck('user_id'))->where('email', 'like', '%@' . self::DOMINIO_CORREO)->get();
+        foreach ($usuarios as $user) {
+            $user->forceFill(['password' => $clave])->save();
+            DB::table('sessions')->where('user_id', $user->id)->delete();
+        }
+
+        return $clave;
     }
 
     /** Borra un remate de prueba con todo lo suyo: sirve para no dejar basura después de probar. */
@@ -138,7 +173,7 @@ class RemateDePrueba
 
             // Los postores de prueba solo existen para este remate: se borran con su rastro (la bitácora de accesos y
             // la de correos apuntan a `users` con restrict, y la sesión abierta también).
-            foreach (User::whereIn('id', $usuarios)->where('email', 'like', '%@demo.colliers.test')->get() as $user) {
+            foreach (User::whereIn('id', $usuarios)->where('email', 'like', '%@' . self::DOMINIO_CORREO)->get() as $user) {
                 $user->postor?->documentos()->delete();
                 $user->postor?->delete();
                 AccessLog::where('user_id', $user->id)->delete();

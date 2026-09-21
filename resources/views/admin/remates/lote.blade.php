@@ -7,7 +7,7 @@
     $campo = fn (string $nombre) => $errors->has($nombre) ? 'es-invalido' : '';
     $valor = fn (string $nombre) => old($nombre, $lote->{$nombre});
     // Sin separador de miles: el valor vuelve tal cual al guardar.
-    $numero = fn ($n) => $n === null ? '' : rtrim(rtrim((string) $n, '0'), '.');
+    $numero = fn ($n) => \App\Support\Formato::campo($n);
 @endphp
 <x-layouts.admin seccion="subastas" :titulo="$nuevo ? 'Nuevo lote' : 'Lote ' . $lote->orden" clase-cuerpo="placeholder-claro">
     <div class="admin-encabezado">

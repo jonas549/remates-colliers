@@ -123,7 +123,8 @@ class PostoresController extends Controller
     /** @return Collection<int, array> */
     private function filas(): Collection
     {
-        $postores = Postor::with(['user', 'empresa', 'documentos', 'user.garantias' => fn ($q) => $q->with('remate')->latest('id')])
+        // Los postores de prueba se ven en la ficha de su remate de prueba, no aquí: esta lista es de clientes.
+        $postores = Postor::reales()->with(['user', 'empresa', 'documentos', 'user.garantias' => fn ($q) => $q->with('remate')->latest('id')])
             ->latest('updated_at')->get();
 
         return $postores->flatMap(function (Postor $p) {

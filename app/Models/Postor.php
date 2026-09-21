@@ -26,6 +26,12 @@ class Postor extends Model
 {
     use TieneRutCifrado;
 
+    /** Sin los postores de «Crear subasta de prueba»: no son clientes y no cuentan en el panel ni en los reportes. */
+    public function scopeReales(\Illuminate\Database\Eloquent\Builder $query): void
+    {
+        $query->whereHas('user', fn ($q) => $q->where('email', 'not like', '%@' . \App\Remates\RemateDePrueba::DOMINIO_CORREO));
+    }
+
     public const TIPO_NATURAL = 'natural';
 
     public const TIPO_JURIDICA = 'juridica';

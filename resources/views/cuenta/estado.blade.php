@@ -28,6 +28,13 @@
             </div>
         </div>
 
+        @if ($d['dePrueba'] ?? false)
+            {{-- Postor creado con «Crear subasta de prueba»: su remate no está en el listado público, se entra desde aquí. --}}
+            <div class="cuenta__avisos" data-cuenta-prueba>
+                <div class="cuenta__aviso">Esta es una cuenta de prueba creada desde el panel de Colliers. Su remate de prueba no aparece en el listado público de remates: se entra desde esta página, con el botón «Entrar a la sala de pujas».</div>
+            </div>
+        @endif
+
         @if (session('estado') || session('error') || $errors->any())
             <div class="cuenta__avisos" role="status" aria-live="polite">
                 @if (session('estado'))<div class="cuenta__aviso">{{ session('estado') }}</div>@endif

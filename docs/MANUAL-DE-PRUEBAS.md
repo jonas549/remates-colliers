@@ -92,11 +92,16 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 
 ## 3. Cargar un remate de prueba
 
-> **Atajo (20/09):** en `/admin/subastas` hay una franja «Subastas de prueba» con el botón **«Crear subasta de prueba»**.
-> Crea el remate publicado, con lotes, con postores habilitados y con la clave común —que se muestra una sola vez—, y
-> trae los enlaces a la ficha pública y a la sala. Sirve para los pasos 6 y 7 sin llenar el formulario ni usar la
-> terminal, y se borra con un botón. Los pasos de abajo son para cargar un remate **a mano**, que es lo que hará el
-> cliente.
+> **Atajo:** en **Subastas** hay una franja «Subastas de prueba» con el botón **«Crear subasta de prueba»**. Crea el
+> remate publicado, con lotes y con postores ya aprobados y con la garantía aprobada. La ficha que se abre muestra, **en
+> la fila de cada postor**, su correo y la clave (con botón **Copiar**) y el enlace **«Ingresar como este postor»**.
+> La clave se ve **una sola vez**; si se pierde, **Generar clave nueva** en esa misma ficha. Sirve para los pasos 6 y 7
+> sin llenar el formulario ni usar la terminal, y se borra con un botón. Los pasos de abajo son para cargar un remate
+> **a mano**, que es lo que hará el cliente.
+>
+> Con un postor de prueba: **Ingresar como este postor** → pegar la clave → **Mi cuenta** muestra el remate con la
+> garantía aprobada → **Entrar a la sala de pujas**. El navegador guarda una sola sesión: para tener el panel y la sala
+> a la vez, la pantalla ofrece copiar el enlace y abrirlo en una ventana privada.
 
 1. `/admin/subastas` → **Crear subasta**.
 2. Completa:
@@ -139,7 +144,7 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 
 ## 6. Hacer una puja, del inicio a la adjudicación
 
-1. Postor habilitado → `/remates/{slug}/sala` antes del inicio: dice **PRÓXIMO · PUJA AÚN NO ABRE** y cuenta hacia la apertura.
+1. Postor habilitado → **Mi cuenta** → **Entrar a la sala de pujas**, antes del inicio: dice **PRÓXIMO · PUJA AÚN NO ABRE** y cuenta hacia la apertura.
 2. Al llegar la hora: **EN VIVO · PUJA ABIERTA**, contador hacia el cierre.
 3. **Puja rápida + $100k** (o monto libre) → **Pujar $…** → se abre el modal **Confirma tu puja** (obligatorio) → **Confirmar puja**. Debe quedar **Vas ganando** y la puja arriba del historial como «Postor #1 (tú)».
 4. Monto bajo el mínimo en «Monto libre»: el botón se deshabilita y la ayuda se pone en rojo.
@@ -150,14 +155,14 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 
 ## 7. Probar con varios postores a la vez
 
-**Opción rápida (postores de demostración):**
+**Opción rápida (subasta de prueba):**
 
-1. En la terminal:
-   ```
-   php artisan colliers:remate-demo --postores=5 --inicio=3 --duracion=10
-   ```
-   Muestra el enlace del JSON, la **clave común** de los postores y la tabla con sus correos. El remate de demostración **no aparece en el listado** ni envía correos; su URL es `/remates/demo-…` (el slug está en la salida).
-2. Abre `/ingresar` en 3 navegadores distintos (normal, privada de otro navegador y celular) con 3 correos de la tabla y la misma clave. En cada uno, `/remates/{slug}/sala`.
+1. **Subastas → Crear subasta de prueba** con 5 postores e inicio en 3 minutos. La ficha muestra cada postor con su
+   correo, la clave y **Copiar**. El remate de prueba **no aparece en el listado público** ni envía correos.
+2. En 3 navegadores distintos (normal, privada de otro navegador y celular): en cada uno, **Ingresar como este postor**
+   (o **Copiar enlace** y pegarlo en la ventana privada) → pegar la clave → **Mi cuenta** → **Entrar a la sala de pujas**.
+   (Por terminal sigue existiendo `php artisan colliers:remate-demo --postores=5 --inicio=3 --duracion=10`: los postores
+   que crea aparecen igual en la ficha del remate.)
 3. Pujan por turnos y también **al mismo tiempo** (cuenta regresiva en voz alta y confirmen juntos). Esperado:
    - Todos ven el precio nuevo en ~1 segundo sin recargar.
    - Si dos confirman el mismo monto, **solo una** puja entra; la otra recibe «El monto es menor que la puja mínima.»

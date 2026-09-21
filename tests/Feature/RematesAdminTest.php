@@ -350,7 +350,7 @@ class RematesAdminTest extends TestCase
         $respuesta = $this->actingAs($this->admin)->post(route('admin.remates.crear-prueba'), ['lotes' => 2, 'postores' => 3, 'inicio' => 12]);
 
         $remate = Remate::where('es_demostracion', true)->sole();
-        $respuesta->assertRedirect(route('admin.remates.show', $remate))->assertSessionHas('estado');
+        $respuesta->assertRedirect(route('admin.remates.show', $remate) . '#postores-prueba')->assertSessionHas('estado');
 
         // Publicado, con lotes programados y el inicio a los minutos pedidos.
         $this->assertSame(Remate::ESTADO_PUBLICADO, $remate->estado);
@@ -360,12 +360,14 @@ class RematesAdminTest extends TestCase
         $this->assertNotNull($remate->lotes()->first()->abre_en);
 
         // Tres postores aprobados con garantía aprobada y la clave común, mostrada una sola vez.
-        $credenciales = session('credenciales_prueba');
-        $this->assertCount(3, $credenciales['postores']);
-        $this->assertNotEmpty($credenciales['clave']);
+        $clave = session('clave_prueba');
+        $this->assertSame($remate->id, $clave['remate']);
+        $this->assertNotEmpty($clave['clave']);
         $this->assertSame(3, $remate->garantias()->where('estado', Garantia::ESTADO_APROBADA)->count());
-        $primero = User::where('email', $credenciales['postores'][0]['email'])->sole();
-        $this->assertTrue(Hash::check($credenciales['clave'], $primero->password));
+        $postores = app(\App\Remates\RemateDePrueba::class)->postores($remate);
+        $this->assertCount(3, $postores);
+        $primero = User::where('email', $postores[0]['email'])->sole();
+        $this->assertTrue(Hash::check($clave['clave'], $primero->password));
         $this->assertSame(Postor::ESTADO_APROBADO, $primero->postor->estado);
 
         // Fuera del listado real y del sitio público; el JSON de estado sí existe (para probar el tiempo real).

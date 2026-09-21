@@ -83,6 +83,20 @@ class Formato
         };
     }
 
+    /**
+     * Número para un campo de formulario (punto decimal, sin ceros de sobra): «10.00» → «10», «82.50» → «82.5».
+     * Solo quita ceros DESPUÉS del punto: con rtrim a secas, «10» quedaba en «1» (21/09).
+     */
+    public static function campo(int|float|string|null $n): string
+    {
+        if ($n === null || $n === '') {
+            return '';
+        }
+        $texto = (string) $n;
+
+        return str_contains($texto, '.') ? rtrim(rtrim($texto, '0'), '.') : $texto;
+    }
+
     public static function numero(int|float|string|null $n, int $decimales = 0): string
     {
         if ($n === null || $n === '') {

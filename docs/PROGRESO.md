@@ -10,12 +10,15 @@
 
 - **Estado (21/09):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local.
   E/F empezado: la pantalla **«06 Usuarios»**.
-- **172 pruebas PHPUnit**: en SQLite (`php artisan test`, 2 se saltan) y en MySQL (`composer test:mysql`, 172/172).
+- **178 pruebas PHPUnit**: en SQLite (`php artisan test`, 2 se saltan) y en MySQL (`composer test:mysql`, 178/178).
   Recorridos en navegador real al día (`tools/comparar/*.mjs`).
 - **21/09:** folio de la subasta de prueba corregido (500 en el sandbox), suite contra MySQL, análisis del
   `1040 Too many connections` del hosting y **reintento de conexión en la puja** con margen seguro de 5 s vigilado por el
   panel. Detalle en `docs/progreso/2026-09-21.md`.
-- **Subido a `main` hasta `1a8767c`** (aprobado el 21/09). El reintento de conexión queda **local** hasta su visto bueno.
+- **Subido a `main` hasta `1a8767c`** (aprobado el 21/09). Quedan **locales** el reintento de conexión y la experiencia de
+  prueba de punta a punta, hasta su visto bueno.
+- **Criterio de Jonas (21/09), para todo el proyecto:** si algo necesita que alguien escriba una URL o sepa algo que la
+  pantalla no dice, está mal. Los recorridos en navegador tampoco escriben URL: hacen clic, copian y pegan.
 - **Pendiente de Jonas (21/09):** mediciones de conexiones del sandbox, margen a 5 s y aviso del cierre al 10 %.
 - **Siguiente para Jonas en el sandbox:**
   1. Subir `post_max_size` y `upload_max_filesize` (cPanel → MultiPHP INI Editor; recomendado 64M / 20M). Sin eso, un

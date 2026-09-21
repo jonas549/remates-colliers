@@ -36,3 +36,8 @@ html.pagina-completa .sc-host { height: 100%; }
   cursor: pointer;
 }
 .boton-enlace:hover { color: #16265a; text-decoration: underline; }
+
+/* Botón «Copiar» (resources/js/modulos/copiar.js): mismo aspecto en el panel y en el acceso; 44 px de alto al tacto. */
+.boton-copiar { display: inline-flex; align-items: center; justify-content: center; min-height: 32px; padding: 4px 12px; border: 1px solid #25408f; background: #fff; color: #25408f; font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; white-space: nowrap; }
+.boton-copiar:hover { background: #f0f4fb; }
+@media (max-width: 1119.98px) { .boton-copiar { min-height: 44px; min-width: 44px; } }

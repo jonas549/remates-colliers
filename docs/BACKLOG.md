@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-09-21** (folio de la subasta de prueba, suite en MySQL, riesgo de conexiones y reintento en la puja).
+> **Registro vivo del avance.** Última actualización: **2026-09-21** (folio de la subasta de prueba, suite en MySQL, riesgo de conexiones, reintento en la puja y experiencia de prueba de punta a punta).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -21,7 +21,7 @@ nota *(verifica Jonas en el sandbox)*.
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 31/35 |
 | D | Autenticación y registro de postores | En progreso | 13/16 |
 | K | Sala de puja conectada al motor real | En progreso | 14/15 |
-| I | Remates y lotes + panel del martillero | **Completo** | 16/16 |
+| I | Remates y lotes + panel del martillero | **Completo** | 18/18 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 9/11 |
@@ -269,6 +269,7 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 - [x] **El cierre anticipado dice a quién se adjudica y por cuánto** *(QA del 20/09, punto 8)*: el modal nombra al adjudicatario con su alias y el monto, o avisa que el lote quedará **desierto** si nadie pujó, y que la acción no se deshace *(`RematesAdminTest::test_el_modal_de_cierre_anticipado_dice_a_quien_y_por_cuanto`; `panel-remates.mjs`)*
 - [x] **Las fechas del formulario se explican solas** *(QA del 20/09, punto 4)*: ayuda bajo «Inicio del remate» (abre el primer lote), «Duración» (sin extensiones) y «Cierre de garantías» (va antes del inicio; vacío = N horas antes), más un resumen en lenguaje natural que se arma mientras se escribe: «Los postores pueden inscribirse y constituir la garantía hasta el … El remate abre el … y cada lote dura N minutos, sin extensiones», con aviso si el cierre de garantías quedó después del inicio. La ficha de edición lleva las mismas ayudas *(diferencia deliberada con el prototipo, como REGIÓN y el % de garantía; `panel-remates.mjs` 3 comprobaciones nuevas)*
 - [x] **«Crear subasta de prueba»** *(QA del 20/09, punto 3)*: franja aparte en `/admin/subastas`, solo para administradores y **solo fuera de producción**. Crea un remate publicado con lotes, horario a los minutos que se indiquen (12 por defecto), cierre de garantías unos minutos antes, y postores aprobados con garantía aprobada; la clave común se muestra **una sola vez** junto a los enlaces a la ficha pública y a la sala («Mi cuenta» no lista los remates de prueba a propósito). Queda marcado `es_demostracion`: fuera del listado real, del sitio público, de los reportes y de los correos. «Borrar» lo elimina con sus postores, su bitácora y su JSON. `colliers:remate-demo` usa el mismo servicio (`App\Remates\RemateDePrueba`) *(`RematesAdminTest` 3 pruebas nuevas; `panel-remates.mjs` 8 comprobaciones nuevas, incluida la usabilidad a 375 px y un postor de prueba entrando a la sala)*
+- [x] **La experiencia de prueba de punta a punta, sin escribir una URL** *(Jonas, 21/09: «Mi cuenta» del postor de prueba decía «Sin inscripciones» y «Bloqueado» siendo falso, y la clave estaba escondida en una frase)*: «Mi cuenta» muestra su remate de prueba con la garantía aprobada y «Entrar a la sala de pujas»; la ficha de la prueba tiene cada postor con correo y clave en la misma fila, botones Copiar, aviso de que la clave se muestra una vez, «Generar clave nueva» e «Ingresar como este postor» (acceso con el correo escrito, y si hay otra sesión abierta lo explica y ofrece cerrarla o copiar el enlace para una ventana privada). Remates y postores de prueba separados de los reales: no se cruzan inscripciones y no cuentan en Postores, dashboard ni reportes. De paso: «1 (global)» en vez de «10 (global)» en el % de garantía (`Formato::campo`) *(`PostoresDePruebaTest` 6; `panel-remates.mjs` reescrito sin URL: del panel a una puja real con el modal)*
 - [x] **Folio de la subasta de prueba demasiado largo** *(sandbox, 21/09: 500 con `1406 Data too long for column 'folio'`)*: `PRUEBA-` + sufijo sumaba 22 caracteres en un `VARCHAR(20)`; ahora `PR-` + sufijo (18). También rompía `colliers:remate-demo`, que usa el mismo servicio. SQLite no valida largos, por eso las pruebas pasaban: nuevo **`composer test:mysql`**, la suite completa contra MySQL estricto, que reproducía el error antes de la corrección (3 fallas) y queda en 163/163
 - [x] **«Cerrar sesión» legible con el mouse encima** *(QA del 20/09, punto 6)*: `.boton-enlace:hover` lo dejaba del color del fondo marino de la barra *(`panel-remates.mjs` compara el color del texto con el del fondo)*
 

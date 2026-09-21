@@ -34,8 +34,8 @@ class DashboardController extends Controller
             && $r->cierraEn()?->greaterThanOrEqualTo($inicioMes));
         $concretados = $cerradosMes->filter(fn (Remate $r) => $r->estadoVisible($ahora) === Remate::VISTA_ADJUDICADO)->count();
 
-        $postores = Postor::count();
-        $enRevision = Postor::where('estado', Postor::ESTADO_EN_REVISION)->count();
+        $postores = Postor::reales()->count();
+        $enRevision = Postor::reales()->where('estado', Postor::ESTADO_EN_REVISION)->count();
         $garantiasRevision = Garantia::where('estado', Garantia::ESTADO_EN_REVISION)->whereHas('remate', fn ($q) => $q->where('es_demostracion', false));
         $uf = Configuracion::valor('uf_valor');
 
@@ -43,7 +43,7 @@ class DashboardController extends Controller
             'fecha' => Formato::fechaConDia($ahora) . ($uf ? ' · UF $' . number_format((float) $uf, 2, ',', '.') : ''),
             'kpis' => [
                 ['SUBASTAS ACTIVAS', (string) ($enVivo->count() + $proximos->count()), $enVivo->count() . ' en vivo · ' . $proximos->count() . ' próximas', false],
-                ['POSTORES REGISTRADOS', (string) $postores, '+' . Postor::where('created_at', '>=', $ahora->subWeek()->format('Y-m-d H:i:s'))->count() . ' esta semana', false],
+                ['POSTORES REGISTRADOS', (string) $postores, '+' . Postor::reales()->where('created_at', '>=', $ahora->subWeek()->format('Y-m-d H:i:s'))->count() . ' esta semana', false],
                 ['CUENTAS POR APROBAR', (string) $enRevision, 'Revisión manual pendiente', $enRevision > 0],
                 ['GARANTÍAS EN REVISIÓN', (string) (clone $garantiasRevision)->count(), Formato::clp((int) (clone $garantiasRevision)->sum('monto')) . ' comprometidos', (clone $garantiasRevision)->exists()],
                 ['ADJUDICADO EN ' . mb_strtoupper(Formato::MESES[$ahora->setTimezone(Formato::ZONA)->month - 1]), $this->millones((int) $adjudicadoMes->sum('monto')),

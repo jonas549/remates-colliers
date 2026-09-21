@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ReportesController;
 use App\Http\Controllers\Admin\SalaMartilleroController;
 use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CuentaController;
+use App\Http\Controllers\IngresarComoController;
 use App\Http\Controllers\PublicoController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\RevisionController;
@@ -79,6 +80,10 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:login')->name('admin.ingresar.store');
 });
 
+// «Ingresar como este postor» (postores de prueba): el acceso con el correo ya escrito, aunque haya otra sesión abierta.
+Route::get('/ingresar/como', [IngresarComoController::class, 'show'])->name('ingresar.como');
+Route::post('/ingresar/como', [IngresarComoController::class, 'cambiar'])->middleware('auth')->name('ingresar.como.cambiar');
+
 Route::middleware('auth')->group(function () {
     Route::get('/mi-cuenta/cambiar-clave', [CuentaController::class, 'clave'])->name('cuenta.clave');
 
@@ -128,6 +133,7 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         // Subasta de prueba lista para usar (fuera de producción): el servicio se niega si APP_ENV=production.
         Route::post('/subastas/prueba', [RematesController::class, 'crearPrueba'])->name('remates.crear-prueba');
         Route::delete('/subastas/{remate}/prueba', [RematesController::class, 'borrarPrueba'])->name('remates.borrar-prueba');
+        Route::post('/subastas/{remate}/prueba/clave', [RematesController::class, 'nuevaClavePrueba'])->name('remates.prueba-clave');
         Route::put('/subastas/{remate}', [RematesController::class, 'update'])->name('remates.update');
         Route::post('/subastas/{remate}/publicar', [RematesController::class, 'publicar'])->name('remates.publicar');
         Route::post('/subastas/{remate}/cancelar', [RematesController::class, 'cancelar'])->name('remates.cancelar');

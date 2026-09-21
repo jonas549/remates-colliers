@@ -1,5 +1,8 @@
 @php
     $administracion = ($portal ?? 'postores') === 'administracion';
+    // «Ingresar como este postor» (postores de prueba) llega con ?usuario=correo: queda escrito y el foco va a la clave.
+    $usuarioSugerido = is_string(request()->query('usuario')) && filter_var(request()->query('usuario'), FILTER_VALIDATE_EMAIL) ? request()->query('usuario') : '';
+    $usuarioInicial = old('usuario', $usuarioSugerido);
     // Ningún error queda sin mostrar: primero los del formulario y, si no, cualquier otro.
     $errorServidor = $errors->first('usuario') ?: $errors->first('password') ?: $errors->first('email') ?: $errors->first();
     if (! $errorServidor && request('sesion') === 'perdida') {
@@ -13,7 +16,7 @@
     :titulo="$administracion ? 'Ingresa al panel de Colliers' : 'Ingresa a tu cuenta'"
     :intro="$administracion ? 'Administración de remates, postores y garantías. Acceso exclusivo para el equipo de Colliers y los martilleros.' : 'Sigue los remates publicados, revisa el estado de tus garantías y entra a la sala de pujas cuando comience la transmisión.'"
     :proximo="$proximo"
-    :alpine="'acceso(' . \Illuminate\Support\Js::from(old('usuario', '')) . ')'"
+    :alpine="'acceso(' . \Illuminate\Support\Js::from($usuarioInicial) . ')'"
 >
     @if ($errorServidor)
         <div class="acceso__error" x-show="!error">{{ $errorServidor }}</div>
@@ -34,7 +37,7 @@
             </label>
             <label class="acceso__campo acceso__campo--clave">
                 <span class="acceso__etiqueta">CONTRASEÑA</span>
-                <input name="password" :type="ver ? 'text' : 'password'" type="password" x-model="clave" @input="error = false" placeholder="Tu contraseña" class="acceso__input" autocomplete="current-password">
+                <input name="password" :type="ver ? 'text' : 'password'" type="password" x-model="clave" @input="error = false" placeholder="Tu contraseña" class="acceso__input" autocomplete="current-password" @if ($usuarioInicial !== '' && ! $errorServidor) autofocus @endif>
                 <button type="button" class="acceso__ver-clave" @click="alternarClave" x-text="ver ? 'OCULTAR' : 'MOSTRAR'">MOSTRAR</button>
             </label>
         </div>

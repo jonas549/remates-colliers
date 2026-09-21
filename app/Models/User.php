@@ -56,6 +56,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->rol === self::ROL_ADMIN;
     }
 
+    /** Postor creado por «Crear subasta de prueba» (App\Remates\RemateDePrueba): solo existe para su remate de prueba. */
+    public function esDePrueba(): bool
+    {
+        return str_ends_with((string) $this->email, '@' . \App\Remates\RemateDePrueba::DOMINIO_CORREO);
+    }
+
     public function esAdministracion(): bool
     {
         return in_array($this->rol, [self::ROL_ADMIN, self::ROL_MARTILLERO], true);

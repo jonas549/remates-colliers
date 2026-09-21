@@ -25,8 +25,9 @@ class EstadoCuenta
     {
         $postor = $user->postor;
         $ahora = CarbonImmutable::now('UTC');
-        $garantias = Garantia::with('remate.lotes')->where('user_id', $user->id)->get()
-            ->filter(fn (Garantia $g) => ! $g->remate->es_demostracion)->values();
+        // Todas las del postor, también las de un remate de prueba: esa es la cuenta de un postor de prueba, y un postor
+        // real no puede inscribirse en uno (InscripcionGarantias). Mostrar menos sería mostrar un estado falso (21/09).
+        $garantias = Garantia::with('remate.lotes')->where('user_id', $user->id)->get();
         $garantia = $slug ? $garantias->first(fn (Garantia $g) => $g->remate->slug === $slug) : self::relevante($garantias, $ahora);
 
         $clave = match (true) {
@@ -99,8 +100,10 @@ class EstadoCuenta
                     'url' => route('cuenta.estado', ['remate' => $g->remate->slug]),
                     'actual' => $garantia?->id === $g->id,
                 ])->all(),
-                'abiertos' => $postor?->estaAprobado() && ! $habilitadoEnTodos
+                // Un postor de prueba solo puja en su remate de prueba: no se le ofrecen los reales.
+                'abiertos' => $postor?->estaAprobado() && ! $habilitadoEnTodos && ! $user->esDePrueba()
                     ? self::rematesAbiertos($garantias, $ahora, $modoUnico) : [],
+                'dePrueba' => $user->esDePrueba(),
                 'habilitadoEnTodos' => $habilitadoEnTodos,
                 'basesGenerales' => Sitio::valor('enlace_bases_generales') ?: null,
             ],
