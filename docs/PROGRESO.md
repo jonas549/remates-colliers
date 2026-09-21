@@ -1,6 +1,6 @@
 # PROGRESO — Remates Colliers · Fase 3
 
-> Punto de retome. Última actualización: **2026-09-20, cierre de jornada.**
+> Punto de retome. Última actualización: **2026-09-21, cierre de jornada.**
 > Leer junto con `CLAUDE.md` (reglas) y **`docs/BACKLOG.md` (estado vivo de cada tarea)**.
 > El detalle de cada jornada está en `docs/progreso/AAAA-MM-DD.md`.
 
@@ -15,21 +15,20 @@
 - **21/09:** folio de la subasta de prueba corregido (500 en el sandbox), suite contra MySQL, análisis del
   `1040 Too many connections` del hosting y **reintento de conexión en la puja** con margen seguro de 5 s vigilado por el
   panel. Detalle en `docs/progreso/2026-09-21.md`.
-- **Subido a `main` hasta `b9ef945`** (aprobado el 21/09). Queda **local** lo de la noche (martillero, acceso libre, cierre
-  en la sala, recorrido de los tres roles) hasta su visto bueno.
+- **21/09, noche:** martillero a cargo de la subasta de prueba e inicio «Tus remates», **sandbox sin clave de acceso**
+  (noindex fuera de producción), la sala respeta un remate borrado o cancelado, **cambio de lote evidente**, y el
+  recorrido de los tres roles `tools/comparar/recorrido-roles.mjs` (50/50).
+- **Todo subido a `main` hasta `450ffae`** (aprobado el 21/09).
+- **Mañana (22/09): Jonas prueba en el sandbox** con el plan de `docs/progreso/2026-09-21.md` §11.
 - **Antes de reportar algo como listo:** `node tools/comparar/recorrido-roles.mjs` (los tres roles con clics) en verde.
 - **Criterio de Jonas (21/09), para todo el proyecto:** si algo necesita que alguien escriba una URL o sepa algo que la
   pantalla no dice, está mal. Los recorridos en navegador tampoco escriben URL: hacen clic, copian y pegan.
-- **Pendiente de Jonas (21/09):** mediciones de conexiones del sandbox, margen a 5 s y aviso del cierre al 10 %.
-- **Siguiente para Jonas en el sandbox:**
-  1. Subir `post_max_size` y `upload_max_filesize` (cPanel → MultiPHP INI Editor; recomendado 64M / 20M). Sin eso, un
-     registro con tres documentos no llega nunca: PHP descarta el envío entero. Confirmar con `colliers:diagnostico`.
-  2. Probar el ciclo de pujas con el botón **«Crear subasta de prueba»** de `/admin/subastas` (ya no hace falta la
-     terminal) y crear al martillero desde **«06 Usuarios»**.
+- **Pendiente de Jonas en el sandbox:** margen a 5 s y aviso del cierre al 10 %, `colliers:diagnostico` (conexiones),
+  `post_max_size` 64M / `upload_max_filesize` 20M si falta, y el recorrido de los tres roles (plan en el registro del 21/09 §11).
 - **Siguiente para Claude:** lo que salga de esas pruebas → Bloque L (streaming) → resto de E/F.
-- **Decisiones cerradas el 20/09:** el aviso de cambio de lote queda como está; el **PDF de reportes sale del alcance**
-  (no está en el acta); la **habilitación única** se construyó configurable, apagada y con el monto vacío, para poder
-  mostrársela a Colliers. Si la eligen, fijan el monto en Configuración → Garantías.
+- **Decisiones vigentes:** el **PDF de reportes** está fuera del alcance; la **habilitación única** está construida,
+  apagada y con el monto vacío; **«cerrar el remate completo» lo decide Jonas después (no implementar)**; el cambio de lote
+  en la sala se destacó el 21/09 a su pedido.
 - OPcache está **apagado** en el sandbox: leer `docs/RENDIMIENTO-SIN-OPCACHE.md` antes de tocar el camino de la puja.
 - Antes de correr recorridos en navegador: **uno a la vez** y cerrar Chrome al terminar.
 
@@ -40,7 +39,7 @@
 | 2026-09-15 | [`docs/progreso/2026-09-15.md`](progreso/2026-09-15.md) | Bloque T cerrado (11 pantallas 1:1), infraestructura de deploy (B) |
 | 2026-09-16 | [`docs/progreso/2026-09-16.md`](progreso/2026-09-16.md) | Servidor conectado, hook de assets, C completo, J núcleo con concurrencia real, D, K |
 | 2026-09-17 | [`docs/progreso/2026-09-17.md`](progreso/2026-09-17.md) | Rendimiento sin OPcache, K terminado, I, V, G, H, M, N, manual de pruebas y push |
-| 2026-09-21 | [`docs/progreso/2026-09-21.md`](progreso/2026-09-21.md) | Folio de la subasta de prueba (500 en el sandbox), suite contra MySQL (`composer test:mysql`), análisis de `1040 Too many connections` y riesgo de caída de la base durante un remate |
+| 2026-09-21 | [`docs/progreso/2026-09-21.md`](progreso/2026-09-21.md) | Folio (500 en el sandbox), suite contra MySQL, `1040 Too many connections` y reintento en la puja, experiencia de prueba sin URL, martillero y «Tus remates», sandbox sin clave, sala ante remate borrado/cancelado, cambio de lote evidente, recorrido de los tres roles. §11: plan de prueba del 22/09 |
 | 2026-09-20 | [`docs/progreso/2026-09-20.md`](progreso/2026-09-20.md) | Los 8 puntos del QA de Jonas: martillero, cierre anticipado, hover, registro que no pierde nada, subasta de prueba, ayudas del formulario, «06 Usuarios» y `Habilitacion`. Tarde: push, habilitación única configurable y PDF fuera de alcance |
 
 ---
