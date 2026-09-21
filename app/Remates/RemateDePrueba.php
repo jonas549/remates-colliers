@@ -52,7 +52,8 @@ class RemateDePrueba
 
         [$remate, $credenciales] = DB::transaction(function () use ($sufijo, $clave, $postores, $lotes, $inicio, $duracionMinutos, $pausaMinutos, $garantiaAntesMinutos, $ahora) {
             $remate = Remate::create([
-                'folio' => 'PRUEBA-' . strtoupper($sufijo),
+                // `remates.folio` es VARCHAR(20): «PR-» + 15 = 18. Con «PRUEBA-» eran 22 y MariaDB lo rechazaba (21/09).
+                'folio' => 'PR-' . strtoupper($sufijo),
                 'slug' => 'prueba-' . $sufijo,
                 'titulo' => 'PRUEBA · no es un remate real',
                 'descripcion' => 'Remate creado desde el panel para probar la plataforma. No aparece en el sitio público ni en los reportes.',

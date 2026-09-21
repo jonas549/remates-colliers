@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    La misma suite, contra MySQL/MariaDB real en modo estricto (como el servidor).
+
+    SQLite no valida el largo de VARCHAR ni muchas restricciones que MariaDB sí: un valor demasiado largo pasa en
+    SQLite y en el servidor es un 500 (así llegó al sandbox el folio de «Crear subasta de prueba», 21/09).
+
+    Uso, con el MySQL de Laragon encendido:
+        composer test:mysql
+    Base propia `colliers_pruebas` (se crea sola y las pruebas la recrean): nunca apunta a la de desarrollo.
+    Host, puerto, usuario y clave se pueden cambiar con PRUEBAS_DB_HOST, PRUEBAS_DB_PORT, PRUEBAS_DB_USER y
+    PRUEBAS_DB_PASSWORD (ver tests/mysql-bootstrap.php).
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/mysql-bootstrap.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="BROADCAST_CONNECTION" value="null"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_DATABASE" value="colliers_pruebas"/>
+        <env name="DB_URL" value=""/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="PULSE_ENABLED" value="false"/>
+        <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="COLLIERS_ACCESO_CLAVE" value=""/>
+        <env name="NIGHTWATCH_ENABLED" value="false"/>
+    </php>
+</phpunit>

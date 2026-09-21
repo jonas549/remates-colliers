@@ -34,6 +34,7 @@
 | 2026-09-15 | [`docs/progreso/2026-09-15.md`](progreso/2026-09-15.md) | Bloque T cerrado (11 pantallas 1:1), infraestructura de deploy (B) |
 | 2026-09-16 | [`docs/progreso/2026-09-16.md`](progreso/2026-09-16.md) | Servidor conectado, hook de assets, C completo, J núcleo con concurrencia real, D, K |
 | 2026-09-17 | [`docs/progreso/2026-09-17.md`](progreso/2026-09-17.md) | Rendimiento sin OPcache, K terminado, I, V, G, H, M, N, manual de pruebas y push |
+| 2026-09-21 | [`docs/progreso/2026-09-21.md`](progreso/2026-09-21.md) | Folio de la subasta de prueba (500 en el sandbox), suite contra MySQL (`composer test:mysql`), análisis de `1040 Too many connections` y riesgo de caída de la base durante un remate |
 | 2026-09-20 | [`docs/progreso/2026-09-20.md`](progreso/2026-09-20.md) | Los 8 puntos del QA de Jonas: martillero, cierre anticipado, hover, registro que no pierde nada, subasta de prueba, ayudas del formulario, «06 Usuarios» y `Habilitacion`. Tarde: push, habilitación única configurable y PDF fuera de alcance |
 
 ---
@@ -72,6 +73,8 @@
 - **Windows**: el enlace `public/storage` no lo detecta `is_dir`; usar `file_exists`/`is_link`.
   `rename` sobre un archivo retenido falla («Acceso denegado»): el emisor reintenta y copia solo en Windows.
 - **SQLite local** no soporta `select version()`; usar `getServerVersion()`.
+- **SQLite no valida el largo de `VARCHAR`** ni reordena JSON como MySQL: antes de subir algo que escribe en la base, correr
+  también `composer test:mysql` (MySQL de Laragon encendido). Así se escapó el folio de 22 caracteres (21/09).
 - **Playwright**: usar `channel: 'chrome'` (la descarga de Chromium falla); `waitUntil: 'load'`, no
   `networkidle` (el iframe de YouTube nunca queda inactivo); `clock.setFixedTime`, no `pauseAt`.
 - **Comentarios CSS con `*/` dentro** (por ejemplo en rutas) rompen el build de Vite.

@@ -79,7 +79,8 @@ class RematesAdminTest extends TestCase
         $lote = $remate->lotes()->sole();
         $this->assertSame(120000000, $lote->precio_base);
         $this->assertSame('82.50', $lote->superficie_util);
-        $this->assertSame(['rol_avaluo' => '1234-56', 'mandante' => 'Banco Consorcio'], $lote->atributos);
+        // assertEquals: MySQL reordena las claves de una columna JSON (MariaDB no); las vistas leen por clave.
+        $this->assertEquals(['rol_avaluo' => '1234-56', 'mandante' => 'Banco Consorcio'], $lote->atributos);
         $this->assertSame('2026-09-25 15:30:00', $lote->cierra_en->format('Y-m-d H:i:s'));
         $this->assertSame(12000000, $remate->montoGarantia(), '10 % global del precio base');
     }
@@ -315,7 +316,7 @@ class RematesAdminTest extends TestCase
         $copia = $nuevo->lotes()->sole();
         $this->assertSame($lote->id, $copia->lote_origen_id);
         $this->assertSame(Lote::ESTADO_PROGRAMADO, $copia->estado);
-        $this->assertSame(['rol_avaluo' => '1234-56', 'mandante' => 'Banco Consorcio'], $copia->atributos);
+        $this->assertEquals(['rol_avaluo' => '1234-56', 'mandante' => 'Banco Consorcio'], $copia->atributos);
         $this->assertSame('img/demo/prop-montt.jpg', $copia->imagenes()->sole()->ruta);
         $this->assertSame(Lote::ESTADO_DESIERTO, $lote->fresh()->estado, 'el original no se toca');
     }

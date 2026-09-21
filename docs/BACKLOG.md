@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-09-20** (tarde: decisiones de Jonas y push).
+> **Registro vivo del avance.** Última actualización: **2026-09-21** (folio de la subasta de prueba, suite en MySQL, riesgo de conexiones).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -32,7 +32,7 @@ nota *(verifica Jonas en el sandbox)*.
 | O | Reportes | En progreso | 7/8 |
 | P | Seguridad | Pendiente | 0/8 |
 | Q | QA y carga | Pendiente | 0/6 |
-| R | Despliegue a producción | Pendiente | 0/8 |
+| R | Despliegue a producción | Pendiente | 0/9 |
 | S | Documentación | Pendiente | 0/4 |
 
 ## Orden de ejecución acordado
@@ -268,6 +268,7 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 - [x] **El cierre anticipado dice a quién se adjudica y por cuánto** *(QA del 20/09, punto 8)*: el modal nombra al adjudicatario con su alias y el monto, o avisa que el lote quedará **desierto** si nadie pujó, y que la acción no se deshace *(`RematesAdminTest::test_el_modal_de_cierre_anticipado_dice_a_quien_y_por_cuanto`; `panel-remates.mjs`)*
 - [x] **Las fechas del formulario se explican solas** *(QA del 20/09, punto 4)*: ayuda bajo «Inicio del remate» (abre el primer lote), «Duración» (sin extensiones) y «Cierre de garantías» (va antes del inicio; vacío = N horas antes), más un resumen en lenguaje natural que se arma mientras se escribe: «Los postores pueden inscribirse y constituir la garantía hasta el … El remate abre el … y cada lote dura N minutos, sin extensiones», con aviso si el cierre de garantías quedó después del inicio. La ficha de edición lleva las mismas ayudas *(diferencia deliberada con el prototipo, como REGIÓN y el % de garantía; `panel-remates.mjs` 3 comprobaciones nuevas)*
 - [x] **«Crear subasta de prueba»** *(QA del 20/09, punto 3)*: franja aparte en `/admin/subastas`, solo para administradores y **solo fuera de producción**. Crea un remate publicado con lotes, horario a los minutos que se indiquen (12 por defecto), cierre de garantías unos minutos antes, y postores aprobados con garantía aprobada; la clave común se muestra **una sola vez** junto a los enlaces a la ficha pública y a la sala («Mi cuenta» no lista los remates de prueba a propósito). Queda marcado `es_demostracion`: fuera del listado real, del sitio público, de los reportes y de los correos. «Borrar» lo elimina con sus postores, su bitácora y su JSON. `colliers:remate-demo` usa el mismo servicio (`App\Remates\RemateDePrueba`) *(`RematesAdminTest` 3 pruebas nuevas; `panel-remates.mjs` 8 comprobaciones nuevas, incluida la usabilidad a 375 px y un postor de prueba entrando a la sala)*
+- [x] **Folio de la subasta de prueba demasiado largo** *(sandbox, 21/09: 500 con `1406 Data too long for column 'folio'`)*: `PRUEBA-` + sufijo sumaba 22 caracteres en un `VARCHAR(20)`; ahora `PR-` + sufijo (18). También rompía `colliers:remate-demo`, que usa el mismo servicio. SQLite no valida largos, por eso las pruebas pasaban: nuevo **`composer test:mysql`**, la suite completa contra MySQL estricto, que reproducía el error antes de la corrección (3 fallas) y queda en 163/163
 - [x] **«Cerrar sesión» legible con el mouse encima** *(QA del 20/09, punto 6)*: `.boton-enlace:hover` lo dejaba del color del fondo marino de la barra *(`panel-remates.mjs` compara el color del texto con el del fondo)*
 
 ## V — Configuración autoadministrable y SMTP · En progreso
@@ -446,6 +447,7 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] Respaldo periódico de la base
 - [ ] Bloqueo de deploy con remate en curso activo en el script
 - [ ] Verificación con `colliers:diagnostico`
+- [ ] ⚠️ **Riesgo: la base compartida del hosting deja de aceptar conexiones** *(sandbox, 21/09: `1040 Too many connections` a las 16:14 UTC y `2002 No such file or directory` —MariaDB caída o reiniciando— a las 16:24 UTC, ambos en el cron)*. Si pasa durante un remate: **ninguna puja queda a medias** (la transacción es todo o nada) pero **ninguna puja entra** mientras dure; el postor ve «No pudimos confirmar tu puja», el precio del JSON queda congelado, el cronómetro sigue (`hora.php` no usa la base) y **el lote cierra igual en `cierra_en`** (no hay anti-sniping ni se reabre). Hay que: (1) medir `max_connections`, `max_user_connections` y el reinicio en el sandbox y pedir al hosting de producción el límite por cuenta; (2) definir con Colliers qué dicen las bases si la plataforma falla durante un remate; (3) bajar «espectadores que avisan» del 100 % (cada aviso abre una conexión en el mismo segundo del cierre). Análisis completo en `docs/progreso/2026-09-21.md`
 - [ ] ⚠️ **Riesgo: verificar OPcache en el hosting de producción antes de comprometer rendimiento.** Sin OPcache la validez de las pujas se mantiene, pero 10 pujas en el mismo segundo tardan ~4 s en confirmarse con 1 núcleo. Medir con `tools/sandbox/medir-servidor.php` y fijar el margen de liquidación según la latencia (`docs/RENDIMIENTO-SIN-OPCACHE.md` §7)
 
 ## S — Documentación · Pendiente
