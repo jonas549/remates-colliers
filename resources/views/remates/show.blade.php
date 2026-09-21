@@ -49,8 +49,8 @@
             @if ($vivo)
                 <div class="detalle-ticker detalle-ticker--vivo">
                     <span class="detalle-ticker__vivo" x-show="!cerrado"><span class="detalle-ticker__punto"></span>EN VIVO</span>
-                    <span class="detalle-ticker__vivo" x-show="cerrado" x-cloak x-text="resultado ? 'CERRADO' : 'CERRANDO'">CERRADO</span>
-                    <span class="detalle-ticker__texto">{{ $r['direccion'] }} · <span x-show="!cerrado">cierra en <span x-text="tiempo"></span></span><span x-show="cerrado" x-cloak x-text="adjudicando ? 'el lote cerró: se está adjudicando' : 'el lote cerró'"></span></span>
+                    <span class="detalle-ticker__vivo" x-show="cerrado" x-cloak x-text="retirado ? 'NO DISPONIBLE' : (resultado ? 'CERRADO' : 'CERRANDO')">CERRADO</span>
+                    <span class="detalle-ticker__texto">{{ $r['direccion'] }} · <span x-show="!cerrado">cierra en <span x-text="tiempo"></span></span><span x-show="cerrado" x-cloak x-text="retirado ? 'el remate ya no está disponible' : (adjudicando ? 'el lote cerró: se está adjudicando' : 'el lote cerró')"></span></span>
                     <span class="detalle-ticker__fin">Puja actual <span x-text="pujaActual"></span></span>
                 </div>
             @else
@@ -236,7 +236,7 @@
                                         <div class="detalle-remate__caja"><div class="detalle-remate__digito" x-text="partes.{{ $p }}"></div><div class="detalle-remate__caja-etiqueta">{{ $etiqueta }}</div></div>
                                     @endforeach
                                 </div>
-                                <div class="detalle-remate__cierre-aviso" x-show="cerrado" x-cloak x-text="adjudicando ? 'Adjudicando…' : 'Remate cerrado'"></div>
+                                <div class="detalle-remate__cierre-aviso" x-show="cerrado" x-cloak x-text="retirado ? 'Este remate ya no está disponible' : (adjudicando ? 'Adjudicando…' : 'Remate cerrado')"></div>
                             @elseif ($cerrado)
                                 <div class="detalle-remate__etiqueta">RESULTADO</div>
                                 <div class="detalle-remate__precio">{{ $r['resultado'] }}</div>

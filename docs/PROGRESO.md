@@ -10,13 +10,14 @@
 
 - **Estado (21/09):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local.
   E/F empezado: la pantalla **«06 Usuarios»**.
-- **178 pruebas PHPUnit**: en SQLite (`php artisan test`, 2 se saltan) y en MySQL (`composer test:mysql`, 178/178).
+- **179 pruebas PHPUnit**: en SQLite (`php artisan test`, 2 se saltan) y en MySQL (`composer test:mysql`, 179/179).
   Recorridos en navegador real al día (`tools/comparar/*.mjs`).
 - **21/09:** folio de la subasta de prueba corregido (500 en el sandbox), suite contra MySQL, análisis del
   `1040 Too many connections` del hosting y **reintento de conexión en la puja** con margen seguro de 5 s vigilado por el
   panel. Detalle en `docs/progreso/2026-09-21.md`.
-- **Subido a `main` hasta `1a8767c`** (aprobado el 21/09). Quedan **locales** el reintento de conexión y la experiencia de
-  prueba de punta a punta, hasta su visto bueno.
+- **Subido a `main` hasta `b9ef945`** (aprobado el 21/09). Queda **local** lo de la noche (martillero, acceso libre, cierre
+  en la sala, recorrido de los tres roles) hasta su visto bueno.
+- **Antes de reportar algo como listo:** `node tools/comparar/recorrido-roles.mjs` (los tres roles con clics) en verde.
 - **Criterio de Jonas (21/09), para todo el proyecto:** si algo necesita que alguien escriba una URL o sepa algo que la
   pantalla no dice, está mal. Los recorridos en navegador tampoco escriben URL: hacen clic, copian y pegan.
 - **Pendiente de Jonas (21/09):** mediciones de conexiones del sandbox, margen a 5 s y aviso del cierre al 10 %.
@@ -78,6 +79,8 @@
 - **Windows**: el enlace `public/storage` no lo detecta `is_dir`; usar `file_exists`/`is_link`.
   `rename` sobre un archivo retenido falla («Acceso denegado»): el emisor reintenta y copia solo en Windows.
 - **SQLite local** no soporta `select version()`; usar `getServerVersion()`.
+- **Un recorrido que hace clic en «la primera tarjeta» puede estar probando otra cosa**: el martillero del seeder tiene
+  varios remates. Elegir siempre por folio o texto visible (21/09: pareció reproducir el bug del cierre y no lo era).
 - **SQLite no valida el largo de `VARCHAR`** ni reordena JSON como MySQL: antes de subir algo que escribe en la base, correr
   también `composer test:mysql` (MySQL de Laragon encendido). Así se escapó el folio de 22 caracteres (21/09).
 - **Playwright**: usar `channel: 'chrome'` (la descarga de Chromium falla); `waitUntil: 'load'`, no

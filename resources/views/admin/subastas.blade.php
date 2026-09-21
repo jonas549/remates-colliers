@@ -40,8 +40,30 @@
                     <label class="admin-pruebas__campo">POSTORES
                         <input type="number" name="postores" value="3" min="1" max="20" inputmode="numeric">
                     </label>
-                    <button type="submit" class="admin-boton-borde">Crear subasta de prueba</button>
+                    {{-- Martillero a cargo (21/09): uno se asigna solo, varios se eligen, ninguno se crea en 06 Usuarios. --}}
+                    @if ($martillerosPrueba->count() > 1)
+                        <label class="admin-pruebas__campo">MARTILLERO A CARGO
+                            <select name="martillero" required class="admin-pruebas__select" data-martillero-prueba>
+                                <option value="">Elige un martillero…</option>
+                                @foreach ($martillerosPrueba as $m)
+                                    <option value="{{ $m->id }}">{{ $m->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                    @endif
+                    <button type="submit" class="admin-boton-borde" @disabled($martillerosPrueba->isEmpty())>Crear subasta de prueba</button>
                 </form>
+                @if ($martillerosPrueba->isEmpty())
+                    <div class="admin-pruebas__alerta" role="alert" data-sin-martillero>
+                        <strong>No hay ningún martillero activo.</strong> La subasta de prueba necesita uno a cargo para probar
+                        su panel en vivo. <a href="{{ route('admin.usuarios') }}">Crear un martillero en «06 Usuarios» →</a>
+                    </div>
+                @elseif ($martillerosPrueba->count() === 1)
+                    <p class="admin-pruebas__texto" data-martillero-unico>
+                        Queda a cargo el único martillero activo: <strong>{{ $martillerosPrueba->first()->name }}</strong>
+                        ({{ $martillerosPrueba->first()->email }}).
+                    </p>
+                @endif
                 @if ($pruebas)
                     <table class="admin-pruebas__tabla">
                         <tbody>

@@ -28,6 +28,40 @@
         panel y la sala a la vez, abre el enlace en una ventana privada o en otro navegador.
     </p>
 
+    {{-- Martillero a cargo (21/09): se prueba igual que los postores, desde esta misma pantalla. --}}
+    <h3 class="admin-pruebas__subtitulo">Martillero a cargo</h3>
+    @if ($remate->martillero)
+        <div class="admin-pruebas__postores admin-pruebas__postores--martillero">
+            <div class="admin-pruebas__fila" data-martillero-prueba-fila>
+                <span class="admin-pruebas__dato admin-pruebas__dato--postor">
+                    <span class="admin-pruebas__etiqueta">MARTILLERO</span>
+                    <strong data-martillero-nombre>{{ $remate->martillero->name }}</strong>
+                </span>
+                <span class="admin-pruebas__dato">
+                    <span class="admin-pruebas__etiqueta">CORREO</span>
+                    <code class="admin-pruebas__valor" data-martillero-correo>{{ $remate->martillero->email }}</code>
+                    <button type="button" class="boton-copiar" x-data="copiar(@js($remate->martillero->email))" @click="copiar"
+                            x-text="copiado ? 'Copiado ✓' : 'Copiar'" aria-label="Copiar el correo del martillero">Copiar</button>
+                </span>
+                <span class="admin-pruebas__dato">
+                    <span class="admin-pruebas__etiqueta">CLAVE</span>
+                    <span class="admin-pruebas__sin-clave">La suya. Si no la tiene: <a href="{{ route('admin.usuarios') }}">Restablecer clave en «06 Usuarios»</a></span>
+                </span>
+                <span class="admin-pruebas__dato admin-pruebas__dato--accion">
+                    <a href="{{ route('ingresar.como', ['usuario' => $remate->martillero->email, 'portal' => 'admin']) }}" target="_blank" rel="noopener"
+                       class="admin-boton-borde">Ingresar como este martillero</a>
+                </span>
+            </div>
+        </div>
+        <p class="admin-pruebas__texto">Al entrar, el martillero ve este remate en su inicio, con «Abrir panel en vivo».</p>
+    @else
+        <p class="admin-pruebas__texto" data-sin-martillero-ficha>
+            Esta subasta no tiene martillero. Asígnalo en «Datos y condiciones», más abajo:
+            <a href="#datos-y-condiciones">ir a Martillero →</a>
+        </p>
+    @endif
+
+    <h3 class="admin-pruebas__subtitulo">Postores</h3>
     <div class="admin-pruebas__postores">
         <div class="admin-pruebas__fila admin-pruebas__fila--cabeza" aria-hidden="true">
             <span>POSTOR</span><span>CORREO</span><span>CLAVE</span><span></span>

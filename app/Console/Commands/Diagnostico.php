@@ -41,7 +41,6 @@ class Diagnostico extends Command
         $this->revisar(config('app.timezone') === 'UTC', 'Zona horaria de la aplicación en UTC');
         $this->revisar(config('app.locale') === 'es', 'Idioma español (APP_LOCALE=es)');
         $this->revisar(str_starts_with((string) config('app.url'), 'https://') || ! $produccion, 'APP_URL con https', critico: false);
-        $this->revisar(filled(config('colliers.acceso.clave')) || ! $produccion, 'Clave de acceso al sandbox (COLLIERS_ACCESO_CLAVE)', critico: false);
 
         $this->seccion('Base de datos');
         try {

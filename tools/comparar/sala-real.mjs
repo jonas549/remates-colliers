@@ -117,7 +117,7 @@ await esperar('A se reconecta y recupera el estado actual', async () => (await t
 // ── Móvil: barra fija, hoja de puja y modal ──────────────────────────────────────────────────────────────
 const M = await abrir(navegador, 'contacto@andes.test', { ancho: 375 });
 await esperar('móvil: la barra fija muestra el precio', async () => (await texto(M.pagina, '.sala-barra__precio')) === '$199.500.000');
-await M.pagina.locator('.sala-barra__boton').click();
+await M.pagina.locator('button.sala-barra__boton').click();
 await M.pagina.locator('.sala-hoja .sala-puja__rapida').first().click();
 await M.pagina.locator('.sala-hoja .sala-puja__boton').click();
 await M.pagina.locator('.sala-modal__confirmar').click();
@@ -130,7 +130,7 @@ comprobar('móvil: sin scroll horizontal', !desborde);
 ayudante('cerrar-en', '6');
 await esperar('al llegar a cierra_en el formulario desaparece (A, B y móvil)', async () =>
     (await panel(A.pagina).locator('.sala-puja__boton').count()) === 0 && (await panel(B.pagina).locator('.sala-puja__boton').count()) === 0
-    && (await M.pagina.locator('.sala-barra__boton').isDisabled()), 12000);
+    && (await M.pagina.locator('button.sala-barra__boton').isDisabled()), 12000);
 await esperar('el navegador dispara la liquidación y A ve «Adjudicado a otro postor»', async () =>
     (await texto(A.pagina, '.sala-resultado__titulo')) === 'Adjudicado a otro postor', 15000);
 await esperar('el móvil (ganador) ve «Te adjudicaste la propiedad»', async () =>

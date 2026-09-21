@@ -31,7 +31,6 @@ return [
         'SESSION_DRIVER' => 'database',
         'CACHE_STORE' => 'database',
         'QUEUE_CONNECTION' => 'sync',
-        'COLLIERS_ACCESO_CLAVE' => '',
         // La prueba mide concurrencia, no el límite por minuto (ese tiene su prueba en MotorPujasTest).
         'COLLIERS_PUJAS_POR_MINUTO' => '100000',
         'COLLIERS_ESTADO_POR_MINUTO' => '100000',

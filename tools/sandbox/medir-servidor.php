@@ -10,7 +10,7 @@
  *   - /robots.txt  archivo estático: latencia de red pura (así se sirve el JSON que consultan los espectadores).
  *   - /hora.php    PHP sin framework: costo de lanzar PHP (docs/RENDIMIENTO-SIN-OPCACHE.md).
  *   - /up          Laravel completo: lo que cuesta cualquier página o puja (sin OPcache, ~6 MB de PHP compilado).
- * No necesita la clave de acceso: las tres rutas están fuera de ella.
+ * Solo GET y sin sesión (el sandbox es de acceso libre desde el 21/09).
  *
  * Cómo leerlo: si N peticiones simultáneas a /up tardan ~N veces lo que tarda una sola, el servidor está atendiendo
  * con UN núcleo; si tardan lo mismo, hay núcleos de sobra. Las pujas cuestan un poco más que /up.

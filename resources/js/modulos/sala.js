@@ -22,6 +22,9 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     ahora: servidorMs,
     fallos: 0,
     ultimaConsultaPhp: 0,
+    // El remate dejó de existir para pujar aunque el reloj diga otra cosa (21/09): 'cancelado' (lo dice el JSON) o
+    // 'no-disponible' (se borró: el JSON y el endpoint responden 404). La sala nunca debe mostrar «PUJA ABIERTA» ahí.
+    retirado: estado.estado === 'cancelado' ? 'cancelado' : null,
 
     init() {
         this.sincronizar();
@@ -51,6 +54,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
 
     tic() {
         this.ahora = Date.now() + this.desfase;
+        if (this.retirado) return;
         const lote = this.lote;
         if (!lote || TERMINALES.includes(lote.estado) || lote.cierra_en_ms === null) return;
         const limite = lote.cierra_en_ms + this.estado.margen_liquidacion_ms + 300 + Math.random() * 1200;
@@ -59,9 +63,12 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
 
     // ── Estado ────────────────────────────────────────────────────────────────────────────────────────────
     async consultar() {
+        if (this.retirado === 'no-disponible') return; // ya no hay nada que consultar
         let espera = 1000;
         try {
             const r = await fetch(urls.estadoJson + '?t=' + Date.now(), { cache: 'no-store' });
+            // Sin JSON: o se borró el remate o algo falló. El endpoint lo confirma de inmediato (404 = no existe).
+            if (r.status === 404) { await this.consultarPhp(true); throw new Error('HTTP 404'); }
             if (!r.ok) throw new Error('HTTP ' + r.status);
             this.aplicar(await r.json());
             this.fallos = 0;
@@ -80,6 +87,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         this.ultimaConsultaPhp = ahora;
         try {
             const r = await fetch(urls.estado, { cache: 'no-store', headers: { Accept: 'application/json' } });
+            if (r.status === 404) this.retirado = 'no-disponible';
             if (r.ok) this.aplicar(await r.json());
         } catch (e) { /* el sondeo del JSON sigue */ }
     },
@@ -88,6 +96,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         if (!nuevo || !Array.isArray(nuevo.lotes)) return;
         if (nuevo.generado_en_ms < this.estado.generado_en_ms) return; // nunca retroceder
         this.estado = nuevo;
+        if (nuevo.estado === 'cancelado') this.retirado = 'cancelado';
         const vigente = nuevo.lotes.find((l) => !TERMINALES.includes(l.estado)) || nuevo.lotes[nuevo.lotes.length - 1];
         const actual = nuevo.lotes.find((l) => l.id === this.loteId);
         // Se queda en el lote actual hasta que termina; entonces pasa al siguiente sin liquidar.
@@ -120,14 +129,14 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     },
     get terminal() { return TERMINALES.includes(this.lote.estado); },
     get antesDeAbrir() { return this.lote.abre_en_ms !== null && this.ahora < this.lote.abre_en_ms; },
-    get abierto() { return !this.terminal && !this.antesDeAbrir && this.lote.cierra_en_ms !== null && this.ahora < this.lote.cierra_en_ms; },
+    get abierto() { return !this.retirado && !this.terminal && !this.antesDeAbrir && this.lote.cierra_en_ms !== null && this.ahora < this.lote.cierra_en_ms; },
 
     // ── Lo que muestra la vista (mismos nombres que la sala del prototipo) ─────────────────────────────────
     get restante() {
         const objetivo = this.antesDeAbrir ? this.lote.abre_en_ms : this.lote.cierra_en_ms;
         return objetivo === null ? 0 : Math.max(0, Math.floor((objetivo - this.ahora) / 1000));
     },
-    get vencido() { return this.terminal || (!this.antesDeAbrir && this.restante === 0); },
+    get vencido() { return !!this.retirado || this.terminal || (!this.antesDeAbrir && this.restante === 0); },
     get hayPujas() { return this.lote.total_pujas > 0; },
     get totalPujas() { return this.lote.total_pujas; },
     get yoGanando() { return !!this.miAlias && this.lote.ganador === this.miAlias; },
@@ -146,6 +155,8 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     get etiquetaContador() { return this.antesDeAbrir ? 'ABRE EN' : 'CIERRA EN'; },
 
     get estadoTexto() {
+        if (this.retirado === 'cancelado') return 'REMATE CANCELADO';
+        if (this.retirado) return 'REMATE NO DISPONIBLE';
         if (this.lote.estado === 'adjudicado') return 'ADJUDICADO';
         if (this.lote.estado === 'desierto') return 'CERRADO SIN POSTORES';
         if (this.antesDeAbrir) return 'PRÓXIMO · PUJA AÚN NO ABRE';
@@ -153,6 +164,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         return 'EN VIVO · PUJA ABIERTA';
     },
     get tiempoTexto() {
+        if (this.retirado) return this.retirado === 'cancelado' ? 'Remate cancelado' : 'Remate no disponible';
         if (this.terminal) return 'Remate finalizado';
         if (this.antesDeAbrir) return 'Abre en ' + this.hh + ':' + this.mm + ':' + this.ss;
         return this.vencido ? 'Cerrado' : 'Cierra en ' + this.hh + ':' + this.mm + ':' + this.ss;
@@ -274,11 +286,15 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     },
 
     get resultadoTitulo() {
+        if (this.retirado === 'cancelado') return 'Colliers canceló este remate';
+        if (this.retirado) return 'Este remate ya no está disponible';
         if (!this.terminal) return 'Remate cerrado';
         if (!this.hayPujas) return 'El remate se cerró sin posturas';
         return this.yoGanando ? 'Te adjudicaste la propiedad' : 'Adjudicado a otro postor';
     },
     get resultadoTexto() {
+        if (this.retirado === 'cancelado') return 'No se reciben pujas. Tus remates y el estado de tu garantía están en «Mi cuenta».';
+        if (this.retirado) return 'Colliers retiró este remate: no se reciben pujas.';
         if (!this.terminal) return 'Estamos confirmando la adjudicación con las posturas recibidas antes del cierre.';
         if (!this.hayPujas) return 'No se registraron posturas sobre el precio base. La propiedad se publicará en un remate nuevo, con fecha y condiciones propias.';
         // Neutro a propósito: qué pasa con la garantía (devolución o imputación) está pendiente con el cliente.

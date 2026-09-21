@@ -10,18 +10,25 @@ use App\Models\Lote;
 use App\Models\Postor;
 use App\Models\Puja;
 use App\Models\Remate;
+use App\Models\User;
 use App\Remates\PresentacionRemate;
 use App\Support\Formato;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 /** Resumen del panel con datos reales (diseño «Admin Dashboard»). Excluye los remates de demostración. */
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $ahora = CarbonImmutable::now('UTC');
+        // El martillero no administra: entra a trabajar sus remates (21/09). El resumen general trae datos de postores
+        // que no le corresponden; el suyo muestra lo que tiene en vivo y lo próximo, con el panel a un clic.
+        if ($request->user()->rol === User::ROL_MARTILLERO) {
+            return $this->martillero($request->user(), $ahora);
+        }
         $remates = Remate::with(['lotes', 'garantias'])->where('es_demostracion', false)->get();
         $porVista = $remates->groupBy(fn (Remate $r) => $r->estadoVisible($ahora));
         $enVivo = $porVista->get(Remate::VISTA_EN_VIVO, collect());
@@ -53,6 +60,48 @@ class DashboardController extends Controller
             'pendientes' => $this->pendientes(),
             'actividad' => $this->actividad($ahora),
         ]]);
+    }
+
+    /**
+     * Inicio del martillero: sus remates, también los de prueba que tenga asignados (son su trabajo), en vivo primero,
+     * después los próximos por fecha y al final los últimos cerrados. Cada uno con el panel en vivo a un clic.
+     */
+    private function martillero(User $user, CarbonImmutable $ahora): View
+    {
+        $remates = Remate::with('lotes')->where('martillero_id', $user->id)
+            ->whereNotIn('estado', [Remate::ESTADO_BORRADOR, Remate::ESTADO_CANCELADO])->get();
+        $porVista = $remates->groupBy(fn (Remate $r) => $r->estadoVisible($ahora));
+        $fila = function (Remate $r) use ($ahora) {
+            $vista = $r->estadoVisible($ahora);
+            $vigente = $r->lotes->sortBy('orden')->first(fn (Lote $l) => ! in_array($l->estado, Lote::ESTADOS_TERMINALES, true));
+            $total = $r->lotes->count();
+
+            return [
+                'titulo' => $r->titulo,
+                'folio' => $r->folio,
+                'prueba' => $r->es_demostracion,
+                'direccion' => PresentacionRemate::direccion($r),
+                'vista' => $vista,
+                'estado' => ['en_vivo' => 'EN VIVO', 'proximo' => 'PRÓXIMO', 'adjudicado' => 'ADJUDICADO'][$vista] ?? 'CERRADO',
+                'tono' => ['en_vivo' => 'vivo', 'proximo' => 'proximo', 'adjudicado' => 'adjudicada'][$vista] ?? 'cerrado',
+                'cuando' => match ($vista) {
+                    Remate::VISTA_EN_VIVO => ($total > 1 && $vigente ? "Lote {$vigente->orden} de {$total} · " : '')
+                        . ($vigente?->cierra_en ? 'cierra ' . Formato::fecha($vigente->cierra_en, $ahora) : 'en curso'),
+                    Remate::VISTA_PROXIMO => 'Abre ' . Formato::fecha($r->abreEn(), $ahora) . ($total > 1 ? " · {$total} lotes" : ''),
+                    default => 'Cerró ' . Formato::fecha($r->cierraEn(), $ahora),
+                },
+                'enVivo' => route('admin.remates.en-vivo', $r),
+                'ficha' => route('admin.remates.show', $r),
+            ];
+        };
+
+        return view('admin.dashboard-martillero', [
+            'fecha' => Formato::fechaConDia($ahora),
+            'enVivo' => $porVista->get(Remate::VISTA_EN_VIVO, collect())->sortBy(fn (Remate $r) => $r->cierraEn()?->getTimestamp())->map($fila)->values()->all(),
+            'proximos' => $porVista->get(Remate::VISTA_PROXIMO, collect())->sortBy(fn (Remate $r) => $r->abreEn()?->getTimestamp())->map($fila)->values()->all(),
+            'cerrados' => $porVista->get(Remate::VISTA_ADJUDICADO, collect())->merge($porVista->get(Remate::VISTA_CERRADO, collect()))
+                ->sortByDesc(fn (Remate $r) => $r->cierraEn()?->getTimestamp())->take(5)->map($fila)->values()->all(),
+        ]);
     }
 
     private function subastas(Collection $enVivo, Collection $proximos, Collection $porVista, CarbonImmutable $ahora): array

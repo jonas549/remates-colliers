@@ -39,7 +39,7 @@ class RemateDePrueba
     /**
      * @return array{remate: Remate, clave: string, postores: list<array{numero: int, email: string, rut: string}>}
      */
-    public function crear(int $postores = 3, int $lotes = 3, int $inicioMinutos = 12, int $duracionMinutos = 8, int $pausaMinutos = 1, int $garantiaAntesMinutos = 4): array
+    public function crear(int $postores = 3, int $lotes = 3, int $inicioMinutos = 12, int $duracionMinutos = 8, int $pausaMinutos = 1, int $garantiaAntesMinutos = 4, ?int $martilleroId = null): array
     {
         if (app()->isProduction()) {
             throw new DomainException('No se crean remates de prueba en producción. En el sandbox usa APP_ENV=staging.');
@@ -48,12 +48,17 @@ class RemateDePrueba
             throw new DomainException('Opciones fuera de rango: postores 1–50, lotes 1–10, inicio ≥ 1 min, duración ≥ 1 min, pausa ≥ 0.');
         }
 
+        // El martillero se prueba igual que los postores (21/09): tiene que ser un martillero activo.
+        if ($martilleroId !== null && ! self::martillerosActivos()->contains('id', $martilleroId)) {
+            throw new DomainException('El martillero elegido no existe o está desactivado. Revisa «06 Usuarios».');
+        }
+
         $sufijo = CarbonImmutable::now('America/Santiago')->format('ymd-Hi') . '-' . Str::lower(Str::random(3));
         $clave = Str::password(16, symbols: false);
         $ahora = CarbonImmutable::now('UTC');
         $inicio = $ahora->addMinutes($inicioMinutos)->startOfMinute();
 
-        [$remate, $credenciales] = DB::transaction(function () use ($sufijo, $clave, $postores, $lotes, $inicio, $duracionMinutos, $pausaMinutos, $garantiaAntesMinutos, $ahora) {
+        [$remate, $credenciales] = DB::transaction(function () use ($sufijo, $clave, $postores, $lotes, $inicio, $duracionMinutos, $pausaMinutos, $garantiaAntesMinutos, $ahora, $martilleroId) {
             $remate = Remate::create([
                 // `remates.folio` es VARCHAR(20): «PR-» + 15 = 18. Con «PRUEBA-» eran 22 y MariaDB lo rechazaba (21/09).
                 'folio' => 'PR-' . strtoupper($sufijo),
@@ -67,6 +72,7 @@ class RemateDePrueba
                 'duracion_lote_segundos' => $duracionMinutos * 60,
                 'pausa_entre_lotes_segundos' => $pausaMinutos * 60,
                 'publicado_en' => $ahora,
+                'martillero_id' => $martilleroId,
             ]);
             $remate->forceFill(['es_demostracion' => true])->save();
 
@@ -113,6 +119,12 @@ class RemateDePrueba
         $this->emisor->publicarEstado($remate);
 
         return ['remate' => $remate->fresh(['lotes']), 'clave' => $clave, 'postores' => $credenciales];
+    }
+
+    /** Martilleros que pueden quedar a cargo de una subasta de prueba. */
+    public static function martillerosActivos(): \Illuminate\Support\Collection
+    {
+        return User::where('rol', User::ROL_MARTILLERO)->where('estado', User::ESTADO_ACTIVO)->orderBy('name')->get(['id', 'name', 'email']);
     }
 
     /**

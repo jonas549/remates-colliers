@@ -212,6 +212,8 @@ class Catalogo
             // Tiempo real: el detalle en vivo SOLO lee el JSON estático y el reloj sin framework (no ejecuta PHP con espectadores).
             'tiempoReal' => [
                 'loteId' => $lote->id,
+                // Próximo: al llegar la hora, la página se recarga sola y muestra el remate en vivo (21/09).
+                'proximo' => $vista === Remate::VISTA_PROXIMO,
                 'objetivoMs' => (int) (($enVivo ? $lote->cierra_en : $r->abreEn())?->format('Uv') ?? 0),
                 'servidorMs' => (int) $ahora->format('Uv'),
                 'estadoJson' => asset('tiempo-real/' . $r->slug . '.json'),

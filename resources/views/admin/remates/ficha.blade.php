@@ -73,7 +73,7 @@
             @endif
 
             {{-- 01 · Datos y condiciones --}}
-            <div class="admin-gestion__bloque">
+            <div class="admin-gestion__bloque" id="datos-y-condiciones">
                 <div class="admin-seccion__cabeza"><h2 class="admin-seccion__titulo">Datos y condiciones</h2></div>
                 @unless ($editable)
                     @if ($puedeEditar)

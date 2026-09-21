@@ -72,3 +72,20 @@
   .admin-kpi__valor { font-size: 30px; }
   .admin-kpi:last-child { grid-column: 1 / -1; }
 }
+
+/* Inicio del martillero (21/09): sus remates con el panel en vivo a un clic. */
+.admin-mis-remates { padding: 0 32px 40px; display: flex; flex-direction: column; gap: 24px; }
+.admin-mi-remate { display: flex; align-items: center; justify-content: space-between; gap: 16px 24px; padding: 18px 0; border-top: 1px solid #e6e9ef; flex-wrap: wrap; }
+.admin-mi-remate__datos { min-width: 0; flex: 1 1 320px; }
+.admin-mi-remate__cabeza { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.admin-mi-remate__folio { font-size: 12px; letter-spacing: 0.08em; color: #8c95a3; font-weight: 700; }
+.admin-mi-remate__titulo { font-size: 17px; font-weight: 600; color: #16265a; }
+.admin-mi-remate__cuando { font-size: 14px; color: #4a5563; margin-top: 4px; }
+.admin-mi-remate__acciones { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.admin-mi-remate__acciones a { min-height: 44px; display: inline-flex; align-items: center; }
+
+@media (max-width: 759.98px) {
+  .admin-mis-remates { padding: 0 20px 32px; }
+  .admin-mi-remate__acciones { width: 100%; }
+  .admin-mi-remate__acciones .admin-boton, .admin-mi-remate__acciones .admin-boton-borde { flex: 1 1 auto; justify-content: center; }
+}

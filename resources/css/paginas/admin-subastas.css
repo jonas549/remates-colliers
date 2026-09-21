@@ -156,3 +156,8 @@
   .admin-pruebas__dato--accion { justify-content: flex-start; }
   .admin-pruebas__dato--accion .admin-boton-borde { min-height: 44px; }
 }
+.admin-pruebas__subtitulo { font-size: 11px; letter-spacing: 0.14em; font-weight: 700; color: #16265a; margin: 20px 0 0; text-transform: uppercase; }
+.admin-pruebas__postores--martillero { margin-top: 8px; }
+.admin-pruebas__select { border: 1px solid #d5dae3; padding: 10px 12px; font: inherit; font-size: 14px; letter-spacing: normal; color: #1d2530; min-height: 44px; background: #fff; min-width: 220px; }
+.admin-pruebas > .admin-pruebas__alerta { margin: 14px 0 0; }
+.admin-pruebas__alerta a { color: #8c0f22; font-weight: 700; }

@@ -13,7 +13,7 @@ function reloj(segundos) {
 // Detalle de remate (Bloque N): cuenta regresiva al inicio o al cierre con la hora del servidor, historial de pujas en vivo
 // y mapa. Los espectadores SOLO leen el JSON estático (cada ~2 s) y sincronizan el reloj con hora.php: el detalle nunca
 // ejecuta el framework, así la cantidad de espectadores no compite con las pujas (docs/RENDIMIENTO-SIN-OPCACHE.md).
-export default ({ enVivo, loteId, objetivoMs, servidorMs, estadoJson, hora, pujas, precioActual, totalPujas, uf, mapa, rutas, remate,
+export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estadoJson, hora, pujas, precioActual, totalPujas, uf, mapa, rutas, remate,
     margenMs = 2000, avisoCierre = { espera_ms: 5000, porcentaje: 100 }, estadoUrl = null }) => ({
     pujas,
     precio: precioActual,
@@ -32,11 +32,23 @@ export default ({ enVivo, loteId, objetivoMs, servidorMs, estadoJson, hora, puja
     avisara: Math.random() * 100 < (avisoCierre.porcentaje ?? 100),
     esperaAviso: Math.floor(Math.random() * ((avisoCierre.espera_ms ?? 5000) + 1)),
     avisoCierreHecho: false,
+    // El remate se canceló o se retiró (borrado: el JSON responde 404) con la página abierta (21/09).
+    retirado: false,
+    ausencias: 0,
 
     init() {
         setInterval(() => { this.ahora = Date.now() + this.desfase; }, 1000);
         this.sincronizar();
         if (enVivo) this.consultar();
+        // Remate próximo con la página abierta: al llegar la hora de inicio se recarga sola y aparece en vivo (21/09:
+        // el espectador que esperaba en la página veía la cuenta llegar a cero y nada más). Cada uno espera un tiempo al
+        // azar de hasta 15 s para que no recarguen todos en el mismo segundo: cada recarga es una petición al servidor.
+        if (proximo && objetivoMs > 0) {
+            const espera = 1000 + Math.floor(Math.random() * 15000);
+            const revisar = setInterval(() => {
+                if (this.ahora >= objetivoMs + espera) { clearInterval(revisar); window.location.reload(); }
+            }, 1000);
+        }
         this.$nextTick(() => this.iniciarMapa());
     },
 
@@ -50,10 +62,15 @@ export default ({ enVivo, loteId, objetivoMs, servidorMs, estadoJson, hora, puja
     },
 
     async consultar() {
+        if (this.retirado) return;
         try {
             const r = await fetch(estadoJson + '?t=' + Date.now(), { cache: 'no-store' });
+            // Dos 404 seguidos: el remate ya no existe (un 404 suelto puede ser un reemplazo del archivo en curso).
+            this.ausencias = r.status === 404 ? this.ausencias + 1 : 0;
+            if (this.ausencias >= 2) { this.retirado = true; return; }
             if (r.ok) {
                 const estado = await r.json();
+                if (estado.estado === 'cancelado') { this.retirado = true; return; }
                 const lote = estado.lotes.find((l) => l.id === loteId) || estado.lotes.find((l) => !TERMINALES.includes(l.estado));
                 if (lote) {
                     this.pujas = lote.pujas || [];
@@ -76,11 +93,11 @@ export default ({ enVivo, loteId, objetivoMs, servidorMs, estadoJson, hora, puja
 
     // El lote cerró por reloj (hora del servidor), aunque el JSON todavía no traiga el resultado.
     get cerrado() {
-        return enVivo && this.objetivo > 0 && this.ahora >= this.objetivo;
+        return this.retirado || (enVivo && this.objetivo > 0 && this.ahora >= this.objetivo);
     },
 
     get adjudicando() {
-        return this.cerrado && !TERMINALES.includes(this.estadoLote);
+        return !this.retirado && this.cerrado && !TERMINALES.includes(this.estadoLote);
     },
 
     get resultado() {
@@ -88,6 +105,7 @@ export default ({ enVivo, loteId, objetivoMs, servidorMs, estadoJson, hora, puja
     },
 
     get textoCierre() {
+        if (this.retirado) return 'REMATE NO DISPONIBLE';
         if (this.resultado === 'adjudicado') return 'REMATE ADJUDICADO';
         if (this.resultado) return 'REMATE CERRADO';
         return 'CERRADO · ADJUDICANDO';

@@ -24,6 +24,8 @@ class PostoresDePruebaTest extends TestCase
 
     private User $admin;
 
+    private User $martillero;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,6 +34,8 @@ class PostoresDePruebaTest extends TestCase
         $this->app->forgetInstance(\App\Subastas\Difusion\Emisor::class);
         Configuracion::sembrarDefectos();
         $this->admin = User::create(['name' => 'Carolina Méndez', 'email' => 'admin@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_ADMIN, 'estado' => User::ESTADO_ACTIVO]);
+        // La subasta de prueba siempre queda a cargo de un martillero activo (21/09).
+        $this->martillero = User::create(['name' => 'M. Ossandón', 'email' => 'mossandon@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_MARTILLERO, 'estado' => User::ESTADO_ACTIVO]);
     }
 
     protected function tearDown(): void
@@ -84,8 +88,14 @@ class PostoresDePruebaTest extends TestCase
             $this->assertStringContainsString($p['email'], $html);
             $this->assertStringContainsString('href="' . e(route('ingresar.como', ['usuario' => $p['email']])) . '"', $html);
         }
-        $this->assertSame(6, substr_count($html, 'x-data="copiar('), 'un botón de copiar para cada correo y cada clave');
+        $this->assertSame(7, substr_count($html, 'x-data="copiar('), 'un botón de copiar para cada correo y cada clave, más el correo del martillero');
         $this->assertSame(3, substr_count($html, '>Ingresar como este postor</a>'), 'un enlace por postor');
+
+        // El martillero a cargo, junto a los postores, con su enlace al acceso de administración.
+        $this->assertSame($this->martillero->id, $remate->martillero_id, 'el único martillero activo queda a cargo');
+        $this->assertStringContainsString('data-martillero-correo>mossandon@colliers.test<', $html);
+        $this->assertStringContainsString('href="' . e(route('ingresar.como', ['usuario' => 'mossandon@colliers.test', 'portal' => 'admin'])) . '"', $html);
+        $this->assertStringContainsString('>Ingresar como este martillero</a>', $html);
 
         // Al volver a la ficha la clave ya no está, y la pantalla dice cómo conseguir otra.
         $otraVez = $this->actingAs($this->admin)->get(route('admin.remates.show', $remate))->assertOk()
@@ -144,6 +154,19 @@ class PostoresDePruebaTest extends TestCase
             ->forceFill(['estado' => Postor::ESTADO_APROBADO])->save();
         $this->actingAs($cliente)->post(route('cuenta.inscribirme', $prueba['remate']->slug))->assertSessionHas('error');
         $this->assertSame(0, $prueba['remate']->garantias()->where('user_id', $cliente->id)->count());
+    }
+
+    public function test_mi_cuenta_de_un_remate_cancelado_no_dice_habilitado(): void
+    {
+        $creado = app(RemateDePrueba::class)->crear(postores: 1, lotes: 1, inicioMinutos: 30);
+        $postor = User::where('email', $creado['postores'][0]['email'])->sole();
+        app(\App\Remates\GestionRemates::class)->cancelar($creado['remate'], 'Retiro de la propiedad');
+
+        $this->actingAs($postor)->get('/mi-cuenta')->assertOk()
+            ->assertSee('REMATE CANCELADO')->assertSee('Retiro de la propiedad')->assertSee('data-remate-cancelado', false)
+            ->assertSee('Remate cancelado')
+            ->assertDontSee('HABILITADO PARA PUJAR')->assertDontSee('CÓMO CONSTITUIRLA')->assertDontSee('Entrar a la sala de pujas')
+            ->assertDontSee('Subir comprobante');
     }
 
     public function test_los_numeros_de_los_formularios_no_pierden_ceros(): void

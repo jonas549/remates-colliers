@@ -1,14 +1,13 @@
-// Ingreso con la clave del sandbox activa, en navegador real (bug del 17/09: la pantalla «solo se refrescaba»).
-// Requiere un servidor con la clave de acceso, como el sandbox:
-//   APP_ENV=staging SESSION_SECURE_COOKIE=true COLLIERS_ACCESO_CLAVE=prueba-sandbox php artisan serve --port=8010
+// Ingreso de administración configurado como el servidor, en navegador real (bug del 17/09: la pantalla «solo se
+// refrescaba»). El sandbox es de acceso libre desde el 21/09 (sin clave de acceso). Requiere:
+//   APP_ENV=staging SESSION_SECURE_COOKIE=true php artisan serve --port=8010
 // y la base local sembrada. Crea su propio administrador con cambio de clave pendiente (como colliers:instalar).
 //
-//   node tools/comparar/ingreso-sandbox.mjs
+//   node tools/comparar/ingreso-servidor.mjs
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const URL = process.env.LARAVEL_URL || 'http://127.0.0.1:8010';
-const ACCESO = process.env.ACCESO || 'prueba-sandbox';
 let fallas = 0;
 const comprobar = (nombre, ok, detalle = '') => {
     if (!ok) fallas++;
@@ -25,15 +24,12 @@ async function nuevaSesion() {
     const c = await navegador.newContext({ locale: 'es-CL' });
     const p = await c.newPage();
     await p.goto(`${URL}/admin/ingresar`, { waitUntil: 'load' });
-    comprobar('sin la cookie de la clave pide el acceso (primera visita, sin aviso)', p.url().includes('/acceso') && (await p.locator('[role=alert]').count()) === 0);
-    await p.fill('input[name=clave]', ACCESO);
-    await p.locator('button[type=submit]').click();
-    await p.waitForLoadState('load');
+    comprobar('el acceso de administración abre directo, sin clave de sandbox', p.url().endsWith('/admin/ingresar'), p.url());
     return { c, p };
 }
-async function ingresar(p) {
+async function ingresar(p, usar = clave) {
     await p.fill('input[name=usuario]', correo);
-    await p.fill('input[name=password]', clave);
+    await p.fill('input[name=password]', usar);
     await p.getByRole('button', { name: 'Ingresar' }).click();
     await p.waitForLoadState('load');
 }
@@ -41,15 +37,8 @@ async function ingresar(p) {
 // 1. Flujo normal: entra y llega al cambio de clave obligatorio, sin la marca en la URL.
 {
     const { c, p } = await nuevaSesion();
-    comprobar('con la clave vuelve al acceso de administración', p.url().endsWith('/admin/ingresar'), p.url());
     await ingresar(p);
     comprobar('ingresa y llega al cambio de clave obligatorio', p.url().endsWith('/mi-cuenta/cambiar-clave'), p.url());
-
-    // La cookie de la clave desaparece con la sesión iniciada: no la expulsa y se la devuelve.
-    await c.clearCookies({ name: 'colliers_acceso' });
-    await p.goto(`${URL}/mi-cuenta/cambiar-clave`, { waitUntil: 'load' });
-    comprobar('sesión iniciada sin la cookie de la clave: no la expulsa', p.url().endsWith('/mi-cuenta/cambiar-clave'), p.url());
-    comprobar('y recibe de nuevo la cookie de la clave', (await c.cookies()).some((k) => k.name === 'colliers_acceso'));
     await c.close();
 }
 
@@ -76,25 +65,9 @@ async function ingresar(p) {
 // 3. Clave incorrecta: siempre con mensaje.
 {
     const { c, p } = await nuevaSesion();
-    await p.fill('input[name=usuario]', correo);
-    await p.fill('input[name=password]', 'incorrecta-123');
-    await p.getByRole('button', { name: 'Ingresar' }).click();
-    await p.waitForLoadState('load');
+    await ingresar(p, 'incorrecta-123');
     const error = (await p.locator('.acceso__error').allInnerTexts()).join(' ');
     comprobar('clave incorrecta: mensaje visible', error.includes('Usuario o contraseña incorrectos'), error);
-
-    // 4. La cookie de la clave vence mientras navega sin sesión: /acceso explica por qué y vuelve al formulario.
-    await c.clearCookies({ name: 'colliers_acceso' });
-    await p.fill('input[name=usuario]', correo);
-    await p.fill('input[name=password]', 'incorrecta-123');
-    await p.getByRole('button', { name: 'Ingresar' }).click();
-    await p.waitForLoadState('load');
-    const aviso = (await p.locator('[role=alert]').allInnerTexts()).join(' ');
-    comprobar('clave del sandbox vencida al enviar: /acceso con el motivo', p.url().includes('/acceso') && aviso.includes('venció o no se encontró'), aviso);
-    await p.fill('input[name=clave]', ACCESO);
-    await p.locator('button[type=submit]').click();
-    await p.waitForLoadState('load');
-    comprobar('con la clave vuelve al formulario de ingreso', p.url().endsWith('/admin/ingresar'), p.url());
     await c.close();
 }
 

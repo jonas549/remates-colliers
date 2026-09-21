@@ -51,10 +51,15 @@ class RemateDemoTest extends TestCase
         $this->app['env'] = 'staging';
         CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-20 15:00:20', 'UTC'));
 
+        // Sin martillero activo no se crea: la subasta de prueba siempre queda a cargo de uno (21/09).
+        $this->artisan('colliers:remate-demo')->expectsOutputToContain('No hay ningún martillero activo')->assertFailed();
+        $martillero = User::create(['name' => 'M. Ossandón', 'email' => 'm@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_MARTILLERO, 'estado' => User::ESTADO_ACTIVO]);
+
         $this->artisan('colliers:remate-demo', ['--postores' => 3, '--lotes' => 2, '--inicio' => 5, '--duracion' => 10, '--pausa' => 1])
-            ->expectsOutputToContain('se muestra una sola vez')->assertSuccessful();
+            ->expectsOutputToContain('se muestra una sola vez')->expectsOutputToContain('M. Ossandón')->assertSuccessful();
 
         $remate = Remate::sole();
+        $this->assertSame($martillero->id, $remate->martillero_id, 'con un solo martillero activo, queda a cargo sin indicarlo');
         $this->assertTrue($remate->es_demostracion);
         $this->assertSame(Remate::ESTADO_PUBLICADO, $remate->estado);
         $this->assertSame(['15:05', '15:15', '15:16', '15:26'], $remate->lotes->flatMap(fn (Lote $l) => [$l->abre_en->format('H:i'), $l->cierra_en->format('H:i')])->all());

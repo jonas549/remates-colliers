@@ -201,6 +201,8 @@ comprobar('el listado ofrece crear una subasta de prueba', await p.getByRole('bu
 await p.fill('.admin-pruebas__acciones input[name=inicio]', '1');
 await p.fill('.admin-pruebas__acciones input[name=lotes]', '2');
 await p.fill('.admin-pruebas__acciones input[name=postores]', '3');
+// El seeder tiene varios martilleros: la franja pregunta cuál queda a cargo (21/09).
+await p.locator('[data-martillero-prueba]').selectOption({ label: 'M. Ossandón' });
 await p.getByRole('button', { name: 'Crear subasta de prueba' }).click();
 await p.waitForSelector('[data-postores-prueba]');
 const fichaPrueba = p.url().split('#')[0];

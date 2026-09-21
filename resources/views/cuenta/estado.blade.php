@@ -31,7 +31,7 @@
         @if ($d['dePrueba'] ?? false)
             {{-- Postor creado con «Crear subasta de prueba»: su remate no está en el listado público, se entra desde aquí. --}}
             <div class="cuenta__avisos" data-cuenta-prueba>
-                <div class="cuenta__aviso">Esta es una cuenta de prueba creada desde el panel de Colliers. Su remate de prueba no aparece en el listado público de remates: se entra desde esta página, con el botón «Entrar a la sala de pujas».</div>
+                <div class="cuenta__aviso">Esta es una cuenta de prueba creada desde el panel de Colliers. Su remate de prueba no aparece en el listado público de remates{{ $estado['clave'] === 'aprobada' ? ': se entra desde esta página, con el botón «Entrar a la sala de pujas».' : '.' }}</div>
             </div>
         @endif
 
@@ -84,7 +84,23 @@
                         </div>
                     </div>
 
-                    @unless ($estado['habilitado'])
+                    @if ($estado['clave'] === 'remate-cancelado')
+                        {{-- Remate cancelado (21/09): nada que constituir ni pujar; se dice qué pasó y adónde ir. --}}
+                        <div data-remate-cancelado>
+                            <div class="cuenta__subtitulo">REMATE CANCELADO</div>
+                            <div class="cuenta__item">
+                                <span class="cuenta__item-marca">✕</span>
+                                <div class="cuenta__item-texto">Colliers canceló este remate{{ $r['cancelado'] ? ' el ' . $r['cancelado'] : '' }}. No se realizará y no se reciben pujas.</div>
+                            </div>
+                            <div class="cuenta__botones">
+                                <a href="{{ route('remates.index') }}" class="cuenta__boton">Ver remates publicados</a>
+                                @if ($g['comprobante'])
+                                    <a href="{{ $g['comprobante'] }}" class="cuenta__boton-secundario">Ver comprobante enviado</a>
+                                @endif
+                            </div>
+                            <p class="cuenta__nota">El destino de la garantía se rige por las bases del remate. Si tienes dudas, escríbenos a <a href="mailto:{{ Sitio::correo() }}">{{ Sitio::correo() }}</a>.</p>
+                        </div>
+                    @elseif (! $estado['habilitado'])
                         <div>
                             <div class="cuenta__subtitulo">CÓMO CONSTITUIRLA</div>
                             <div class="cuenta__lista">
@@ -170,7 +186,7 @@
 
                             <p class="cuenta__nota">Si te adjudicas la propiedad, Colliers te contactará para la firma y el pago del saldo. El destino de la garantía se rige por las bases del remate.</p>
                         </div>
-                    @endunless
+                    @endif
                 @elseif ($d['habilitadoEnTodos'] ?? false)
                     {{-- Modo «habilitación única»: no hay nada que inscribir, la garantía ya sirve para todos. --}}
                     <p class="cuenta__lateral-texto">Con tu habilitación aprobada puedes pujar en cualquier remate publicado: no tienes que inscribirte uno por uno. Entra al remate que te interese y usa «Entrar a la sala de pujas».</p>

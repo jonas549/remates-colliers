@@ -16,7 +16,12 @@
                 <div class="sala-cabecera__titulo">Sala de pujas · <span>{{ $propiedad['folio'] }}</span>@if ($real)<span x-show="etiquetaLote" x-text="' · ' + etiquetaLote.toUpperCase()"></span>@endif</div>
                 <div class="sala-cabecera__derecha">
                     <span class="sala-cabecera__chip">GARANTÍA APROBADA</span>
-                    <span class="sala-cabecera__usuario">{{ $propiedad['usuario'] }}</span>
+                    {{-- El nombre lleva a «Mi cuenta» (21/09): la sala no tenía salida hacia la cuenta del postor. --}}
+                    @if ($real)
+                        <a href="{{ route('cuenta.estado') }}" class="sala-cabecera__usuario sala-cabecera__usuario--enlace" title="Ir a Mi cuenta">{{ $propiedad['usuario'] }}</a>
+                    @else
+                        <span class="sala-cabecera__usuario">{{ $propiedad['usuario'] }}</span>
+                    @endif
                 </div>
             </div>
             <div class="sala-ticker" :class="{ 'es-cerrado': vencido }">
@@ -130,6 +135,10 @@
                                 <div class="sala-resultado" :class="{ 'es-desierto': !hayPujas }">
                                     <div class="sala-resultado__titulo" x-text="resultadoTitulo"></div>
                                     <div class="sala-resultado__texto" x-text="resultadoTexto"></div>
+                                    @if ($real)
+                                        <a x-show="retirado === 'cancelado'" href="{{ route('cuenta.estado') }}" class="sala-resultado__enlace">Ir a Mi cuenta</a>
+                                        <a x-show="retirado === 'no-disponible'" href="{{ route('remates.index') }}" class="sala-resultado__enlace">Ver remates publicados</a>
+                                    @endif
                                 </div>
                             </template>
                         </div>
@@ -156,7 +165,14 @@
                 </div>
                 <span class="sala-barra__estado" :class="{ 'es-ganando': yoGanando && !vencido, 'es-cerrado': vencido }" x-text="vencido ? estadoTexto : estadoTitulo.toUpperCase()"></span>
             </div>
-            <button type="button" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">Pujar</button>
+            @if ($real)
+                {{-- Remate cancelado o retirado: en vez de un «Pujar» apagado, la salida a «Mi cuenta». --}}
+                <a x-show="retirado === 'cancelado'" x-cloak href="{{ route('cuenta.estado') }}" class="sala-barra__boton sala-barra__boton--enlace">Mi cuenta</a>
+                <a x-show="retirado === 'no-disponible'" x-cloak href="{{ route('remates.index') }}" class="sala-barra__boton sala-barra__boton--enlace">Remates</a>
+                <button type="button" x-show="!retirado" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">Pujar</button>
+            @else
+                <button type="button" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">Pujar</button>
+            @endif
         </div>
 
         <template x-if="hoja && !vencido">

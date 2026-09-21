@@ -76,8 +76,8 @@ núcleos entregue realmente el hosting, y eso se mide en el sandbox (§6).
    recibir la petición, antes de compilar nada; el cliente no puede alterarlo. Si falta o es absurdo (futuro o más de
    120 s atrás) se usa la hora actual. Es el cambio de mayor impacto: de 4,5 s a 0,15 s de sello.
 2. **`public/hora.php` sin framework.** La sincronización del reloj ya no arranca Laravel: 15 ms con 10 simultáneas
-   contra 4 s. La sala la usa; la ruta `/hora` de Laravel queda de respaldo. No pasa por la clave del sandbox (no
-   expone nada, igual que el JSON de estado).
+   contra 4 s. La sala la usa; la ruta `/hora` de Laravel queda de respaldo. No expone nada, igual que el JSON de
+   estado.
 3. **Menos consultas por puja:** `Configuracion::valor()` recuerda los valores 2 s (una puja leía la misma clave 3–4
    veces; guardar desde el panel vacía la memoria) y `PujaController` arma el resumen con una sola lectura del alias.
 4. **Escenario D** en las pruebas de concurrencia y comprobación «ninguna puja recibida antes de T se perdió» en C y D.

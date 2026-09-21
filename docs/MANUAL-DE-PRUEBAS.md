@@ -10,7 +10,6 @@
 
 | Qué | Dónde |
 |---|---|
-| Clave de acceso al sandbox | `COLLIERS_ACCESO_CLAVE` del `.env` del servidor. La pide la primera vez en cada navegador. |
 | Administrador | El correo de `COLLIERS_ADMIN_EMAIL`. Ingreso: `https://rematescolliers.sandboxdelta.com/admin/ingresar` |
 | Martillero | Se crea en el paso 1.5 (publicar un remate exige martillero). |
 | Postores | Los creas tú en el paso 4 (registro real) o con el comando del paso 7 (postores de demostración). |
@@ -100,7 +99,9 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 > **a mano**, que es lo que hará el cliente.
 >
 > Con un postor de prueba: **Ingresar como este postor** → pegar la clave → **Mi cuenta** muestra el remate con la
-> garantía aprobada → **Entrar a la sala de pujas**. El navegador guarda una sola sesión: para tener el panel y la sala
+> garantía aprobada → **Entrar a la sala de pujas**. El martillero a cargo aparece en la misma ficha: **Ingresar como
+> este martillero** → su clave → **Tus remates** → **Abrir panel en vivo**. Si hay varios martilleros activos, la franja
+> pregunta cuál queda a cargo; si no hay ninguno, lleva a «06 Usuarios». El navegador guarda una sola sesión: para tener el panel y la sala
 > a la vez, la pantalla ofrece copiar el enlace y abrirlo en una ventana privada.
 
 1. `/admin/subastas` → **Crear subasta**.
@@ -230,7 +231,6 @@ Direcciones que se usan en todo el manual (reemplaza `{slug}` e `{id}` por los d
 
 | Síntoma | Causa probable | Qué hacer |
 |---|---|---|
-| El sitio pide la clave de acceso en cada página | La cookie no se guardó (navegador en modo estricto) | Probar en otra ventana; revisar `COLLIERS_ACCESO_CLAVE`. |
 | «No se puede publicar: … Asigna un martillero» | No hay martilleros | Paso 1.5. |
 | Nadie puede inscribirse | El cierre de garantías ya pasó (vacío = 48 h antes del inicio) | En la ficha, fija el cierre de garantías antes del inicio y en el futuro. |
 | La sala redirige a «Mi cuenta» | Cuenta o garantía de ESE remate sin aprobar | Pasos 4 y 5. |

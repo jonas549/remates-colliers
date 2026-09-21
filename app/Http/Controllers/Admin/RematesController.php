@@ -37,8 +37,10 @@ class RematesController extends Controller
         $user = $request->user();
         $esMartillero = $user->rol === User::ROL_MARTILLERO;
         // En vivo primero, luego próximas por fecha, borradores y al final lo cerrado (lo más reciente arriba).
-        $remates = Remate::with(['lotes', 'martillero', 'garantias'])->where('es_demostracion', false)
-            ->when($esMartillero, fn ($q) => $q->where('martillero_id', $user->id))->get()
+        // Al martillero se le listan también las subastas de prueba a su cargo: son su trabajo (21/09). La administración
+        // las ve en su franja aparte.
+        $remates = Remate::with(['lotes', 'martillero', 'garantias'])
+            ->when($esMartillero, fn ($q) => $q->where('martillero_id', $user->id), fn ($q) => $q->where('es_demostracion', false))->get()
             ->sortBy(fn (Remate $r) => [$prioridad[$r->estadoVisible($ahora)] ?? 3,
                 ($prioridad[$r->estadoVisible($ahora)] ?? 3) === 3 ? -($r->abreEn()?->getTimestamp() ?? 0) : ($r->abreEn()?->getTimestamp() ?? PHP_INT_MAX)]);
 
@@ -63,6 +65,7 @@ class RematesController extends Controller
                     'enVivo' => route('admin.remates.en-vivo', $r),
                     'borrar' => route('admin.remates.borrar-prueba', $r),
                 ])->all(),
+            'martillerosPrueba' => app()->isProduction() || $esMartillero ? collect() : RemateDePrueba::martillerosActivos(),
         ]);
     }
 
@@ -96,11 +99,23 @@ class RematesController extends Controller
      */
     public function crearPrueba(Request $request, RemateDePrueba $prueba): RedirectResponse
     {
+        // Martillero (21/09): uno activo se asigna solo; con varios, el formulario pregunta cuál; sin ninguno, no se crea
+        // y la pantalla lleva a «06 Usuarios» (la franja ya lo avisa antes de apretar el botón).
+        $martilleros = RemateDePrueba::martillerosActivos();
+        if ($martilleros->isEmpty()) {
+            return back()->with('error', 'No hay ningún martillero activo para quedar a cargo de la subasta de prueba. Créalo en «06 Usuarios» y vuelve a intentarlo.');
+        }
+        $martilleroId = $martilleros->count() === 1 ? $martilleros->first()->id : $request->integer('martillero');
+        if (! $martilleros->contains('id', $martilleroId)) {
+            return back()->with('error', 'Elige qué martillero queda a cargo de la subasta de prueba.');
+        }
+
         try {
             $creado = $prueba->crear(
                 postores: (int) $request->integer('postores', 3),
                 lotes: (int) $request->integer('lotes', 2),
                 inicioMinutos: (int) $request->integer('inicio', 12),
+                martilleroId: $martilleroId,
             );
         } catch (DomainException $e) {
             return back()->with('error', $e->getMessage());

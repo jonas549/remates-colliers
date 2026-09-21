@@ -47,7 +47,7 @@ class PresentacionRemate
         return [
             'id' => $remate->id,
             'slug' => $remate->slug,
-            'folio' => $remate->folio,
+            'folio' => $remate->folio . ($remate->es_demostracion ? ' · PRUEBA' : ''),
             'direccion' => self::direccion($remate),
             'comuna' => self::comuna($remate),
             'martillero' => $remate->martillero?->name ?? 'Sin martillero',

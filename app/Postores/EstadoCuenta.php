@@ -35,6 +35,8 @@ class EstadoCuenta
             $postor->estado === Postor::ESTADO_RECHAZADO => 'cuenta-rechazada',
             $postor->estado === Postor::ESTADO_BLOQUEADO => 'cuenta-bloqueada',
             $garantia === null => 'sin-inscripcion',
+            // Remate cancelado por Colliers (21/09): «habilitado para pujar» sería falso, el remate no va a ocurrir.
+            $garantia->remate?->estado === Remate::ESTADO_CANCELADO => 'remate-cancelado',
             $garantia->estado === Garantia::ESTADO_APROBADA => 'aprobada',
             $garantia->estado === Garantia::ESTADO_EN_REVISION => 'garantia-revision',
             $garantia->estado === Garantia::ESTADO_RECHAZADA => 'rechazada',
@@ -61,13 +63,17 @@ class EstadoCuenta
             'aprobada' => ['GARANTÍA APROBADA · HABILITADO PARA PUJAR', 'Estás habilitado para pujar', $unica
                 ? "Tu habilitación por {$montoTexto} fue aprobada: te sirve para todos los remates publicados. Podrás ingresar posturas en pesos cuando comience cada transmisión."
                 : "Tu garantía por {$montoTexto} fue aprobada para {$nombreRemate}. Podrás ingresar posturas en pesos cuando comience la transmisión del remate.", '#1c5330', 4, 'Aprobada'],
+            'remate-cancelado' => ['REMATE CANCELADO', 'Colliers canceló este remate', "El remate {$nombreRemate} fue cancelado"
+                . ($remate?->motivo_cancelacion ? ' (' . $remate->motivo_cancelacion . ')' : '') . ' y no se realizará. No se reciben pujas. '
+                . 'Si Colliers vuelve a rematar la propiedad, lo hará en un remate nuevo, con su propia inscripción. Tu garantía se rige por las bases del remate; escríbenos si tienes dudas.',
+                '#5b6572', 3, ['pendiente' => 'Pendiente', 'en_revision' => 'En revisión', 'aprobada' => 'Aprobada', 'rechazada' => 'Rechazada'][$garantia?->estado] ?? 'Pendiente'],
             'rechazada' => ['GARANTÍA RECHAZADA', 'No pudimos validar tu garantía', 'Colliers no aprobó el comprobante' . ($garantia?->motivo_rechazo ? ': ' . $garantia->motivo_rechazo : '.') . ' Puedes corregirlo y volver a enviarlo antes del cierre de garantías, o escribirnos si crees que se trata de un error.', '#8c0f22', 2, 'Rechazada'],
         ][$clave];
 
         // Solo la habilitación ÚNICA aprobada sirve para todos los remates.
         $habilitadoEnTodos = $modoUnico && $unica && $garantia?->estado === Garantia::ESTADO_APROBADA;
         $estado = self::armar($clave, ...$textos);
-        $puedeSubir = $garantia !== null && $postor?->estaAprobado() && in_array($garantia->estado, [Garantia::ESTADO_PENDIENTE, Garantia::ESTADO_RECHAZADA], true)
+        $puedeSubir = $garantia !== null && $clave !== 'remate-cancelado' && $postor?->estaAprobado() && in_array($garantia->estado, [Garantia::ESTADO_PENDIENTE, Garantia::ESTADO_RECHAZADA], true)
             && ($unica || (($remate->cierre_garantias_en === null || $ahora->lessThan($remate->cierre_garantias_en)) && ! $remate->yaComenzo($ahora)));
         $vista = $remate?->estadoVisible($ahora);
 
@@ -81,6 +87,7 @@ class EstadoCuenta
                     'sala' => $clave === 'aprobada' && in_array($vista, [Remate::VISTA_EN_VIVO, Remate::VISTA_PROXIMO], true) ? route('sala.show', $remate->slug) : null,
                     'abre' => Formato::fecha($remate->abreEn(), $ahora),
                     'enVivo' => $vista === Remate::VISTA_EN_VIVO,
+                    'cancelado' => $remate->cancelado_en ? Formato::fecha($remate->cancelado_en, $ahora) : null,
                 ] : null,
                 'garantia' => $garantia ? [
                     'id' => $garantia->id,
@@ -177,7 +184,7 @@ class EstadoCuenta
             ['titulo' => 'Registro enviado', 'texto' => 'Datos personales y documentos recibidos.', 'chip' => 'Completado'],
             ['titulo' => 'Cuenta aprobada', 'texto' => 'Revisión manual de antecedentes por Colliers.', 'chip' => $clave === 'cuenta-rechazada' ? 'Rechazada' : ($clave === 'cuenta-bloqueada' ? 'Bloqueada' : ($etapa >= 2 ? 'Aprobada' : 'En revisión'))],
             ['titulo' => 'Garantía constituida', 'texto' => 'Vale a la vista o transferencia, fuera de la plataforma.', 'chip' => $garantia],
-            ['titulo' => 'Habilitado para pujar', 'texto' => 'Se activa la sala de pujas del remate inscrito.', 'chip' => $etapa >= 4 ? 'Habilitado' : 'Bloqueado'],
+            ['titulo' => 'Habilitado para pujar', 'texto' => 'Se activa la sala de pujas del remate inscrito.', 'chip' => $clave === 'remate-cancelado' ? 'Remate cancelado' : ($etapa >= 4 ? 'Habilitado' : 'Bloqueado')],
         ];
         foreach ($pasos as $i => &$paso) {
             $n = $i + 1;

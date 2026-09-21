@@ -22,12 +22,34 @@ class RemateDemo extends Command
         {--lotes=3 : Cantidad de lotes (1 a 10). Varios por defecto: así se prueba el paso al siguiente y el cierre anticipado}
         {--inicio=5 : Minutos desde ahora hasta que abre el primer lote}
         {--duracion=10 : Minutos que dura cada lote}
-        {--pausa=1 : Minutos de pausa entre lotes}';
+        {--pausa=1 : Minutos de pausa entre lotes}
+        {--martillero= : Correo del martillero a cargo (si hay uno solo activo, se asigna sin indicarlo)}';
 
     protected $description = 'Crea un remate de demostración con postores habilitados (nunca en producción)';
 
     public function handle(RemateDePrueba $prueba): int
     {
+        if (app()->isProduction()) {
+            $this->error('No se crean remates de prueba en producción. En el sandbox usa APP_ENV=staging.');
+
+            return self::FAILURE;
+        }
+        $martilleros = RemateDePrueba::martillerosActivos();
+        $correo = $this->option('martillero');
+        $martillero = $correo ? $martilleros->firstWhere('email', $correo) : ($martilleros->count() === 1 ? $martilleros->first() : null);
+        if ($correo && $martillero === null) {
+            $this->error("No hay un martillero activo con el correo {$correo}.");
+
+            return self::FAILURE;
+        }
+        if ($martillero === null) {
+            $this->error($martilleros->isEmpty()
+                ? 'No hay ningún martillero activo. Créalo en «06 Usuarios» (o con colliers:crear-usuario martillero …).'
+                : 'Hay varios martilleros activos: indica cuál con --martillero=correo (' . $martilleros->pluck('email')->join(', ') . ').');
+
+            return self::FAILURE;
+        }
+
         try {
             $creado = $prueba->crear(
                 postores: (int) $this->option('postores'),
@@ -35,6 +57,7 @@ class RemateDemo extends Command
                 inicioMinutos: max(1, (int) $this->option('inicio')),
                 duracionMinutos: (int) $this->option('duracion'),
                 pausaMinutos: (int) $this->option('pausa'),
+                martilleroId: $martillero->id,
             );
         } catch (DomainException $e) {
             $this->error($e->getMessage());
@@ -45,6 +68,7 @@ class RemateDemo extends Command
         $remate = $creado['remate'];
         $primero = $remate->lotes->first();
         $this->info("Remate de demostración {$remate->folio} creado.");
+        $this->line("  Martillero:       {$martillero->name} ({$martillero->email})");
         $this->line('  Primer lote abre: ' . $primero->abre_en->setTimezone('America/Santiago')->format('d-m-Y H:i') . ' (Santiago)');
         $this->line('  Estado público:   ' . rtrim(config('app.url'), '/') . "/tiempo-real/{$remate->slug}.json");
         $this->line('  Estado (PHP):     ' . rtrim(config('app.url'), '/') . "/remates/{$remate->slug}/estado");

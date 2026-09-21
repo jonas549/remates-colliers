@@ -215,7 +215,8 @@ El servidor se configura **una vez**; desde ahí todo entra por push y cron. Par
 - **Una sola línea de cron para tareas:** `schedule:run` cada minuto. Toda tarea periódica nueva va en
   `routes/console.php`, nunca como cron adicional. La cola se procesa ahí con `--stop-when-empty`.
 - **`colliers:diagnostico`** revisa extensiones, entorno, base, permisos, assets y el latido del cron.
-- **Clave de acceso al sandbox:** `COLLIERS_ACCESO_CLAVE` protege todo el sitio (incluido /admin).
+- **Sandbox de acceso libre** (21/09, a pedido de Jonas): sin clave de acceso. Fuera de producción todas las páginas
+  llevan `X-Robots-Tag: noindex, nofollow` (middleware `NoIndexar`).
 - **Migraciones solo aditivas:** crear tablas, agregar columnas nullable o con valor por defecto, índices.
   Nunca renombrar ni eliminar columnas. Si algo cambia de significado, columna nueva y la antigua deprecada.
 - `users` guarda credenciales y rol (admin, martillero, postor). Los datos del postor van en tablas propias.
@@ -390,7 +391,7 @@ El servidor de prueba usa la configuración en caché (como el servidor real): c
 
 - [x] Comandos `colliers:instalar`, `colliers:puede-desplegar`, `colliers:diagnostico` (con pruebas)
 - [x] Programador de tareas: latido y cola por minuto con `--stop-when-empty`
-- [x] Clave de acceso al sandbox (middleware, formulario, límite de intentos, noindex)
+- [x] ~~Clave de acceso al sandbox~~ quitada el 21/09 (acceso libre); se mantiene el noindex fuera de producción
 - [x] Páginas de error propias: 403, 404, 419, 429, 500, 503
 - [x] Traducciones al español en `lang/es/` (validación, autenticación, contraseñas, paginación)
 - [x] `.env.example` completo y sin secretos

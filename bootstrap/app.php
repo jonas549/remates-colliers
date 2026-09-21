@@ -16,14 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Después, solo en la puja: abrir la conexión a la base con reintento, antes que la sesión (la hora ya quedó sellada).
         $middleware->prepend([\App\Http\Middleware\HoraRecepcion::class, \App\Http\Middleware\ConexionPujaConReintento::class]);
 
-        // Clave de acceso mientras el subdominio es un sandbox público (COLLIERS_ACCESO_CLAVE).
-        $middleware->web(append: [\App\Http\Middleware\AccesoSandbox::class, \App\Http\Middleware\SesionTrasIngreso::class]);
+        // Fuera de producción, noindex. El sandbox es de acceso libre: la clave de acceso se quitó el 21/09.
+        $middleware->web(append: [\App\Http\Middleware\NoIndexar::class, \App\Http\Middleware\SesionTrasIngreso::class]);
         // Duración de la sesión desde el panel: tiene que aplicarse antes de que StartSession lea session.lifetime.
         // SubidaDemasiadoGrande va antes del CSRF: si PHP descartó el cuerpo por tamaño, no hay token que verificar.
         $middleware->web(prepend: [\App\Http\Middleware\SubidaDemasiadoGrande::class, \App\Http\Middleware\DuracionSesion::class]);
-        // Ambos antes de `auth`, del límite de peticiones y de los modelos de la ruta: la clave del sandbox responde
-        // primero (sin revelar si algo existe) y la marca de ingreso se revisa antes de que `auth` redirija sin decir nada.
-        $middleware->prependToPriorityList(\Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class, \App\Http\Middleware\AccesoSandbox::class);
+        // La marca de ingreso se revisa antes de `auth`, para que no redirija sin decir nada.
         $middleware->prependToPriorityList(\Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class, \App\Http\Middleware\SesionTrasIngreso::class);
 
         // Bloque D: rol y cambio de contraseña obligatorio.

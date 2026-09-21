@@ -19,15 +19,6 @@ return [
     ],
 
     /*
-     * Clave de acceso al sitio mientras es un sandbox público. Si está vacía, el sitio queda abierto.
-     * En producción se deja vacía.
-     */
-    'acceso' => [
-        'clave' => env('COLLIERS_ACCESO_CLAVE'),
-        'dias' => (int) env('COLLIERS_ACCESO_DIAS', 30),
-    ],
-
-    /*
      * Archivo que, si existe, bloquea el deploy (colliers:puede-desplegar responde "no").
      * Sirve para congelar deploys a mano; el Bloque J agrega el bloqueo automático con remate en curso.
      */

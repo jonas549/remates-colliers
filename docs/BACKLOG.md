@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-09-21** (folio de la subasta de prueba, suite en MySQL, riesgo de conexiones, reintento en la puja y experiencia de prueba de punta a punta).
+> **Registro vivo del avance.** Última actualización: **2026-09-21** (folio, suite en MySQL, conexiones, reintento en la puja, experiencia de prueba, martillero, acceso libre y recorrido de los tres roles).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -20,13 +20,13 @@ nota *(verifica Jonas en el sandbox)*.
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 31/35 |
 | D | Autenticación y registro de postores | En progreso | 13/16 |
-| K | Sala de puja conectada al motor real | En progreso | 14/15 |
-| I | Remates y lotes + panel del martillero | **Completo** | 18/18 |
+| K | Sala de puja conectada al motor real | En progreso | 15/16 |
+| I | Remates y lotes + panel del martillero | **Completo** | 20/20 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
-| H | Garantías | En progreso | 9/11 |
+| H | Garantías | En progreso | 10/12 |
 | M | Notificaciones | En progreso | 8/9 |
-| N | Sitio público | En progreso | 11/12 |
+| N | Sitio público | En progreso | 12/13 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 7/8 |
@@ -105,7 +105,7 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 
 - [x] Comandos `colliers:instalar`, `colliers:puede-desplegar`, `colliers:diagnostico` (con pruebas)
 - [x] Programador: latido y cola por minuto con `--stop-when-empty`
-- [x] Clave de acceso al sandbox (middleware, formulario, límite de intentos, noindex)
+- [x] ~~Clave de acceso al sandbox~~ **quitada el 21/09 a pedido de Jonas**: el sandbox es de acceso libre. Se mantiene `X-Robots-Tag: noindex, nofollow` fuera de producción (`NoIndexar`) *(`InfraestructuraTest::test_el_sitio_es_de_acceso_libre_y_fuera_de_produccion_no_se_indexa`)*
 - [x] Páginas de error propias: 403, 404, 419, 429, 500, 503
 - [x] Traducciones al español en `lang/es/`
 - [x] `.env.example` completo y sin secretos
@@ -116,7 +116,7 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] Script de deploy con `colliers:puede-desplegar` y `colliers:instalar` *(Jonas, 16/09)*
 - [x] Cron de `schedule:run` cada minuto y cron de deploy cada 5 minutos activos *(Jonas, 16/09)*
 - [x] Handler PHP 8.4 aplicado en el servidor: `application/x-httpd-ea-php84` *(Jonas, 16/09)*
-- [x] Sandbox responde en https y pide la clave de acceso *(Jonas, 16/09)*
+- [x] Sandbox responde en https *(Jonas, 16/09; la clave de acceso se quitó el 21/09)*
 - [x] `colliers:diagnostico` sin errores ni avisos, latido del cron a 38 s *(Jonas en el sandbox, 16/09)*
 - [x] Handler versionado en `public/.htaccess`: sitio carga tras el deploy de `4bd54c0` y `git status` limpio *(Jonas en el sandbox, 16/09)*
 - [x] Hook pre-commit (`.githooks/pre-commit`) que verifica que `public/build` corresponde a los assets del commit (5 casos probados, 16/09)
@@ -216,7 +216,7 @@ táctiles < 44 px en 375/760/1120/1440, y revisadas a ojo.
 - [x] Sesiones activas y cierre remoto (una, o todas las demás); nunca se cierra una sesión ajena por id
 - [x] Middleware de rol (`/admin` para admin y martillero; acciones de cuentas solo admin) y policy de documentos; consultas filtradas por dueño en lo existente *(G y H lo extienden a postores y garantías)*
 - [x] Pantallas que el diseño no tiene, con el diseño del Login: acceso de administradores, recuperar y restablecer contraseña, verificar correo, cambiar contraseña, confirmar contraseña, sesiones activas
-- [x] **Bug del sandbox (17/09): el ingreso de administración «solo se refrescaba», sin mensaje.** La clave pasaba (`ingreso` en `access_logs`) y la sesión con usuario existía en la base, pero el navegador no la presentó en la petición siguiente; la causa exacta de eso en el servidor está sin confirmar. Corregido para que nunca falle en silencio: (1) la clave del sandbox no expulsa una sesión autenticada y le devuelve su cookie; (2) tras ingresar, si la sesión no llega, vuelve al acceso con el motivo y anota en el log el diagnóstico (nombres de cookies, esquema, host, configuración de sesión); (3) la clave del sandbox responde 403 con motivo a las peticiones JSON (antes, un redirect que el panel mostraba como «Listo.») y explica en `/acceso` por qué la pide; (4) sesión vencida en acciones por fetch: 419 con mensaje en español; (5) el login muestra cualquier error. *(`AutenticacionTest`, `InfraestructuraTest`, `tools/comparar/ingreso-sandbox.mjs`)*
+- [x] **Bug del sandbox (17/09): el ingreso de administración «solo se refrescaba», sin mensaje.** La clave pasaba (`ingreso` en `access_logs`) y la sesión con usuario existía en la base, pero el navegador no la presentó en la petición siguiente; la causa exacta de eso en el servidor está sin confirmar. Corregido para que nunca falle en silencio: (1) la clave del sandbox no expulsa una sesión autenticada y le devuelve su cookie; (2) tras ingresar, si la sesión no llega, vuelve al acceso con el motivo y anota en el log el diagnóstico (nombres de cookies, esquema, host, configuración de sesión); (3) la clave del sandbox responde 403 con motivo a las peticiones JSON (antes, un redirect que el panel mostraba como «Listo.») y explica en `/acceso` por qué la pide; (4) sesión vencida en acciones por fetch: 419 con mensaje en español; (5) el login muestra cualquier error. *(`AutenticacionTest`, `InfraestructuraTest`, `tools/comparar/ingreso-servidor.mjs`; los puntos 1 y 3 se fueron con la clave de acceso el 21/09)*
 - [ ] En el sandbox: el primer administrador entra por `/admin/ingresar` y cambia su clave temporal *(Jonas en el sandbox; si vuelve a fallar, la pantalla lo dice y el log `storage/logs/laravel-AAAA-MM-DD.log` trae «Ingreso sin sesión»)*
 - [x] **El registro no pierde nada al fallar la validación** *(QA del 20/09, punto 5)*: los documentos válidos se guardan en el disco privado y se reponen en el intento siguiente (`DocumentosDelRegistro`), el formulario abre con un resumen de lo que falta y el foco en el primer error, cada documento dice «Ya adjuntado: archivo» y el botón pasa a «Reemplazar». La contraseña nunca vuelve al navegador (Laravel la excluye a propósito) y el aviso lo dice. `colliers:limpiar-temporales` (programador, 04:10) borra los de registros abandonados a las 24 h *(`AutenticacionTest` 3 pruebas nuevas; `registro-acceso.mjs` 6 comprobaciones nuevas)*
 - [x] **Un envío más pesado que `post_max_size` se explica** *(misma causa raíz)*: PHP descarta el cuerpo entero —campos, archivos y token—, así que el formulario volvía vacío o con un 419 «sesión expirada». `SubidaDemasiadoGrande` (antes del CSRF) responde la página 413 diciendo cuánto pesó el envío y cuánto acepta el servidor. `colliers:diagnostico` avisa si `post_max_size` no alcanza para el registro completo (3 documentos de 5 MB) ni para los documentos de 20 MB del panel
@@ -244,6 +244,7 @@ interacción idéntica; escritorio 0,05 % en 1280–1440 y 1,9 % en 1120 por el 
 - [x] Mensaje del martillero en la sala, sin recargar: dentro del panel de puja en escritorio y sobre el video bajo 1120 px *(sin diseño, mismo criterio)*
 - [x] Textos del resultado neutros («Colliers te informará sobre tu garantía según las bases») mientras el cliente no defina qué pasa con la garantía del perdedor
 - [x] Verificado en navegador real (17/09): `sala-real.mjs` 32/32, incluido un remate de dos lotes con mensaje del martillero en escritorio y 375 px
+- [x] **La sala nunca muestra «PUJA ABIERTA» en un remate que ya no se puede pujar** *(21/09)*. Reproducido con los tres roles: el cierre anticipado del martillero llega a los postores en ~1–2 s sin recargar (luego la adjudicación y el paso al lote 2). Lo que sí fallaba: con el remate **borrado** la sala seguía como si nada, y con el remate **cancelado** la sala, al llegar la hora, habría calculado «PUJA ABIERTA» por reloj. Ahora dice «REMATE NO DISPONIBLE» / «REMATE CANCELADO», quita el formulario y ofrece la salida (remates publicados / «Mi cuenta»); el nombre del postor en la cabecera lleva a «Mi cuenta» *(`tools/comparar/recorrido-roles.mjs`: administrador, martillero, dos postores y un espectador en sesiones separadas, solo con clics; 48/48 en tres corridas seguidas)*
 - [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración *(Jonas)*
 
 ## I — Remates y lotes, incluido el panel del martillero · Completo
@@ -270,6 +271,8 @@ con los componentes del panel. Migración aditiva: `lotes.nota_cierre`, `remates
 - [x] **Las fechas del formulario se explican solas** *(QA del 20/09, punto 4)*: ayuda bajo «Inicio del remate» (abre el primer lote), «Duración» (sin extensiones) y «Cierre de garantías» (va antes del inicio; vacío = N horas antes), más un resumen en lenguaje natural que se arma mientras se escribe: «Los postores pueden inscribirse y constituir la garantía hasta el … El remate abre el … y cada lote dura N minutos, sin extensiones», con aviso si el cierre de garantías quedó después del inicio. La ficha de edición lleva las mismas ayudas *(diferencia deliberada con el prototipo, como REGIÓN y el % de garantía; `panel-remates.mjs` 3 comprobaciones nuevas)*
 - [x] **«Crear subasta de prueba»** *(QA del 20/09, punto 3)*: franja aparte en `/admin/subastas`, solo para administradores y **solo fuera de producción**. Crea un remate publicado con lotes, horario a los minutos que se indiquen (12 por defecto), cierre de garantías unos minutos antes, y postores aprobados con garantía aprobada; la clave común se muestra **una sola vez** junto a los enlaces a la ficha pública y a la sala («Mi cuenta» no lista los remates de prueba a propósito). Queda marcado `es_demostracion`: fuera del listado real, del sitio público, de los reportes y de los correos. «Borrar» lo elimina con sus postores, su bitácora y su JSON. `colliers:remate-demo` usa el mismo servicio (`App\Remates\RemateDePrueba`) *(`RematesAdminTest` 3 pruebas nuevas; `panel-remates.mjs` 8 comprobaciones nuevas, incluida la usabilidad a 375 px y un postor de prueba entrando a la sala)*
 - [x] **La experiencia de prueba de punta a punta, sin escribir una URL** *(Jonas, 21/09: «Mi cuenta» del postor de prueba decía «Sin inscripciones» y «Bloqueado» siendo falso, y la clave estaba escondida en una frase)*: «Mi cuenta» muestra su remate de prueba con la garantía aprobada y «Entrar a la sala de pujas»; la ficha de la prueba tiene cada postor con correo y clave en la misma fila, botones Copiar, aviso de que la clave se muestra una vez, «Generar clave nueva» e «Ingresar como este postor» (acceso con el correo escrito, y si hay otra sesión abierta lo explica y ofrece cerrarla o copiar el enlace para una ventana privada). Remates y postores de prueba separados de los reales: no se cruzan inscripciones y no cuentan en Postores, dashboard ni reportes. De paso: «1 (global)» en vez de «10 (global)» en el % de garantía (`Formato::campo`) *(`PostoresDePruebaTest` 6; `panel-remates.mjs` reescrito sin URL: del panel a una puja real con el modal)*
+- [x] **La subasta de prueba siempre tiene martillero a cargo** *(Jonas, 21/09: «el martillero no puede trabajar»)*: con un solo martillero activo se asigna solo; con varios, la franja pregunta cuál (obligatorio); sin ninguno, no se crea y la franja lleva a «06 Usuarios». La ficha muestra al martillero junto a los postores, con su correo, «Copiar» e «Ingresar como este martillero» (acceso de administración con el correo escrito). `colliers:remate-demo` con la misma regla y `--martillero=correo` *(`MartilleroTest`, `RemateDemoTest`, `tools/comparar/recorrido-roles.mjs`: administrador, martillero, dos postores y un espectador en sesiones separadas, solo con clics; 48/48 en tres corridas seguidas)*
+- [x] **Inicio del martillero: «Tus remates»** *(21/09)*: al entrar ve sus remates —también los de prueba a su cargo, marcados PRUEBA—: en vivo ahora (con el lote que corre y su cierre), próximos y últimos cerrados, cada uno con «Abrir panel en vivo». Ya no ve el resumen general (traía nombres y RUT de postores). En «Subastas» también ve sus subastas de prueba *(`MartilleroTest`; recorrido de los tres roles; usable a 375 px)*
 - [x] **Folio de la subasta de prueba demasiado largo** *(sandbox, 21/09: 500 con `1406 Data too long for column 'folio'`)*: `PRUEBA-` + sufijo sumaba 22 caracteres en un `VARCHAR(20)`; ahora `PR-` + sufijo (18). También rompía `colliers:remate-demo`, que usa el mismo servicio. SQLite no valida largos, por eso las pruebas pasaban: nuevo **`composer test:mysql`**, la suite completa contra MySQL estricto, que reproducía el error antes de la corrección (3 fallas) y queda en 163/163
 - [x] **«Cerrar sesión» legible con el mouse encima** *(QA del 20/09, punto 6)*: `.boton-enlace:hover` lo dejaba del color del fondo marino de la barra *(`panel-remates.mjs` compara el color del texto con el del fondo)*
 
@@ -337,6 +340,7 @@ desde el celular, reenviar uno rechazado, cuenta aprobada con acceso a la sala a
 - [x] «Mi cuenta» con datos reales: remate, monto, plazo, estado, inscripciones múltiples y acceso a la sala *(textos del destino de la garantía neutros)*
 - [x] **«¿Puede pujar?» en una sola clase** *(QA del 20/09, punto 7)*: `App\Postores\Habilitacion` responde la condición del acta (registrado + cuenta aprobada + garantía aprobada de ESE remate), que estaba repetida en el motor de pujas, la sala, la ficha pública, el catálogo, los documentos reservados y el estado de la cuenta. Sin cambio de comportamiento y sin consultas nuevas en el camino de la puja *(`HabilitacionTest`, 4 pruebas; `sala-real.mjs` en navegador real contra el motor)*
 - [x] **Modo «postor habilitado una vez para todos los remates»** *(decisión de Jonas, 20/09: interruptor apagado por defecto y monto configurable, vacío, para poder mostrarle la opción a Colliers y que ellos definan el monto)*. Configuración → Garantías: «Cómo se habilita un postor» (por remate / habilitación única) y «Monto de la habilitación única (CLP)». El panel **no deja activar el modo sin monto**: una garantía que no pertenece a un remate no tiene precio base que porcentuar. Con el modo activo, el postor constituye **una** garantía (`garantias.alcance = unico`, migración aditiva) que la administración aprueba como cualquier otra y que lo habilita en todos los remates; «Mi cuenta» lo explica y deja de pedir inscripción por remate, el plazo de un remate no la vence, y el feed numera «Postor #N» de los que pujan sin garantía de ese remate por el orden de su primera puja. Volver al modo por remate no borra nada: cada garantía sigue valiendo para su remate *(`HabilitacionTest` 8 pruebas; `tools/comparar/habilitacion-unica.mjs`, 9 comprobaciones en navegador real, incluidas la validación del monto, la puja en un remate donde nunca se inscribió y la vuelta atrás)*
+- [x] **«Mi cuenta» con un remate cancelado dice la verdad** *(21/09)*: antes seguía diciendo «Estás habilitado para pujar… cuando comience la transmisión» y ofrecía subir el comprobante. Ahora: «REMATE CANCELADO», el motivo, que no se realizará, el paso 4 en «Remate cancelado», sin formulario de comprobante y con «Ver remates publicados» *(`PostoresDePruebaTest::test_mi_cuenta_de_un_remate_cancelado_no_dice_habilitado`; recorrido de los tres roles)*
 - [ ] **Monto de la habilitación única**: lo fija Colliers desde el panel cuando decida usar el modo *(hoy vacío, modo apagado)*
 - [ ] Destino posterior (devolución / imputación / ejecución) *(pendiente con el cliente)*
 
@@ -377,6 +381,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [x] Enlace al canal de YouTube de Colliers (Configuración; se oculta si está vacío) y «Compartir»
 - [x] Contacto «Coordinar visita» y «Contactar al ejecutivo» con el correo de Configuración
 - [x] «Avísame» en el listado y en el detalle; foto y datos del próximo remate real en el Login y demás pantallas de acceso
+- [x] **El espectador que espera en la página de un remate próximo lo ve empezar sin recargar** *(21/09)*: antes la cuenta llegaba a cero y la página se quedaba quieta. Ahora se recarga sola al comenzar, cada espectador con una espera al azar de hasta 15 s (cada recarga es una petición al servidor). Con el remate borrado con la página abierta: «NO DISPONIBLE» *(recorrido de los tres roles)*
 - [ ] Idioma EN/ES *(pendiente de decisión de Jonas)*
 
 ## L — Streaming · Pendiente
@@ -443,7 +448,7 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 ## R — Despliegue a producción · Pendiente
 
 - [ ] Dominio definitivo (subdominio de Colliers) y HTTPS
-- [ ] `.env` de producción: `APP_DEBUG=false`, `COLLIERS_ACCESO_CLAVE` vacía
+- [ ] `.env` de producción: `APP_DEBUG=false`, `APP_ENV=production` (así el sitio se indexa: fuera de producción lleva noindex)
 - [ ] Handler PHP 8.4 activo
 - [ ] Respaldo de `APP_KEY` y `.env` fuera del servidor
 - [ ] Respaldo periódico de la base
@@ -468,6 +473,7 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - 16/09: las pantallas de autenticación que el diseño no tiene reutilizan el diseño del Login.
 - 16/09: bloqueo por intentos fallidos de 15 minutos por defecto (5 intentos, según el diseño); editable en V.
 - 16/09: el JSON público de estado de remates no pasa por la clave del sandbox (las subastas son públicas).
+- 21/09: **el sandbox va con acceso libre**: se quitó la clave de acceso (middleware, pantalla `/acceso`, variable y pruebas). Se mantiene el noindex.
 - 16/09: la concurrencia contra MariaDB se prueba en el sandbox sobre el remate de demostración.
 - 20/09: el **martillero** ve solo los remates a su cargo (listado y panel en vivo) y la ficha de esos, en modo lectura.
 - 20/09: los **usuarios internos** van en una pantalla propia, **«06 Usuarios»** del menú lateral, solo para administradores.

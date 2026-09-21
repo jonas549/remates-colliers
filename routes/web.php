@@ -1,7 +1,6 @@
 <?php
 
 use App\Demo\PantallasRevision;
-use App\Http\Controllers\AccesoSandboxController;
 use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentosController;
@@ -29,10 +28,6 @@ use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
  * Rutas de la aplicación. La raíz es el listado de remates; /remates redirige a "/".
  * Las vistas del diseño (Bloque T) reciben datos reales desde los Bloques I a N.
  */
-
-// Clave de acceso al sandbox (ver App\Http\Middleware\AccesoSandbox).
-Route::get('/acceso', [AccesoSandboxController::class, 'formulario'])->name('acceso.formulario');
-Route::post('/acceso', [AccesoSandboxController::class, 'ingresar'])->name('acceso.ingresar');
 
 /*
  * Bloque J: motor de pujas y tiempo real. Los espectadores leen /tiempo-real/{remate}.json (estático);

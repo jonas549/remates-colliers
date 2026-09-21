@@ -9,6 +9,9 @@
     <form method="POST" action="{{ route('ingresar.como.cambiar') }}">
         @csrf
         <input type="hidden" name="usuario" value="{{ $usuario }}">
+        @if ($portal)
+            <input type="hidden" name="portal" value="{{ $portal }}">
+        @endif
         <button type="submit" class="acceso__entrar es-listo">Cerrar esta sesión e ingresar como {{ $usuario }}</button>
     </form>
 

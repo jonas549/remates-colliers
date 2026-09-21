@@ -216,3 +216,9 @@
   .sala-barra__boton { padding: 0 22px; }
   .sala-hoja { padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* Salidas a «Mi cuenta» (21/09): el nombre de la cabecera y, si el remate se cancela o retira, el resultado y la barra. */
+.sala-cabecera__usuario--enlace { text-decoration: none; }
+.sala-cabecera__usuario--enlace:hover { color: #25408f; text-decoration: underline; }
+.sala-resultado__enlace { display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; padding: 0 18px; background: #25408f; color: #ffffff; font-weight: 700; font-size: 14px; text-decoration: none; }
+.sala-barra__boton--enlace { display: inline-flex; align-items: center; text-decoration: none; }
