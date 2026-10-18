@@ -8,7 +8,9 @@ const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 // - Pasado cierra_en + margen sin liquidar, el navegador pide el estado a PHP (detector del cierre perezoso).
 // - La base de datos es la fuente de verdad: tras cada puja se vuelve a leer el estado.
 // - Varios lotes: la ficha sigue al lote vigente y un aviso cuenta cómo terminó el anterior (no hay diseño: mínimo).
-export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado, servidorMs, urls, uf = null }) => ({
+// - Presencia: latido cada ~15 s a presencia.php (sin Laravel) con un token firmado; el número de conectados llega en el
+//   mismo JSON del estado. El postor solo ve el número: los nombres nunca llegan a su navegador.
+export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado, servidorMs, urls, uf = null, presencia = null }) => ({
     estado,
     loteId: loteInicial,
     anterior: null,
@@ -31,9 +33,32 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         setInterval(() => this.sincronizar(), 60000);
         setInterval(() => this.tic(), 250);
         this.consultar();
-        const reconectar = () => { this.sincronizar(); this.consultarPhp(true); };
+        const reconectar = () => { this.sincronizar(); this.consultarPhp(true); this.latir(); };
         document.addEventListener('visibilitychange', () => { if (!document.hidden) reconectar(); });
         window.addEventListener('online', reconectar);
+        if (presencia) {
+            this.latir();
+            setInterval(() => this.latir(), presencia.latidoMs);
+            // Al cerrar la pestaña o salir de la sala, baja del contador sin esperar a que venza el latido.
+            window.addEventListener('pagehide', () => {
+                navigator.sendBeacon?.(urls.presencia, new URLSearchParams({ token: presencia.token, accion: 'salir' }));
+            });
+        }
+    },
+
+    // ── Presencia ─────────────────────────────────────────────────────────────────────────────────────────
+    async latir() {
+        if (!presencia || this.retirado) return;
+        try {
+            const r = await fetch(urls.presencia, { method: 'POST', cache: 'no-store', body: new URLSearchParams({ token: presencia.token, accion: 'latido' }) });
+            if (!r.ok) return;
+            const { conectados } = await r.json();
+            this.estado.presencia = { conectados };
+        } catch (e) { /* el próximo latido lo reintenta */ }
+    },
+    get conectadosTexto() {
+        const n = this.estado.presencia?.conectados;
+        return n ? n + (n === 1 ? ' CONECTADO' : ' CONECTADOS') : '';
     },
 
     // ── Reloj ─────────────────────────────────────────────────────────────────────────────────────────────

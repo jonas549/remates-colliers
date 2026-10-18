@@ -93,6 +93,34 @@ class SitioPublicoTest extends TestCase
         $respuesta->assertViewHas('mostrarFiltroGarantia', false);
     }
 
+    public function test_menu_y_pie_enlazan_al_sitio_corporativo_solo_donde_hay_pagina(): void
+    {
+        config(['colliers.sitio_produccion.url' => 'https://corporativo.test/']);
+        $html = $this->get('/')->assertOk()->getContent();
+
+        foreach (['servicios/' => 'Servicios', 'nosotros/' => 'Nosotros', 'politica-de-privacidad' => 'Política de privacidad',
+            'terminos-y-condiciones/' => 'Términos de Uso'] as $ruta => $texto) {
+            $this->assertStringContainsString('<a href="https://corporativo.test/' . $ruta . '" target="_blank" rel="noopener">' . $texto . '</a>', $html);
+        }
+        foreach (['https://cl.linkedin.com/company/colliers-chile', 'https://www.instagram.com/collierschile/', 'https://www.youtube.com/@collierscl'] as $red) {
+            $this->assertStringContainsString('<a href="' . $red . '" target="_blank" rel="noopener"', $html);
+        }
+        // Sin página en producción: el texto se ve igual, pero no enlaza a nada (ni a la portada como relleno).
+        foreach (['Expertos', 'Propiedades', 'Investigación', 'Artículos', 'Carreras', 'Accionistas', 'Declaración de accesibilidad'] as $texto) {
+            $this->assertStringContainsString('<a>' . $texto . '</a>', $html);
+        }
+        $this->assertStringContainsString('<a aria-label="X">', $html);
+        $this->assertStringNotContainsString('href="#"', $html);
+        $this->assertStringNotContainsString('href="https://corporativo.test/"', $html);
+
+        // Lo que se configure en el panel manda sobre el sitio corporativo.
+        Configuracion::guardar('enlace_privacidad', 'https://colliers.test/privacidad.pdf');
+        Configuracion::guardar('enlace_bases_generales', 'https://colliers.test/bases.pdf');
+        $this->get('/')->assertSee('<a href="https://colliers.test/privacidad.pdf" target="_blank" rel="noopener">Política de privacidad</a>', false)
+            ->assertSee('href="https://corporativo.test/terminos-y-condiciones/"', false);
+        $this->get('/registro')->assertSee('<a href="https://colliers.test/bases.pdf" target="_blank" rel="noopener" class="tramite-pie__enlace">Bases y condiciones</a>', false);
+    }
+
     public function test_detalle_proximo_con_ficha_mapa_visitas_documentos_y_calendario(): void
     {
         Storage::fake('local');

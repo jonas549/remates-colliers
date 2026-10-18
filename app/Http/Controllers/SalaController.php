@@ -11,6 +11,7 @@ use App\Postores\Habilitacion;
 use App\Subastas\Difusion\Emisor;
 use App\Subastas\EstadoRemate;
 use App\Subastas\Liquidador;
+use App\Subastas\Presencia;
 use App\Support\Sitio;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -70,11 +71,14 @@ class SalaController extends Controller
                 'estado' => EstadoRemate::construir($remate),
                 'servidorMs' => (int) now('UTC')->format('Uv'),
                 'uf' => Sitio::uf(),
+                // Presencia: latido sin Laravel con un token firmado para este postor y este remate.
+                'presencia' => ['token' => Presencia::token($remate, $user), 'latidoMs' => Presencia::latidoMs()],
                 'urls' => [
                     'estadoJson' => asset('tiempo-real/' . $remate->slug . '.json'),
                     'estado' => route('tiempo-real.estado', $remate),
                     // Sin framework (public/hora.php): la ruta /hora queda de respaldo.
                     'hora' => asset('hora.php'),
+                    'presencia' => asset('presencia.php'),
                     'pujar' => url("/remates/{$remate->slug}/lotes/__LOTE__/pujas"),
                     'ingresar' => route('login'),
                 ],

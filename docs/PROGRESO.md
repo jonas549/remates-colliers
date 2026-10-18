@@ -1,6 +1,6 @@
 # PROGRESO — Remates Colliers · Fase 3
 
-> Punto de retome. Última actualización: **2026-09-21, cierre de jornada.**
+> Punto de retome. Última actualización: **2026-10-18.**
 > Leer junto con `CLAUDE.md` (reglas) y **`docs/BACKLOG.md` (estado vivo de cada tarea)**.
 > El detalle de cada jornada está en `docs/progreso/AAAA-MM-DD.md`.
 
@@ -18,7 +18,11 @@
 - **21/09, noche:** martillero a cargo de la subasta de prueba e inicio «Tus remates», **sandbox sin clave de acceso**
   (noindex fuera de producción), la sala respeta un remate borrado o cancelado, **cambio de lote evidente**, y el
   recorrido de los tres roles `tools/comparar/recorrido-roles.mjs` (50/50).
-- **Todo subido a `main` hasta `450ffae`** (aprobado el 21/09).
+- **Todo subido a `main` hasta `450ffae`** (aprobado el 21/09). **Locales sin push:** `cb5ea9e` (progreso del 21/09) y lo
+  del 18/10.
+- **18/10 (QA de Jonas):** favicon, cabecera y pie hacia el sitio corporativo (solo lo que tiene página allí) y
+  **presencia en la sala** (contador para el postor; lista con nombres solo en el panel; latido sin Laravel). Detalle y qué
+  probar en el sandbox: `docs/progreso/2026-10-18.md`.
 - **Mañana (22/09): Jonas prueba en el sandbox** con el plan de `docs/progreso/2026-09-21.md` §11.
 - **Antes de reportar algo como listo:** `node tools/comparar/recorrido-roles.mjs` (los tres roles con clics) en verde.
 - **Criterio de Jonas (21/09), para todo el proyecto:** si algo necesita que alguien escriba una URL o sepa algo que la
@@ -40,6 +44,7 @@
 | 2026-09-16 | [`docs/progreso/2026-09-16.md`](progreso/2026-09-16.md) | Servidor conectado, hook de assets, C completo, J núcleo con concurrencia real, D, K |
 | 2026-09-17 | [`docs/progreso/2026-09-17.md`](progreso/2026-09-17.md) | Rendimiento sin OPcache, K terminado, I, V, G, H, M, N, manual de pruebas y push |
 | 2026-09-21 | [`docs/progreso/2026-09-21.md`](progreso/2026-09-21.md) | Folio (500 en el sandbox), suite contra MySQL, `1040 Too many connections` y reintento en la puja, experiencia de prueba sin URL, martillero y «Tus remates», sandbox sin clave, sala ante remate borrado/cancelado, cambio de lote evidente, recorrido de los tres roles. §11: plan de prueba del 22/09 |
+| 2026-10-18 | [`docs/progreso/2026-10-18.md`](progreso/2026-10-18.md) | Favicon, menú y pie hacia el sitio corporativo, presencia en la sala (latido sin Laravel, nombres solo en el panel) |
 | 2026-09-20 | [`docs/progreso/2026-09-20.md`](progreso/2026-09-20.md) | Los 8 puntos del QA de Jonas: martillero, cierre anticipado, hover, registro que no pierde nada, subasta de prueba, ayudas del formulario, «06 Usuarios» y `Habilitacion`. Tarde: push, habilitación única configurable y PDF fuera de alcance |
 
 ---
@@ -113,5 +118,8 @@
 - **Los mensajes de PHPUnit dicen la condición esperada, no la real:** «Failed asserting that '…' contains "X"» es un
   `assertSee` que falló.
 - **Borrar un usuario exige borrar su rastro:** `access_logs` y `notificaciones_log` apuntan a `users` con `restrict`.
+- **El MySQL de Laragon puede escuchar en el 3307:** `PRUEBAS_DB_PORT=3307 composer test:mysql`.
+- **Las pruebas no escriben en el `storage` real:** `Tests\TestCase` da a la presencia una carpeta por proceso; cualquier
+  archivo nuevo que escriba el código en `storage/app` necesita lo mismo.
 - **`tools/rendimiento/medir.php` y `tools/concurrencia/prueba.php` recrean su base** (`colliers_concurrencia`): nunca
   apuntarlos al sandbox. Para el sandbox: `tools/sandbox/medir-servidor.php` (solo GET).

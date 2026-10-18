@@ -14,11 +14,11 @@
     <div class="pub-cabecera__nav contenedor">
         <a href="{{ route('remates.index') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="pub-cabecera__logo"></a>
         <div class="pub-cabecera__links">
-            <a href="#">Servicios</a>
-            <a href="#">Expertos</a>
-            <a href="#">Propiedades</a>
-            <a href="#">Investigación</a>
-            <a href="#">Nosotros</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('servicios')">Servicios</x-publico.enlace-externo>
+            <a>Expertos</a>
+            <a>Propiedades</a>
+            <a>Investigación</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">Nosotros</x-publico.enlace-externo>
             <a href="{{ route('remates.index') }}" class="es-actual">Remates</a>
         </div>
         <div class="pub-cabecera__derecha">
@@ -37,11 +37,11 @@
     </div>
     <template x-if="menu">
         <div class="pub-menu">
-            <a href="#">Servicios</a>
-            <a href="#">Expertos</a>
-            <a href="#">Propiedades</a>
-            <a href="#">Investigación</a>
-            <a href="#">Nosotros</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('servicios')">Servicios</x-publico.enlace-externo>
+            <a>Expertos</a>
+            <a>Propiedades</a>
+            <a>Investigación</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">Nosotros</x-publico.enlace-externo>
             <a href="{{ route('remates.index') }}" class="es-actual">Remates</a>
             @if ($logueado)
                 @if ($cuenta)<a href="{{ route('cuenta.estado') }}" class="pub-menu__acceso">Mi cuenta</a>@endif

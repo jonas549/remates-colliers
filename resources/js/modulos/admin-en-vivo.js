@@ -4,7 +4,9 @@ const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 
 // Panel del martillero (Bloque I). Mismo transporte que la sala: JSON estático cada ~1 s, reloj sincronizado con
 // hora.php y el endpoint de estado solo como respaldo o pasado el cierre. Muestra la identidad detrás de cada «Postor #N».
-export default ({ estado, nombres, lotes, servidorMs, urls }) => ({
+// Presencia: quién tiene la sala abierta, con nombre, desde un endpoint solo del panel cada ~15 s (el JSON público lleva
+// solo el número).
+export default ({ estado, nombres, lotes, servidorMs, urls, presencia = { conectados: 0, usuarios: [] }, latidoMs = 15000 }) => ({
     estado,
     terminales: TERMINALES,
     desfase: servidorMs - Date.now(),
@@ -17,12 +19,21 @@ export default ({ estado, nombres, lotes, servidorMs, urls }) => ({
     aviso: '',
     avisoError: false,
     ultimaConsultaPhp: 0,
+    presencia,
 
     init() {
         this.sincronizar();
         setInterval(() => this.sincronizar(), 60000);
         setInterval(() => { this.ahora = Date.now() + this.desfase; this.revisarCierre(); }, 250);
         this.consultar();
+        setInterval(() => this.consultarPresencia(), latidoMs);
+    },
+
+    async consultarPresencia() {
+        try {
+            const r = await fetch(urls.presencia, { cache: 'no-store', headers: { Accept: 'application/json' } });
+            if (r.ok && (r.headers.get('content-type') || '').includes('application/json')) this.presencia = await r.json();
+        } catch (e) { /* se reintenta en el próximo ciclo */ }
     },
 
     async sincronizar() {

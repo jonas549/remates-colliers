@@ -59,6 +59,9 @@ final class EstadoRemate
                 'en_ms' => self::ms($remate->mensaje_martillero_en),
             ],
             'lotes' => $lotes->values()->all(),
+            // Solo el número de postores con la sala abierta: este estado es público, nunca lleva nombres. Leerlo
+            // limpia los vencidos (PresenciaSala); el emisor lo escribe bajo su bloqueo, que es el mismo del latido.
+            'presencia' => ['conectados' => Presencia::sala()->conectados($remate->id, self::ms($ahora))],
             'generado_en_ms' => self::ms($ahora),
         ];
     }

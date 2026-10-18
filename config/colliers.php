@@ -43,6 +43,18 @@ return [
     ],
 
     /*
+     * Presencia en la sala de pujas (App\Subastas\PresenciaSala). El navegador late cada `latido_segundos` a
+     * public/presencia.php (sin Laravel); se cuenta como conectado quien latió en los últimos `ventana_segundos`.
+     * `ajustes`: archivo que Laravel deja para el script (clave del token y carpetas); fuera de `public`.
+     */
+    'presencia' => [
+        'carpeta' => env('COLLIERS_PRESENCIA_CARPETA', storage_path('app/presencia')),
+        'ajustes' => env('COLLIERS_PRESENCIA_AJUSTES', storage_path('app/presencia-ajustes.json')),
+        'latido_segundos' => 15,
+        'ventana_segundos' => 45,
+    ],
+
+    /*
      * Límites técnicos de protección (no son reglas de negocio del acta): peticiones por minuto.
      * Un postor real no se acerca a 30 pujas por minuto; los espectadores consultan el JSON estático, no PHP.
      */
@@ -74,6 +86,25 @@ return [
      * todos los lotes del remate estén liquidados.
      */
     'deploy_minutos_antes_de_remate' => (int) env('COLLIERS_DEPLOY_MINUTOS_ANTES', 30),
+
+    /*
+     * Sitio corporativo de Colliers en producción. Los ítems de la cabecera y del pie que no son pantallas de esta
+     * aplicación enlazan ahí (App\Support\Sitio::produccion). Las redes son las que publica ese sitio.
+     */
+    'sitio_produccion' => [
+        'url' => env('COLLIERS_SITIO_PRODUCCION', 'https://activosespeciales.colliers.cl'),
+        'paginas' => [
+            'servicios' => 'servicios/',
+            'nosotros' => 'nosotros/',
+            'privacidad' => 'politica-de-privacidad',
+            'terminos' => 'terminos-y-condiciones/',
+        ],
+        'redes' => [
+            'linkedin' => 'https://cl.linkedin.com/company/colliers-chile',
+            'instagram' => 'https://www.instagram.com/collierschile/',
+            'youtube' => 'https://www.youtube.com/@collierscl',
+        ],
+    ],
 
     /* Zona horaria en que se muestran las fechas. En base de datos todo se guarda en UTC. */
     'zona_visualizacion' => env('COLLIERS_ZONA_VISUALIZACION', 'America/Santiago'),

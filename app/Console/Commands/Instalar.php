@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Configuracion;
 use App\Models\User;
+use App\Subastas\Presencia;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -35,10 +36,18 @@ class Instalar extends Command
         $this->enlaceStorage();
         $this->primerAdministrador();
         $this->configuracionPorDefecto();
+        $this->ajustesPresencia();
 
         $this->info('Instalación completa.');
 
         return self::SUCCESS;
+    }
+
+    /** Lo que public/presencia.php (sin Laravel) necesita para verificar los latidos de la sala. */
+    private function ajustesPresencia(): void
+    {
+        Presencia::publicarAjustes();
+        $this->line('  ✓ Ajustes de presencia en la sala');
     }
 
     private function carpetas(): void

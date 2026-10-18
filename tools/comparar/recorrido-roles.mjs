@@ -144,6 +144,37 @@ for (let i = 0; i < 2; i++) {
 }
 const [P1, P2] = postores.map((x) => x.p);
 
+// ══ PRESENCIA (QA de Jonas, 18/10): el postor ve cuántos hay; el martillero, quiénes ════════════════════════════
+console.log('\n— Presencia en la sala');
+const conteoSala = (p) => texto(p, '.sala__historial-conteo');
+const enLaSala = async () => texto(M, '[data-presencia]');
+comprobar('postores: los dos ven «2 CONECTADOS» en la sala, sin recargar',
+    await esperar(async () => (await conteoSala(P1)).includes('2 CONECTADOS') && (await conteoSala(P2)).includes('2 CONECTADOS'), 20000),
+    (await conteoSala(P1)).slice(0, 80));
+comprobar('martillero: «En la sala ahora» lista a los dos por nombre (se actualiza solo, cada 15 s)',
+    await esperar(async () => { const t = await enLaSala(); return t.includes('2 conectados') && t.includes('Postor de prueba 1') && t.includes('Postor de prueba 2'); }, 25000),
+    (await enLaSala()).slice(0, 160));
+const htmlP1 = await P1.content();
+comprobar('postor: su navegador no recibe el nombre del otro postor ni correos', !htmlP1.includes('Postor de prueba 2') && !htmlP1.includes(correos[1]));
+// El postor 2 sale de la sala con el enlace a «Mi cuenta»: baja del contador sin esperar a que venza su latido.
+await P2.locator('.sala-cabecera__usuario--enlace').click();
+await P2.waitForLoadState('load');
+comprobar('cuando un postor sale de la sala, el otro ve «1 CONECTADO» en segundos', await esperar(async () => (await conteoSala(P1)).includes('1 CONECTADO'), 8000),
+    (await conteoSala(P1)).slice(0, 80));
+comprobar('martillero: la lista baja a uno', await esperar(async () => { const t = await enLaSala(); return t.includes('1 conectado') && !t.includes('Postor de prueba 2'); }, 25000),
+    (await enLaSala()).slice(0, 160));
+await P2.getByRole('link', { name: 'Entrar a la sala de pujas' }).first().click();
+await P2.waitForLoadState('load');
+comprobar('al volver a la sala, vuelve a contar', await esperar(async () => (await conteoSala(P1)).includes('2 CONECTADOS'), 20000));
+await M.waitForTimeout(800);
+await M.screenshot({ path: path.join(SALIDA, '03b-martillero-presencia.png'), fullPage: true });
+await P1.setViewportSize({ width: 375, height: 800 });
+await P1.waitForTimeout(600);
+const usoSala = await revisarUsabilidad(P1, 375);
+comprobar('sala a 375 px con el contador: sin desborde', !usoSala.desborde, `desborde:${usoSala.desborde}`);
+await P1.screenshot({ path: path.join(SALIDA, '03c-sala-presencia-375.png'), fullPage: true });
+await P1.setViewportSize({ width: 1440, height: 900 });
+
 // Espectador: desde la ficha, «Ver en el sitio» (la página pública del remate).
 const [E] = await Promise.all([cA.waitForEvent('page'), A.getByRole('link', { name: 'Ver en el sitio' }).click()]);
 await E.waitForLoadState('load');

@@ -71,7 +71,8 @@
                     <div class="sala__historial">
                         <div class="sala__historial-cabeza">
                             <h2 class="sala__historial-titulo">Historial de pujas</h2>
-                            <span class="sala__historial-conteo"><span x-text="totalPujas"></span> POSTURAS · TIEMPO REAL</span>
+                            {{-- Presencia (sin diseño): el número de postores con la sala abierta, en la misma línea del conteo. Solo el número. --}}
+                            <span class="sala__historial-conteo"><span x-text="totalPujas"></span> POSTURAS · TIEMPO REAL{!! $real ? '<span class="sala__conectados" x-show="conectadosTexto" x-text="\' · \' + conectadosTexto"></span>' : '' !!}</span>
                         </div>
                         <div class="sala__historial-lista">
                             <template x-for="(p, i) in historialVista" :key="p.hora + p.monto">

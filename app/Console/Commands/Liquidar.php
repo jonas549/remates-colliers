@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Subastas\Liquidador;
+use App\Subastas\Presencia;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 
 /**
@@ -21,6 +23,9 @@ class Liquidar extends Command
         ['liquidados' => $liquidados, 'abiertos' => $abiertos] = $liquidador->transicionesPendientes();
         $this->line($liquidados ? "Lotes liquidados: {$liquidados}" : 'Sin lotes pendientes de liquidar.');
         $this->line($abiertos ? "Lotes abiertos: {$abiertos}" : 'Sin lotes pendientes de abrir.');
+
+        // Presencia en la sala: si todos cerraron sin avisar, nadie más late y el contador quedaría fijo.
+        Presencia::sala()->limpiarTodos((int) CarbonImmutable::now('UTC')->format('Uv'));
 
         return self::SUCCESS;
     }

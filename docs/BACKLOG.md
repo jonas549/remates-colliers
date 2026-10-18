@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-09-21** (folio, suite en MySQL, conexiones, reintento en la puja, experiencia de prueba, martillero, acceso libre y recorrido de los tres roles).
+> **Registro vivo del avance.** Última actualización: **2026-10-18** (QA de Jonas: favicon, menú y pie hacia el sitio corporativo, presencia en la sala).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -20,13 +20,13 @@ nota *(verifica Jonas en el sandbox)*.
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 31/35 |
 | D | Autenticación y registro de postores | En progreso | 13/16 |
-| K | Sala de puja conectada al motor real | En progreso | 16/17 |
+| K | Sala de puja conectada al motor real | En progreso | 17/18 |
 | I | Remates y lotes + panel del martillero | **Completo** | 20/20 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 10/12 |
 | M | Notificaciones | En progreso | 8/9 |
-| N | Sitio público | En progreso | 12/13 |
+| N | Sitio público | En progreso | 14/15 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 7/8 |
@@ -61,12 +61,12 @@ internos (2) → habilitación configurable (7)**.
 | 2 | No hay dónde crear usuarios internos (hoy solo `colliers:crear-usuario` por terminal) | **Hecho (20/09)**: pantalla **«06 Usuarios»** en el menú lateral: crear, editar, activar/desactivar, restablecer clave, desbloquear y cerrar sesiones |
 | 7 | Inscripción por remate vs. postor habilitado una vez, configurable | **Hecho (20/09)**: interruptor en Configuración → Garantías, **apagado por defecto**, con el monto de la habilitación única **vacío** hasta que Colliers lo fije. Activarlo sin monto no se permite |
 
-**Dónde vamos:** T, C, I y G cerrados; K, V, H, M y N hechos en local (falta lo que solo se prueba en el sandbox, el destino de la garantía y EN/ES). Reportes (O) con datos reales y exportables XLSX/CSV (falta PDF, a decidir, y probar en el sandbox). B completo. J, D y K hechos y probados en local
-(K en navegador real contra el motor); faltan sus verificaciones en el sandbox. 17/09: OPcache apagado en el sandbox →
-camino de la puja optimizado por código (`docs/RENDIMIENTO-SIN-OPCACHE.md`). Plan del 17/09 (Jonas): seguir de corrido
-**K → I → V → G → H → M → N**, commits locales, push al terminar N → **hecho**. Ahora: Jonas prueba en el sandbox con
-`docs/MANUAL-DE-PRUEBAS.md`; después L → E/F → O. **QA completo en local hecho (17/09):** `docs/QA-CHECKLIST.md`, 74/74 casos en
-verde y 11 que solo se prueban en el sandbox.
+**Dónde vamos (18/10):** T, B, C, I y G cerrados; J, D, K, V, H, M, N y O hechos y probados en local, con lo que solo se
+prueba en el sandbox pendiente de Jonas (plan en `docs/progreso/2026-09-21.md` §11). E/F empezado («06 Usuarios»).
+18/10, QA de Jonas: favicon, cabecera y pie hacia el sitio corporativo y **presencia en la sala**, en local y sin push
+(detalle en `docs/progreso/2026-10-18.md`). Siguiente: lo que salga del sandbox → L (streaming) → resto de E/F → P → Q → R → S.
+OPcache sigue apagado en el sandbox: el camino de la puja y la presencia no ejecutan Laravel donde no hace falta
+(`docs/RENDIMIENTO-SIN-OPCACHE.md`).
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -246,7 +246,8 @@ interacción idéntica; escritorio 0,05 % en 1280–1440 y 1,9 % en 1120 por el 
 - [x] Verificado en navegador real (17/09): `sala-real.mjs` 32/32, incluido un remate de dos lotes con mensaje del martillero en escritorio y 375 px
 - [x] **La sala nunca muestra «PUJA ABIERTA» en un remate que ya no se puede pujar** *(21/09)*. Reproducido con los tres roles: el cierre anticipado del martillero llega a los postores en ~1–2 s sin recargar (luego la adjudicación y el paso al lote 2). Lo que sí fallaba: con el remate **borrado** la sala seguía como si nada, y con el remate **cancelado** la sala, al llegar la hora, habría calculado «PUJA ABIERTA» por reloj. Ahora dice «REMATE NO DISPONIBLE» / «REMATE CANCELADO», quita el formulario y ofrece la salida (remates publicados / «Mi cuenta»); el nombre del postor en la cabecera lleva a «Mi cuenta» *(`tools/comparar/recorrido-roles.mjs`: administrador, martillero, dos postores y un espectador en sesiones separadas, solo con clics; 48/48 en tres corridas seguidas)*
 - [x] **El cambio de lote es evidente** *(Jonas, 21/09: cerró el lote 1 con «Cerrar este lote ahora», el lote 2 abrió a su hora y la sala no dejó claro que había cambiado de lote)*: la franja y la cabecera del panel nombran el lote («LOTE 2 DE 2 · PRÓXIMO · PUJA AÚN NO ABRE»); el aviso «CAMBIO DE LOTE · AHORA LOTE 2 DE 2» va primero, dice el resultado del lote anterior **para ese postor** («Te adjudicaste el lote 1 en $X…», en verde; «se adjudicó a otro postor»; «cerró sin posturas») y qué se remata ahora, con la hora de apertura o «en vivo». Antes, al pasar al lote 2, el ganador del lote 1 dejaba de ver que lo había ganado *(`sala-real.mjs` con un remate de dos lotes en escritorio y 375 px; `recorrido-roles.mjs` 50/50)*
-- [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración *(Jonas)*
+- [x] **Presencia en la sala** *(QA de Jonas, 18/10)*: el postor ve cuántos están conectados («2 CONECTADOS», en la línea del conteo de posturas); el martillero y la administración ven además **quiénes**, en «En la sala ahora» del panel en vivo: nombre y apellido del postor o, si puja por una empresa, la razón social. Nada de RUT ni correo, y sin marca de habilitación (a la sala solo entra quien está habilitado). Sin websockets ni procesos persistentes: latido cada 15 s a `public/presencia.php`, **sin Laravel** (como `hora.php`), con un token firmado (HMAC derivado de `APP_KEY`) que la sala entrega al abrir; la presencia va a un archivo por remate en `storage/app/presencia` (no a la base: un latido no abre conexiones). Activo = latido en los últimos 45 s; al cerrar la pestaña, `sendBeacon` lo baja al instante. El JSON público lleva **solo el número** (`presencia.conectados`), escrito bajo el mismo bloqueo del emisor; los nombres salen de `GET /admin/subastas/{id}/presencia`, solo para administración y el martillero del remate, que el panel consulta cada 15 s. Los vencidos se limpian al construir el estado y en el cron de cada minuto (`colliers:liquidar`). Lógica en `App\Subastas\PresenciaSala`, sin dependencias, compartida por Laravel y el script *(`PresenciaSalaTest` 7, incluido el script en un proceso aparte que no carga ni Composer ni Laravel; `recorrido-roles.mjs` con 8 comprobaciones nuevas: dos postores ven «2 CONECTADOS», el martillero los ve por nombre, uno sale y baja a 1, vuelve y sube, el navegador del postor no recibe el nombre del otro, y la sala a 375 px sin desborde; `sala-real.mjs` y `panel-remates.mjs` sin regresiones)*
+- [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración, **incluida la presencia** (`presencia.php` bajo LiteSpeed y la lista del panel) *(Jonas)*
 
 ## I — Remates y lotes, incluido el panel del martillero · Completo
 
@@ -381,6 +382,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [x] Recomendados (próximos y en vivo)
 - [x] Enlace al canal de YouTube de Colliers (Configuración; se oculta si está vacío) y «Compartir»
 - [x] **Favicon** *(QA de Jonas, 18/10)*: el ícono de activosespeciales.colliers.cl (original de 512 px) en `favicon.ico` (16/32/48), PNG de 32, 180 (apple-touch), 192 y 512 y `site.webmanifest`, enlazados en `x-layouts.base`, que es el único `<head>`: el panel, el acceso, la sala y las páginas de error lo envuelven. `.htaccess` sirve el manifiesto como `application/manifest+json` *(verificado en local: sitio, acceso y panel con sesión; 179 pruebas)*
+- [x] **Cabecera y pie hacia el sitio corporativo** *(QA de Jonas, 18/10)*: los ítems que no son de la aplicación enlazan a la página que existe en activosespeciales.colliers.cl, en pestaña nueva (`target="_blank" rel="noopener"`): Servicios, Nosotros, Política de privacidad, Términos de uso y las redes que publica ese sitio (LinkedIn, Instagram, YouTube). Sin página allí quedan **sin enlace**, con el mismo aspecto: Expertos, Propiedades, Investigación, Artículos, Carreras, Accionistas, Cookies, Accesibilidad y X; nada va a la portada como relleno. Los enlaces de Configuración → Sitio (privacidad, términos, bases) **mandan cuando tienen valor**; vacíos, la página corporativa (las bases no tienen: sin valor, sin enlace). URL base en `config/colliers.php` → `sitio_produccion` con `COLLIERS_SITIO_PRODUCCION` (por defecto la de producción: no hace falta tocar el servidor). El menú del panel no cambió *(`SitioPublicoTest::test_menu_y_pie_enlazan_al_sitio_corporativo_solo_donde_hay_pagina`)*
 - [x] Contacto «Coordinar visita» y «Contactar al ejecutivo» con el correo de Configuración
 - [x] «Avísame» en el listado y en el detalle; foto y datos del próximo remate real en el Login y demás pantallas de acceso
 - [x] **El espectador que espera en la página de un remate próximo lo ve empezar sin recargar** *(21/09)*: antes la cuenta llegaba a cero y la página se quedaba quieta. Ahora se recarga sola al comenzar, cada espectador con una espera al azar de hasta 15 s (cada recarga es una petición al servidor). Con el remate borrado con la página abierta: «NO DISPONIBLE» *(recorrido de los tres roles)*

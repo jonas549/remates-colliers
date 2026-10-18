@@ -81,6 +81,9 @@ núcleos entregue realmente el hosting, y eso se mide en el sandbox (§6).
 3. **Menos consultas por puja:** `Configuracion::valor()` recuerda los valores 2 s (una puja leía la misma clave 3–4
    veces; guardar desde el panel vacía la memoria) y `PujaController` arma el resumen con una sola lectura del alias.
 4. **Escenario D** en las pruebas de concurrencia y comprobación «ninguna puja recibida antes de T se perdió» en C y D.
+5. **Presencia en la sala sin framework** (18/10): `public/presencia.php` recibe el latido de cada postor cada 15 s con un
+   token firmado y escribe un archivo en storage; no carga Composer ni Laravel ni abre la base. Por Laravel habría sido
+   ~0,7 peticiones por segundo con 10 postores durante todo el remate (`App\Subastas\PresenciaSala`).
 
 ### Evaluado y descartado: una ruta de puja que no arranque el framework
 

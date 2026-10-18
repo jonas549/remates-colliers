@@ -51,6 +51,23 @@
                     </template>
                 </div>
                 <p class="admin-gestion__nota">Se muestran las últimas 10 posturas del lote. El sitio público identifica a cada postor solo con su número; aquí se ve quién es.</p>
+
+                {{-- Presencia (sin diseño, con los componentes del panel): quién tiene la sala abierta ahora. --}}
+                <div data-presencia>
+                    <div class="admin-seccion__cabeza">
+                        <h2 class="admin-seccion__titulo">En la sala ahora</h2>
+                        <span class="admin-reportes__nota-titulo"><span x-text="presencia.conectados"></span> <span x-text="presencia.conectados === 1 ? 'conectado' : 'conectados'"></span></span>
+                    </div>
+                    <div class="admin-vivo__historial">
+                        <template x-for="(u, i) in presencia.usuarios" :key="i + '-' + u.nombre">
+                            <div class="admin-fila"><div class="admin-fila__principal" x-text="u.nombre"></div></div>
+                        </template>
+                        <template x-if="presencia.usuarios.length === 0">
+                            <div class="admin-vacio">Ningún postor tiene la sala abierta.</div>
+                        </template>
+                    </div>
+                </div>
+                <p class="admin-gestion__nota">Postores con la sala de pujas abierta en los últimos {{ config('colliers.presencia.ventana_segundos') }} segundos. Se actualiza cada {{ config('colliers.presencia.latido_segundos') }} segundos.</p>
             </div>
 
             <div>

@@ -104,6 +104,8 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
     Route::get('/subastas', [RematesController::class, 'index'])->name('subastas');
     // Panel del martillero: administradores y el martillero asignado a ese remate (se revisa en el controlador).
     Route::get('/subastas/{remate}/en-vivo', [EnVivoController::class, 'show'])->name('remates.en-vivo');
+    // Quién está en la sala, con nombre (solo el panel; el JSON público lleva solo el número).
+    Route::get('/subastas/{remate}/presencia', [EnVivoController::class, 'presencia'])->name('remates.presencia');
     // Ficha: administración la edita; el martillero del remate la ve en modo lectura (se revisa en el controlador).
     Route::get('/subastas/{remate}', [RematesController::class, 'show'])->name('remates.show');
     // Bloque O: reportes con datos reales y exportables (sin datos personales).
