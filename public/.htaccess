@@ -8,6 +8,11 @@
     </IfModule>
 </IfModule>
 
+# Manifiesto del ícono del sitio (site.webmanifest): tipo correcto para los navegadores.
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

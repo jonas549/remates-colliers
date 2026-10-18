@@ -380,6 +380,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [x] Documentos descargables: públicos para todos; reservados solo con garantía aprobada del remate
 - [x] Recomendados (próximos y en vivo)
 - [x] Enlace al canal de YouTube de Colliers (Configuración; se oculta si está vacío) y «Compartir»
+- [x] **Favicon** *(QA de Jonas, 18/10)*: el ícono de activosespeciales.colliers.cl (original de 512 px) en `favicon.ico` (16/32/48), PNG de 32, 180 (apple-touch), 192 y 512 y `site.webmanifest`, enlazados en `x-layouts.base`, que es el único `<head>`: el panel, el acceso, la sala y las páginas de error lo envuelven. `.htaccess` sirve el manifiesto como `application/manifest+json` *(verificado en local: sitio, acceso y panel con sesión; 179 pruebas)*
 - [x] Contacto «Coordinar visita» y «Contactar al ejecutivo» con el correo de Configuración
 - [x] «Avísame» en el listado y en el detalle; foto y datos del próximo remate real en el Login y demás pantallas de acceso
 - [x] **El espectador que espera en la página de un remate próximo lo ve empezar sin recargar** *(21/09)*: antes la cuenta llegaba a cero y la página se quedaba quieta. Ahora se recarga sola al comenzar, cada espectador con una espera al azar de hasta 15 s (cada recarga es una petición al servidor). Con el remate borrado con la página abierta: «NO DISPONIBLE» *(recorrido de los tres roles)*
