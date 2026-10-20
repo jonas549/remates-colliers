@@ -3,10 +3,10 @@
     <div class="pub-pie__arriba contenedor">
         <img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="pub-pie__logo">
         <div class="pub-pie__links">
-            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">Nosotros</x-publico.enlace-externo>
-            <a>Artículos</a>
-            <a>Carreras</a>
-            <a>Accionistas</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">{{ __('sitio.pie.nosotros') }}</x-publico.enlace-externo>
+            <a>{{ __('sitio.pie.articulos') }}</a>
+            <a>{{ __('sitio.pie.carreras') }}</a>
+            <a>{{ __('sitio.pie.accionistas') }}</a>
         </div>
         <div class="pub-pie__sociales">
             <x-publico.enlace-externo :href="\App\Support\Sitio::red('linkedin')" aria-label="LinkedIn">
@@ -25,13 +25,13 @@
     </div>
     <div class="pub-pie__separador">
         <div class="pub-pie__abajo contenedor">
-            <a>Política de información para el uso de Cookies</a>
-            <x-publico.enlace-externo :href="\App\Support\Sitio::enlaceLegal('privacidad')">Política de privacidad</x-publico.enlace-externo>
-            <x-publico.enlace-externo :href="\App\Support\Sitio::enlaceLegal('terminos')">Términos de Uso</x-publico.enlace-externo>
-            <a>Declaración de accesibilidad</a>
+            <a>{{ __('sitio.pie.cookies') }}</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::enlaceLegal('privacidad')">{{ __('sitio.pie.privacidad') }}</x-publico.enlace-externo>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::enlaceLegal('terminos')">{{ __('sitio.pie.terminos') }}</x-publico.enlace-externo>
+            <a>{{ __('sitio.pie.accesibilidad') }}</a>
             <div class="pub-pie__copy">
-                <span>Desarrollado por <a href="https://deltadigital.cl" target="_blank" rel="noopener">DeltaDigital</a></span>
-                <span>Copyright © 2026 Colliers</span>
+                <span>{{ __('sitio.pie.desarrollado_por') }} <a href="https://deltadigital.cl" target="_blank" rel="noopener">DeltaDigital</a></span>
+                <span>{{ __('sitio.pie.copyright') }}</span>
             </div>
         </div>
     </div>

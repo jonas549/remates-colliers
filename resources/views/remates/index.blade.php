@@ -9,17 +9,18 @@
     $remateBarra = $visitante['remate']['titulo'] ?? ($hero['direccion'] ?? '');
     $slugBarra = $visitante['remate']['slug'] ?? ($hero['id'] ?? null);
     $barra = [
-        'registrado' => ['clase' => 'registrado', 'msg' => 'Aún no registras una garantía. Necesitas una aprobada por remate para poder pujar.', 'accion' => 'Cómo constituirla'],
-        'en-revision' => ['clase' => 'revision', 'msg' => 'Recibimos tu comprobante para ' . $remateBarra . '. Lo revisamos dentro de ' . Sitio::horasRevision() . ' horas hábiles.', 'accion' => 'Ver estado'],
-        'aprobada' => ['clase' => 'aprobada', 'msg' => 'Garantía aprobada para ' . $remateBarra . '. Puedes pujar cuando comience el remate.', 'accion' => 'Ir al remate'],
+        'registrado' => ['clase' => 'registrado', 'msg' => __('listado.barra.registrado'), 'accion' => __('listado.barra.registrado_accion')],
+        'en-revision' => ['clase' => 'revision', 'msg' => __('listado.barra.en_revision', ['remate' => $remateBarra, 'horas' => Sitio::horasRevision()]), 'accion' => __('listado.barra.en_revision_accion')],
+        'aprobada' => ['clase' => 'aprobada', 'msg' => __('listado.barra.aprobada', ['remate' => $remateBarra]), 'accion' => __('listado.barra.aprobada_accion')],
     ][$sesion] ?? null;
     $heroCta = $hero === null ? null : match ($sesion) {
-        'visitante' => $logueado ? ['texto' => 'Ver bases y condiciones', 'href' => route('remates.show', $hero['id'])] : ['texto' => 'Crear cuenta para pujar', 'href' => route('register')],
-        'aprobada' => ['texto' => 'Ir al remate', 'href' => $visitante['remate'] ? route('sala.show', $visitante['remate']['slug']) : route('remates.show', $hero['id'])],
-        default => ['texto' => 'Constituir la garantía', 'href' => route('remates.show', $hero['id'])],
+        'visitante' => $logueado ? ['texto' => __('listado.hero.ver_bases'), 'href' => route('remates.show', $hero['id'])] : ['texto' => __('listado.hero.crear_cuenta'), 'href' => route('register')],
+        'aprobada' => ['texto' => __('listado.hero.ir_al_remate'), 'href' => $visitante['remate'] ? route('sala.show', $visitante['remate']['slug']) : route('remates.show', $hero['id'])],
+        default => ['texto' => __('listado.hero.constituir_garantia'), 'href' => route('remates.show', $hero['id'])],
     };
-    $opcionesEstado = ['Todos' => 'Todos los remates', 'En vivo' => 'En vivo', 'Próximo' => 'Próximos', 'Cerrado' => 'Cerrados'];
-    $opcionesOcupacion = ['Todas' => 'Todas', 'Desocupada' => 'Desocupada', 'Ocupada' => 'Ocupada'];
+    // Claves: valores del catálogo (datos del filtro); valores: etiquetas.
+    $opcionesEstado = ['Todos' => __('listado.filtros.estado_todos'), 'En vivo' => __('listado.filtros.estado_en_vivo'), 'Próximo' => __('listado.filtros.estado_proximo'), 'Cerrado' => __('listado.filtros.estado_cerrado')];
+    $opcionesOcupacion = ['Todas' => __('listado.filtros.ocupacion_todas'), 'Desocupada' => __('listado.filtros.ocupacion_desocupada'), 'Ocupada' => __('listado.filtros.ocupacion_ocupada')];
     // Opciones de filtro generadas desde los remates publicados.
     $tipos = collect($remates)->pluck('tipo')->unique()->sortBy(fn ($t) => $t === 'Departamento' ? 0 : 1)->values();
     $regiones = \App\Support\RegionesChile::ordenar(collect($remates)->pluck('region')->unique()->values()->all());
@@ -31,14 +32,14 @@
         'rutas' => ['detalle' => route('remates.show', '__ID__'), 'avisame' => route('suscripciones.store')],
     ];
 @endphp
-<x-layouts.base titulo="Remates" pagina-completa>
+<x-layouts.base :titulo="__('listado.titulo_pagina')" pagina-completa>
     <div class="listado" x-data="listado(@js($config))">
 
         <x-publico.cabecera :sesion="$sesion" :visitante="$visitante">
             @if ($barra)
                 <div class="pub-garantia pub-garantia--{{ $barra['clase'] }}">
                     <div class="pub-garantia__interior contenedor">
-                        <span class="pub-garantia__chip">GARANTÍA</span>
+                        <span class="pub-garantia__chip">{{ __('listado.barra.chip') }}</span>
                         <span>{{ $barra['msg'] }}</span>
                         <a href="{{ $sesion === 'aprobada' && $slugBarra ? route('sala.show', $slugBarra) : route('cuenta.estado', array_filter(['remate' => $visitante['remate']['slug'] ?? null])) }}" class="pub-garantia__accion">{{ $barra['accion'] }}</a>
                     </div>
@@ -47,21 +48,21 @@
         </x-publico.cabecera>
 
         <div class="listado__encabezado contenedor">
-            <div class="listado__migas">Inicio <span>/</span> Remates</div>
+            <div class="listado__migas">{{ __('listado.encabezado.migas_inicio') }} <span>/</span> {{ __('listado.encabezado.migas_remates') }}</div>
             <div class="listado__encabezado-grilla">
                 <div>
-                    <div class="listado__kicker">REMATES INMOBILIARIOS</div>
-                    <h1 class="listado__titulo">Casas y departamentos en remate</h1>
-                    <p class="listado__bajada">Propiedades adjudicadas en subasta pública en línea, con transmisión en vivo y cierre automático al vencer el tiempo. Todas las pujas se cursan en pesos chilenos.</p>
+                    <div class="listado__kicker">{{ __('listado.encabezado.kicker') }}</div>
+                    <h1 class="listado__titulo">{{ __('listado.encabezado.titulo') }}</h1>
+                    <p class="listado__bajada">{{ __('listado.encabezado.bajada') }}</p>
                 </div>
                 <div class="listado__uf">
                     <div>
-                        <div class="listado__uf-etiqueta">UF DE HOY</div>
+                        <div class="listado__uf-etiqueta">{{ __('listado.encabezado.uf_etiqueta') }}</div>
                         <div class="listado__uf-valor">{{ $uf['valor'] ? '$' . number_format($uf['valor'], 2, ',', '.') : '—' }}</div>
-                        <div class="listado__uf-fecha">{{ $uf['fecha'] ? Formato::fechaLarga(\Carbon\CarbonImmutable::parse($uf['fecha'], Formato::ZONA)) : 'Sin valor vigente' }}</div>
+                        <div class="listado__uf-fecha">{{ $uf['fecha'] ? Formato::fechaLarga(\Carbon\CarbonImmutable::parse($uf['fecha'], Formato::ZONA)) : __('listado.encabezado.uf_sin_valor') }}</div>
                     </div>
                     <div class="listado__uf-divisor"></div>
-                    <p>Valor de referencia informativa. Los precios base, las garantías y las pujas se expresan y se pagan en pesos (CLP).</p>
+                    <p>{{ __('listado.encabezado.uf_nota') }}</p>
                 </div>
             </div>
         </div>
@@ -70,11 +71,11 @@
         <div class="listado__hero">
             <div class="listado__hero-interior contenedor">
                 <div>
-                    <div class="listado__hero-chip">{{ $hero['enVivo'] ? 'REMATE EN VIVO' : 'PRÓXIMO REMATE' }}</div>
+                    <div class="listado__hero-chip">{{ $hero['enVivo'] ? __('listado.hero.en_vivo') : __('listado.hero.proximo') }}</div>
                     <h2 class="listado__hero-titulo">{{ $hero['direccion'] }}</h2>
-                    <div class="listado__hero-meta">{{ collect([trim($hero['comuna'] . ', ' . $hero['region'], ', '), $hero['tipo'], $hero['sup'] ? Formato::numero($hero['sup'], 2) . ' m² útiles' : null, $hero['dorm'] ? $hero['dorm'] . 'D / ' . $hero['banos'] . 'B' : null, $hero['ocupacion']])->filter()->join(' · ') }}</div>
+                    <div class="listado__hero-meta">{{ collect([trim($hero['comuna'] . ', ' . $hero['region'], ', '), $hero['tipo'], $hero['sup'] ? __('listado.hero.superficie', ['sup' => Formato::numero($hero['sup'], 2)]) : null, $hero['dorm'] ? __('listado.hero.dorm_banos', ['dorm' => $hero['dorm'], 'banos' => $hero['banos']]) : null, $hero['ocupacion']])->filter()->join(' · ') }}</div>
                     <div class="listado__contador">
-                        @foreach (['d' => 'DÍAS', 'h' => 'HORAS', 'm' => 'MIN', 's' => 'SEG'] as $parte => $etiqueta)
+                        @foreach (['d' => __('listado.hero.dias'), 'h' => __('listado.hero.horas'), 'm' => __('listado.hero.min'), 's' => __('listado.hero.seg')] as $parte => $etiqueta)
                             <div class="listado__caja-tiempo">
                                 <div class="listado__digito" x-text="hero({{ $hero['delta'] }}).{{ $parte }}"></div>
                                 <div class="listado__caja-etiqueta">{{ $etiqueta }}</div>
@@ -84,33 +85,33 @@
                     @if ($hero['limiteLargo'] && ! $hero['enVivo'])
                         <div class="listado__hero-plazo">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffd400" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
-                            <span>Garantía aprobada a más tardar el</span>
+                            <span>{{ __('listado.hero.garantia_hasta') }}</span>
                             <span>{{ $hero['limiteLargo'] }}</span>
                         </div>
                     @endif
                     <div class="listado__hero-datos">
                         <div class="listado__hero-dato">
-                            <div class="listado__hero-dato-etiqueta">PRECIO BASE</div>
+                            <div class="listado__hero-dato-etiqueta">{{ __('listado.hero.precio_base') }}</div>
                             <div class="listado__hero-dato-valor">{{ $clp($hero['precio']) }}</div>
                         </div>
                         <div class="listado__hero-dato">
-                            <div class="listado__hero-dato-etiqueta">GARANTÍA REQUERIDA</div>
+                            <div class="listado__hero-dato-etiqueta">{{ __('listado.hero.garantia_requerida') }}</div>
                             <div class="listado__hero-dato-valor">{{ $clp($hero['garantia']) }}</div>
                         </div>
                         <div class="listado__hero-dato">
-                            <div class="listado__hero-dato-etiqueta">INICIO</div>
+                            <div class="listado__hero-dato-etiqueta">{{ __('listado.hero.inicio') }}</div>
                             <div class="listado__hero-dato-valor">{{ $hero['fecha'] }}</div>
                         </div>
                     </div>
                     <div class="listado__hero-acciones">
                         <a href="{{ $heroCta['href'] }}" class="listado__hero-cta">{{ $heroCta['texto'] }}</a>
-                        <a href="{{ route('remates.show', $hero['id']) }}" class="listado__hero-cta2">Ver bases y condiciones</a>
-                        <a href="mailto:{{ Sitio::correo() }}?subject={{ rawurlencode('Visita a ' . $hero['direccion'] . ' (' . $hero['folio'] . ')') }}" class="listado__hero-visita">Coordinar visita a la propiedad</a>
+                        <a href="{{ route('remates.show', $hero['id']) }}" class="listado__hero-cta2">{{ __('listado.hero.ver_bases') }}</a>
+                        <a href="mailto:{{ Sitio::correo() }}?subject={{ rawurlencode(__('listado.hero.visita_asunto', ['direccion' => $hero['direccion'], 'folio' => $hero['folio']])) }}" class="listado__hero-visita">{{ __('listado.hero.coordinar_visita') }}</a>
                     </div>
-                    <p class="listado__hero-nota">Martillero: <span>{{ $hero['martillero'] }}</span>. La garantía se constituye por vale a la vista o transferencia y es revisada manualmente por Colliers.</p>
+                    <p class="listado__hero-nota">{!! __('listado.hero.nota', ['martillero' => '<span>' . e($hero['martillero']) . '</span>']) !!}</p>
                 </div>
                 <div class="listado__hero-foto">
-                    <x-imagen-slot :src="$hero['foto']" alt="Foto de la propiedad destacada" />
+                    <x-imagen-slot :src="$hero['foto']" :alt="__('listado.hero.foto_alt')" />
                 </div>
             </div>
         </div>
@@ -120,21 +121,21 @@
             <div class="listado__herramientas">
                 <button type="button" class="listado__btn-filtros" @click="alternarFiltros()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><path d="M3 5h18M6 12h12M10 19h4"></path></svg>
-                    <span x-text="filtrosAbiertos && !compacto ? 'Ocultar filtros' : 'Filtros'">Ocultar filtros</span>
+                    <span x-text="filtrosAbiertos && !compacto ? @js(__('listado.herramientas.ocultar_filtros')) : @js(__('listado.herramientas.filtros'))">{{ __('listado.herramientas.ocultar_filtros') }}</span>
                 </button>
                 <label class="listado__buscador">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5b6572" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-                    <input id="buscar" :value="q" @input="buscar($event.target.value)" placeholder="Busca por dirección, comuna o tipo" aria-label="Buscar remates">
+                    <input id="buscar" :value="q" @input="buscar($event.target.value)" placeholder="{{ __('listado.herramientas.buscar_placeholder') }}" aria-label="{{ __('listado.herramientas.buscar_etiqueta') }}">
                 </label>
-                <select class="listado__orden" x-model="orden" aria-label="Ordenar remates">
-                    <option value="fecha">Ordenar por: fecha de remate</option>
-                    <option value="precio-asc">Ordenar por: precio base (menor a mayor)</option>
-                    <option value="precio-desc">Ordenar por: precio base (mayor a menor)</option>
-                    <option value="superficie">Ordenar por: superficie</option>
+                <select class="listado__orden" x-model="orden" aria-label="{{ __('listado.herramientas.ordenar_etiqueta') }}">
+                    <option value="fecha">{{ __('listado.herramientas.orden_fecha') }}</option>
+                    <option value="precio-asc">{{ __('listado.herramientas.orden_precio_asc') }}</option>
+                    <option value="precio-desc">{{ __('listado.herramientas.orden_precio_desc') }}</option>
+                    <option value="superficie">{{ __('listado.herramientas.orden_superficie') }}</option>
                 </select>
                 <div class="listado__vista">
-                    <button type="button" :class="{ 'es-activa': vista === 'Grilla' }" @click="vista = 'Grilla'" class="es-activa">Grilla</button>
-                    <button type="button" :class="{ 'es-activa': vista === 'Tabla' }" @click="vista = 'Tabla'">Tabla</button>
+                    <button type="button" :class="{ 'es-activa': vista === 'Grilla' }" @click="vista = 'Grilla'" class="es-activa">{{ __('listado.herramientas.vista_grilla') }}</button>
+                    <button type="button" :class="{ 'es-activa': vista === 'Tabla' }" @click="vista = 'Tabla'">{{ __('listado.herramientas.vista_tabla') }}</button>
                 </div>
             </div>
 
@@ -147,12 +148,12 @@
                 <template x-if="filtrosAbiertos">
                     <div class="listado__filtros" @keydown.escape.window="compacto && alternarFiltros()">
                         <div class="listado__filtros-cabeza">
-                            <div>Filtros</div>
-                            <button type="button" @click="alternarFiltros()" aria-label="Cerrar filtros">✕</button>
+                            <div>{{ __('listado.filtros.titulo') }}</div>
+                            <button type="button" @click="alternarFiltros()" aria-label="{{ __('listado.filtros.cerrar') }}">✕</button>
                         </div>
 
                         <details open class="listado__grupo" x-data="{ abierto: true }" @toggle="abierto = $el.open">
-                            <summary>Estado del remate <span x-text="abierto ? '–' : '+'">–</span></summary>
+                            <summary>{{ __('listado.filtros.estado') }} <span x-text="abierto ? '–' : '+'">–</span></summary>
                             <div class="listado__opciones">
                                 @foreach ($opcionesEstado as $clave => $etiqueta)
                                     <label class="listado__opcion listado__opcion--radio">
@@ -165,7 +166,7 @@
                         </details>
 
                         <details open class="listado__grupo" x-data="{ abierto: true }" @toggle="abierto = $el.open">
-                            <summary>Ocupación <span x-text="abierto ? '–' : '+'">–</span></summary>
+                            <summary>{{ __('listado.filtros.ocupacion') }} <span x-text="abierto ? '–' : '+'">–</span></summary>
                             <div class="listado__opciones">
                                 @foreach ($opcionesOcupacion as $clave => $etiqueta)
                                     <label class="listado__opcion listado__opcion--radio">
@@ -179,15 +180,15 @@
 
                         {{-- Filtros adicionales (decisión del 15/09). Se quitó "Con visita programada": agendar visita quedó fuera de alcance. --}}
                         <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                            <summary>Fecha de remate <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <summary>{{ __('listado.filtros.fecha') }} <span x-text="abierto ? '–' : '+'">+</span></summary>
                             <div class="listado__opciones">
-                                <label class="listado__opcion"><input type="checkbox" value="7" x-model="extra.fecha" @change="marcarExtra('fecha')">Esta semana</label>
-                                <label class="listado__opcion"><input type="checkbox" value="30" x-model="extra.fecha" @change="marcarExtra('fecha')">Próximos 30 días</label>
-                                <label class="listado__opcion"><input type="checkbox" value="90" x-model="extra.fecha" @change="marcarExtra('fecha')">Próximos 90 días</label>
+                                <label class="listado__opcion"><input type="checkbox" value="7" x-model="extra.fecha" @change="marcarExtra('fecha')">{{ __('listado.filtros.fecha_semana') }}</label>
+                                <label class="listado__opcion"><input type="checkbox" value="30" x-model="extra.fecha" @change="marcarExtra('fecha')">{{ __('listado.filtros.fecha_30') }}</label>
+                                <label class="listado__opcion"><input type="checkbox" value="90" x-model="extra.fecha" @change="marcarExtra('fecha')">{{ __('listado.filtros.fecha_90') }}</label>
                             </div>
                         </details>
                         <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                            <summary>Tipo de propiedad <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <summary>{{ __('listado.filtros.tipo') }} <span x-text="abierto ? '–' : '+'">+</span></summary>
                             <div class="listado__opciones">
                                 @foreach ($tipos as $tipo)
                                     <label class="listado__opcion"><input type="checkbox" value="{{ $tipo }}" x-model="extra.tipo" @change="marcarExtra('tipo')">{{ $tipo }}</label>
@@ -195,26 +196,26 @@
                             </div>
                         </details>
                         <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                            <summary>Características <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <summary>{{ __('listado.filtros.caracteristicas') }} <span x-text="abierto ? '–' : '+'">+</span></summary>
                             <div class="listado__opciones">
-                                <label class="listado__opcion"><input type="checkbox" value="2" x-model="extra.dorm" @change="marcarExtra('caracteristicas')">2 dormitorios o más</label>
-                                <label class="listado__opcion"><input type="checkbox" value="3" x-model="extra.dorm" @change="marcarExtra('caracteristicas')">3 dormitorios o más</label>
-                                <label class="listado__opcion"><input type="checkbox" x-model="extra.estac" @change="marcarExtra('caracteristicas')">Con estacionamiento</label>
-                                <label class="listado__opcion"><input type="checkbox" x-model="extra.bodega" @change="marcarExtra('caracteristicas')">Con bodega</label>
+                                <label class="listado__opcion"><input type="checkbox" value="2" x-model="extra.dorm" @change="marcarExtra('caracteristicas')">{{ __('listado.filtros.dorm_2') }}</label>
+                                <label class="listado__opcion"><input type="checkbox" value="3" x-model="extra.dorm" @change="marcarExtra('caracteristicas')">{{ __('listado.filtros.dorm_3') }}</label>
+                                <label class="listado__opcion"><input type="checkbox" x-model="extra.estac" @change="marcarExtra('caracteristicas')">{{ __('listado.filtros.estacionamiento') }}</label>
+                                <label class="listado__opcion"><input type="checkbox" x-model="extra.bodega" @change="marcarExtra('caracteristicas')">{{ __('listado.filtros.bodega') }}</label>
                             </div>
                         </details>
 
                         <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                            <summary>Rango de precio base <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <summary>{{ __('listado.filtros.precio') }} <span x-text="abierto ? '–' : '+'">+</span></summary>
                             <div class="listado__rango">
-                                <input placeholder="Desde CLP" aria-label="Precio base desde" inputmode="numeric" :value="extra.desde" @input="extra.desde = $event.target.value.replace(/[^\d]/g, ''); $event.target.value = extra.desde; marcarExtra('precio')">
-                                <input placeholder="Hasta CLP" aria-label="Precio base hasta" inputmode="numeric" :value="extra.hasta" @input="extra.hasta = $event.target.value.replace(/[^\d]/g, ''); $event.target.value = extra.hasta; marcarExtra('precio')">
+                                <input placeholder="{{ __('listado.filtros.precio_desde') }}" aria-label="{{ __('listado.filtros.precio_desde_etiqueta') }}" inputmode="numeric" :value="extra.desde" @input="extra.desde = $event.target.value.replace(/[^\d]/g, ''); $event.target.value = extra.desde; marcarExtra('precio')">
+                                <input placeholder="{{ __('listado.filtros.precio_hasta') }}" aria-label="{{ __('listado.filtros.precio_hasta_etiqueta') }}" inputmode="numeric" :value="extra.hasta" @input="extra.hasta = $event.target.value.replace(/[^\d]/g, ''); $event.target.value = extra.hasta; marcarExtra('precio')">
                             </div>
                         </details>
 
                         {{-- Región y comuna: opciones generadas desde los remates publicados (no fijas). --}}
                         <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                            <summary>Región <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <summary>{{ __('listado.filtros.region') }} <span x-text="abierto ? '–' : '+'">+</span></summary>
                             <div class="listado__opciones">
                                 @foreach ($regiones as $region)
                                     <label class="listado__opcion"><input type="checkbox" value="{{ $region }}" x-model="extra.region" @change="marcarExtra('region')">{{ \App\Support\RegionesChile::nombreCorto($region) }}</label>
@@ -222,7 +223,7 @@
                             </div>
                         </details>
                         <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                            <summary>Comuna <span x-text="abierto ? '–' : '+'">+</span></summary>
+                            <summary>{{ __('listado.filtros.comuna') }} <span x-text="abierto ? '–' : '+'">+</span></summary>
                             <div class="listado__opciones">
                                 @foreach ($comunas as $comuna => $regionComuna)
                                     <label class="listado__opcion" x-show="comunaVisible(@js($comuna), @js($regionComuna))"><input type="checkbox" value="{{ $comuna }}" x-model="extra.comuna" @change="marcarExtra('comuna')">{{ $comuna }}</label>
@@ -240,7 +241,7 @@
                         --}}
                         @if ($mostrarFiltroGarantia)
                             <details class="listado__grupo" x-data="{ abierto: false }" @toggle="abierto = $el.open">
-                                <summary>Garantía requerida <span x-text="abierto ? '–' : '+'">+</span></summary>
+                                <summary>{{ __('listado.filtros.garantia') }} <span x-text="abierto ? '–' : '+'">+</span></summary>
                                 <div class="listado__opciones">
                                     <template x-for="(tramo, i) in tramosGarantia" :key="i">
                                         <label class="listado__opcion"><input type="checkbox" :value="i" x-model.number="extra.garantia" @change="marcarExtra('garantia')"><span x-text="tramo.etiqueta"></span></label>
@@ -250,8 +251,8 @@
                         @endif
 
                         <div class="listado__filtros-acciones">
-                            <button type="button" class="listado__limpiar" @click="limpiar()">Limpiar filtros</button>
-                            <button type="button" class="listado__ver-resultados" @click="alternarFiltros()" x-text="'Ver ' + filtrados.length + ' remates'"></button>
+                            <button type="button" class="listado__limpiar" @click="limpiar()">{{ __('listado.filtros.limpiar') }}</button>
+                            <button type="button" class="listado__ver-resultados" @click="alternarFiltros()" x-text="@js(__('listado.filtros.ver_resultados')).replace(':n', filtrados.length)"></button>
                         </div>
                     </div>
                 </template>
@@ -259,7 +260,7 @@
                 <div>
                     <div class="listado__resultados-cabeza">
                         <div class="listado__conteo" x-text="conteo"></div>
-                        <div class="listado__nota-cierre">Los remates cierran automáticamente al vencer el tiempo, sin extensiones.</div>
+                        <div class="listado__nota-cierre">{{ __('listado.resultados.nota_cierre') }}</div>
                     </div>
 
                     <template x-if="esGrilla">
@@ -275,7 +276,7 @@
                                                     {{-- Guardar remate (favoritos): fuera de alcance por decisión del 15/09. --}}
                                                 </div>
                                                 <div class="tarjeta__precio">
-                                                    <div class="tarjeta__precio-etiqueta">PRECIO BASE</div>
+                                                    <div class="tarjeta__precio-etiqueta">{{ __('listado.resultados.precio_base') }}</div>
                                                     <div class="tarjeta__precio-valor" x-text="l.precio"></div>
                                                 </div>
                                             </div>
@@ -297,11 +298,11 @@
                                             </div>
                                             <div class="tarjeta__datos">
                                                 <div>
-                                                    <div class="tarjeta__dato-etiqueta">REMATE</div>
+                                                    <div class="tarjeta__dato-etiqueta">{{ __('listado.resultados.remate') }}</div>
                                                     <div class="tarjeta__dato-valor" x-text="l.fecha"></div>
                                                 </div>
                                                 <div>
-                                                    <div class="tarjeta__dato-etiqueta">GARANTÍA</div>
+                                                    <div class="tarjeta__dato-etiqueta">{{ __('listado.resultados.garantia') }}</div>
                                                     <div class="tarjeta__dato-valor" x-text="l.garantia"></div>
                                                     <div class="tarjeta__dato-limite" x-text="l.limite"></div>
                                                 </div>
@@ -309,7 +310,7 @@
                                             <template x-if="l.visita">
                                                 <div class="tarjeta__visita">
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><rect x="3" y="5" width="18" height="16"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
-                                                    <span>Visita a la propiedad:</span>
+                                                    <span>{{ __('listado.resultados.visita') }}</span>
                                                     <span x-text="l.visita"></span>
                                                 </div>
                                             </template>
@@ -320,9 +321,9 @@
                                             <div class="tarjeta__pie">
                                                 <template x-if="!l.abierto">
                                                     <div class="tarjeta__cerrado">
-                                                        <div class="tarjeta__cerrado-caja">Remate cerrado</div>
+                                                        <div class="tarjeta__cerrado-caja">{{ __('listado.resultados.remate_cerrado') }}</div>
                                                         <template x-if="l.nuevoRemate">
-                                                            <a :href="l.nuevoHref || '#'" class="tarjeta__nuevo" x-text="'Se republicó en un remate nuevo: ' + l.nuevoRemate"></a>
+                                                            <a :href="l.nuevoHref || '#'" class="tarjeta__nuevo" x-text="@js(__('listado.resultados.republicado')).replace(':remate', () => l.nuevoRemate)"></a>
                                                         </template>
                                                     </div>
                                                 </template>
@@ -330,8 +331,8 @@
                                                     <a :href="l.href" class="tarjeta__cta" x-text="l.cta"></a>
                                                 </template>
                                                 <div class="tarjeta__enlaces">
-                                                    <a :href="l.bases || l.href">Bases del remate</a>
-                                                    <span>Martillero: <span x-text="l.martillero"></span></span>
+                                                    <a :href="l.bases || l.href">{{ __('listado.resultados.bases') }}</a>
+                                                    <span>{{ __('listado.resultados.martillero') }} <span x-text="l.martillero"></span></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -340,7 +341,7 @@
                             </div>
                             <template x-if="hayMas">
                                 <div class="listado__mas">
-                                    <button type="button" @click="visibles += 6">Cargar más remates</button>
+                                    <button type="button" @click="visibles += 6">{{ __('listado.resultados.cargar_mas') }}</button>
                                 </div>
                             </template>
                         </div>
@@ -350,13 +351,13 @@
                         <table class="listado__tabla">
                             <thead>
                                 <tr>
-                                    <th>PROPIEDAD</th>
-                                    <th>TIPO / SUP.</th>
-                                    <th>OCUPACIÓN</th>
-                                    <th>PRECIO BASE</th>
-                                    <th>GARANTÍA</th>
-                                    <th>REMATE</th>
-                                    <th>ESTADO</th>
+                                    <th>{{ __('listado.tabla.propiedad') }}</th>
+                                    <th>{{ __('listado.tabla.tipo_sup') }}</th>
+                                    <th>{{ __('listado.tabla.ocupacion') }}</th>
+                                    <th>{{ __('listado.tabla.precio_base') }}</th>
+                                    <th>{{ __('listado.tabla.garantia') }}</th>
+                                    <th>{{ __('listado.tabla.remate') }}</th>
+                                    <th>{{ __('listado.tabla.estado') }}</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -378,7 +379,7 @@
                                         </td>
                                         <td class="es-accion">
                                             <template x-if="l.abierto"><a :href="l.href" x-text="l.cta"></a></template>
-                                            <template x-if="!l.abierto"><span>Cerrado</span></template>
+                                            <template x-if="!l.abierto"><span>{{ __('listado.resultados.cerrado') }}</span></template>
                                         </td>
                                     </tr>
                                 </template>
@@ -388,7 +389,7 @@
 
                     <template x-if="tarjetas.length === 0">
                         <div class="listado__vacio">
-                            <div class="listado__vacio-titulo">Sin remates para esta combinación</div>
+                            <div class="listado__vacio-titulo">{{ __('listado.resultados.sin_resultados') }}</div>
                             <p x-text="sugerencia"></p>
                             <button type="button" @click="limpiar()" x-text="sugerenciaAccion"></button>
                         </div>
@@ -400,13 +401,13 @@
         <div class="listado__aviso">
             <div class="listado__aviso-interior contenedor">
                 <div>
-                    <h2 class="listado__aviso-titulo">Avísame de los próximos remates</h2>
-                    <p>Recibe un correo cuando se publique un nuevo remate de casas y departamentos, y un recordatorio 48 horas antes del cierre de garantías.</p>
+                    <h2 class="listado__aviso-titulo">{{ __('listado.aviso.titulo') }}</h2>
+                    <p>{{ __('listado.aviso.texto') }}</p>
                 </div>
                 {{-- Bloque M: suscripción real a avisos de remates nuevos. --}}
                 <form class="listado__aviso-form" @submit.prevent="suscribir($event.target)">
-                    <input type="email" name="email" required placeholder="tu@correo.cl" aria-label="Correo electrónico" value="{{ auth()->user()?->email }}">
-                    <button type="submit" :disabled="avisoEnviando">Suscribirme</button>
+                    <input type="email" name="email" required placeholder="{{ __('listado.aviso.correo_placeholder') }}" aria-label="{{ __('listado.aviso.correo_etiqueta') }}" value="{{ auth()->user()?->email }}">
+                    <button type="submit" :disabled="avisoEnviando">{{ __('listado.aviso.suscribirme') }}</button>
                 </form>
                 <p class="listado__aviso-resultado" x-show="avisoMensaje" x-text="avisoMensaje" role="status"></p>
             </div>
@@ -414,25 +415,25 @@
 
         <div class="listado__como">
             <div class="listado__como-interior contenedor">
-                <h2 class="listado__como-titulo">Cómo participar</h2>
+                <h2 class="listado__como-titulo">{{ __('listado.como.titulo') }}</h2>
                 <div class="listado__como-grilla">
                     <div class="listado__paso">
                         <div class="listado__paso-num">01</div>
-                        <h3>Crea tu cuenta</h3>
-                        <p>Regístrate con tu RUT y antecedentes. Puedes revisar todos los remates sin cuenta, pero necesitas una para pujar.</p>
+                        <h3>{{ __('listado.como.paso1_titulo') }}</h3>
+                        <p>{{ __('listado.como.paso1_texto') }}</p>
                     </div>
                     <div class="listado__paso">
                         <div class="listado__paso-num">02</div>
-                        <h3>Constituye la garantía</h3>
-                        <p>Por vale a la vista o transferencia, fuera de la plataforma. Colliers revisa el comprobante y aprueba tu participación de forma manual, hasta 48 horas antes del remate.</p>
+                        <h3>{{ __('listado.como.paso2_titulo') }}</h3>
+                        <p>{{ __('listado.como.paso2_texto') }}</p>
                     </div>
                     <div class="listado__paso">
                         <div class="listado__paso-num">03</div>
-                        <h3>Puja durante la transmisión</h3>
-                        <p>El remate se transmite en vivo por el canal de YouTube de Colliers. Las pujas se ingresan en pesos y el remate cierra automáticamente al vencer el tiempo.</p>
+                        <h3>{{ __('listado.como.paso3_titulo') }}</h3>
+                        <p>{{ __('listado.como.paso3_texto') }}</p>
                     </div>
                 </div>
-                <p class="listado__como-nota">Colliers puede cerrar un remate de forma anticipada. Si un remate no se concreta, la propiedad se publica en un remate nuevo con fecha y condiciones propias.</p>
+                <p class="listado__como-nota">{{ __('listado.como.nota') }}</p>
             </div>
         </div>
 

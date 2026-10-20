@@ -30,6 +30,9 @@ class FortifyServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Las rutas de Fortify se cargan desde routes/web.php, en español y bajo /en (sitio en inglés, 20/10).
+        Fortify::ignoreRoutes();
+
         // Después de ingresar: administración al panel, postores a su cuenta.
         $this->app->instance(LoginResponse::class, new class implements LoginResponse
         {

@@ -7,18 +7,18 @@
     // Enlaces a datos que cambian con el lote vigente: solo en la sala real (la demo tiene un solo lote fijo).
     $real = $componente === 'salaPuja';
 @endphp
-<x-layouts.base titulo="Sala de pujas" clase-cuerpo="">
+<x-layouts.base :titulo="__('sala.titulo')" clase-cuerpo="">
     <div class="sala" x-data="{{ $componente }}(@js($config))" @keydown.escape.window="modal = false; hoja = false">
 
         <div class="sala-cabecera">
             <div class="sala-cabecera__nav contenedor">
                 <a href="{{ route('remates.index') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="sala-cabecera__logo"></a>
-                <div class="sala-cabecera__titulo">Sala de pujas · <span>{{ $propiedad['folio'] }}</span>@if ($real)<span x-show="etiquetaLote" x-text="' · ' + etiquetaLote.toUpperCase()"></span>@endif</div>
+                <div class="sala-cabecera__titulo">{{ __('sala.titulo') }} · <span>{{ $propiedad['folio'] }}</span>@if ($real)<span x-show="etiquetaLote" x-text="' · ' + etiquetaLote.toUpperCase()"></span>@endif</div>
                 <div class="sala-cabecera__derecha">
-                    <span class="sala-cabecera__chip">GARANTÍA APROBADA</span>
+                    <span class="sala-cabecera__chip">{{ __('sala.cabecera.garantia_aprobada') }}</span>
                     {{-- El nombre lleva a «Mi cuenta» (21/09): la sala no tenía salida hacia la cuenta del postor. --}}
                     @if ($real)
-                        <a href="{{ route('cuenta.estado') }}" class="sala-cabecera__usuario sala-cabecera__usuario--enlace" title="Ir a Mi cuenta">{{ $propiedad['usuario'] }}</a>
+                        <a href="{{ route('cuenta.estado') }}" class="sala-cabecera__usuario sala-cabecera__usuario--enlace" title="{{ __('sala.cabecera.ir_a_mi_cuenta') }}">{{ $propiedad['usuario'] }}</a>
                     @else
                         <span class="sala-cabecera__usuario">{{ $propiedad['usuario'] }}</span>
                     @endif
@@ -43,13 +43,13 @@
                     @endif
                     <div class="sala__video">
                         @if ($propiedad['video'])
-                            <iframe src="https://www.youtube-nocookie.com/embed/{{ $propiedad['video'] }}?rel=0" title="Transmisión en vivo del remate" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                            <iframe src="https://www.youtube-nocookie.com/embed/{{ $propiedad['video'] }}?rel=0" title="{{ __('sala.video.titulo') }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
                         @endif
                     </div>
                     <div class="sala__video-pie">
-                        <span>Transmisión del canal de Colliers Chile{!! $propiedad['martillero'] ? ' · Martillero <span>' . e($propiedad['martillero']) . '</span>' : '' !!}</span>
+                        <span>{{ __('sala.video.canal') }}{!! $propiedad['martillero'] ? ' · ' . e(__('sala.video.martillero')) . ' <span>' . e($propiedad['martillero']) . '</span>' : '' !!}</span>
                         {{-- Acta: el cronómetro y el precio de la plataforma son la fuente oficial, no el video (10–30 s de retraso). --}}
-                        <span class="sala__video-oficial">Precio y cronómetro oficiales: el video tiene 10–30 s de retraso</span>
+                        <span class="sala__video-oficial">{{ __('sala.video.oficial') }}</span>
                     </div>
 
                     <div class="sala__ficha">
@@ -58,21 +58,21 @@
                                 <h1 class="sala__titulo" @if ($real) x-text="info.direccion" @endif>{{ $propiedad['direccion'] }}</h1>
                                 <div class="sala__meta" @if ($real) x-text="info.meta" @endif>{{ $propiedad['meta'] }}</div>
                             </div>
-                            <a href="{{ route('remates.show', $propiedad['slug']) }}" class="sala__antecedentes">Ver antecedentes</a>
+                            <a href="{{ route('remates.show', $propiedad['slug']) }}" class="sala__antecedentes">{{ __('sala.ficha.ver_antecedentes') }}</a>
                         </div>
                         <div class="sala__datos">
-                            <div class="sala__dato"><div class="sala__dato-etiqueta">PRECIO BASE</div><div class="sala__dato-valor" @if ($real) x-text="formatoClp(info.base)" @endif>{{ $clp($propiedad['base']) }}</div></div>
-                            <div class="sala__dato"><div class="sala__dato-etiqueta">INCREMENTO MÍNIMO</div><div class="sala__dato-valor">{{ $clp($propiedad['incremento']) }}</div></div>
-                            <div class="sala__dato"><div class="sala__dato-etiqueta">TU GARANTÍA</div><div class="sala__dato-valor">{{ $clp($propiedad['garantia']) }}</div></div>
-                            <div class="sala__dato"><div class="sala__dato-etiqueta">REFERENCIA UF</div><div class="sala__dato-valor" x-text="actualEnUf"></div></div>
+                            <div class="sala__dato"><div class="sala__dato-etiqueta">{{ __('sala.ficha.precio_base') }}</div><div class="sala__dato-valor" @if ($real) x-text="formatoClp(info.base)" @endif>{{ $clp($propiedad['base']) }}</div></div>
+                            <div class="sala__dato"><div class="sala__dato-etiqueta">{{ __('sala.ficha.incremento_minimo') }}</div><div class="sala__dato-valor">{{ $clp($propiedad['incremento']) }}</div></div>
+                            <div class="sala__dato"><div class="sala__dato-etiqueta">{{ __('sala.ficha.tu_garantia') }}</div><div class="sala__dato-valor">{{ $clp($propiedad['garantia']) }}</div></div>
+                            <div class="sala__dato"><div class="sala__dato-etiqueta">{{ __('sala.ficha.referencia_uf') }}</div><div class="sala__dato-valor" x-text="actualEnUf"></div></div>
                         </div>
                     </div>
 
                     <div class="sala__historial">
                         <div class="sala__historial-cabeza">
-                            <h2 class="sala__historial-titulo">Historial de pujas</h2>
+                            <h2 class="sala__historial-titulo">{{ __('sala.historial.titulo') }}</h2>
                             {{-- Presencia (sin diseño): el número de postores con la sala abierta, en la misma línea del conteo. Solo el número. --}}
-                            <span class="sala__historial-conteo"><span x-text="totalPujas"></span> POSTURAS · TIEMPO REAL{!! $real ? '<span class="sala__conectados" x-show="conectadosTexto" x-text="\' · \' + conectadosTexto"></span>' : '' !!}</span>
+                            <span class="sala__historial-conteo">{!! __('sala.historial.conteo', ['total' => '<span x-text="totalPujas"></span>', 'conectados' => $real ? '<span class="sala__conectados" x-show="conectadosTexto" x-text="\' · \' + conectadosTexto"></span>' : '']) !!}</span>
                         </div>
                         <div class="sala__historial-lista">
                             <template x-for="(p, i) in historialVista" :key="p.hora + p.monto">
@@ -88,7 +88,7 @@
                                 </div>
                             </template>
                         </div>
-                        <div class="sala__historial-nota">El remate cierra automáticamente al vencer el temporizador, sin extensiones. Colliers puede cerrarlo de forma anticipada.</div>
+                        <div class="sala__historial-nota">{{ __('sala.historial.nota') }}</div>
                     </div>
                 </div>
 
@@ -102,11 +102,11 @@
                             @if ($real)
                                 @include('sala._avisos', ['donde' => 'panel'])
                             @endif
-                            <div class="sala-panel__etiqueta">PRECIO ACTUAL</div>
+                            <div class="sala-panel__etiqueta">{{ __('sala.panel.precio_actual') }}</div>
                             <template x-for="precio in [actualTexto]" :key="precio">
                                 <div class="sala-panel__precio" x-text="precio"></div>
                             </template>
-                            <div class="sala-panel__base">Base <span @if ($real) x-text="formatoClp(info.base)" @endif>{{ $clp($propiedad['base']) }}</span> · <span x-text="sobreBase"></span> sobre el mínimo</div>
+                            <div class="sala-panel__base">{!! __('sala.panel.base', ['base' => '<span' . ($real ? '  x-text="formatoClp(info.base)" ' : ' ') . '>' . e($clp($propiedad['base'])) . '</span>', 'sobre' => '<span x-text="sobreBase"></span>']) !!}</div>
 
                             <div class="sala-estado" :class="{ 'es-ganando': yoGanando }">
                                 <template x-if="yoGanando">
@@ -121,13 +121,13 @@
                                 </div>
                             </div>
 
-                            <div class="sala-panel__etiqueta sala-panel__etiqueta--cierra" x-text="etiquetaContador">CIERRA EN</div>
+                            <div class="sala-panel__etiqueta sala-panel__etiqueta--cierra" x-text="etiquetaContador">{{ __('sala.panel.cierra_en') }}</div>
                             <div class="sala-contador" :class="{ 'es-final': enMinutoFinal }">
-                                <div class="sala-contador__caja"><div class="sala-contador__digito" x-text="hh"></div><div class="sala-contador__etiqueta">HORAS</div></div>
-                                <div class="sala-contador__caja"><div class="sala-contador__digito" x-text="mm"></div><div class="sala-contador__etiqueta">MIN</div></div>
-                                <div class="sala-contador__caja"><div class="sala-contador__digito" x-text="ss"></div><div class="sala-contador__etiqueta">SEG</div></div>
+                                <div class="sala-contador__caja"><div class="sala-contador__digito" x-text="hh"></div><div class="sala-contador__etiqueta">{{ __('sala.panel.horas') }}</div></div>
+                                <div class="sala-contador__caja"><div class="sala-contador__digito" x-text="mm"></div><div class="sala-contador__etiqueta">{{ __('sala.panel.min') }}</div></div>
+                                <div class="sala-contador__caja"><div class="sala-contador__digito" x-text="ss"></div><div class="sala-contador__etiqueta">{{ __('sala.panel.seg') }}</div></div>
                             </div>
-                            <div class="sala-panel__sin-extension">Sin extensiones por posturas de último minuto.</div>
+                            <div class="sala-panel__sin-extension">{{ __('sala.panel.sin_extension') }}</div>
 
                             <template x-if="!vencido">
                                 @include('sala._formulario-puja', ['id' => 'panel'])
@@ -137,8 +137,8 @@
                                     <div class="sala-resultado__titulo" x-text="resultadoTitulo"></div>
                                     <div class="sala-resultado__texto" x-text="resultadoTexto"></div>
                                     @if ($real)
-                                        <a x-show="retirado === 'cancelado'" href="{{ route('cuenta.estado') }}" class="sala-resultado__enlace">Ir a Mi cuenta</a>
-                                        <a x-show="retirado === 'no-disponible'" href="{{ route('remates.index') }}" class="sala-resultado__enlace">Ver remates publicados</a>
+                                        <a x-show="retirado === 'cancelado'" href="{{ route('cuenta.estado') }}" class="sala-resultado__enlace">{{ __('sala.cabecera.ir_a_mi_cuenta') }}</a>
+                                        <a x-show="retirado === 'no-disponible'" href="{{ route('remates.index') }}" class="sala-resultado__enlace">{{ __('sala.panel.ver_remates') }}</a>
                                     @endif
                                 </div>
                             </template>
@@ -146,8 +146,8 @@
                     </div>
 
                     <div class="sala-soporte">
-                        <div class="sala-soporte__titulo">SOPORTE DURANTE EL REMATE</div>
-                        <p>Si se corta la transmisión o tienes un problema para pujar, llámanos: el remate no se detiene.</p>
+                        <div class="sala-soporte__titulo">{{ __('sala.soporte.titulo') }}</div>
+                        <p>{{ __('sala.soporte.texto') }}</p>
                         <div class="sala-soporte__enlaces">
                             <a href="{{ \App\Support\Sitio::telefonoEnlace() }}">{{ \App\Support\Sitio::telefono() }}</a>
                             <a href="mailto:{{ \App\Support\Sitio::correo() }}">{{ \App\Support\Sitio::correo() }}</a>
@@ -158,33 +158,33 @@
         </div>
 
         {{-- Barra fija inferior y hoja de puja (solo < 1120px, ver sala.css) --}}
-        <div class="sala-barra" role="region" aria-label="Estado de la puja">
+        <div class="sala-barra" role="region" aria-label="{{ __('sala.barra.aria') }}">
             <div class="sala-barra__datos">
                 <div class="sala-barra__fila">
                     <span class="sala-barra__precio" x-text="actualTexto"></span>
-                    <span class="sala-barra__tiempo" :class="{ 'es-final': enMinutoFinal }" x-text="vencido ? 'Finalizado' : hh + ':' + mm + ':' + ss"></span>
+                    <span class="sala-barra__tiempo" :class="{ 'es-final': enMinutoFinal }" x-text="vencido ? {{ Js::from(__('sala.barra.finalizado')) }} : hh + ':' + mm + ':' + ss"></span>
                 </div>
                 <span class="sala-barra__estado" :class="{ 'es-ganando': yoGanando && !vencido, 'es-cerrado': vencido }" x-text="vencido ? estadoTexto : estadoTitulo.toUpperCase()"></span>
             </div>
             @if ($real)
                 {{-- Remate cancelado o retirado: en vez de un «Pujar» apagado, la salida a «Mi cuenta». --}}
-                <a x-show="retirado === 'cancelado'" x-cloak href="{{ route('cuenta.estado') }}" class="sala-barra__boton sala-barra__boton--enlace">Mi cuenta</a>
-                <a x-show="retirado === 'no-disponible'" x-cloak href="{{ route('remates.index') }}" class="sala-barra__boton sala-barra__boton--enlace">Remates</a>
-                <button type="button" x-show="!retirado" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">Pujar</button>
+                <a x-show="retirado === 'cancelado'" x-cloak href="{{ route('cuenta.estado') }}" class="sala-barra__boton sala-barra__boton--enlace">{{ __('sala.barra.mi_cuenta') }}</a>
+                <a x-show="retirado === 'no-disponible'" x-cloak href="{{ route('remates.index') }}" class="sala-barra__boton sala-barra__boton--enlace">{{ __('sala.barra.remates') }}</a>
+                <button type="button" x-show="!retirado" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">{{ __('sala.barra.pujar') }}</button>
             @else
-                <button type="button" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">Pujar</button>
+                <button type="button" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">{{ __('sala.barra.pujar') }}</button>
             @endif
         </div>
 
         <template x-if="hoja && !vencido">
             <div>
                 <div class="sala-hoja__velo" @click="hoja = false"></div>
-                <div class="sala-hoja" role="dialog" aria-modal="true" aria-label="Ingresar puja">
+                <div class="sala-hoja" role="dialog" aria-modal="true" aria-label="{{ __('sala.hoja.titulo') }}">
                     <div class="sala-hoja__cabeza">
-                        <h2 class="sala-hoja__titulo">Ingresar puja</h2>
-                        <button type="button" class="sala-hoja__cerrar" @click="hoja = false" aria-label="Cerrar">✕</button>
+                        <h2 class="sala-hoja__titulo">{{ __('sala.hoja.titulo') }}</h2>
+                        <button type="button" class="sala-hoja__cerrar" @click="hoja = false" aria-label="{{ __('sala.hoja.cerrar') }}">✕</button>
                     </div>
-                    <div class="sala-hoja__resumen">Precio actual <strong x-text="actualTexto"></strong> · cierra en <span x-text="hh + ':' + mm + ':' + ss"></span></div>
+                    <div class="sala-hoja__resumen">{!! __('sala.hoja.resumen', ['precio' => '<strong x-text="actualTexto"></strong>', 'tiempo' => '<span x-text="hh + \':\' + mm + \':\' + ss"></span>']) !!}</div>
                     @include('sala._formulario-puja', ['id' => 'hoja'])
                 </div>
             </div>
@@ -194,16 +194,16 @@
             <div class="sala-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmacion">
                 <div class="sala-modal__caja" x-init="$nextTick(() => $el.querySelector('.sala-modal__cancelar').focus())">
                     <div class="sala-modal__cabeza">
-                        <h2 class="sala-modal__titulo" id="titulo-confirmacion">Confirma tu puja</h2>
+                        <h2 class="sala-modal__titulo" id="titulo-confirmacion">{{ __('sala.modal.titulo') }}</h2>
                     </div>
                     <div class="sala-modal__cuerpo">
-                        <div class="sala-modal__propiedad">Vas a ofertar por {{ $propiedad['direccion'] }}</div>
+                        <div class="sala-modal__propiedad">{{ __('sala.modal.propiedad', ['direccion' => $propiedad['direccion']]) }}</div>
                         <div class="sala-modal__monto" x-text="modalMonto"></div>
-                        <div class="sala-modal__detalle"><span x-text="modalUf ? modalUf + ' · ' : ''"></span>supera en <span x-text="modalDiferencia"></span> la puja actual</div>
-                        <div class="sala-modal__aviso">La postura es irrevocable y compromete tu garantía de {{ $clp($propiedad['garantia']) }}. Si resultas adjudicatario, deberás suscribir la escritura y pagar el saldo en el plazo de las bases. El remate cierra automáticamente al vencer el tiempo.</div>
+                        <div class="sala-modal__detalle"><span x-text="modalUf ? modalUf + ' · ' : ''"></span>{!! __('sala.modal.supera', ['diferencia' => '<span x-text="modalDiferencia"></span>']) !!}</div>
+                        <div class="sala-modal__aviso">{{ __('sala.modal.aviso', ['garantia' => $clp($propiedad['garantia'])]) }}</div>
                         <div class="sala-modal__botones">
-                            <button type="button" class="sala-modal__confirmar" :disabled="enviando" @click="confirmar()">Confirmar puja</button>
-                            <button type="button" class="sala-modal__cancelar" @click="modal = false">Cancelar</button>
+                            <button type="button" class="sala-modal__confirmar" :disabled="enviando" @click="confirmar()">{{ __('sala.modal.confirmar') }}</button>
+                            <button type="button" class="sala-modal__cancelar" @click="modal = false">{{ __('sala.modal.cancelar') }}</button>
                         </div>
                     </div>
                 </div>

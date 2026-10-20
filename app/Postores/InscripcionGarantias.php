@@ -27,16 +27,16 @@ class InscripcionGarantias
     public function inscribir(User $user, Remate $remate): Garantia
     {
         if (! $user->postor?->estaAprobado()) {
-            throw new DomainException('Tu cuenta debe estar aprobada por Colliers para inscribirte en un remate.');
+            throw new DomainException(__('cuenta.inscripcion.cuenta_no_aprobada'));
         }
 
         // Los remates de prueba y sus postores son un mundo aparte (21/09): un postor real que llegue al enlace de uno no
         // queda con una garantía que nadie va a revisar, y un postor de prueba no se inscribe en remates reales.
         if ($remate->es_demostracion && ! $user->esDePrueba()) {
-            throw new DomainException('Este es un remate de prueba de Colliers: no recibe inscripciones. Revisa los remates publicados en el sitio.');
+            throw new DomainException(__('cuenta.inscripcion.remate_de_prueba'));
         }
         if ($user->esDePrueba() && ! $remate->es_demostracion) {
-            throw new DomainException('Esta es una cuenta de prueba: solo puede pujar en su remate de prueba, que ya aparece en «Mi cuenta».');
+            throw new DomainException(__('cuenta.inscripcion.cuenta_de_prueba'));
         }
 
         if (Habilitacion::modo() === Habilitacion::MODO_UNICO) {
@@ -44,7 +44,7 @@ class InscripcionGarantias
         }
 
         if ($remate->estadoVisible() !== Remate::VISTA_PROXIMO) {
-            throw new DomainException('Este remate no acepta inscripciones.');
+            throw new DomainException(__('cuenta.inscripcion.no_acepta'));
         }
         $this->dentroDelPlazo($remate);
 
@@ -60,7 +60,7 @@ class InscripcionGarantias
     {
         $monto = Habilitacion::montoUnico();
         if ($monto === null) {
-            throw new DomainException('Colliers todavía no fijó el monto de la habilitación. Escríbenos y te avisamos apenas esté.');
+            throw new DomainException(__('cuenta.inscripcion.sin_monto_unico'));
         }
 
         return DB::transaction(function () use ($user, $remate, $monto) {
@@ -76,7 +76,7 @@ class InscripcionGarantias
         $garantia->loadMissing('remate');
         if (! in_array($garantia->estado, [Garantia::ESTADO_PENDIENTE, Garantia::ESTADO_RECHAZADA], true)) {
             throw new DomainException($garantia->estado === Garantia::ESTADO_APROBADA
-                ? 'Tu garantía ya está aprobada.' : 'Ya recibimos tu comprobante y lo estamos revisando.');
+                ? __('cuenta.inscripcion.ya_aprobada') : __('cuenta.inscripcion.ya_en_revision'));
         }
         // La habilitación única no pertenece a un remate: no la vence el plazo del remate desde donde se pidió.
         if (! $garantia->esUnica()) {
@@ -102,10 +102,10 @@ class InscripcionGarantias
     private function dentroDelPlazo(Remate $remate): void
     {
         if ($remate->cierre_garantias_en !== null && CarbonImmutable::now('UTC')->greaterThanOrEqualTo($remate->cierre_garantias_en)) {
-            throw new DomainException('El plazo para constituir la garantía de este remate ya cerró.');
+            throw new DomainException(__('cuenta.inscripcion.plazo_cerrado'));
         }
         if ($remate->yaComenzo()) {
-            throw new DomainException('El remate ya comenzó: no se reciben más garantías.');
+            throw new DomainException(__('cuenta.inscripcion.ya_comenzo'));
         }
     }
 }

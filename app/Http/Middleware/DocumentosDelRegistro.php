@@ -37,7 +37,8 @@ class DocumentosDelRegistro
     public function handle(Request $request, Closure $next): Response
     {
         // Va en la lista de Fortify, que atiende también el ingreso y las claves: aquí solo interesa el registro.
-        if (! $request->is(trim((string) config('fortify.paths.register', '/registro'), '/'))) {
+        $registro = trim((string) config('fortify.paths.register', '/registro'), '/');
+        if (! $request->is($registro, \App\Support\Idioma::PREFIJO . '/' . $registro)) {
             return $next($request);
         }
 

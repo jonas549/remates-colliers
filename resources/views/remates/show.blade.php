@@ -8,19 +8,19 @@
     $cerrado = $r['resultado'] !== null;
     $sesion = $visitante['sesion'];
     $logueado = $visitante['logueado'];
-    $limite = $r['limite'] ?? 'el inicio del remate';
+    $limite = $r['limite'] ?? __('remate.limite_defecto');
 
     // Bloqueo según la cuenta y la garantía de ESTE remate (App\Publico\EstadoVisitante).
     $bloqueo = $vivo ? [
-        'visitante' => ['tono' => 'info', 'titulo' => 'Solo puedes mirar este remate', 'texto' => 'Para pujar necesitas una cuenta y una garantía aprobada por Colliers. La transmisión y el historial son públicos.', 'cta' => $logueado ? null : 'Crear cuenta'],
-        'registrado' => ['tono' => 'ambar', 'titulo' => 'Garantía no constituida', 'texto' => 'Tu cuenta está activa, pero no registras una garantía aprobada para este remate. Sin ella no puedes ingresar posturas.', 'cta' => 'Ver mi cuenta'],
-        'en-revision' => ['tono' => 'azul', 'titulo' => 'Garantía en revisión', 'texto' => 'Recibimos tu comprobante y lo estamos revisando de forma manual. Te avisaremos por correo apenas quede aprobada.', 'cta' => 'Ver estado de la garantía'],
-        'aprobada' => ['tono' => 'verde', 'titulo' => 'Estás habilitado para pujar', 'texto' => 'Tu garantía fue aprobada para este remate. Entra a la sala de pujas para ingresar posturas en pesos.', 'cta' => 'Entrar a la sala de pujas'],
+        'visitante' => ['tono' => 'info', 'titulo' => __('remate.bloqueo.vivo.visitante.titulo'), 'texto' => __('remate.bloqueo.vivo.visitante.texto'), 'cta' => $logueado ? null : __('remate.bloqueo.cta.crear_cuenta')],
+        'registrado' => ['tono' => 'ambar', 'titulo' => __('remate.bloqueo.vivo.registrado.titulo'), 'texto' => __('remate.bloqueo.vivo.registrado.texto'), 'cta' => __('remate.bloqueo.cta.ver_mi_cuenta')],
+        'en-revision' => ['tono' => 'azul', 'titulo' => __('remate.bloqueo.vivo.en_revision.titulo'), 'texto' => __('remate.bloqueo.vivo.en_revision.texto'), 'cta' => __('remate.bloqueo.cta.ver_estado_garantia')],
+        'aprobada' => ['tono' => 'verde', 'titulo' => __('remate.bloqueo.vivo.aprobada.titulo'), 'texto' => __('remate.bloqueo.vivo.aprobada.texto'), 'cta' => __('remate.bloqueo.cta.entrar_sala')],
     ][$sesion] : [
-        'visitante' => ['tono' => 'info', 'titulo' => 'Necesitas una cuenta para pujar', 'texto' => 'Puedes revisar todos los antecedentes sin registrarte. Para ingresar posturas debes crear una cuenta y constituir la garantía.', 'cta' => $logueado ? null : 'Crear cuenta'],
-        'registrado' => ['tono' => 'ambar', 'titulo' => 'Falta constituir la garantía', 'texto' => 'Vale a la vista o transferencia por ' . $clp($r['garantia']) . ', fuera de la plataforma. Debe estar aprobada antes del ' . $limite . '.', 'cta' => 'Constituir la garantía'],
-        'en-revision' => ['tono' => 'azul', 'titulo' => 'Garantía en revisión', 'texto' => 'Recibimos tu comprobante y lo revisamos de forma manual dentro de ' . Sitio::horasRevision() . ' horas hábiles. Te avisaremos por correo.', 'cta' => 'Ver estado de la garantía'],
-        'aprobada' => ['tono' => 'verde', 'titulo' => 'Estás habilitado para pujar', 'texto' => 'Tu garantía fue aprobada para este remate. Podrás ingresar posturas cuando comience la transmisión.', 'cta' => 'Recordarme al comenzar'],
+        'visitante' => ['tono' => 'info', 'titulo' => __('remate.bloqueo.proximo.visitante.titulo'), 'texto' => __('remate.bloqueo.proximo.visitante.texto'), 'cta' => $logueado ? null : __('remate.bloqueo.cta.crear_cuenta')],
+        'registrado' => ['tono' => 'ambar', 'titulo' => __('remate.bloqueo.proximo.registrado.titulo'), 'texto' => __('remate.bloqueo.proximo.registrado.texto', ['monto' => $clp($r['garantia']), 'limite' => $limite]), 'cta' => __('remate.bloqueo.cta.constituir_garantia')],
+        'en-revision' => ['tono' => 'azul', 'titulo' => __('remate.bloqueo.proximo.en_revision.titulo'), 'texto' => __('remate.bloqueo.proximo.en_revision.texto', ['horas' => Sitio::horasRevision()]), 'cta' => __('remate.bloqueo.cta.ver_estado_garantia')],
+        'aprobada' => ['tono' => 'verde', 'titulo' => __('remate.bloqueo.proximo.aprobada.titulo'), 'texto' => __('remate.bloqueo.proximo.aprobada.texto'), 'cta' => __('remate.bloqueo.cta.recordarme')],
     ][$sesion];
     // «Constituir la garantía» inscribe al postor en el remate (Bloque H) si su cuenta está aprobada y el plazo sigue abierto.
     $inscribir = ! $vivo && ! $cerrado && $sesion === 'registrado' && $visitante['cuentaAprobada'] && $visitante['garantia'] === null && $r['garantiasAbiertas'];
@@ -32,15 +32,15 @@
 
     $etapa = ['visitante' => 0, 'registrado' => 1, 'en-revision' => 2, 'aprobada' => 3][$sesion];
     $pasos = [
-        ['Crea tu cuenta', 'Con tu RUT y datos de contacto.'],
-        ['Constituye la garantía', 'Vale a la vista o transferencia por ' . $clp($r['garantia']) . ', fuera de la plataforma.'],
-        ['Espera la aprobación', 'Colliers revisa el comprobante de forma manual y marca tu inscripción como aprobada.'],
-        ['Puja durante la transmisión', 'En pesos, con incrementos mínimos de ' . $clp($r['incremento']) . '. Cierra automáticamente al vencer el tiempo.'],
+        [__('remate.pasos.cuenta.titulo'), __('remate.pasos.cuenta.texto')],
+        [__('remate.pasos.garantia.titulo'), __('remate.pasos.garantia.texto', ['monto' => $clp($r['garantia'])])],
+        [__('remate.pasos.aprobacion.titulo'), __('remate.pasos.aprobacion.texto')],
+        [__('remate.pasos.puja.titulo'), __('remate.pasos.puja.texto', ['monto' => $clp($r['incremento'])])],
     ];
 
     $config = $r['tiempoReal'] + ['enVivo' => $vivo, 'mapa' => $r['mapa'], 'rutas' => ['avisame' => route('suscripciones.store')], 'remate' => $r['id']];
     $iconoCalendario = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><rect x="3" y="5" width="18" height="16"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>';
-    $correoVisita = 'mailto:' . Sitio::correo() . '?subject=' . rawurlencode('Visita a ' . $r['direccion'] . ' (' . $r['folio'] . ')');
+    $correoVisita = 'mailto:' . Sitio::correo() . '?subject=' . rawurlencode(__('remate.correo.asunto_visita', ['direccion' => $r['direccion'], 'folio' => $r['folio']]));
 @endphp
 <x-layouts.base :titulo="$r['direccion']" pagina-completa>
     <div class="detalle" x-data="detalleRemate(@js($config))">
@@ -48,32 +48,32 @@
         <x-publico.cabecera :sesion="$sesion" :visitante="$visitante" :z-index="1200">
             @if ($vivo)
                 <div class="detalle-ticker detalle-ticker--vivo">
-                    <span class="detalle-ticker__vivo" x-show="!cerrado"><span class="detalle-ticker__punto"></span>EN VIVO</span>
-                    <span class="detalle-ticker__vivo" x-show="cerrado" x-cloak x-text="retirado ? 'NO DISPONIBLE' : (resultado ? 'CERRADO' : 'CERRANDO')">CERRADO</span>
-                    <span class="detalle-ticker__texto">{{ $r['direccion'] }} · <span x-show="!cerrado">cierra en <span x-text="tiempo"></span></span><span x-show="cerrado" x-cloak x-text="retirado ? 'el remate ya no está disponible' : (adjudicando ? 'el lote cerró: se está adjudicando' : 'el lote cerró')"></span></span>
-                    <span class="detalle-ticker__fin">Puja actual <span x-text="pujaActual"></span></span>
+                    <span class="detalle-ticker__vivo" x-show="!cerrado"><span class="detalle-ticker__punto"></span>{{ __('remate.ticker.en_vivo') }}</span>
+                    <span class="detalle-ticker__vivo" x-show="cerrado" x-cloak x-text="retirado ? @js(__('remate.ticker.no_disponible')) : (resultado ? @js(__('remate.ticker.cerrado')) : @js(__('remate.ticker.cerrando')))">{{ __('remate.ticker.cerrado') }}</span>
+                    <span class="detalle-ticker__texto">{{ $r['direccion'] }} · <span x-show="!cerrado">{{ __('remate.ticker.cierra_en') }} <span x-text="tiempo"></span></span><span x-show="cerrado" x-cloak x-text="retirado ? @js(__('remate.ticker.retirado')) : (adjudicando ? @js(__('remate.ticker.adjudicando')) : @js(__('remate.ticker.lote_cerro')))"></span></span>
+                    <span class="detalle-ticker__fin">{{ __('remate.ticker.puja_actual') }} <span x-text="pujaActual"></span></span>
                 </div>
             @else
                 <div class="detalle-ticker">
-                    <span class="detalle-ticker__chip">{{ $cerrado ? 'REMATE CERRADO' : 'PRÓXIMO REMATE' }}</span>
-                    <span class="detalle-ticker__texto">{{ $r['direccion'] }} · {{ $cerrado ? $r['resultado'] : 'comienza el' }} @unless ($cerrado)<span>{{ $r['fecha'] }}</span>@endunless</span>
-                    @if (! $cerrado && $r['limite'])<span class="detalle-ticker__fin">Garantías hasta el <span>{{ $r['limite'] }}</span></span>@endif
+                    <span class="detalle-ticker__chip">{{ $cerrado ? __('remate.ticker.remate_cerrado') : __('remate.ticker.proximo_remate') }}</span>
+                    <span class="detalle-ticker__texto">{{ $r['direccion'] }} · {{ $cerrado ? $r['resultado'] : __('remate.ticker.comienza_el') }} @unless ($cerrado)<span>{{ $r['fecha'] }}</span>@endunless</span>
+                    @if (! $cerrado && $r['limite'])<span class="detalle-ticker__fin">{{ __('remate.ticker.garantias_hasta') }} <span>{{ $r['limite'] }}</span></span>@endif
                 </div>
             @endif
         </x-publico.cabecera>
 
         <div class="detalle__contenido contenedor">
-            <div class="detalle__migas">Inicio <span>/</span> <a href="{{ route('remates.index') }}">Remates</a> <span>/</span> {{ $r['direccion'] }}</div>
+            <div class="detalle__migas">{{ __('remate.migas.inicio') }} <span>/</span> <a href="{{ route('remates.index') }}">{{ __('remate.migas.remates') }}</a> <span>/</span> {{ $r['direccion'] }}</div>
 
             <div class="detalle__titulo-fila">
                 <div>
-                    <div class="detalle__kicker">REMATE N.º <span>{{ $r['folio'] }}</span></div>
+                    <div class="detalle__kicker">{{ __('remate.cabeza.folio') }} <span>{{ $r['folio'] }}</span></div>
                     <h1 class="detalle__titulo">{{ $r['direccion'] }}</h1>
                     <div class="detalle__meta">{{ $r['meta'] }}</div>
                 </div>
                 <div class="detalle__acciones">
-                    <a href="{{ $r['bases'] ?? '#condiciones' }}" class="detalle__accion">Bases y condiciones</a>
-                    <a href="{{ url()->current() }}" class="detalle__accion detalle__accion--gris" @click.prevent="compartir()" x-text="compartido || 'Compartir'">Compartir</a>
+                    <a href="{{ $r['bases'] ?? '#condiciones' }}" class="detalle__accion">{{ __('remate.cabeza.bases') }}</a>
+                    <a href="{{ url()->current() }}" class="detalle__accion detalle__accion--gris" @click.prevent="compartir()" x-text="compartido || @js(__('remate.cabeza.compartir'))">{{ __('remate.cabeza.compartir') }}</a>
                 </div>
             </div>
 
@@ -83,21 +83,21 @@
                     @if ($vivo)
                         <div class="detalle__video">
                             @if ($r['video'])
-                                <iframe src="https://www.youtube-nocookie.com/embed/{{ $r['video'] }}?rel=0" title="Transmisión en vivo del remate" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                                <iframe src="https://www.youtube-nocookie.com/embed/{{ $r['video'] }}?rel=0" title="{{ __('remate.video.titulo') }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
                             @else
-                                <x-imagen-slot :src="$r['fotoPrincipal']" alt="Foto principal de la propiedad" />
+                                <x-imagen-slot :src="$r['fotoPrincipal']" :alt="__('remate.video.foto_principal')" />
                             @endif
                         </div>
                         <div class="detalle__video-pie">
                             <span>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c8102e" stroke-width="1.5"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.75-1.77C18.25 5 12 5 12 5s-6.25 0-7.85.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.75 1.77C5.75 19 12 19 12 19s6.25 0 7.85-.43a2.5 2.5 0 0 0 1.75-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8Z"></path><path d="M10 15V9l5.2 3-5.2 3Z"></path></svg>
-                                Transmisión del canal de Colliers Chile
+                                {{ __('remate.video.canal') }}
                             </span>
-                            <span>Martillero: <span>{{ $r['martillero'] }}</span></span>
+                            <span>{{ __('remate.video.martillero') }} <span>{{ $r['martillero'] }}</span></span>
                         </div>
                     @else
                         <div class="detalle__foto-principal">
-                            <x-imagen-slot :src="$r['fotoPrincipal']" alt="Foto principal de la propiedad" />
+                            <x-imagen-slot :src="$r['fotoPrincipal']" :alt="__('remate.video.foto_principal')" />
                         </div>
                     @endif
 
@@ -106,7 +106,7 @@
                             <div class="detalle__miniatura">
                                 <x-imagen-slot :src="$foto" />
                                 @if ($loop->last)
-                                    <div class="detalle__mas-fotos">Ver las {{ $r['totalFotos'] }} fotos</div>
+                                    <div class="detalle__mas-fotos">{{ __('remate.video.ver_fotos', ['total' => $r['totalFotos']]) }}</div>
                                 @endif
                             </div>
                         @endforeach
@@ -117,11 +117,11 @@
                             <div class="detalle__aviso-stream-fila">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.75-1.77C18.25 5 12 5 12 5s-6.25 0-7.85.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.75 1.77C5.75 19 12 19 12 19s6.25 0 7.85-.43a2.5 2.5 0 0 0 1.75-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8Z"></path><path d="M10 15V9l5.2 3-5.2 3Z"></path></svg>
                                 <div>
-                                    <div class="detalle__aviso-stream-titulo">La transmisión se habilita el <span>{{ $r['fecha'] }}</span></div>
-                                    <div class="detalle__aviso-stream-texto">El remate se emite en vivo por el canal de YouTube de Colliers Chile. El reproductor aparecerá en esta misma página al comenzar, y el historial de pujas se abrirá junto con él.</div>
+                                    <div class="detalle__aviso-stream-titulo">{{ __('remate.transmision.se_habilita') }} <span>{{ $r['fecha'] }}</span></div>
+                                    <div class="detalle__aviso-stream-texto">{{ __('remate.transmision.texto') }}</div>
                                     <div class="detalle__aviso-stream-enlaces">
-                                        <a href="{{ route('remates.calendario', $r['id']) }}">Agregar a mi calendario</a>
-                                        @if ($r['canal'])<a href="{{ $r['canal'] }}" target="_blank" rel="noopener">Ver el canal de Colliers</a>@endif
+                                        <a href="{{ route('remates.calendario', $r['id']) }}">{{ __('remate.transmision.calendario') }}</a>
+                                        @if ($r['canal'])<a href="{{ $r['canal'] }}" target="_blank" rel="noopener">{{ __('remate.transmision.ver_canal') }}</a>@endif
                                     </div>
                                 </div>
                             </div>
@@ -130,20 +130,20 @@
 
                     @if ($r['lotes'])
                         {{-- Varios lotes (sin diseño): lista simple; la ficha es la del lote que se remata ahora o el próximo. --}}
-                        <h2 class="detalle__h2">Lotes de este remate</h2>
+                        <h2 class="detalle__h2">{{ __('remate.secciones.lotes') }}</h2>
                         <div class="detalle__tabla-kv">
                             @foreach ($r['lotes'] as $l)
-                                <div class="detalle__kv"><span class="detalle__kv-k">{{ $l['actual'] ? '▸ ' : '' }}Lote {{ $l['orden'] }} · {{ $l['direccion'] }}</span><span class="detalle__kv-v">{{ $clp($l['base']) }} · {{ $l['horario'] }}</span></div>
+                                <div class="detalle__kv"><span class="detalle__kv-k">{{ $l['actual'] ? '▸ ' : '' }}{{ __('remate.secciones.lote', ['orden' => $l['orden'], 'direccion' => $l['direccion']]) }}</span><span class="detalle__kv-v">{{ $clp($l['base']) }} · {{ $l['horario'] }}</span></div>
                             @endforeach
                         </div>
                     @endif
 
                     @if ($r['descripcion'])
-                        <h2 class="detalle__h2">Descripción</h2>
+                        <h2 class="detalle__h2">{{ __('remate.secciones.descripcion') }}</h2>
                         <p class="detalle__descripcion">{{ $r['descripcion'] }}</p>
                     @endif
 
-                    <h2 class="detalle__h2">Características generales</h2>
+                    <h2 class="detalle__h2">{{ __('remate.secciones.caracteristicas') }}</h2>
                     <div class="detalle__ficha">
                         @foreach ($r['ficha'] as $k => $v)
                             <div class="detalle__ficha-item">
@@ -154,7 +154,7 @@
                     </div>
 
                     @if ($r['adicional'])
-                        <h2 class="detalle__h2">Información adicional</h2>
+                        <h2 class="detalle__h2">{{ __('remate.secciones.adicional') }}</h2>
                         <div class="detalle__tabla-kv">
                             @foreach ($r['adicional'] as $k => $v)
                                 <div class="detalle__kv"><span class="detalle__kv-k">{{ $k }}</span><span class="detalle__kv-v">{{ $v }}</span></div>
@@ -163,7 +163,7 @@
                     @endif
 
                     @if ($r['mandante'])
-                        <h2 class="detalle__h2">Antecedentes del mandante</h2>
+                        <h2 class="detalle__h2">{{ __('remate.secciones.mandante') }}</h2>
                         <div class="detalle__tabla-kv">
                             @foreach ($r['mandante'] as $k => $v)
                                 <div class="detalle__kv"><span class="detalle__kv-k">{{ $k }}</span><span class="detalle__kv-v">{{ $v }}</span></div>
@@ -172,20 +172,20 @@
                     @endif
 
                     @if ($r['mapa'])
-                        <h2 class="detalle__h2">Ubicación</h2>
+                        <h2 class="detalle__h2">{{ __('remate.secciones.ubicacion') }}</h2>
                         <div class="detalle__mapa-caja">
                             <div class="detalle__mapa" x-ref="mapa"></div>
                             <div class="detalle__mapa-pie">
                                 <span>{{ $r['mapa']['texto'] }}</span>
-                                <a href="https://www.google.com/maps/search/?api=1&query={{ $r['mapa']['lat'] }},{{ $r['mapa']['lng'] }}" target="_blank" rel="noopener">Abrir en Google Maps</a>
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ $r['mapa']['lat'] }},{{ $r['mapa']['lng'] }}" target="_blank" rel="noopener">{{ __('remate.secciones.google_maps') }}</a>
                             </div>
                         </div>
                     @endif
 
-                    <h2 class="detalle__h2" id="condiciones">Condiciones del remate</h2>
+                    <h2 class="detalle__h2" id="condiciones">{{ __('remate.secciones.condiciones') }}</h2>
                     <div class="detalle__condiciones">
-                        <p>Las posturas se ingresan en pesos chilenos. El valor de la UF se muestra solo como referencia informativa y no determina el monto de las pujas ni de la garantía.</p>
-                        <p>El remate cierra automáticamente al vencer el temporizador, sin extensiones por posturas de último minuto. Colliers puede cerrar el remate de forma anticipada.</p>
+                        <p>{{ __('remate.secciones.condicion_pesos') }}</p>
+                        <p>{{ __('remate.secciones.condicion_cierre') }}</p>
                         <p>{{ $r['garantiaCondicion'] }}</p>
                     </div>
                 </div>
@@ -193,14 +193,14 @@
                 <div class="detalle__lateral">
                     @if ($vivo)
                         <div class="detalle-caja">
-                            <div class="detalle-caja__cabeza">{!! $iconoCalendario !!}<h2 class="detalle-caja__titulo">Horarios de visita</h2></div>
+                            <div class="detalle-caja__cabeza">{!! $iconoCalendario !!}<h2 class="detalle-caja__titulo">{{ __('remate.visitas.titulo') }}</h2></div>
                             <div class="detalle-visitas">
                                 @forelse ($r['visitas'] as [$fecha, $hora])
                                     <div class="detalle-visita"><span class="detalle-visita__fecha">{{ $fecha }}</span><span class="detalle-visita__hora">{{ $hora }}</span></div>
                                 @empty
-                                    <div class="detalle-visita"><span class="detalle-visita__fecha">Sin horarios publicados</span><span class="detalle-visita__hora">Coordínala con Colliers</span></div>
+                                    <div class="detalle-visita"><span class="detalle-visita__fecha">{{ __('remate.visitas.sin_horarios') }}</span><span class="detalle-visita__hora">{{ __('remate.visitas.coordinala') }}</span></div>
                                 @endforelse
-                                <a href="{{ $correoVisita }}" class="detalle-visitas__boton">Coordinar visita</a>
+                                <a href="{{ $correoVisita }}" class="detalle-visitas__boton">{{ __('remate.visitas.coordinar') }}</a>
                             </div>
                         </div>
                     @endif
@@ -209,52 +209,52 @@
                         @if ($vivo)
                             <div class="detalle-remate__cabeza detalle-remate__cabeza--vivo">
                                 {{-- Al llegar la hora de cierre el estado cambia solo, con el reloj del servidor. --}}
-                                <span class="detalle-remate__cabeza-vivo" x-show="!cerrado"><span></span>REMATE EN CURSO</span>
-                                <span class="detalle-remate__cabeza-vivo detalle-remate__cabeza-vivo--cerrado" x-show="cerrado" x-cloak x-text="textoCierre">CERRADO · ADJUDICANDO</span>
+                                <span class="detalle-remate__cabeza-vivo" x-show="!cerrado"><span></span>{{ __('remate.caja.en_curso') }}</span>
+                                <span class="detalle-remate__cabeza-vivo detalle-remate__cabeza-vivo--cerrado" x-show="cerrado" x-cloak x-text="textoCierre">{{ __('remate.js.cerrado_adjudicando') }}</span>
                                 <span class="detalle-remate__folio">{{ $r['folio'] }}</span>
                             </div>
                         @else
                             <div class="detalle-remate__cabeza">
-                                <span class="detalle-remate__cabeza-etiqueta">{{ $cerrado ? 'REMATE CERRADO' : 'COMIENZA EN' }}</span>
+                                <span class="detalle-remate__cabeza-etiqueta">{{ $cerrado ? __('remate.caja.remate_cerrado') : __('remate.caja.comienza_en') }}</span>
                                 <span class="detalle-remate__folio">{{ $r['folio'] }}</span>
                             </div>
                         @endif
                         <div class="detalle-remate__cuerpo">
                             @if ($vivo)
-                                <div class="detalle-remate__etiqueta">PUJA ACTUAL</div>
+                                <div class="detalle-remate__etiqueta">{{ __('remate.caja.puja_actual') }}</div>
                                 <div class="detalle-remate__precio" x-text="pujaActual"></div>
-                                <div class="detalle-remate__referencia"><span x-text="total"></span> pujas · última hace <span x-text="haceUltima"></span></div>
+                                <div class="detalle-remate__referencia">{!! __('remate.caja.pujas_ultima', ['total' => '<span x-text="total"></span>', 'hace' => '<span x-text="haceUltima"></span>']) !!}</div>
                                 <div class="detalle-remate__datos">
-                                    <div><div class="detalle-remate__dato-etiqueta">PRECIO BASE</div><div class="detalle-remate__dato-valor">{{ $clp($r['base']) }}</div></div>
-                                    <div><div class="detalle-remate__dato-etiqueta">INCREMENTO MÍNIMO</div><div class="detalle-remate__dato-valor">{{ $clp($r['incremento']) }}</div></div>
-                                    <div><div class="detalle-remate__dato-etiqueta">GARANTÍA</div><div class="detalle-remate__dato-valor">{{ $clp($r['garantia']) }}</div></div>
-                                    <div><div class="detalle-remate__dato-etiqueta">REFERENCIA UF</div><div class="detalle-remate__dato-valor" x-text="pujaEnUf"></div></div>
+                                    <div><div class="detalle-remate__dato-etiqueta">{{ __('remate.caja.precio_base') }}</div><div class="detalle-remate__dato-valor">{{ $clp($r['base']) }}</div></div>
+                                    <div><div class="detalle-remate__dato-etiqueta">{{ __('remate.caja.incremento_minimo') }}</div><div class="detalle-remate__dato-valor">{{ $clp($r['incremento']) }}</div></div>
+                                    <div><div class="detalle-remate__dato-etiqueta">{{ __('remate.caja.garantia') }}</div><div class="detalle-remate__dato-valor">{{ $clp($r['garantia']) }}</div></div>
+                                    <div><div class="detalle-remate__dato-etiqueta">{{ __('remate.caja.referencia_uf') }}</div><div class="detalle-remate__dato-valor" x-text="pujaEnUf"></div></div>
                                 </div>
-                                <div class="detalle-remate__etiqueta detalle-remate__etiqueta--cierre" x-text="cerrado ? 'CERRADO' : 'CIERRA EN'">CIERRA EN</div>
+                                <div class="detalle-remate__etiqueta detalle-remate__etiqueta--cierre" x-text="cerrado ? @js(__('remate.caja.cerrado')) : @js(__('remate.caja.cierra_en'))">{{ __('remate.caja.cierra_en') }}</div>
                                 <div class="detalle-remate__contador" x-show="!cerrado">
-                                    @foreach (['h' => 'HORAS', 'm' => 'MIN', 's' => 'SEG'] as $p => $etiqueta)
+                                    @foreach (['h' => __('remate.contador.horas'), 'm' => __('remate.contador.min'), 's' => __('remate.contador.seg')] as $p => $etiqueta)
                                         <div class="detalle-remate__caja"><div class="detalle-remate__digito" x-text="partes.{{ $p }}"></div><div class="detalle-remate__caja-etiqueta">{{ $etiqueta }}</div></div>
                                     @endforeach
                                 </div>
-                                <div class="detalle-remate__cierre-aviso" x-show="cerrado" x-cloak x-text="retirado ? 'Este remate ya no está disponible' : (adjudicando ? 'Adjudicando…' : 'Remate cerrado')"></div>
+                                <div class="detalle-remate__cierre-aviso" x-show="cerrado" x-cloak x-text="retirado ? @js(__('remate.caja.retirado')) : (adjudicando ? @js(__('remate.caja.adjudicando')) : @js(__('remate.caja.cerrado_aviso')))"></div>
                             @elseif ($cerrado)
-                                <div class="detalle-remate__etiqueta">RESULTADO</div>
+                                <div class="detalle-remate__etiqueta">{{ __('remate.caja.resultado') }}</div>
                                 <div class="detalle-remate__precio">{{ $r['resultado'] }}</div>
-                                <div class="detalle-remate__referencia">Precio base {{ $clp($r['base']) }}</div>
+                                <div class="detalle-remate__referencia">{{ __('remate.caja.precio_base_monto', ['monto' => $clp($r['base'])]) }}</div>
                             @else
                                 <div class="detalle-remate__contador">
-                                    @foreach (['d' => 'DÍAS', 'h' => 'HORAS', 'm' => 'MIN', 's' => 'SEG'] as $p => $etiqueta)
+                                    @foreach (['d' => __('remate.contador.dias'), 'h' => __('remate.contador.horas'), 'm' => __('remate.contador.min'), 's' => __('remate.contador.seg')] as $p => $etiqueta)
                                         <div class="detalle-remate__caja"><div class="detalle-remate__digito" x-text="partes.{{ $p }}"></div><div class="detalle-remate__caja-etiqueta">{{ $etiqueta }}</div></div>
                                     @endforeach
                                 </div>
-                                <div class="detalle-remate__etiqueta">PRECIO BASE</div>
+                                <div class="detalle-remate__etiqueta">{{ __('remate.caja.precio_base') }}</div>
                                 <div class="detalle-remate__precio">{{ $clp($r['base']) }}</div>
-                                <div class="detalle-remate__referencia">@if ($enUf($r['base']))Referencia: <span>{{ $enUf($r['base']) }}</span> · @endif aún no hay pujas</div>
+                                <div class="detalle-remate__referencia">@if ($enUf($r['base'])){{ __('remate.caja.referencia') }} <span>{{ $enUf($r['base']) }}</span> · @endif {{ __('remate.caja.sin_pujas_aun') }}</div>
                                 <div class="detalle-remate__datos">
-                                    <div><div class="detalle-remate__dato-etiqueta">GARANTÍA</div><div class="detalle-remate__dato-valor">{{ $clp($r['garantia']) }}</div></div>
-                                    <div><div class="detalle-remate__dato-etiqueta">INCREMENTO MÍNIMO</div><div class="detalle-remate__dato-valor">{{ $clp($r['incremento']) }}</div></div>
-                                    <div><div class="detalle-remate__dato-etiqueta">INICIO</div><div class="detalle-remate__dato-valor">{{ $r['fecha'] }}</div></div>
-                                    <div><div class="detalle-remate__dato-etiqueta">CIERRE DE GARANTÍAS</div><div class="detalle-remate__dato-valor">{{ $r['limite'] ?? 'Hasta el inicio' }}</div></div>
+                                    <div><div class="detalle-remate__dato-etiqueta">{{ __('remate.caja.garantia') }}</div><div class="detalle-remate__dato-valor">{{ $clp($r['garantia']) }}</div></div>
+                                    <div><div class="detalle-remate__dato-etiqueta">{{ __('remate.caja.incremento_minimo') }}</div><div class="detalle-remate__dato-valor">{{ $clp($r['incremento']) }}</div></div>
+                                    <div><div class="detalle-remate__dato-etiqueta">{{ __('remate.caja.inicio') }}</div><div class="detalle-remate__dato-valor">{{ $r['fecha'] }}</div></div>
+                                    <div><div class="detalle-remate__dato-etiqueta">{{ __('remate.caja.cierre_garantias') }}</div><div class="detalle-remate__dato-valor">{{ $r['limite'] ?? __('remate.caja.hasta_inicio') }}</div></div>
                                 </div>
                             @endif
 
@@ -283,29 +283,29 @@
                                 {{-- Cerrado el lote, la sala ya no acepta pujas: el enlace desaparece al segundo. --}}
                                 <a href="{{ $ctaHref }}" class="detalle-remate__cta" @if ($vivo && $sesion === 'aprobada') x-show="!cerrado" @endif>{{ $bloqueo['cta'] }}</a>
                                 @if ($vivo && $sesion === 'aprobada')
-                                    <div class="detalle-bloqueo__texto" x-show="cerrado" x-cloak x-text="adjudicando ? 'El lote cerró: se está adjudicando.' : 'El lote cerró.'"></div>
+                                    <div class="detalle-bloqueo__texto" x-show="cerrado" x-cloak x-text="adjudicando ? @js(__('remate.caja.lote_adjudicando')) : @js(__('remate.caja.lote_cerro'))"></div>
                                 @endif
                             @elseif ($bloqueo['cta'])
-                                <button type="button" class="detalle-remate__cta" @click="avisame(@js(auth()->user()?->email))" :disabled="avisoEnviando" x-text="avisoMensaje ? 'Te avisaremos' : @js($bloqueo['cta'])">{{ $bloqueo['cta'] }}</button>
+                                <button type="button" class="detalle-remate__cta" @click="avisame(@js(auth()->user()?->email))" :disabled="avisoEnviando" x-text="avisoMensaje ? @js(__('remate.caja.te_avisaremos')) : @js($bloqueo['cta'])">{{ $bloqueo['cta'] }}</button>
                             @endif
                             @if ($vivo)
                                 @if ($sesion !== 'visitante' && $sesion !== 'aprobada')
-                                    <a href="{{ route('cuenta.estado', ['remate' => $r['id']]) }}" class="detalle-remate__secundario">Ver el estado de mi garantía</a>
+                                    <a href="{{ route('cuenta.estado', ['remate' => $r['id']]) }}" class="detalle-remate__secundario">{{ __('remate.caja.estado_garantia') }}</a>
                                 @endif
                                 <div class="detalle-remate__enlaces">
-                                    <a href="{{ $sesion === 'visitante' && ! $logueado ? route('register') : route('cuenta.estado') }}">Cómo constituir la garantía</a>
+                                    <a href="{{ $sesion === 'visitante' && ! $logueado ? route('register') : route('cuenta.estado') }}">{{ __('remate.caja.como_garantia') }}</a>
                                     <span>|</span>
-                                    <a href="mailto:{{ Sitio::correo() }}?subject={{ rawurlencode('Consulta por el remate ' . $r['folio']) }}">Contactar al ejecutivo</a>
+                                    <a href="mailto:{{ Sitio::correo() }}?subject={{ rawurlencode(__('remate.correo.asunto_consulta', ['folio' => $r['folio']])) }}">{{ __('remate.caja.contactar') }}</a>
                                 </div>
                             @else
                                 {{-- «Avísame antes de que comience» (Bloque M): con sesión, un clic; sin sesión, pide el correo. --}}
                                 <template x-if="!avisoAbierto && !avisoMensaje">
-                                    <a href="#" class="detalle-remate__secundario" @click.prevent="{{ $logueado ? 'avisame(' . e(json_encode(auth()->user()?->email)) . ')' : 'avisoAbierto = true' }}">Avísame antes de que comience</a>
+                                    <a href="#" class="detalle-remate__secundario" @click.prevent="{{ $logueado ? 'avisame(' . e(json_encode(auth()->user()?->email)) . ')' : 'avisoAbierto = true' }}">{{ __('remate.caja.avisame') }}</a>
                                 </template>
                                 <template x-if="avisoAbierto && !avisoMensaje">
                                     <form class="detalle-avisame" @submit.prevent="avisame($event.target.email.value)">
-                                        <input type="email" name="email" required placeholder="tu@correo.cl" aria-label="Correo para el aviso">
-                                        <button type="submit" :disabled="avisoEnviando">Avisarme</button>
+                                        <input type="email" name="email" required placeholder="{{ __('remate.caja.correo_ejemplo') }}" aria-label="{{ __('remate.caja.correo_aviso') }}">
+                                        <button type="submit" :disabled="avisoEnviando">{{ __('remate.caja.avisarme') }}</button>
                                     </form>
                                 </template>
                                 <p class="detalle-avisame__mensaje" x-show="avisoMensaje" x-text="avisoMensaje" role="status"></p>
@@ -317,8 +317,8 @@
                     @if ($vivo)
                         <div class="detalle-caja">
                             <div class="detalle-caja__cabeza detalle-caja__cabeza--separada">
-                                <h2 class="detalle-caja__titulo">Historial de pujas</h2>
-                                <span class="detalle-historial__vivo">Actualiza solo</span>
+                                <h2 class="detalle-caja__titulo">{{ __('remate.historial.titulo') }}</h2>
+                                <span class="detalle-historial__vivo">{{ __('remate.historial.actualiza') }}</span>
                             </div>
                             <div class="detalle-historial">
                                 <template x-for="(p, i) in historial" :key="i">
@@ -334,12 +334,12 @@
                                     </div>
                                 </template>
                             </div>
-                            <div class="detalle-historial__nota">Los postores se identifican con un número asignado por el sistema.</div>
+                            <div class="detalle-historial__nota">{{ __('remate.historial.nota') }}</div>
                         </div>
                     @else
                         @unless ($cerrado)
                         <div class="detalle-caja">
-                            <div class="detalle-caja__cabeza"><h2 class="detalle-caja__titulo">Pasos para participar</h2></div>
+                            <div class="detalle-caja__cabeza"><h2 class="detalle-caja__titulo">{{ __('remate.pasos.titulo') }}</h2></div>
                             <div class="detalle-pasos">
                                 @foreach ($pasos as $i => [$titulo, $texto])
                                     <div class="detalle-paso">
@@ -355,14 +355,14 @@
                         @endunless
 
                         <div class="detalle-caja">
-                            <div class="detalle-caja__cabeza">{!! $iconoCalendario !!}<h2 class="detalle-caja__titulo">Horarios de visita</h2></div>
+                            <div class="detalle-caja__cabeza">{!! $iconoCalendario !!}<h2 class="detalle-caja__titulo">{{ __('remate.visitas.titulo') }}</h2></div>
                             <div class="detalle-visitas">
                                 @forelse ($r['visitas'] as [$fecha, $hora])
                                     <div class="detalle-visita"><span class="detalle-visita__fecha">{{ $fecha }}</span><span class="detalle-visita__hora">{{ $hora }}</span></div>
                                 @empty
-                                    <div class="detalle-visita"><span class="detalle-visita__fecha">Sin horarios publicados</span><span class="detalle-visita__hora">Coordínala con Colliers</span></div>
+                                    <div class="detalle-visita"><span class="detalle-visita__fecha">{{ __('remate.visitas.sin_horarios') }}</span><span class="detalle-visita__hora">{{ __('remate.visitas.coordinala') }}</span></div>
                                 @endforelse
-                                <a href="{{ $correoVisita }}" class="detalle-visitas__boton">Coordinar visita</a>
+                                <a href="{{ $correoVisita }}" class="detalle-visitas__boton">{{ __('remate.visitas.coordinar') }}</a>
                             </div>
                         </div>
                     @endif
@@ -370,25 +370,25 @@
                     <div class="detalle-caja">
                         <div class="detalle-caja__cabeza">
                             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><path d="M4 4h6l2 3h8v13H4Z"></path></svg>
-                            <h2 class="detalle-caja__titulo">Documentos disponibles</h2>
+                            <h2 class="detalle-caja__titulo">{{ __('remate.documentos.titulo') }}</h2>
                         </div>
                         <div class="detalle-docs">
                             @forelse ($r['documentos'] as [$nombre, $peso, $url])
                                 @if ($url)
                                     <a href="{{ $url }}" class="detalle-doc"><span class="detalle-doc__nombre">{{ $nombre }}</span><span class="detalle-doc__peso">{{ $peso }}</span></a>
                                 @else
-                                    <div class="detalle-doc detalle-doc--bloqueado"><span class="detalle-doc__nombre">{{ $nombre }}</span><span class="detalle-doc__peso">Con garantía aprobada</span></div>
+                                    <div class="detalle-doc detalle-doc--bloqueado"><span class="detalle-doc__nombre">{{ $nombre }}</span><span class="detalle-doc__peso">{{ __('remate.documentos.con_garantia') }}</span></div>
                                 @endif
                             @empty
-                                <div class="detalle-doc detalle-doc--bloqueado"><span class="detalle-doc__nombre">Documentos en preparación</span><span class="detalle-doc__peso">Pídelos a Colliers</span></div>
+                                <div class="detalle-doc detalle-doc--bloqueado"><span class="detalle-doc__nombre">{{ __('remate.documentos.en_preparacion') }}</span><span class="detalle-doc__peso">{{ __('remate.documentos.pidelos') }}</span></div>
                             @endforelse
-                            <div class="detalle-docs__nota">Los antecedentes legales completos se entregan a los postores con garantía aprobada.</div>
+                            <div class="detalle-docs__nota">{{ __('remate.documentos.nota') }}</div>
                         </div>
                     </div>
 
                     <div class="detalle-caja detalle-ayuda">
-                        <h2 class="detalle-caja__titulo">¿Necesitas ayuda?</h2>
-                        <p>El equipo de remates resuelve dudas sobre la propiedad, la garantía y el procedimiento.</p>
+                        <h2 class="detalle-caja__titulo">{{ __('remate.ayuda.titulo') }}</h2>
+                        <p>{{ __('remate.ayuda.texto') }}</p>
                         <div class="detalle-ayuda__enlaces">
                             <a href="{{ \App\Support\Sitio::telefonoEnlace() }}">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1.1 1A17 17 0 0 1 4 5.1 1 1 0 0 1 5 4Z"></path></svg>
@@ -408,8 +408,8 @@
         <div class="recomendados">
             <div class="recomendados__interior contenedor">
                 <div class="recomendados__cabeza">
-                    <h2 class="recomendados__titulo">Otros remates que podrían interesarte</h2>
-                    <a href="{{ route('remates.index') }}" class="recomendados__todos">Ver todos los remates</a>
+                    <h2 class="recomendados__titulo">{{ __('remate.recomendados.titulo') }}</h2>
+                    <a href="{{ route('remates.index') }}" class="recomendados__todos">{{ __('remate.recomendados.ver_todos') }}</a>
                 </div>
                 <div class="recomendados__grilla">
                     @foreach ($r['recomendados'] as $rec)
@@ -419,7 +419,7 @@
                                 <div class="tarjeta__capa">
                                     <span @class(['badge-remate', 'recomendado__badge', 'badge-remate--vivo' => $rec['vivo'] && ! $vivo, 'badge-remate--proximo' => ! $rec['vivo'] || $vivo])>{{ $rec['estado'] }}</span>
                                     <div class="tarjeta__precio">
-                                        <div class="tarjeta__precio-etiqueta">PRECIO BASE</div>
+                                        <div class="tarjeta__precio-etiqueta">{{ __('remate.recomendados.precio_base') }}</div>
                                         <div class="tarjeta__precio-valor">{{ $clp($rec['precio']) }}</div>
                                     </div>
                                 </div>
@@ -429,10 +429,10 @@
                                 <div class="recomendado__linea">{{ $rec['ubicacion'] }}</div>
                                 <div class="recomendado__linea">{{ $rec['tipoSup'] }}</div>
                                 <div class="recomendado__datos">
-                                    <div><div class="tarjeta__dato-etiqueta">REMATE</div><div class="recomendado__dato-valor">{{ $rec['fecha'] }}</div></div>
-                                    <div><div class="tarjeta__dato-etiqueta">GARANTÍA</div><div class="recomendado__dato-valor">{{ $clp($rec['garantia']) }}</div></div>
+                                    <div><div class="tarjeta__dato-etiqueta">{{ __('remate.recomendados.remate') }}</div><div class="recomendado__dato-valor">{{ $rec['fecha'] }}</div></div>
+                                    <div><div class="tarjeta__dato-etiqueta">{{ __('remate.recomendados.garantia') }}</div><div class="recomendado__dato-valor">{{ $clp($rec['garantia']) }}</div></div>
                                 </div>
-                                <a href="{{ route('remates.show', $rec['id']) }}" class="recomendado__ver">Ver remate</a>
+                                <a href="{{ route('remates.show', $rec['id']) }}" class="recomendado__ver">{{ __('remate.recomendados.ver') }}</a>
                             </div>
                         </div>
                     @endforeach

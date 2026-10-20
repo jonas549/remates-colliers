@@ -14,7 +14,7 @@
         </template>
         <template x-if="mensajeMartillero">
             <div class="sala-aviso sala-aviso--martillero">
-                <div class="sala-aviso__etiqueta">MENSAJE DEL MARTILLERO <span x-text="mensajeHace"></span></div>
+                <div class="sala-aviso__etiqueta">{{ __('sala.avisos.mensaje_martillero') }} <span x-text="mensajeHace"></span></div>
                 <div class="sala-aviso__texto" x-text="mensajeMartillero"></div>
             </div>
         </template>

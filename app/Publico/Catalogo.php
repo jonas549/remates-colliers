@@ -68,7 +68,7 @@ class Catalogo
             'direccion' => $varios ? $r->titulo : ($lote->direccion ?: $r->titulo),
             'comuna' => (string) $lote->comuna,
             'region' => (string) $lote->region,
-            'tipo' => $varios ? $r->lotes->count() . ' lotes' : (string) $lote->tipo_propiedad,
+            'tipo' => $varios ? __('catalogo.tarjeta.lotes', ['n' => $r->lotes->count()]) : (string) $lote->tipo_propiedad,
             'sup' => (float) $lote->superficie_util,
             'dorm' => (int) $lote->dormitorios,
             'banos' => (int) $lote->banos,
@@ -80,12 +80,12 @@ class Catalogo
             'precio' => (int) $r->lotes->sum('precio_base'),
             'garantia' => $r->montoGarantia(),
             'limite' => $vista === Remate::VISTA_PROXIMO && $r->cierre_garantias_en
-                ? ($ahora->greaterThanOrEqualTo($r->cierre_garantias_en) ? 'Cierre de garantías: vencido' : 'Hasta ' . CarbonImmutable::instance($r->cierre_garantias_en)->setTimezone(Formato::ZONA)->format('d-m, H:i'))
-                : ($vista === Remate::VISTA_EN_VIVO ? 'Cierre de garantías: vencido' : ''),
+                ? ($ahora->greaterThanOrEqualTo($r->cierre_garantias_en) ? __('catalogo.tarjeta.garantias_vencido') : __('catalogo.tarjeta.garantias_hasta', ['fecha' => CarbonImmutable::instance($r->cierre_garantias_en)->setTimezone(Formato::ZONA)->format('d-m, H:i')]))
+                : ($vista === Remate::VISTA_EN_VIVO ? __('catalogo.tarjeta.garantias_vencido') : ''),
             'estado' => $estado,
             'fecha' => $estado === 'Cerrado' ? Formato::dia($r->cierraEn() ?? $r->abreEn()) : Formato::fecha($r->abreEn(), $ahora),
             'resultado' => $estado === 'Cerrado' ? ($adjudicados->isNotEmpty()
-                ? 'Adjudicado en ' . Formato::clp((int) $adjudicados->sum('precio_actual')) : 'No adjudicado') : null,
+                ? __('catalogo.tarjeta.adjudicado_en', ['monto' => Formato::clp((int) $adjudicados->sum('precio_actual'))]) : __('catalogo.tarjeta.no_adjudicado')) : null,
             'nuevoRemate' => $nuevo ? Formato::dia($nuevo->abreEn()) : null,
             'nuevoHref' => $nuevo ? route('remates.show', $nuevo->slug) : null,
             'foto' => $lote->imagenes->first()?->url() ?? asset('img/demo/prop-hero.jpg'),
@@ -121,41 +121,41 @@ class Catalogo
         $lote = self::loteVigente($r);
         $a = $lote->atributos ?? [];
         $enVivo = $vista === Remate::VISTA_EN_VIVO;
-        $m2 = fn ($n) => $n === null ? null : Formato::numero($n, 2) . ' m²';
+        $m2 = fn ($n) => $n === null ? null : __('catalogo.medidas.m2', ['n' => Formato::numero($n, 2)]);
         $garantiaAprobada = Habilitacion::conGarantiaAprobada($user, $r);
         $fotos = $lote->imagenes->map->url()->values();
 
         $ficha = array_filter([
-            'TIPO' => $lote->tipo_propiedad,
-            'SUPERFICIE ÚTIL' => $m2($lote->superficie_util),
-            'SUPERFICIE TERRAZA' => $m2($lote->superficie_terraza),
-            'SUPERFICIE TERRENO' => $m2($lote->superficie_terreno),
-            'DORMITORIOS / BAÑOS' => $lote->dormitorios !== null ? $lote->dormitorios . ' / ' . ($lote->banos ?? 0) : null,
-            'ESTACIONAMIENTOS' => $lote->estacionamientos ? (string) $lote->estacionamientos : null,
-            'BODEGA' => $lote->bodega ? 'Sí' : null,
-            'AÑO DE CONSTRUCCIÓN' => $a['anio_construccion'] ?? null,
-            'OCUPACIÓN' => $lote->ocupacion,
-            'ORIENTACIÓN' => $a['orientacion'] ?? null,
-            'PISO' => $a['piso'] ?? null,
-            'GASTOS COMUNES' => isset($a['gastos_comunes']) && is_numeric($a['gastos_comunes']) ? Formato::clp((int) $a['gastos_comunes']) . ' mensuales' : ($a['gastos_comunes'] ?? null),
-            'ENTREGA' => $a['entrega'] ?? null,
+            __('catalogo.ficha.tipo') => self::etiquetaTipo($lote->tipo_propiedad),
+            __('catalogo.ficha.superficie_util') => $m2($lote->superficie_util),
+            __('catalogo.ficha.superficie_terraza') => $m2($lote->superficie_terraza),
+            __('catalogo.ficha.superficie_terreno') => $m2($lote->superficie_terreno),
+            __('catalogo.ficha.dormitorios_banos') => $lote->dormitorios !== null ? __('catalogo.medidas.dorm_banos', ['dorm' => $lote->dormitorios, 'banos' => $lote->banos ?? 0]) : null,
+            __('catalogo.ficha.estacionamientos') => $lote->estacionamientos ? (string) $lote->estacionamientos : null,
+            __('catalogo.ficha.bodega') => $lote->bodega ? __('catalogo.medidas.si') : null,
+            __('catalogo.ficha.anio_construccion') => $a['anio_construccion'] ?? null,
+            __('catalogo.ficha.ocupacion') => self::etiquetaOcupacion($lote->ocupacion),
+            __('catalogo.ficha.orientacion') => $a['orientacion'] ?? null,
+            __('catalogo.ficha.piso') => $a['piso'] ?? null,
+            __('catalogo.ficha.gastos_comunes') => isset($a['gastos_comunes']) && is_numeric($a['gastos_comunes']) ? __('catalogo.medidas.mensuales', ['monto' => Formato::clp((int) $a['gastos_comunes'])]) : ($a['gastos_comunes'] ?? null),
+            __('catalogo.ficha.entrega') => $a['entrega'] ?? null,
         ], fn ($v) => filled($v));
 
         $adicional = array_filter([
-            'Estado de ocupación' => $lote->ocupacion,
-            'Uso' => $a['uso'] ?? null,
-            'Rol avalúo' => $a['rol_avaluo'] ?? null,
-            'Rol estacionamiento' => $a['rol_estacionamiento'] ?? null,
-            'Rol bodega' => $a['rol_bodega'] ?? null,
-            'Contribuciones' => $a['contribuciones'] ?? null,
-            'Martillero' => $r->martillero?->name,
-            'Plazo de pago del saldo' => $a['plazo_saldo'] ?? null,
+            __('catalogo.adicional.estado_ocupacion') => self::etiquetaOcupacion($lote->ocupacion),
+            __('catalogo.adicional.uso') => $a['uso'] ?? null,
+            __('catalogo.adicional.rol_avaluo') => $a['rol_avaluo'] ?? null,
+            __('catalogo.adicional.rol_estacionamiento') => $a['rol_estacionamiento'] ?? null,
+            __('catalogo.adicional.rol_bodega') => $a['rol_bodega'] ?? null,
+            __('catalogo.adicional.contribuciones') => $a['contribuciones'] ?? null,
+            __('catalogo.adicional.martillero') => $r->martillero?->name,
+            __('catalogo.adicional.plazo_saldo') => $a['plazo_saldo'] ?? null,
         ], fn ($v) => filled($v));
 
         $mandante = array_filter([
-            'Mandante' => $a['mandante'] ?? null,
-            'Tipo de venta' => $a['tipo_venta'] ?? null,
-            'Ejecutivo a cargo' => $a['ejecutivo'] ?? null,
+            __('catalogo.mandante.mandante') => $a['mandante'] ?? null,
+            __('catalogo.mandante.tipo_venta') => $a['tipo_venta'] ?? null,
+            __('catalogo.mandante.ejecutivo') => $a['ejecutivo'] ?? null,
         ], fn ($v) => filled($v));
 
         $recientes = collect(EstadoRemate::construir($r, $ahora)['lotes'])->firstWhere('id', $lote->id)['pujas'] ?? [];
@@ -167,9 +167,9 @@ class Catalogo
             'folio' => $r->folio,
             'titulo' => $r->titulo,
             'direccion' => $lote->direccion ?: $r->titulo,
-            'meta' => collect([trim(collect([$lote->comuna, $lote->region])->filter()->join(', ')), $lote->tipo_propiedad,
-                $lote->superficie_util ? Formato::numero($lote->superficie_util, 2) . ' m² útiles' : null,
-                $lote->dormitorios !== null ? $lote->dormitorios . 'D / ' . ($lote->banos ?? 0) . 'B' : null, $lote->ocupacion])->filter()->join(' · '),
+            'meta' => collect([trim(collect([$lote->comuna, $lote->region])->filter()->join(', ')), self::etiquetaTipo($lote->tipo_propiedad),
+                $lote->superficie_util ? __('catalogo.medidas.m2_utiles', ['n' => Formato::numero($lote->superficie_util, 2)]) : null,
+                $lote->dormitorios !== null ? __('catalogo.medidas.dorm_banos_corto', ['dorm' => $lote->dormitorios, 'banos' => $lote->banos ?? 0]) : null, self::etiquetaOcupacion($lote->ocupacion)])->filter()->join(' · '),
             'base' => (int) $r->lotes->sum('precio_base'),
             'garantia' => $r->montoGarantia(),
             'incremento' => $r->incrementoMinimo(),
@@ -207,7 +207,7 @@ class Catalogo
                 'horario' => Formato::fecha($l->abre_en, $ahora), 'estado' => $l->estado, 'actual' => $l->id === $lote->id,
             ])->all() : [],
             'resultado' => in_array($vista, [Remate::VISTA_ADJUDICADO, Remate::VISTA_CERRADO], true)
-                ? ($r->lotes->where('estado', Lote::ESTADO_ADJUDICADO)->isNotEmpty() ? 'Adjudicado en ' . Formato::clp((int) $r->lotes->where('estado', Lote::ESTADO_ADJUDICADO)->sum('precio_actual')) : 'Cerrado sin posturas')
+                ? ($r->lotes->where('estado', Lote::ESTADO_ADJUDICADO)->isNotEmpty() ? __('catalogo.tarjeta.adjudicado_en', ['monto' => Formato::clp((int) $r->lotes->where('estado', Lote::ESTADO_ADJUDICADO)->sum('precio_actual'))]) : __('catalogo.tarjeta.cerrado_sin_posturas'))
                 : null,
             // Tiempo real: el detalle en vivo SOLO lee el JSON estático y el reloj sin framework (no ejecuta PHP con espectadores).
             'tiempoReal' => [
@@ -239,11 +239,41 @@ class Catalogo
 
                 return [
                     'id' => $r->slug, 'direccion' => $t['direccion'], 'ubicacion' => trim($t['comuna'] . ', ' . $t['region'], ', '),
-                    'tipoSup' => collect([$t['tipo'], $t['sup'] ? Formato::numero($t['sup'], 2) . ' m²' : null, $t['dorm'] ? $t['dorm'] . 'D / ' . $t['banos'] . 'B' : null])->filter()->join(' · '),
-                    'precio' => $t['precio'], 'garantia' => $t['garantia'], 'fecha' => $t['fecha'], 'estado' => mb_strtoupper($t['estado']),
+                    'tipoSup' => collect([self::etiquetaTipo($t['tipo']), $t['sup'] ? __('catalogo.medidas.m2', ['n' => Formato::numero($t['sup'], 2)]) : null, $t['dorm'] ? __('catalogo.medidas.dorm_banos_corto', ['dorm' => $t['dorm'], 'banos' => $t['banos']]) : null])->filter()->join(' · '),
+                    'precio' => $t['precio'], 'garantia' => $t['garantia'], 'fecha' => $t['fecha'], 'estado' => mb_strtoupper(self::etiquetaEstado($t['estado'])),
                     'vivo' => $t['estado'] === 'En vivo', 'foto' => $t['foto'],
                 ];
             })->values()->all();
+    }
+
+    /** Tipo de propiedad para mostrar. El valor guardado (y filtrado) sigue en español; sin etiqueta, va tal cual. */
+    public static function etiquetaTipo(?string $valor): string
+    {
+        return self::etiqueta('tipos', $valor);
+    }
+
+    /** Ocupación para mostrar (el valor guardado sigue en español). */
+    public static function etiquetaOcupacion(?string $valor): string
+    {
+        return self::etiqueta('ocupaciones', $valor);
+    }
+
+    /** Estado de la tarjeta para mostrar: «En vivo», «Próximo» o «Cerrado» son códigos que la vista y el JS comparan. */
+    public static function etiquetaEstado(?string $valor): string
+    {
+        return self::etiqueta('estados', $valor);
+    }
+
+    private static function etiqueta(string $grupo, ?string $valor): string
+    {
+        $valor = (string) $valor;
+        if ($valor === '') {
+            return '';
+        }
+        $clave = 'catalogo.' . $grupo . '.' . $valor;
+        $etiqueta = __($clave);
+
+        return is_string($etiqueta) && $etiqueta !== $clave ? $etiqueta : $valor;
     }
 
     /** El lote que se muestra: el que se está rematando o el próximo; si ya terminaron todos, el primero. */

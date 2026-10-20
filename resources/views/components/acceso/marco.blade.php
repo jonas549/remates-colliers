@@ -33,22 +33,22 @@
             <div class="acceso__foto-velo"></div>
             @if ($proximo)
                 <div class="acceso__foto-contenido">
-                    <div class="acceso__foto-chip">{{ $proximo['enVivo'] ? 'REMATE EN VIVO' : 'PRÓXIMO REMATE' }}</div>
+                    <div class="acceso__foto-chip">{{ $proximo['enVivo'] ? __('acceso.marco.remate_en_vivo') : __('acceso.marco.proximo_remate') }}</div>
                     <div>
                         <div class="acceso__foto-titulo">{{ $proximo['direccion'] }}</div>
                         <div class="acceso__foto-datos">
                             <div class="acceso__foto-dato">
-                                <div class="acceso__foto-dato-etiqueta">PRECIO BASE</div>
+                                <div class="acceso__foto-dato-etiqueta">{{ __('acceso.marco.precio_base') }}</div>
                                 <div class="acceso__foto-dato-valor">{{ \App\Support\Formato::clp($proximo['precio']) }}</div>
                             </div>
                             @if ($proximo['sup'])
                                 <div class="acceso__foto-dato">
-                                    <div class="acceso__foto-dato-etiqueta">SUPERFICIE</div>
+                                    <div class="acceso__foto-dato-etiqueta">{{ __('acceso.marco.superficie') }}</div>
                                     <div class="acceso__foto-dato-valor">{{ \App\Support\Formato::numero($proximo['sup'], 2) }} m²</div>
                                 </div>
                             @endif
                             <div class="acceso__foto-dato">
-                                <div class="acceso__foto-dato-etiqueta">REMATE</div>
+                                <div class="acceso__foto-dato-etiqueta">{{ __('acceso.marco.remate') }}</div>
                                 <div class="acceso__foto-dato-valor">{{ $proximo['fechaCorta'] }}</div>
                             </div>
                         </div>

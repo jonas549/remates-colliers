@@ -5,16 +5,17 @@
     $r = $d['remate'];
     $g = $d['garantia'];
     $b = $d['banco'];
+    $enlaceCorreo = '<a href="mailto:' . e(Sitio::correo()) . '">' . e(Sitio::correo()) . '</a>';
 @endphp
-<x-layouts.base titulo="Mi cuenta">
+<x-layouts.base :titulo="__('cuenta.nav.titulo')">
     <div class="cuenta">
 
-        <x-tramite.cabecera etiqueta="MI CUENTA" :ancho="1180" class="tramite-cabecera--cuenta">
-            <a href="{{ route('remates.index') }}" class="cuenta__nav-remates">Remates</a>
+        <x-tramite.cabecera :etiqueta="__('cuenta.nav.etiqueta')" :ancho="1180" class="tramite-cabecera--cuenta">
+            <a href="{{ route('remates.index') }}" class="cuenta__nav-remates">{{ __('cuenta.nav.remates') }}</a>
             <span class="cuenta__nav-usuario">{{ auth()->user()?->name }}</span>
             <form method="POST" action="{{ route('logout') }}" class="formulario-en-linea">
                 @csrf
-                <button type="submit" class="boton-enlace cuenta__nav-salir">Cerrar sesión</button>
+                <button type="submit" class="boton-enlace cuenta__nav-salir">{{ __('cuenta.nav.cerrar_sesion') }}</button>
             </form>
         </x-tramite.cabecera>
 
@@ -31,7 +32,7 @@
         @if ($d['dePrueba'] ?? false)
             {{-- Postor creado con «Crear subasta de prueba»: su remate no está en el listado público, se entra desde aquí. --}}
             <div class="cuenta__avisos" data-cuenta-prueba>
-                <div class="cuenta__aviso">Esta es una cuenta de prueba creada desde el panel de Colliers. Su remate de prueba no aparece en el listado público de remates{{ $estado['clave'] === 'aprobada' ? ': se entra desde esta página, con el botón «Entrar a la sala de pujas».' : '.' }}</div>
+                <div class="cuenta__aviso">{{ __($estado['clave'] === 'aprobada' ? 'cuenta.aviso_prueba_aprobada' : 'cuenta.aviso_prueba') }}</div>
             </div>
         @endif
 
@@ -62,7 +63,7 @@
 
             <div class="cuenta__columna">
                 <div class="cuenta__bloque-titulo">
-                    <div class="cuenta__kicker">{{ $r ? 'GARANTÍA DEL REMATE' : 'INSCRIPCIÓN EN UN REMATE' }}</div>
+                    <div class="cuenta__kicker">{{ __($r ? 'cuenta.garantia.kicker_remate' : 'cuenta.garantia.kicker_inscripcion') }}</div>
                 </div>
 
                 @if ($r)
@@ -71,15 +72,15 @@
 
                     <div class="cuenta__datos">
                         <div class="cuenta__dato">
-                            <div class="cuenta__dato-etiqueta">MONTO</div>
+                            <div class="cuenta__dato-etiqueta">{{ __('cuenta.garantia.monto') }}</div>
                             <div class="cuenta__dato-valor">{{ $g['monto'] }}</div>
                         </div>
                         <div class="cuenta__dato">
-                            <div class="cuenta__dato-etiqueta">PLAZO</div>
+                            <div class="cuenta__dato-etiqueta">{{ __('cuenta.garantia.plazo') }}</div>
                             <div class="cuenta__dato-valor">{{ $g['plazo'] }}</div>
                         </div>
                         <div class="cuenta__dato">
-                            <div class="cuenta__dato-etiqueta">ESTADO</div>
+                            <div class="cuenta__dato-etiqueta">{{ __('cuenta.garantia.estado') }}</div>
                             <div class="cuenta__dato-estado cuenta__dato-estado--{{ $estado['tonoGarantia'] }}">{{ $estado['garantia'] }}</div>
                         </div>
                     </div>
@@ -87,41 +88,41 @@
                     @if ($estado['clave'] === 'remate-cancelado')
                         {{-- Remate cancelado (21/09): nada que constituir ni pujar; se dice qué pasó y adónde ir. --}}
                         <div data-remate-cancelado>
-                            <div class="cuenta__subtitulo">REMATE CANCELADO</div>
+                            <div class="cuenta__subtitulo">{{ __('cuenta.cancelado.subtitulo') }}</div>
                             <div class="cuenta__item">
                                 <span class="cuenta__item-marca">✕</span>
-                                <div class="cuenta__item-texto">Colliers canceló este remate{{ $r['cancelado'] ? ' el ' . $r['cancelado'] : '' }}. No se realizará y no se reciben pujas.</div>
+                                <div class="cuenta__item-texto">{{ $r['cancelado'] ? __('cuenta.cancelado.texto_fecha', ['fecha' => $r['cancelado']]) : __('cuenta.cancelado.texto') }}</div>
                             </div>
                             <div class="cuenta__botones">
-                                <a href="{{ route('remates.index') }}" class="cuenta__boton">Ver remates publicados</a>
+                                <a href="{{ route('remates.index') }}" class="cuenta__boton">{{ __('cuenta.cancelado.ver_remates') }}</a>
                                 @if ($g['comprobante'])
-                                    <a href="{{ $g['comprobante'] }}" class="cuenta__boton-secundario">Ver comprobante enviado</a>
+                                    <a href="{{ $g['comprobante'] }}" class="cuenta__boton-secundario">{{ __('cuenta.cancelado.ver_comprobante') }}</a>
                                 @endif
                             </div>
-                            <p class="cuenta__nota">El destino de la garantía se rige por las bases del remate. Si tienes dudas, escríbenos a <a href="mailto:{{ Sitio::correo() }}">{{ Sitio::correo() }}</a>.</p>
+                            <p class="cuenta__nota">{!! __('cuenta.cancelado.nota', ['correo' => $enlaceCorreo]) !!}</p>
                         </div>
                     @elseif (! $estado['habilitado'])
                         <div>
-                            <div class="cuenta__subtitulo">CÓMO CONSTITUIRLA</div>
+                            <div class="cuenta__subtitulo">{{ __('cuenta.constituir.subtitulo') }}</div>
                             <div class="cuenta__lista">
                                 @if ($b)
                                     <div class="cuenta__item">
                                         <span class="cuenta__item-marca">01</span>
-                                        <div class="cuenta__item-texto">Vale a la vista a nombre de <strong>{{ $b['banco_titular'] }}</strong>@if ($b['vale_vista_direccion']), entregado en {{ $b['vale_vista_direccion'] }}@endif.</div>
+                                        <div class="cuenta__item-texto">{!! __($b['vale_vista_direccion'] ? 'cuenta.constituir.vale_entregado' : 'cuenta.constituir.vale', ['titular' => '<strong>' . e($b['banco_titular']) . '</strong>', 'direccion' => e($b['vale_vista_direccion'])]) !!}</div>
                                     </div>
                                     <div class="cuenta__item">
                                         <span class="cuenta__item-marca">02</span>
-                                        <div class="cuenta__item-texto">O transferencia a la {{ mb_strtolower($b['banco_tipo_cuenta']) }} {{ $b['banco_nombre'] }} N.º {{ $b['banco_numero_cuenta'] }}@if ($b['banco_rut_titular']), RUT {{ $b['banco_rut_titular'] }}@endif, indicando el número de remate.</div>
+                                        <div class="cuenta__item-texto">{{ __($b['banco_rut_titular'] ? 'cuenta.constituir.transferencia_rut' : 'cuenta.constituir.transferencia', ['tipo' => mb_strtolower($b['banco_tipo_cuenta']), 'banco' => $b['banco_nombre'], 'numero' => $b['banco_numero_cuenta'], 'rut' => $b['banco_rut_titular']]) }}</div>
                                     </div>
                                 @else
                                     <div class="cuenta__item">
                                         <span class="cuenta__item-marca">01</span>
-                                        <div class="cuenta__item-texto">Vale a la vista o transferencia por <strong>{{ $g['monto'] }}</strong>. Escríbenos a <a href="mailto:{{ Sitio::correo() }}">{{ Sitio::correo() }}</a> para recibir los datos de la cuenta y del vale.</div>
+                                        <div class="cuenta__item-texto">{!! __('cuenta.constituir.sin_banco', ['monto' => '<strong>' . e($g['monto']) . '</strong>', 'correo' => $enlaceCorreo]) !!}</div>
                                     </div>
                                 @endif
                                 <div class="cuenta__item">
                                     <span class="cuenta__item-marca">{{ $b ? '03' : '02' }}</span>
-                                    <div class="cuenta__item-texto">Sube aquí el comprobante, o envíalo a <a href="mailto:{{ Sitio::correo() }}">{{ Sitio::correo() }}</a> con tu nombre y el remate al que postulas.</div>
+                                    <div class="cuenta__item-texto">{!! __('cuenta.constituir.subir_o_enviar', ['correo' => $enlaceCorreo]) !!}</div>
                                 </div>
                             </div>
 
@@ -129,85 +130,85 @@
                                 <form method="POST" action="{{ $g['subir'] }}" enctype="multipart/form-data" class="cuenta__form" x-data="{ abierto: {{ $errors->any() ? 'true' : 'false' }} }">
                                     @csrf
                                     <div class="cuenta__botones">
-                                        <button type="button" class="cuenta__boton" @click="abierto = !abierto" x-show="!abierto">Subir comprobante</button>
-                                        <a href="{{ $r['url'] }}" class="cuenta__boton-secundario" x-show="!abierto">Ver antecedentes del remate</a>
+                                        <button type="button" class="cuenta__boton" @click="abierto = !abierto" x-show="!abierto">{{ __('cuenta.constituir.subir') }}</button>
+                                        <a href="{{ $r['url'] }}" class="cuenta__boton-secundario" x-show="!abierto">{{ __('cuenta.constituir.ver_antecedentes') }}</a>
                                     </div>
                                     <div class="cuenta__form-campos" x-show="abierto" x-cloak>
-                                        <label class="cuenta__form-campo"><span>MEDIO</span>
+                                        <label class="cuenta__form-campo"><span>{{ __('cuenta.constituir.medio') }}</span>
                                             <select name="medio" required>
-                                                <option value="transferencia" @selected(old('medio') === 'transferencia')>Transferencia</option>
-                                                <option value="vale_vista" @selected(old('medio') === 'vale_vista')>Vale a la vista</option>
+                                                <option value="transferencia" @selected(old('medio') === 'transferencia')>{{ __('cuenta.constituir.transferencia_opcion') }}</option>
+                                                <option value="vale_vista" @selected(old('medio') === 'vale_vista')>{{ __('cuenta.constituir.vale_opcion') }}</option>
                                             </select>
                                         </label>
-                                        <label class="cuenta__form-campo"><span>COMPROBANTE (PDF, JPG O PNG · HASTA 10 MB)</span>
+                                        <label class="cuenta__form-campo"><span>{{ __('cuenta.constituir.archivo') }}</span>
                                             <input type="file" name="comprobante" accept=".pdf,.jpg,.jpeg,.png" required>
                                         </label>
                                         <div class="cuenta__botones">
-                                            <button type="submit" class="cuenta__boton">Enviar comprobante</button>
-                                            <button type="button" class="cuenta__boton-secundario" @click="abierto = false">Cancelar</button>
+                                            <button type="submit" class="cuenta__boton">{{ __('cuenta.constituir.enviar') }}</button>
+                                            <button type="button" class="cuenta__boton-secundario" @click="abierto = false">{{ __('cuenta.constituir.cancelar') }}</button>
                                         </div>
                                     </div>
                                 </form>
                             @else
                                 <div class="cuenta__botones">
                                     @if ($g['comprobante'])
-                                        <a href="{{ $g['comprobante'] }}" class="cuenta__boton-secundario">Ver comprobante enviado</a>
+                                        <a href="{{ $g['comprobante'] }}" class="cuenta__boton-secundario">{{ __('cuenta.constituir.ver_comprobante_enviado') }}</a>
                                     @endif
-                                    <a href="{{ $r['url'] }}" class="cuenta__boton-secundario">Ver antecedentes del remate</a>
+                                    <a href="{{ $r['url'] }}" class="cuenta__boton-secundario">{{ __('cuenta.constituir.ver_antecedentes') }}</a>
                                 </div>
                             @endif
 
-                            <p class="cuenta__nota">La revisión es manual y no hay pagos en línea. Una vez aprobada quedas habilitado para pujar en ese remate; el destino de la garantía al terminar el remate se rige por sus bases.@if ($g['recibido']) Comprobante recibido el {{ $g['recibido'] }}.@endif</p>
+                            <p class="cuenta__nota">{{ $g['recibido'] ? __('cuenta.constituir.nota_recibido', ['fecha' => $g['recibido']]) : __('cuenta.constituir.nota') }}</p>
                         </div>
                     @else
                         <div>
-                            <div class="cuenta__subtitulo cuenta__subtitulo--ok">GARANTÍA RECIBIDA Y APROBADA</div>
+                            <div class="cuenta__subtitulo cuenta__subtitulo--ok">{{ __('cuenta.aprobada.subtitulo') }}</div>
                             <div class="cuenta__item">
                                 <span class="cuenta__item-marca cuenta__item-marca--ok">✓</span>
-                                <div class="cuenta__item-texto">{{ $g['medio'] ? ucfirst($g['medio']) : 'Garantía' }} por <strong>{{ $g['monto'] }}</strong>@if ($b) a nombre de {{ $b['banco_titular'] }}@endif{{ $g['recibido'] ? ', recibido el ' . $g['recibido'] : ', recibida por Colliers' }}.</div>
+                                <div class="cuenta__item-texto">{!! __('cuenta.aprobada.recibida' . ($b ? '_titular' : '') . ($g['recibido'] ? '_fecha' : ''), ['medio' => e($g['medio'] ? ucfirst($g['medio']) : __('cuenta.aprobada.garantia')), 'monto' => '<strong>' . e($g['monto']) . '</strong>', 'titular' => e($b['banco_titular'] ?? ''), 'fecha' => e($g['recibido'] ?? '')]) !!}</div>
                             </div>
                             <div class="cuenta__item">
                                 <span class="cuenta__item-marca cuenta__item-marca--ok">✓</span>
-                                <div class="cuenta__item-texto">Aprobada por Colliers el <strong>{{ $g['aprobada'] }}</strong>. Quedas habilitado para pujar en este remate.</div>
+                                <div class="cuenta__item-texto">{!! __('cuenta.aprobada.aprobada_el', ['fecha' => '<strong>' . e($g['aprobada']) . '</strong>']) !!}</div>
                             </div>
                             <div class="cuenta__item">
                                 <span class="cuenta__item-marca">→</span>
-                                <div class="cuenta__item-texto">{!! $r['enVivo'] ? 'El remate está <strong>en vivo</strong>: entra a la sala de pujas.' : 'La sala de pujas se abre el <strong>' . e($r['abre']) . '</strong>, junto con la transmisión del remate.' !!}</div>
+                                <div class="cuenta__item-texto">{!! $r['enVivo'] ? __('cuenta.aprobada.en_vivo') : __('cuenta.aprobada.abre', ['fecha' => '<strong>' . e($r['abre']) . '</strong>']) !!}</div>
                             </div>
 
                             <div class="cuenta__botones">
                                 @if ($r['sala'])
-                                    <a href="{{ $r['sala'] }}" class="cuenta__boton">Entrar a la sala de pujas</a>
+                                    <a href="{{ $r['sala'] }}" class="cuenta__boton">{{ __('cuenta.aprobada.entrar_sala') }}</a>
                                 @endif
                                 @if ($g['comprobante'])
-                                    <a href="{{ $g['comprobante'] }}" class="cuenta__boton-secundario">Ver comprobante</a>
+                                    <a href="{{ $g['comprobante'] }}" class="cuenta__boton-secundario">{{ __('cuenta.aprobada.ver_comprobante') }}</a>
                                 @endif
                             </div>
 
-                            <p class="cuenta__nota">Si te adjudicas la propiedad, Colliers te contactará para la firma y el pago del saldo. El destino de la garantía se rige por las bases del remate.</p>
+                            <p class="cuenta__nota">{{ __('cuenta.aprobada.nota') }}</p>
                         </div>
                     @endif
                 @elseif ($d['habilitadoEnTodos'] ?? false)
                     {{-- Modo «habilitación única»: no hay nada que inscribir, la garantía ya sirve para todos. --}}
-                    <p class="cuenta__lateral-texto">Con tu habilitación aprobada puedes pujar en cualquier remate publicado: no tienes que inscribirte uno por uno. Entra al remate que te interese y usa «Entrar a la sala de pujas».</p>
+                    <p class="cuenta__lateral-texto">{{ __('cuenta.inscripcion.habilitado_en_todos') }}</p>
                 @elseif ($d['abiertos'])
                     <div class="cuenta__lista">
                         @foreach ($d['abiertos'] as $abierto)
                             <div class="cuenta__item cuenta__item--remate">
                                 <div class="cuenta__item-texto">
                                     <a href="{{ $abierto['url'] }}"><strong>{{ $abierto['titulo'] }}</strong></a><br>
-                                    {{ $abierto['folio'] }} · {{ $abierto['fecha'] }} · garantía {{ $abierto['garantia'] }}
+                                    {{ $abierto['folio'] }} · {{ $abierto['fecha'] }} · {{ __('cuenta.inscripcion.garantia') }} {{ $abierto['garantia'] }}
                                 </div>
                                 <form method="POST" action="{{ $abierto['inscribir'] }}" class="formulario-en-linea">
                                     @csrf
-                                    <button type="submit" class="cuenta__boton-secundario">Inscribirme</button>
+                                    <button type="submit" class="cuenta__boton-secundario">{{ __('cuenta.inscripcion.inscribirme') }}</button>
                                 </form>
                             </div>
                         @endforeach
                     </div>
-                    <p class="cuenta__nota">Al inscribirte se calcula la garantía de ese remate y aquí verás cómo constituirla.</p>
+                    <p class="cuenta__nota">{{ __('cuenta.inscripcion.nota') }}</p>
                 @else
-                    <p class="cuenta__lateral-texto">{{ in_array($estado['clave'], ['cuenta-revision'], true) ? 'Cuando Colliers apruebe tu cuenta podrás inscribirte en los remates publicados.' : 'No hay remates abiertos a inscripción en este momento. Te avisaremos por correo cuando se publique uno nuevo.' }}</p>
+                    <p class="cuenta__lateral-texto">{{ __(in_array($estado['clave'], ['cuenta-revision'], true) ? 'cuenta.inscripcion.cuando_apruebe' : 'cuenta.inscripcion.sin_abiertos') }}</p>
                 @endif
             </div>
 
@@ -217,18 +218,18 @@
                 </div>
                 <p class="cuenta__lateral-texto">{{ $estado['textoLateral'] }}</p>
                 <div class="cuenta__accesos">
-                    <a href="{{ route('remates.index') }}" class="cuenta__acceso">Ver remates publicados <span>→</span></a>
+                    <a href="{{ route('remates.index') }}" class="cuenta__acceso">{{ __('cuenta.lateral.ver_remates') }} <span>→</span></a>
                     @if ($r && $r['sala'])
-                        <a href="{{ $r['sala'] }}" class="cuenta__acceso">Entrar a la sala de pujas <span>→</span></a>
+                        <a href="{{ $r['sala'] }}" class="cuenta__acceso">{{ __('cuenta.lateral.entrar_sala') }} <span>→</span></a>
                     @endif
                     @if ($d['basesGenerales'])
-                        <a href="{{ $d['basesGenerales'] }}" class="cuenta__acceso" target="_blank" rel="noopener">Bases generales de los remates <span>→</span></a>
+                        <a href="{{ $d['basesGenerales'] }}" class="cuenta__acceso" target="_blank" rel="noopener">{{ __('cuenta.lateral.bases_generales') }} <span>→</span></a>
                     @endif
-                    <a href="{{ route('cuenta.sesiones') }}" class="cuenta__acceso">Sesiones activas y contraseña <span>→</span></a>
+                    <a href="{{ route('cuenta.sesiones') }}" class="cuenta__acceso">{{ __('cuenta.lateral.sesiones') }} <span>→</span></a>
                 </div>
 
                 @if (count($d['inscripciones']) > 1)
-                    <div class="cuenta__subtitulo">TUS INSCRIPCIONES</div>
+                    <div class="cuenta__subtitulo">{{ __('cuenta.lateral.tus_inscripciones') }}</div>
                     <div class="cuenta__accesos">
                         @foreach ($d['inscripciones'] as $i)
                             <a href="{{ $i['url'] }}" @class(['cuenta__acceso', 'es-actual' => $i['actual']])>{{ $i['folio'] }} · {{ $i['titulo'] }} <span>{{ $i['estado'] }}</span></a>
@@ -237,8 +238,8 @@
                 @endif
 
                 <div class="cuenta__contacto">
-                    <div class="cuenta__contacto-titulo">CONTACTO</div>
-                    <p>Si tu solicitud lleva más de {{ Sitio::horasRevision() }} horas hábiles sin respuesta, escríbenos indicando tu RUT y el remate.</p>
+                    <div class="cuenta__contacto-titulo">{{ __('cuenta.lateral.contacto') }}</div>
+                    <p>{{ __('cuenta.lateral.contacto_texto', ['horas' => Sitio::horasRevision()]) }}</p>
                     <div class="cuenta__contacto-enlaces">
                         <a href="mailto:{{ Sitio::correo() }}">{{ Sitio::correo() }}</a>
                         <a href="{{ Sitio::telefonoEnlace() }}">{{ Sitio::telefono() }}</a>

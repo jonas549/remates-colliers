@@ -1,9 +1,9 @@
 {{-- Pantalla sin diseño propio: reutiliza el diseño del Login (decisión del 16/09). --}}
 <x-acceso.marco
-    pagina="Recuperar contraseña"
-    kicker="RECUPERAR CONTRASEÑA"
-    titulo="Recupera tu acceso"
-    intro="Ingresa el correo con que te registraste. Te enviaremos un enlace para crear una contraseña nueva."
+    :pagina="__('acceso.recuperar.pagina')"
+    :kicker="__('acceso.recuperar.kicker')"
+    :titulo="__('acceso.recuperar.titulo')"
+    :intro="__('acceso.recuperar.intro')"
     :proximo="$proximo"
 >
     @if (session('status'))
@@ -17,16 +17,16 @@
         @csrf
         <div class="acceso__campos">
             <label class="acceso__campo">
-                <span class="acceso__etiqueta">CORREO ELECTRÓNICO</span>
-                <input type="email" name="email" value="{{ old('email') }}" placeholder="maria@correo.cl" class="acceso__input" autocomplete="email" required>
+                <span class="acceso__etiqueta">{{ __('acceso.comun.correo_electronico') }}</span>
+                <input type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('acceso.comun.correo_ejemplo') }}" class="acceso__input" autocomplete="email" required>
             </label>
         </div>
 
         <div class="acceso__opciones">
-            <a href="{{ route('login') }}" class="acceso__olvide">Volver a ingresar</a>
+            <a href="{{ route('login') }}" class="acceso__olvide">{{ __('acceso.comun.volver_a_ingresar') }}</a>
         </div>
 
-        <button type="submit" class="acceso__entrar es-listo">Enviar enlace</button>
+        <button type="submit" class="acceso__entrar es-listo">{{ __('acceso.recuperar.enviar') }}</button>
     </form>
 
     <div class="acceso__contacto">

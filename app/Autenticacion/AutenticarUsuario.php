@@ -36,13 +36,13 @@ class AutenticarUsuario
         $user = $this->buscar($identificador);
         if ($user === null) {
             $this->registrar($request, null, $identificador, 'ingreso_fallido', ['motivo' => 'usuario_inexistente', 'portal' => $portal]);
-            $this->fallar('Usuario o contraseña incorrectos.');
+            $this->fallar(__('acceso.mensajes.credenciales'));
         }
 
         if ($user->bloqueado_hasta !== null && $ahora->lessThan($user->bloqueado_hasta)) {
             $this->registrar($request, $user, $identificador, 'ingreso_bloqueado', ['portal' => $portal]);
             $hasta = $user->bloqueado_hasta->setTimezone(config('colliers.zona_visualizacion'))->format('H:i');
-            $this->fallar("La cuenta está bloqueada por seguridad hasta las {$hasta}. Si necesitas ingresar antes, escribe a " . Sitio::correo() . '.');
+            $this->fallar(__('acceso.mensajes.bloqueada_hasta', ['hora' => $hasta, 'correo' => Sitio::correo()]));
         }
 
         if (! Hash::check($clave, $user->password)) {
@@ -52,16 +52,16 @@ class AutenticarUsuario
         $esAdministracion = in_array($user->rol, self::ROLES_ADMINISTRACION, true);
         if ($portal === 'administracion' && ! $esAdministracion) {
             $this->registrar($request, $user, $identificador, 'ingreso_fallido', ['motivo' => 'portal_equivocado', 'portal' => $portal]);
-            $this->fallar('Esta cuenta es de postor: ingresa por el acceso de postores.');
+            $this->fallar(__('acceso.mensajes.cuenta_postor'));
         }
         if ($portal === 'postores' && $esAdministracion) {
             $this->registrar($request, $user, $identificador, 'ingreso_fallido', ['motivo' => 'portal_equivocado', 'portal' => $portal]);
-            $this->fallar('Esta cuenta es de administración: ingresa por el acceso de administradores.');
+            $this->fallar(__('acceso.mensajes.cuenta_administracion'));
         }
 
         if ($user->estado !== User::ESTADO_ACTIVO) {
             $this->registrar($request, $user, $identificador, 'ingreso_fallido', ['motivo' => 'cuenta_inactiva', 'portal' => $portal]);
-            $this->fallar('La cuenta está deshabilitada. Escribe a ' . Sitio::correo() . '.');
+            $this->fallar(__('acceso.mensajes.deshabilitada', ['correo' => Sitio::correo()]));
         }
 
         if ($user->intentos_fallidos > 0 || $user->bloqueado_hasta !== null) {
@@ -100,12 +100,12 @@ class AutenticarUsuario
             $hasta = $ahora->addMinutes($minutos);
             $user->forceFill(['intentos_fallidos' => 0, 'bloqueado_hasta' => $hasta])->saveQuietly();
             $this->registrar($request, $user, $identificador, 'bloqueo', ['intentos' => $intentos, 'minutos' => $minutos, 'portal' => $portal]);
-            $this->fallar("Usuario o contraseña incorrectos. Bloqueamos la cuenta por seguridad durante {$minutos} minutos.");
+            $this->fallar(__('acceso.mensajes.bloqueada_minutos', ['minutos' => $minutos]));
         }
 
         $this->registrar($request, $user, $identificador, 'ingreso_fallido', ['motivo' => 'clave_incorrecta', 'intentos' => $intentos, 'portal' => $portal]);
         $quedan = $maximo - $intentos;
-        $this->fallar('Usuario o contraseña incorrectos. Te ' . ($quedan === 1 ? 'queda 1 intento' : "quedan {$quedan} intentos") . ' antes de que bloqueemos la cuenta por seguridad.');
+        $this->fallar(trans_choice('acceso.mensajes.intentos_restantes', $quedan, ['quedan' => $quedan]));
     }
 
     private function registrar(Request $request, ?User $user, string $identificador, string $evento, array $detalle): void

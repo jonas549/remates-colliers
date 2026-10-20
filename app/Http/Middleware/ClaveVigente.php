@@ -17,7 +17,7 @@ class ClaveVigente
     {
         if ($request->user()?->debe_cambiar_clave) {
             return $request->expectsJson()
-                ? response()->json(['message' => 'Debes cambiar tu contraseña antes de continuar.'], 403)
+                ? response()->json(['message' => __('acceso.mensajes.debe_cambiar_clave')], 403)
                 : redirect()->route('cuenta.clave');
         }
 

@@ -21,7 +21,7 @@ class SuscripcionesController extends Controller
         $datos = $request->validate([
             'email' => ['required', 'email', 'max:255'],
             'remate' => ['nullable', 'string', 'max:120'],
-        ], [], ['email' => 'correo electrónico']);
+        ], [], ['email' => __('cuenta.avisame.atributo_email')]);
 
         $remate = filled($datos['remate'] ?? null) ? Remate::where('slug', $datos['remate'])->whereIn('estado', [Remate::ESTADO_PUBLICADO, Remate::ESTADO_EN_CURSO])->first() : null;
         abort_if(filled($datos['remate'] ?? null) && $remate === null, 404);
@@ -32,8 +32,8 @@ class SuscripcionesController extends Controller
         $suscripcion->fill(['baja_en' => null, 'ip' => $request->ip(), 'user_id' => $request->user()?->id ?? $suscripcion->user_id])->save();
 
         $mensaje = $remate
-            ? 'Listo: te avisaremos por correo antes de que comience este remate.'
-            : 'Listo: te avisaremos por correo cuando se publique un remate nuevo.';
+            ? __('cuenta.avisame.listo_remate')
+            : __('cuenta.avisame.listo_nuevos');
 
         return $request->expectsJson() ? response()->json(['ok' => true, 'mensaje' => $mensaje]) : back()->with('suscripcion', $mensaje);
     }

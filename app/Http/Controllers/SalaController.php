@@ -12,6 +12,7 @@ use App\Subastas\Difusion\Emisor;
 use App\Subastas\EstadoRemate;
 use App\Subastas\Liquidador;
 use App\Subastas\Presencia;
+use App\Support\Idioma;
 use App\Support\Sitio;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,7 +80,8 @@ class SalaController extends Controller
                     // Sin framework (public/hora.php): la ruta /hora queda de respaldo.
                     'hora' => asset('hora.php'),
                     'presencia' => asset('presencia.php'),
-                    'pujar' => url("/remates/{$remate->slug}/lotes/__LOTE__/pujas"),
+                    // En la versión en inglés la puja va por /en, para que los rechazos lleguen en ese idioma.
+                    'pujar' => url((Idioma::esIngles() ? '/' . Idioma::PREFIJO : '') . "/remates/{$remate->slug}/lotes/__LOTE__/pujas"),
                     'ingresar' => route('login'),
                 ],
             ],
@@ -110,8 +112,8 @@ class SalaController extends Controller
         $partes = array_filter([
             trim(implode(', ', array_filter([$lote->comuna, $lote->region])), ', '),
             $lote->tipo_propiedad,
-            $lote->superficie_util ? rtrim(rtrim(number_format((float) $lote->superficie_util, 2, ',', '.'), '0'), ',') . ' m² útiles' : null,
-            $lote->dormitorios !== null ? $lote->dormitorios . 'D / ' . ($lote->banos ?? 0) . 'B' : null,
+            $lote->superficie_util ? __('sala.ficha.superficie', ['superficie' => rtrim(rtrim(number_format((float) $lote->superficie_util, 2, ',', '.'), '0'), ',')]) : null,
+            $lote->dormitorios !== null ? __('sala.ficha.dormitorios_banos', ['dormitorios' => $lote->dormitorios, 'banos' => $lote->banos ?? 0]) : null,
             $lote->ocupacion,
         ]);
 

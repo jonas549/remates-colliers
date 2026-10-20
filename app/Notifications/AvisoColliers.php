@@ -26,6 +26,9 @@ abstract class AvisoColliers extends Notification implements ShouldQueue
     /** Reintentos si el servidor de correo falla (la cola los espacia 60 s). */
     public int $tries = 3;
 
+    /** Los correos van siempre en español (20/10), también para suscriptores sin cuenta y si se dispara desde /en. */
+    public $locale = \App\Support\Idioma::ESPANOL;
+
     /** Clave en App\Correo\Plantillas::CATALOGO. */
     abstract public function plantilla(): string;
 

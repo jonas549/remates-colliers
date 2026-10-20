@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-10-18** (QA de Jonas: favicon, menú y pie hacia el sitio corporativo, presencia en la sala).
+> **Registro vivo del avance.** Última actualización: **2026-10-20** (sitio público en inglés: mecanismo y cadenas migradas; falta escribir el inglés).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -26,7 +26,7 @@ nota *(verifica Jonas en el sandbox)*.
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 10/12 |
 | M | Notificaciones | En progreso | 8/9 |
-| N | Sitio público | En progreso | 14/15 |
+| N | Sitio público | En progreso | 16/18 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 7/8 |
@@ -67,6 +67,9 @@ prueba en el sandbox pendiente de Jonas (plan en `docs/progreso/2026-09-21.md` �
 (detalle en `docs/progreso/2026-10-18.md`). Siguiente: lo que salga del sandbox → L (streaming) → resto de E/F → P → Q → R → S.
 OPcache sigue apagado en el sandbox: el camino de la puja y la presencia no ejecutan Laravel donde no hace falta
 (`docs/RENDIMIENTO-SIN-OPCACHE.md`).
+**20/10: sitio público en inglés** (ver N). Listos el mecanismo `/en` y la migración de las cadenas a `lang/es/` sin cambiar
+el español. Falta escribir el inglés, los formatos de fecha y monto por idioma, los documentos «(in Spanish)» y que Jonas
+revise el glosario. Todo local y sin push.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -386,7 +389,11 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [x] Contacto «Coordinar visita» y «Contactar al ejecutivo» con el correo de Configuración
 - [x] «Avísame» en el listado y en el detalle; foto y datos del próximo remate real en el Login y demás pantallas de acceso
 - [x] **El espectador que espera en la página de un remate próximo lo ve empezar sin recargar** *(21/09)*: antes la cuenta llegaba a cero y la página se quedaba quieta. Ahora se recarga sola al comenzar, cada espectador con una espera al azar de hasta 15 s (cada recarga es una petición al servidor). Con el remate borrado con la página abierta: «NO DISPONIBLE» *(recorrido de los tres roles)*
-- [ ] Idioma EN/ES *(pendiente de decisión de Jonas)*
+- **Sitio público en inglés** *(pedido de Jonas, 20/10: solo el exterior; el panel, los correos y el modelo de datos no cambian)*
+  - [x] **Mecanismo:** idioma por prefijo (`/en/…`, el español sin prefijo). Las rutas públicas y las de Fortify se registran dos veces (`routes/web.php`, nombres `en.x`) y `App\Support\UrlLocalizada` hace que `route('x')` dé la del idioma actual, así que vistas, redirecciones y Fortify no cambian. El middleware global `EstablecerIdioma` toma el idioma de la URL, también en los errores sin ruta. Conmutador EN / ES (el activo resaltado; en el menú móvil, «English»/«Español») por `/idioma/{es|en}?a=…`: misma página y consulta, guarda la cookie `idioma`, nunca lleva a otro sitio. La cookie solo actúa al entrar por la portada `/`. `lang` y `hreflang` (es, en, x-default) en el `<head>` del sitio público. Los correos salen siempre en español y con enlaces en español (`User::preferredLocale()`, `AvisoColliers::$locale`). La puja por `/en` conserva el reintento de conexión *(`IdiomaTest`, 9 pruebas)*
+  - [x] **Cadenas migradas a `lang/es/`** sin cambiar el español: 886 textos en `sitio`, `listado`, `remate`, `sala`, `cuenta`, `acceso`, `errores` y `catalogo`. Los del JavaScript van por `t()` (`resources/js/modulos/textos.js`) desde un bloque JSON del layout. Lo que es dato (tipos, ocupación, estados, opciones del registro) se guarda igual y solo se traduce al mostrarlo. Verificado: foto del HTML de 322 páginas y respuestas antes y después (solo cambian el bloque JSON, los `value` de las opciones del registro y espacios), 196 pruebas, y los recorridos de los tres roles, la sala real, la cuenta, los filtros, el listado, el registro y el ingreso en navegador
+  - [ ] Inglés (`lang/en/`), fechas y montos con formato de cada idioma (siempre hora de Santiago), «(in Spanish)» en los documentos y la línea de «la versión en español rige» como cadena de idioma (texto a confirmar con el cliente)
+  - [ ] Lista de términos del negocio revisada por Jonas (glosario base aprobado el 20/10)
 
 ## L — Streaming · Pendiente
 
@@ -496,7 +503,8 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 
 - [x] Nombre exacto del handler PHP 8.4 en cPanel/LiteSpeed: `application/x-httpd-ea-php84` (16/09)
 - [ ] Subir el acta del 25/08 al material local de referencia
-- [ ] Idioma EN/ES (Bloque N): hoy se ve y no funciona
+- [x] Idioma EN/ES (Bloque N): **se hace solo para el sitio público** *(Jonas, 20/10)*. Prefijo `/en`, cookie con la última elección, correos siempre en español, sin campos en inglés en el panel, documentos marcados «(in Spanish)». Avance en N
+- [ ] Registro de extranjeros sin RUT: el registro exige RUT chileno, región y comuna; en inglés el formulario se entiende, pero un extranjero sin RUT no puede terminarlo *(planteado el 20/10, sin respuesta)*
 - [x] Exportar a PDF (Bloque O): **se quita** *(Jonas, 20/09: no está en el acta; es alcance extra)*
 - [ ] Reportes (17/09): CSV y XLSX de arriba descargan el desempeño comercial en CSV y el libro completo en XLSX; cada «Descargar» de exportables baja esa hoja en XLSX. ¿Sirve así?
 - [ ] Activar el filtro «Garantía requerida» (hoy oculto; pasa a ajuste del panel en V)

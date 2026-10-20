@@ -66,21 +66,21 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
             'acepta' => ['accepted'],
         ], [
-            'rut_empresa.required' => 'Ingresa el RUT de la empresa.',
-            'documentos.*.required' => 'Adjunta este documento.',
-            'documentos.*.mimes' => 'El documento debe ser JPG, PNG o PDF.',
-            'documentos.*.max' => 'El documento no puede superar los 5 MB.',
-            'telefono.regex' => 'Ingresa un teléfono válido, por ejemplo +56 9 1234 5678.',
-            'fecha_nacimiento.before' => 'Debes ser mayor de edad.',
-            'acepta.accepted' => 'Debes aceptar las bases y los términos para registrarte.',
+            'rut_empresa.required' => __('acceso.validacion.rut_empresa_requerido'),
+            'documentos.*.required' => __('acceso.validacion.documento_requerido'),
+            'documentos.*.mimes' => __('acceso.validacion.documento_tipo'),
+            'documentos.*.max' => __('acceso.validacion.documento_tamano'),
+            'telefono.regex' => __('acceso.validacion.telefono'),
+            'fecha_nacimiento.before' => __('acceso.validacion.mayor_de_edad'),
+            'acepta.accepted' => __('acceso.validacion.acepta'),
         ], [
-            'rut_empresa' => 'RUT de la empresa',
-            'razon_social' => 'razón social',
-            'calidad' => 'calidad en que actúa',
-            'documentos.ci-frente' => 'cédula (frente)',
-            'documentos.ci-dorso' => 'cédula (dorso)',
-            'documentos.domicilio' => 'comprobante de domicilio',
-            'documentos.poder' => 'poder o mandato',
+            'rut_empresa' => __('acceso.validacion.atributos.rut_empresa'),
+            'razon_social' => __('acceso.validacion.atributos.razon_social'),
+            'calidad' => __('acceso.validacion.atributos.calidad'),
+            'documentos.ci-frente' => __('acceso.validacion.atributos.ci-frente'),
+            'documentos.ci-dorso' => __('acceso.validacion.atributos.ci-dorso'),
+            'documentos.domicilio' => __('acceso.validacion.atributos.domicilio'),
+            'documentos.poder' => __('acceso.validacion.atributos.poder'),
         ])->validate();
 
         $guardados = [];
@@ -147,7 +147,7 @@ class CreateNewUser implements CreatesNewUsers
     {
         return function (string $atributo, mixed $valor, \Closure $fallar) {
             if ($valor !== null && $valor !== '' && ! Rut::esValido((string) $valor)) {
-                $fallar('El RUT no es válido: revisa el dígito verificador.');
+                $fallar(__('acceso.validacion.rut_invalido'));
             }
         };
     }
@@ -156,7 +156,7 @@ class CreateNewUser implements CreatesNewUsers
     {
         return function (string $atributo, mixed $valor, \Closure $fallar) {
             if (Rut::esValido((string) $valor) && Postor::porRut((string) $valor)->exists()) {
-                $fallar('Ya existe una cuenta con este RUT. Si es tuya, ingresa o recupera tu contraseña.');
+                $fallar(__('acceso.validacion.rut_existente'));
             }
         };
     }
@@ -166,7 +166,7 @@ class CreateNewUser implements CreatesNewUsers
     {
         return function (string $atributo, mixed $valor, \Closure $fallar) {
             if (Rut::esValido((string) $valor) && Empresa::porRut((string) $valor)->whereHas('postores')->exists()) {
-                $fallar('Esta empresa ya tiene una cuenta registrada. Escribe a ' . \App\Support\Sitio::correo() . ' si necesitas otro representante.');
+                $fallar(__('acceso.validacion.empresa_existente', ['correo' => \App\Support\Sitio::correo()]));
             }
         };
     }

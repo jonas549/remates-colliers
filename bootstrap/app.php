@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Hora de recepción de cada petición, antes de cualquier otro trabajo (validez de pujas por recepción).
         // Después, solo en la puja: abrir la conexión a la base con reintento, antes que la sesión (la hora ya quedó sellada).
         $middleware->prepend([\App\Http\Middleware\HoraRecepcion::class, \App\Http\Middleware\ConexionPujaConReintento::class]);
+        // Idioma por el prefijo de la URL (/en). Global, para que también los errores sin ruta salgan en ese idioma.
+        $middleware->append(\App\Http\Middleware\EstablecerIdioma::class);
+        // La cookie del conmutador solo dice «es» o «en»: se lee antes de la sesión, sin cifrar.
+        $middleware->encryptCookies(except: [\App\Support\Idioma::COOKIE]);
 
         // Fuera de producción, noindex. El sandbox es de acceso libre: la clave de acceso se quitó el 21/09.
         $middleware->web(append: [\App\Http\Middleware\NoIndexar::class, \App\Http\Middleware\SesionTrasIngreso::class]);
@@ -37,10 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
-        // Sesión vencida en una acción por fetch (puja, panel): mensaje en español que las pantallas muestran.
+        // Sesión vencida en una acción por fetch (puja, panel): mensaje que las pantallas muestran, en el idioma de la URL.
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, Request $request) {
             if ($e->getStatusCode() === 419 && $request->expectsJson()) {
-                $mensaje = 'Tu sesión expiró. Recarga la página para continuar.';
+                $mensaje = __('errores.419.json');
 
                 return response()->json(['message' => $mensaje, 'mensaje' => $mensaje], 419);
             }

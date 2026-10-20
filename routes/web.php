@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ReportesController;
 use App\Http\Controllers\Admin\SalaMartilleroController;
 use App\Http\Controllers\Admin\UsuariosController;
 use App\Http\Controllers\CuentaController;
+use App\Http\Controllers\IdiomaController;
 use App\Http\Controllers\IngresarComoController;
 use App\Http\Controllers\PublicoController;
 use App\Http\Controllers\PujaController;
@@ -21,6 +22,7 @@ use App\Http\Controllers\RevisionController;
 use App\Http\Controllers\SalaController;
 use App\Http\Controllers\SuscripcionesController;
 use App\Http\Controllers\TiempoRealController;
+use App\Support\Idioma;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
@@ -36,20 +38,10 @@ use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 Route::get('/hora', [TiempoRealController::class, 'hora'])->name('tiempo-real.hora');
 Route::get('/remates/{remate:slug}/estado', [TiempoRealController::class, 'estado'])
     ->middleware('throttle:estado-remate')->name('tiempo-real.estado');
-Route::post('/remates/{remate:slug}/lotes/{lote}/pujas', [PujaController::class, 'store'])
-    ->whereNumber('lote')->middleware(['auth', 'clave.vigente', 'throttle:pujas'])->name('pujas.store');
 Route::post('/admin/remates/{remate:slug}/lotes/{lote}/cerrar', [SalaMartilleroController::class, 'cerrarLote'])
     ->whereNumber('lote')->middleware(['auth', 'clave.vigente'])->name('admin.sala.cerrar-lote');
 Route::post('/admin/remates/{remate:slug}/mensaje', [SalaMartilleroController::class, 'mensaje'])
     ->middleware(['auth', 'clave.vigente'])->name('admin.sala.mensaje');
-
-// Bloque M: «Avísame» (remates nuevos o recordatorio de un remate) y baja desde el enlace del correo.
-Route::post('/avisame', [SuscripcionesController::class, 'store'])->middleware('throttle:10,1')->name('suscripciones.store');
-Route::get('/avisame/baja/{token}', [SuscripcionesController::class, 'baja'])->where('token', '[A-Za-z0-9]{40}')->name('suscripciones.baja');
-
-// Bloque N: sitio público con datos reales. En local, ?sesion= fuerza la variante del visitante (arnés visual).
-Route::get('/', [PublicoController::class, 'index'])->name('remates.index');
-Route::permanentRedirect('/remates', '/');
 
 // Índice de pantallas para revisar variantes: solo en el entorno local, nunca en el servidor.
 if (app()->isLocal()) {
@@ -57,45 +49,70 @@ if (app()->isLocal()) {
     // Entra como el primer usuario de un rol del seeder (pantallas protegidas y arnés visual).
     Route::get('/revision/entrar/{rol}', [RevisionController::class, 'entrar'])->name('revision.entrar');
 }
-Route::get('/remates/{remate:slug}', [PublicoController::class, 'show'])->name('remates.show');
-Route::get('/remates/{remate:slug}/documentos/{documento}', [PublicoController::class, 'documento'])->whereNumber('documento')->name('remates.documento');
-Route::get('/remates/{remate:slug}/calendario.ics', [PublicoController::class, 'calendario'])->name('remates.calendario');
-// Bloque K: sala de puja conectada al motor. Solo postores con cuenta y garantía del remate aprobadas.
-Route::get('/remates/{remate:slug}/sala', [SalaController::class, 'show'])
-    ->middleware(['auth', 'rol:postor', 'verified', 'clave.vigente'])->name('sala.show');
 
 /*
- * Bloque D: autenticación. Fortify registra /ingresar, /registro, /salir, /recuperar-clave, /restablecer-clave y
- * /verificar-correo (config/fortify.php). Aquí: el acceso separado de administración y el área de la cuenta.
+ * Sitio público (20/10): se registra dos veces, en español sin prefijo y en inglés bajo /en con los nombres «en.x».
+ * UrlLocalizada elige la del idioma actual: route('remates.show') en una página en inglés ya da /en/remates/….
+ * El panel no se traduce: sus rutas van fuera de esta función.
  */
+$publicas = function (string $prefijo) {
+    Route::post('/remates/{remate:slug}/lotes/{lote}/pujas', [PujaController::class, 'store'])
+        ->whereNumber('lote')->middleware(['auth', 'clave.vigente', 'throttle:pujas'])->name('pujas.store');
+
+    // Bloque M: «Avísame» (remates nuevos o recordatorio de un remate) y baja desde el enlace del correo.
+    Route::post('/avisame', [SuscripcionesController::class, 'store'])->middleware('throttle:10,1')->name('suscripciones.store');
+    Route::get('/avisame/baja/{token}', [SuscripcionesController::class, 'baja'])->where('token', '[A-Za-z0-9]{40}')->name('suscripciones.baja');
+
+    // Bloque N: sitio público con datos reales. En local, ?sesion= fuerza la variante del visitante (arnés visual).
+    Route::get('/', [PublicoController::class, 'index'])->name('remates.index');
+    Route::permanentRedirect('/remates', $prefijo === '' ? '/' : '/' . $prefijo)->name('remates.antiguo');
+
+    Route::get('/remates/{remate:slug}', [PublicoController::class, 'show'])->name('remates.show');
+    Route::get('/remates/{remate:slug}/documentos/{documento}', [PublicoController::class, 'documento'])->whereNumber('documento')->name('remates.documento');
+    Route::get('/remates/{remate:slug}/calendario.ics', [PublicoController::class, 'calendario'])->name('remates.calendario');
+    // Bloque K: sala de puja conectada al motor. Solo postores con cuenta y garantía del remate aprobadas.
+    Route::get('/remates/{remate:slug}/sala', [SalaController::class, 'show'])
+        ->middleware(['auth', 'rol:postor', 'verified', 'clave.vigente'])->name('sala.show');
+
+    // Bloque D: Fortify registra /ingresar, /registro, /salir, /recuperar-clave, /restablecer-clave y /verificar-correo
+    // (config/fortify.php). Se cargan aquí, y no desde Fortify, para tener también su versión en inglés.
+    Route::group(['namespace' => 'Laravel\Fortify\Http\Controllers'], fn () => require base_path('vendor/laravel/fortify/routes/routes.php'));
+
+    // «Ingresar como este postor» (postores de prueba): el acceso con el correo ya escrito, aunque haya otra sesión abierta.
+    Route::get('/ingresar/como', [IngresarComoController::class, 'show'])->name('ingresar.como');
+    Route::post('/ingresar/como', [IngresarComoController::class, 'cambiar'])->middleware('auth')->name('ingresar.como.cambiar');
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/mi-cuenta/cambiar-clave', [CuentaController::class, 'clave'])->name('cuenta.clave');
+
+        Route::middleware('clave.vigente')->group(function () {
+            Route::get('/mi-cuenta/sesiones', [CuentaController::class, 'sesiones'])->name('cuenta.sesiones');
+            Route::delete('/mi-cuenta/sesiones', [CuentaController::class, 'cerrarOtrasSesiones'])->name('cuenta.sesiones.cerrar-otras');
+            Route::delete('/mi-cuenta/sesiones/{sesion}', [CuentaController::class, 'cerrarSesion'])->name('cuenta.sesiones.cerrar');
+        });
+
+        Route::middleware(['rol:postor', 'verified', 'clave.vigente'])->group(function () {
+            Route::get('/mi-cuenta', [CuentaController::class, 'estado'])->name('cuenta.estado');
+            Route::get('/mi-cuenta/documentos/{documento}', [CuentaController::class, 'documento'])->name('cuenta.documento');
+            // Bloque H: inscripción en un remate y comprobante de la garantía (sin pasarela de pago).
+            Route::post('/mi-cuenta/remates/{remate:slug}/inscribirme', [CuentaController::class, 'inscribirme'])->name('cuenta.inscribirme');
+            Route::post('/mi-cuenta/garantias/{garantia}/comprobante', [CuentaController::class, 'subirComprobante'])->name('cuenta.comprobante.store');
+            Route::get('/mi-cuenta/garantias/{garantia}/comprobante', [CuentaController::class, 'comprobante'])->name('cuenta.comprobante');
+        });
+    });
+};
+$publicas('');
+Route::prefix(Idioma::PREFIJO)->name(Idioma::PREFIJO . '.')->group(fn () => $publicas(Idioma::PREFIJO));
+
+// Conmutador EN / ES del encabezado: guarda la elección y vuelve a la misma página en el otro idioma.
+Route::get('/idioma/{idioma}', IdiomaController::class)->whereIn('idioma', Idioma::TODOS)->name('idioma.cambiar');
+
+// Acceso separado de administración (solo en español, como el panel).
 Route::middleware('guest')->group(function () {
     Route::get('/admin/ingresar', fn () => view('auth.login', ['proximo' => \App\Publico\Catalogo::destacado(), 'portal' => 'administracion']))
         ->name('admin.ingresar');
     Route::post('/admin/ingresar', [AuthenticatedSessionController::class, 'store'])
         ->middleware('throttle:login')->name('admin.ingresar.store');
-});
-
-// «Ingresar como este postor» (postores de prueba): el acceso con el correo ya escrito, aunque haya otra sesión abierta.
-Route::get('/ingresar/como', [IngresarComoController::class, 'show'])->name('ingresar.como');
-Route::post('/ingresar/como', [IngresarComoController::class, 'cambiar'])->middleware('auth')->name('ingresar.como.cambiar');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/mi-cuenta/cambiar-clave', [CuentaController::class, 'clave'])->name('cuenta.clave');
-
-    Route::middleware('clave.vigente')->group(function () {
-        Route::get('/mi-cuenta/sesiones', [CuentaController::class, 'sesiones'])->name('cuenta.sesiones');
-        Route::delete('/mi-cuenta/sesiones', [CuentaController::class, 'cerrarOtrasSesiones'])->name('cuenta.sesiones.cerrar-otras');
-        Route::delete('/mi-cuenta/sesiones/{sesion}', [CuentaController::class, 'cerrarSesion'])->name('cuenta.sesiones.cerrar');
-    });
-
-    Route::middleware(['rol:postor', 'verified', 'clave.vigente'])->group(function () {
-        Route::get('/mi-cuenta', [CuentaController::class, 'estado'])->name('cuenta.estado');
-        Route::get('/mi-cuenta/documentos/{documento}', [CuentaController::class, 'documento'])->name('cuenta.documento');
-        // Bloque H: inscripción en un remate y comprobante de la garantía (sin pasarela de pago).
-        Route::post('/mi-cuenta/remates/{remate:slug}/inscribirme', [CuentaController::class, 'inscribirme'])->name('cuenta.inscribirme');
-        Route::post('/mi-cuenta/garantias/{garantia}/comprobante', [CuentaController::class, 'subirComprobante'])->name('cuenta.comprobante.store');
-        Route::get('/mi-cuenta/garantias/{garantia}/comprobante', [CuentaController::class, 'comprobante'])->name('cuenta.comprobante');
-    });
 });
 
 // Panel: administradores y martilleros. Sin sesión redirige a /admin/ingresar.

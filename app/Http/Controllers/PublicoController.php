@@ -79,11 +79,11 @@ class PublicoController extends Controller
             'DTSTAMP:' . $f(CarbonImmutable::now('UTC')),
             'DTSTART:' . $f($inicio),
             'DTEND:' . $f($fin),
-            'SUMMARY:' . $texto('Remate ' . $remate->folio . ' · ' . $remate->titulo),
-            'DESCRIPTION:' . $texto('Remate en línea de Colliers con transmisión en vivo. Cierra automáticamente al vencer el tiempo, sin extensiones.'
-                . ($remate->cierre_garantias_en ? ' Garantías hasta el ' . Formato::fecha($remate->cierre_garantias_en) . '.' : '') . ' ' . $url),
+            'SUMMARY:' . $texto(__('catalogo.calendario.titulo', ['folio' => $remate->folio, 'titulo' => $remate->titulo])),
+            'DESCRIPTION:' . $texto(__('catalogo.calendario.descripcion')
+                . ($remate->cierre_garantias_en ? __('catalogo.calendario.garantias_hasta', ['fecha' => Formato::fecha($remate->cierre_garantias_en)]) : '') . ' ' . $url),
             'URL:' . $url,
-            'BEGIN:VALARM', 'TRIGGER:-PT1H', 'ACTION:DISPLAY', 'DESCRIPTION:' . $texto('Remate ' . $remate->folio . ' en 1 hora'), 'END:VALARM',
+            'BEGIN:VALARM', 'TRIGGER:-PT1H', 'ACTION:DISPLAY', 'DESCRIPTION:' . $texto(__('catalogo.calendario.alarma', ['folio' => $remate->folio])), 'END:VALARM',
             'END:VEVENT', 'END:VCALENDAR', '',
         ]);
 

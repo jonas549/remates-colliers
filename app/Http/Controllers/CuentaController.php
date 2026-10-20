@@ -49,7 +49,7 @@ class CuentaController extends Controller
         }
 
         return redirect()->route('cuenta.estado', ['remate' => $remate->slug])
-            ->with('estado', 'Quedaste inscrito en ' . $remate->folio . '. La garantía es de ' . Formato::clp($garantia->monto) . ': constitúyela y sube el comprobante.');
+            ->with('estado', __('cuenta.inscripcion.inscrito', ['folio' => $remate->folio, 'monto' => Formato::clp($garantia->monto)]));
     }
 
     public function subirComprobante(Request $request, Garantia $garantia, InscripcionGarantias $inscripcion): RedirectResponse
@@ -58,7 +58,7 @@ class CuentaController extends Controller
         $datos = $request->validate([
             'medio' => ['required', Rule::in([Garantia::MEDIO_TRANSFERENCIA, Garantia::MEDIO_VALE_VISTA])],
             'comprobante' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
-        ], ['comprobante.max' => 'El comprobante puede pesar hasta 10 MB.'], ['medio' => 'medio', 'comprobante' => 'comprobante']);
+        ], ['comprobante.max' => __('cuenta.inscripcion.comprobante_max')], ['medio' => __('cuenta.inscripcion.atributo_medio'), 'comprobante' => __('cuenta.inscripcion.atributo_comprobante')]);
 
         try {
             $inscripcion->subirComprobante($garantia, $request->file('comprobante'), $datos['medio']);
@@ -67,7 +67,7 @@ class CuentaController extends Controller
         }
 
         return redirect()->route('cuenta.estado', ['remate' => $garantia->remate->slug])
-            ->with('estado', 'Recibimos tu comprobante. Colliers lo revisará y te avisará por correo.');
+            ->with('estado', __('cuenta.inscripcion.comprobante_recibido'));
     }
 
     public function comprobante(Request $request, Garantia $garantia): StreamedResponse
@@ -96,11 +96,11 @@ class CuentaController extends Controller
 
     public function cerrarSesion(Request $request, string $sesion): RedirectResponse
     {
-        abort_if($sesion === $request->session()->getId(), 422, 'Para cerrar la sesión actual usa «Cerrar sesión».');
+        abort_if($sesion === $request->session()->getId(), 422, __('cuenta.sesiones.usar_cerrar_sesion'));
         abort_unless(Sesiones::cerrarUna($request->user(), $sesion), 404);
         $this->anotar($request, 'sesion_cerrada_remota', ['cantidad' => 1]);
 
-        return back()->with('estado', 'Cerramos esa sesión.');
+        return back()->with('estado', __('cuenta.sesiones.cerrada'));
     }
 
     public function cerrarOtrasSesiones(Request $request): RedirectResponse
@@ -108,7 +108,7 @@ class CuentaController extends Controller
         $cantidad = Sesiones::cerrarTodas($request->user(), $request->session()->getId());
         $this->anotar($request, 'sesion_cerrada_remota', ['cantidad' => $cantidad]);
 
-        return back()->with('estado', $cantidad === 1 ? 'Cerramos 1 sesión.' : "Cerramos {$cantidad} sesiones.");
+        return back()->with('estado', trans_choice('cuenta.sesiones.cerradas', $cantidad));
     }
 
     public function documento(Request $request, PostorDocumento $documento): StreamedResponse

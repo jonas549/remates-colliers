@@ -9,45 +9,49 @@
     $simulado = app()->isLocal() && request()->filled('sesion');
     $panel = $simulado || ($visitante['esAdministracion'] ?? false);
     $cuenta = $simulado || (auth()->user()?->rol === \App\Models\User::ROL_POSTOR);
+    $ingles = \App\Support\Idioma::esIngles();
 @endphp
 <div class="pub-cabecera" @if ($zIndex) style="z-index: {{ $zIndex }}" @endif x-data="{ menu: false }">
     <div class="pub-cabecera__nav contenedor">
         <a href="{{ route('remates.index') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="pub-cabecera__logo"></a>
         <div class="pub-cabecera__links">
-            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('servicios')">Servicios</x-publico.enlace-externo>
-            <a>Expertos</a>
-            <a>Propiedades</a>
-            <a>Investigación</a>
-            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">Nosotros</x-publico.enlace-externo>
-            <a href="{{ route('remates.index') }}" class="es-actual">Remates</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('servicios')">{{ __('sitio.cabecera.servicios') }}</x-publico.enlace-externo>
+            <a>{{ __('sitio.cabecera.expertos') }}</a>
+            <a>{{ __('sitio.cabecera.propiedades') }}</a>
+            <a>{{ __('sitio.cabecera.investigacion') }}</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">{{ __('sitio.cabecera.nosotros') }}</x-publico.enlace-externo>
+            <a href="{{ route('remates.index') }}" class="es-actual">{{ __('sitio.cabecera.remates') }}</a>
         </div>
         <div class="pub-cabecera__derecha">
-            <a href="{{ route('remates.index') }}#buscar" class="pub-cabecera__buscar" aria-label="Buscar remates"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></a>
-            <span class="pub-cabecera__idioma">EN / <span>ES</span></span>
+            <a href="{{ route('remates.index') }}#buscar" class="pub-cabecera__buscar" aria-label="{{ __('sitio.cabecera.buscar') }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></a>
+            {{-- Conmutador (20/10): el idioma activo va resaltado (span) y el otro es el enlace a la misma página en ese idioma. --}}
+            <span class="pub-cabecera__idioma">@if ($ingles)<span>EN</span> / <a href="{{ \App\Support\Idioma::urlConmutador('es') }}" hreflang="es" lang="es">ES</a>@else<a href="{{ \App\Support\Idioma::urlConmutador('en') }}" hreflang="en" lang="en">EN</a> / <span>ES</span>@endif</span>
             @if ($logueado)
-                @if ($panel)<a href="{{ route('admin.dashboard') }}" class="pub-cabecera__panel">Panel Colliers</a>@endif
-                @if ($cuenta)<a href="{{ route('cuenta.estado') }}" class="pub-cabecera__acceso">Mi cuenta</a>@else<a href="{{ route('admin.dashboard') }}" class="pub-cabecera__acceso">Panel</a>@endif
+                @if ($panel)<a href="{{ route('admin.dashboard') }}" class="pub-cabecera__panel">{{ __('sitio.cabecera.panel_colliers') }}</a>@endif
+                @if ($cuenta)<a href="{{ route('cuenta.estado') }}" class="pub-cabecera__acceso">{{ __('sitio.cabecera.mi_cuenta') }}</a>@else<a href="{{ route('admin.dashboard') }}" class="pub-cabecera__acceso">{{ __('sitio.cabecera.panel') }}</a>@endif
             @else
-                <a href="{{ route('login') }}" class="pub-cabecera__acceso">Ingresar</a>
+                <a href="{{ route('login') }}" class="pub-cabecera__acceso">{{ __('sitio.cabecera.ingresar') }}</a>
             @endif
-            <button type="button" class="pub-cabecera__menu-boton" aria-label="Abrir menú" :aria-expanded="menu" @click="menu = !menu">
+            <button type="button" class="pub-cabecera__menu-boton" aria-label="{{ __('sitio.cabecera.abrir_menu') }}" :aria-expanded="menu" @click="menu = !menu">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
             </button>
         </div>
     </div>
     <template x-if="menu">
         <div class="pub-menu">
-            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('servicios')">Servicios</x-publico.enlace-externo>
-            <a>Expertos</a>
-            <a>Propiedades</a>
-            <a>Investigación</a>
-            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">Nosotros</x-publico.enlace-externo>
-            <a href="{{ route('remates.index') }}" class="es-actual">Remates</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('servicios')">{{ __('sitio.cabecera.servicios') }}</x-publico.enlace-externo>
+            <a>{{ __('sitio.cabecera.expertos') }}</a>
+            <a>{{ __('sitio.cabecera.propiedades') }}</a>
+            <a>{{ __('sitio.cabecera.investigacion') }}</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">{{ __('sitio.cabecera.nosotros') }}</x-publico.enlace-externo>
+            <a href="{{ route('remates.index') }}" class="es-actual">{{ __('sitio.cabecera.remates') }}</a>
+            {{-- En móvil el conmutador del encabezado no se ve: el menú lleva al otro idioma. --}}
+            @if ($ingles)<a href="{{ \App\Support\Idioma::urlConmutador('es') }}" hreflang="es" lang="es">Español</a>@else<a href="{{ \App\Support\Idioma::urlConmutador('en') }}" hreflang="en" lang="en">English</a>@endif
             @if ($logueado)
-                @if ($cuenta)<a href="{{ route('cuenta.estado') }}" class="pub-menu__acceso">Mi cuenta</a>@endif
-                @if ($panel)<a href="{{ route('admin.dashboard') }}" class="pub-menu__panel">Panel Colliers</a>@endif
+                @if ($cuenta)<a href="{{ route('cuenta.estado') }}" class="pub-menu__acceso">{{ __('sitio.cabecera.mi_cuenta') }}</a>@endif
+                @if ($panel)<a href="{{ route('admin.dashboard') }}" class="pub-menu__panel">{{ __('sitio.cabecera.panel_colliers') }}</a>@endif
             @else
-                <a href="{{ route('login') }}" class="pub-menu__acceso">Ingresar</a>
+                <a href="{{ route('login') }}" class="pub-menu__acceso">{{ __('sitio.cabecera.ingresar') }}</a>
             @endif
         </div>
     </template>

@@ -1,4 +1,5 @@
 import { rutValido } from './rut';
+import { t } from './textos';
 
 // Formulario de registro de postor: tipo de persona, RUT con dígito verificador,
 // documentos adjuntos y aceptación de bases (habilita el envío).
@@ -21,8 +22,8 @@ export default (tipoInicial = 'natural', rutInicial = '', aceptaInicial = false,
     },
 
     get mensajeRut() {
-        if (this.estadoRut === false) return 'Dígito verificador incorrecto';
-        return this.estadoRut ? 'RUT válido' : 'Formato 12.345.678-9';
+        if (this.estadoRut === false) return t('acceso.rut_incorrecto');
+        return this.estadoRut ? t('acceso.rut_valido') : t('acceso.formato_rut');
     },
 
     numero(base) {
@@ -40,6 +41,6 @@ export default (tipoInicial = 'natural', rutInicial = '', aceptaInicial = false,
     },
 
     detalle(id, porDefecto) {
-        return this.guardados[id] ? 'Ya adjuntado: ' + this.guardados[id] : porDefecto;
+        return this.guardados[id] ? t('acceso.ya_adjuntado', { nombre: this.guardados[id] }) : porDefecto;
     },
 });

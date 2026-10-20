@@ -6,6 +6,7 @@ use App\Listeners\RegistroDeAccesos;
 use App\Subastas\Difusion\Emisor;
 use App\Subastas\Difusion\EmisorJsonEstatico;
 use App\Support\CorreoSaliente;
+use App\Support\UrlLocalizada;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Mail\MailManager;
@@ -25,6 +26,15 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(Emisor::class, fn () => match (config('colliers.tiempo_real.driver')) {
             'json' => new EmisorJsonEstatico(config('colliers.tiempo_real.carpeta')),
             default => throw new InvalidArgumentException('Driver de tiempo real desconocido: ' . config('colliers.tiempo_real.driver')),
+        });
+
+        // Sitio en inglés (20/10): el mismo generador de URL de Laravel, pero route() elige la ruta del idioma actual.
+        // Los resolutores de sesión y de clave (URL firmadas) los agrega el extend() de RoutingServiceProvider.
+        $this->app->singleton('url', function ($app) {
+            $routes = $app['router']->getRoutes();
+            $app->instance('routes', $routes);
+
+            return new UrlLocalizada($routes, $app->rebinding('request', fn ($app, $request) => $app['url']->setRequest($request)), $app['config']['app.asset_url']);
         });
 
         // Correo saliente del panel (Bloque V): se aplica al crear el gestor de correo, solo cuando algo se envía.

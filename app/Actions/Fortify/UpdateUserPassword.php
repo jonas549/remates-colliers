@@ -28,8 +28,8 @@ class UpdateUserPassword implements UpdatesUserPasswords
             'current_password' => ['required', 'string', 'current_password:web'],
             'password' => [...$this->passwordRules(), 'different:current_password'],
         ], [
-            'current_password.current_password' => 'La contraseña actual no es correcta.',
-            'password.different' => 'La nueva contraseña debe ser distinta de la actual.',
+            'current_password.current_password' => __('acceso.validacion.clave_actual_incorrecta'),
+            'password.different' => __('acceso.validacion.clave_distinta'),
         ])->validateWithBag('updatePassword');
 
         $user->forceFill([

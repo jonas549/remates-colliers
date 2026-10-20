@@ -19,8 +19,9 @@ use Illuminate\Notifications\Notifiable;
  * Credenciales y rol. Los datos del postor van en `postores`. La verificación de correo se exige solo en las rutas de
  * postores (middleware `verified`); las cuentas de administración las crea Colliers.
  * `intentos_fallidos` y `bloqueado_hasta` no son asignables en masa: solo los escribe el ingreso.
+ * Los correos van siempre en español (20/10), aunque se disparen desde una página en inglés: preferredLocale().
  */
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements \Illuminate\Contracts\Translation\HasLocalePreference, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -34,6 +35,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public const ESTADO_ACTIVO = 'activo';
 
     public const ESTADO_INACTIVO = 'inactivo';
+
+    /** Idioma de sus correos: siempre español (decisión del 20/10; el sitio público también está en inglés). */
+    public function preferredLocale(): string
+    {
+        return \App\Support\Idioma::ESPANOL;
+    }
 
     /**
      * Get the attributes that should be cast.

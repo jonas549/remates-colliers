@@ -1,13 +1,14 @@
 import L from 'leaflet';
 import { clp, dos } from './formato';
+import { t } from './textos';
 
 const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 
 function reloj(segundos) {
     const s = Math.max(0, segundos);
-    if (s < 60) return s + ' seg';
-    if (s < 3600) return Math.floor(s / 60) + ' min';
-    return Math.floor(s / 3600) + ' h';
+    if (s < 60) return t('remate.seg', { n: s });
+    if (s < 3600) return t('remate.min', { n: Math.floor(s / 60) });
+    return t('remate.h', { n: Math.floor(s / 3600) });
 }
 
 // Detalle de remate (Bloque N): cuenta regresiva al inicio o al cierre con la hora del servidor, historial de pujas en vivo
@@ -105,10 +106,10 @@ export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estad
     },
 
     get textoCierre() {
-        if (this.retirado) return 'REMATE NO DISPONIBLE';
-        if (this.resultado === 'adjudicado') return 'REMATE ADJUDICADO';
-        if (this.resultado) return 'REMATE CERRADO';
-        return 'CERRADO · ADJUDICANDO';
+        if (this.retirado) return t('remate.no_disponible');
+        if (this.resultado === 'adjudicado') return t('remate.adjudicado');
+        if (this.resultado) return t('remate.cerrado');
+        return t('remate.cerrado_adjudicando');
     },
 
     /**
@@ -156,7 +157,7 @@ export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estad
     },
 
     get pujaActual() {
-        return this.precio ? clp(this.precio) : 'Sin pujas';
+        return this.precio ? clp(this.precio) : t('remate.sin_pujas');
     },
 
     get pujaEnUf() {
@@ -172,7 +173,7 @@ export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estad
             monto: clp(p.monto),
             postor: p.postor,
             hora: new Date(p.en_ms).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour12: false }),
-            hace: 'hace ' + reloj(Math.floor((this.ahora - p.en_ms) / 1000)),
+            hace: t('remate.hace', { tiempo: reloj(Math.floor((this.ahora - p.en_ms) / 1000)) }),
         }));
     },
 
@@ -184,7 +185,7 @@ export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estad
                 return;
             }
             await navigator.clipboard.writeText(url);
-            this.compartido = 'Enlace copiado';
+            this.compartido = t('remate.enlace_copiado');
         } catch (e) {
             this.compartido = '';
         }
@@ -201,9 +202,9 @@ export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estad
                 body: JSON.stringify({ email, remate }),
             });
             const datos = await r.json().catch(() => ({}));
-            this.avisoMensaje = datos.mensaje || datos.message || (r.ok ? 'Listo.' : 'No pudimos registrar tu correo.');
+            this.avisoMensaje = datos.mensaje || datos.message || (r.ok ? t('remate.listo') : t('remate.error_correo'));
         } catch (e) {
-            this.avisoMensaje = 'Sin conexión: inténtalo de nuevo.';
+            this.avisoMensaje = t('remate.sin_conexion');
         } finally {
             this.avisoEnviando = false;
         }

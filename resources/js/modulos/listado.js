@@ -1,4 +1,9 @@
 import { clp, cuentaRegresiva, partes, dos } from './formato';
+import { t } from './textos';
+
+// El estado del catálogo («En vivo», «Próximo», «Cerrado») es un dato del filtro: se traduce solo al mostrarlo.
+const CLAVE_ESTADO = { 'En vivo': 'en_vivo', 'Próximo': 'proximo', 'Cerrado': 'cerrado' };
+const etiquetaEstado = (estado) => (CLAVE_ESTADO[estado] ? t('listado.estados.' + CLAVE_ESTADO[estado]) : estado);
 
 // Listado de remates. Port de la lógica de index.dc.html: filtros por estado y ocupación,
 // búsqueda, orden, grilla/tabla, "cargar más" y cuentas regresivas (favoritos: fuera de alcance),
@@ -82,9 +87,9 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
         const c2 = redondear(valores[Math.floor((valores.length * 2) / 3)]);
         if (c1 >= c2) return [];
         return [
-            { etiqueta: 'Hasta ' + clp(c1), min: 0, max: c1 },
-            { etiqueta: clp(c1 + 1) + ' a ' + clp(c2), min: c1 + 1, max: c2 },
-            { etiqueta: 'Más de ' + clp(c2), min: c2 + 1, max: Infinity },
+            { etiqueta: t('listado.tramo_hasta', { monto: clp(c1) }), min: 0, max: c1 },
+            { etiqueta: t('listado.tramo_entre', { desde: clp(c1 + 1), hasta: clp(c2) }), min: c1 + 1, max: c2 },
+            { etiqueta: t('listado.tramo_mas_de', { monto: clp(c2) }), min: c2 + 1, max: Infinity },
         ];
     },
 
@@ -120,27 +125,27 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
     tarjeta(l) {
         const abierto = l.estado !== 'Cerrado';
         const restante = l.delta ? Math.max(0, this.t0 + l.delta * 1000 - this.ahora) : 0;
-        let statusLabel = 'Resultado';
+        let statusLabel = t('listado.resultado');
         let statusValor = l.resultado || '';
         let statusClase = '';
         if (l.estado === 'En vivo') {
-            statusLabel = 'Puja actual · ' + l.pujas + ' pujas';
+            statusLabel = t('listado.puja_actual', { n: l.pujas });
             statusValor = clp(l.puja) + ' · ' + cuentaRegresiva(restante);
             statusClase = 'tarjeta__estado-valor--vivo';
         } else if (l.estado === 'Próximo') {
-            statusLabel = 'Comienza en';
+            statusLabel = t('listado.comienza_en');
             statusValor = cuentaRegresiva(restante);
             statusClase = 'tarjeta__estado-valor--proximo';
         }
-        const extras = [l.estac ? l.estac + ' estac.' : '', l.bodega ? 'bodega' : ''].filter(Boolean).join(' · ');
+        const extras = [l.estac ? t('listado.estacionamientos', { n: l.estac }) : '', l.bodega ? t('listado.bodega') : ''].filter(Boolean).join(' · ');
         return {
             id: l.id,
             href: rutas.detalle.replace('__ID__', l.id),
             foto: l.foto,
             direccion: l.direccion,
             ubicacion: l.comuna + ', ' + l.region,
-            tipoSup: l.tipo + (l.sup ? ' · ' + String(l.sup).replace('.', ',') + ' m² útiles' : ''),
-            dormBanos: l.dorm ? l.dorm + 'D / ' + l.banos + 'B' : l.tipo,
+            tipoSup: l.tipo + (l.sup ? ' · ' + t('listado.superficie', { sup: String(l.sup).replace('.', ',') }) : ''),
+            dormBanos: l.dorm ? t('listado.dorm_banos', { dorm: l.dorm, banos: l.banos }) : l.tipo,
             extras,
             ocupacion: l.ocupacion,
             ocupacionClase: l.ocupacion === 'Ocupada' ? 'tarjeta__chip--ocupada' : 'tarjeta__chip--desocupada',
@@ -150,7 +155,7 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
             fecha: l.fecha,
             visita: l.visita,
             martillero: l.martillero,
-            estado: l.estado.toUpperCase(),
+            estado: etiquetaEstado(l.estado).toUpperCase(),
             badgeClase: l.estado === 'En vivo' ? 'badge-remate--vivo' : l.estado === 'Próximo' ? 'badge-remate--proximo' : '',
             statusLabel,
             statusValor,
@@ -159,7 +164,7 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
             nuevoRemate: l.nuevoRemate || '',
             nuevoHref: l.nuevoHref || '',
             bases: l.bases || '',
-            cta: l.estado === 'En vivo' ? 'Ver transmisión y pujar' : (this.sesion === 'aprobada' ? 'Ver remate' : 'Inscribirme para pujar'),
+            cta: l.estado === 'En vivo' ? t('listado.cta_en_vivo') : (this.sesion === 'aprobada' ? t('listado.cta_ver') : t('listado.cta_inscribirme')),
         };
     },
 
@@ -188,9 +193,9 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
                 body: JSON.stringify({ email: formulario.email.value }),
             });
             const datos = await r.json().catch(() => ({}));
-            this.avisoMensaje = datos.mensaje || datos.message || (r.ok ? 'Listo.' : 'No pudimos registrar tu correo.');
+            this.avisoMensaje = datos.mensaje || datos.message || (r.ok ? t('listado.aviso_listo') : t('listado.aviso_error'));
         } catch (e) {
-            this.avisoMensaje = 'Sin conexión: inténtalo de nuevo.';
+            this.avisoMensaje = t('listado.aviso_sin_conexion');
         } finally {
             this.avisoEnviando = false;
         }
@@ -212,7 +217,7 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
     },
 
     get conteo() {
-        return 'Mostrando ' + this.tarjetas.length + ' de ' + this.filtrados.length + ' remates';
+        return t('listado.conteo', { n: this.tarjetas.length, total: this.filtrados.length });
     },
 
     get hayMas() {
@@ -228,13 +233,14 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
     },
 
     get sugerencia() {
-        if (this.ultimoFiltro === 'texto') return 'La búsqueda “' + this.q + '” no coincide con ningún remate publicado.';
-        const nombres = { ocupacion: 'ocupación', fecha: 'fecha de remate', tipo: 'tipo de propiedad', caracteristicas: 'características', precio: 'rango de precio', region: 'región', comuna: 'comuna', garantia: 'garantía requerida' };
-        return 'El filtro por ' + (nombres[this.ultimoFiltro] || 'estado del remate') + ' es el que más resultados descarta.';
+        if (this.ultimoFiltro === 'texto') return t('listado.busqueda_sin_resultados', { q: this.q });
+        const nombres = ['ocupacion', 'fecha', 'tipo', 'caracteristicas', 'precio', 'region', 'comuna', 'garantia'];
+        const filtro = nombres.includes(this.ultimoFiltro) ? this.ultimoFiltro : 'estado';
+        return t('listado.filtro_descarta', { filtro: t('listado.filtro_nombres.' + filtro) });
     },
 
     get sugerenciaAccion() {
-        return this.ultimoFiltro === 'texto' ? 'Borrar la búsqueda' : 'Quitar ese filtro';
+        return this.ultimoFiltro === 'texto' ? t('listado.borrar_busqueda') : t('listado.quitar_filtro');
     },
 
     // Cuenta regresiva del hero: { d, h, m, s } con dos dígitos

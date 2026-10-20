@@ -1,1 +1,1 @@
-<x-pagina-error codigo="500" titulo="Tuvimos un problema" mensaje="Ocurrió un error inesperado de nuestro lado. Ya quedó registrado. Si estás participando en un remate en vivo, llámanos: el remate no se detiene." />
+<x-pagina-error codigo="500" :titulo="__('errores.500.titulo')" :mensaje="__('errores.500.mensaje')" />

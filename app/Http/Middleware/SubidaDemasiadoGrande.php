@@ -29,8 +29,7 @@ class SubidaDemasiadoGrande
             return $next($request);
         }
 
-        $mensaje = 'El envío pesa ' . self::enMb($enviado) . ' y este servidor acepta hasta ' . self::enMb($limite)
-            . ' por formulario. Adjunta archivos más livianos (puedes reducir las fotos o guardar el PDF con menos calidad) e inténtalo de nuevo.';
+        $mensaje = __('errores.413.detalle', ['enviado' => self::enMb($enviado), 'limite' => self::enMb($limite)]);
 
         if ($request->expectsJson()) {
             return response()->json(['ok' => false, 'mensaje' => $mensaje], 413);

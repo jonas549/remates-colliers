@@ -1,17 +1,21 @@
 {{-- Plantilla común de las páginas de error. Sin dependencias de sesión ni base de datos. --}}
-@props(['codigo', 'titulo', 'mensaje', 'accion' => 'Volver a los remates', 'href' => null])
+@props(['codigo', 'titulo', 'mensaje', 'accion' => null, 'href' => null])
+@php($correo = \App\Support\Sitio::correo())
 <x-layouts.base :titulo="$titulo">
     <div class="acceso-sandbox">
-        <x-tramite.cabecera etiqueta="REMATES" />
+        <x-tramite.cabecera :etiqueta="__('errores.etiqueta')" />
 
         <div class="acceso-sandbox__cuerpo">
             <div class="acceso-sandbox__caja">
-                <div class="acceso-sandbox__kicker">ERROR {{ $codigo }}</div>
+                <div class="acceso-sandbox__kicker">{{ __('errores.kicker', ['codigo' => $codigo]) }}</div>
                 <h1 class="acceso-sandbox__titulo">{{ $titulo }}</h1>
                 <p class="acceso-sandbox__texto">{{ $mensaje }}</p>
                 {{ $slot }}
-                <a href="{{ $href ?? url('/') }}" class="acceso-sandbox__boton acceso-sandbox__boton--enlace">{{ $accion }}</a>
-                <p class="acceso-sandbox__ayuda">¿Necesitas ayuda? Escríbenos a <a href="mailto:{{ \App\Support\Sitio::correo() }}">{{ \App\Support\Sitio::correo() }}</a> o llama al <a href="{{ \App\Support\Sitio::telefonoEnlace() }}">{{ \App\Support\Sitio::telefono() }}</a>.</p>
+                <a href="{{ $href ?? route('remates.index') }}" class="acceso-sandbox__boton acceso-sandbox__boton--enlace">{{ $accion ?? __('errores.volver_remates') }}</a>
+                <p class="acceso-sandbox__ayuda">{!! __('errores.ayuda', [
+                    'correo' => '<a href="mailto:' . e($correo) . '">' . e($correo) . '</a>',
+                    'telefono' => '<a href="' . e(\App\Support\Sitio::telefonoEnlace()) . '">' . e(\App\Support\Sitio::telefono()) . '</a>',
+                ]) !!}</p>
             </div>
         </div>
 

@@ -1,4 +1,5 @@
 import { clp, dos } from './formato';
+import { t } from './textos';
 
 const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 
@@ -58,7 +59,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     },
     get conectadosTexto() {
         const n = this.estado.presencia?.conectados;
-        return n ? n + (n === 1 ? ' CONECTADO' : ' CONECTADOS') : '';
+        return n ? t(n === 1 ? 'sala.conectado' : 'sala.conectados', { n }) : '';
     },
 
     // ── Reloj ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -139,21 +140,20 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     get info() { return lotes[this.lote.id] || {}; },
     get etiquetaLote() {
         const total = this.estado.lotes.length;
-        return total > 1 ? 'Lote ' + this.lote.orden + ' de ' + total : '';
+        return total > 1 ? t('sala.lote_de', { orden: this.lote.orden, total }) : '';
     },
     // Cambio de lote (21/09, Jonas: «que sea evidente»): resultado del lote anterior para este postor y qué se remata ahora.
     get avisoLote() {
         const a = this.anterior;
         if (!a || a.siguiente !== this.lote.orden) return '';
-        const resultado = a.estado !== 'adjudicado' ? 'El lote ' + a.orden + ' cerró sin posturas.'
-            : (a.gane ? 'Te adjudicaste el lote ' + a.orden + ' en ' + clp(a.precio) + '. Colliers te contactará para la firma y el pago del saldo.'
-                : 'El lote ' + a.orden + ' se adjudicó a otro postor en ' + clp(a.precio) + '.');
-        const ahora = 'Ahora se remata el lote ' + this.lote.orden + (this.info.direccion ? ': ' + this.info.direccion : '')
-            + (this.antesDeAbrir ? ', abre a las ' + this.horaDe(this.lote.abre_en_ms) + '.' : ', en vivo.');
+        const resultado = a.estado !== 'adjudicado' ? t('sala.lote_sin_posturas', { orden: a.orden })
+            : t(a.gane ? 'sala.lote_ganado' : 'sala.lote_de_otro', { orden: a.orden, precio: clp(a.precio) });
+        const datos = { orden: this.lote.orden, direccion: this.info.direccion ? ': ' + this.info.direccion : '' };
+        const ahora = this.antesDeAbrir ? t('sala.ahora_abre', { ...datos, hora: this.horaDe(this.lote.abre_en_ms) }) : t('sala.ahora_en_vivo', datos);
         return resultado + ' ' + ahora;
     },
     get avisoLoteGanado() { return !!this.anterior?.gane && this.anterior.siguiente === this.lote.orden; },
-    get avisoLoteEtiqueta() { return 'CAMBIO DE LOTE · AHORA ' + this.etiquetaLote.toUpperCase(); },
+    get avisoLoteEtiqueta() { return t('sala.cambio_de_lote', { lote: this.etiquetaLote.toUpperCase() }); },
     horaDe(ms) { return new Date(ms).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false }); },
     // Estado con el lote delante cuando hay varios: «LOTE 2 DE 2 · EN VIVO · PUJA ABIERTA».
     get estadoConLote() { return (this.etiquetaLote && !this.retirado ? this.etiquetaLote.toUpperCase() + ' · ' : '') + this.estadoTexto; },
@@ -162,7 +162,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         const en = this.estado.mensaje_martillero?.en_ms;
         if (!en) return '';
         const seg = Math.max(0, Math.floor((this.ahora - en) / 1000));
-        return seg < 60 ? 'hace ' + seg + ' seg' : 'hace ' + Math.floor(seg / 60) + ' min';
+        return seg < 60 ? t('sala.hace_seg', { n: seg }) : t('sala.hace_min', { n: Math.floor(seg / 60) });
     },
     get terminal() { return TERMINALES.includes(this.lote.estado); },
     get antesDeAbrir() { return this.lote.abre_en_ms !== null && this.ahora < this.lote.abre_en_ms; },
@@ -189,22 +189,23 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     get mm() { return dos(Math.floor((this.restante % 3600) / 60)); },
     get ss() { return dos(this.restante % 60); },
     get enMinutoFinal() { return this.abierto && this.restante < 60; },
-    get etiquetaContador() { return this.antesDeAbrir ? 'ABRE EN' : 'CIERRA EN'; },
+    get etiquetaContador() { return t(this.antesDeAbrir ? 'sala.abre_en_etiqueta' : 'sala.cierra_en_etiqueta'); },
 
     get estadoTexto() {
-        if (this.retirado === 'cancelado') return 'REMATE CANCELADO';
-        if (this.retirado) return 'REMATE NO DISPONIBLE';
-        if (this.lote.estado === 'adjudicado') return 'ADJUDICADO';
-        if (this.lote.estado === 'desierto') return 'CERRADO SIN POSTORES';
-        if (this.antesDeAbrir) return 'PRÓXIMO · PUJA AÚN NO ABRE';
-        if (this.vencido) return 'CERRADO · ADJUDICANDO';
-        return 'EN VIVO · PUJA ABIERTA';
+        if (this.retirado === 'cancelado') return t('sala.estado.cancelado');
+        if (this.retirado) return t('sala.estado.no_disponible');
+        if (this.lote.estado === 'adjudicado') return t('sala.estado.adjudicado');
+        if (this.lote.estado === 'desierto') return t('sala.estado.desierto');
+        if (this.antesDeAbrir) return t('sala.estado.proximo');
+        if (this.vencido) return t('sala.estado.adjudicando');
+        return t('sala.estado.en_vivo');
     },
     get tiempoTexto() {
-        if (this.retirado) return this.retirado === 'cancelado' ? 'Remate cancelado' : 'Remate no disponible';
-        if (this.terminal) return 'Remate finalizado';
-        if (this.antesDeAbrir) return 'Abre en ' + this.hh + ':' + this.mm + ':' + this.ss;
-        return this.vencido ? 'Cerrado' : 'Cierra en ' + this.hh + ':' + this.mm + ':' + this.ss;
+        if (this.retirado) return t(this.retirado === 'cancelado' ? 'sala.tiempo.cancelado' : 'sala.tiempo.no_disponible');
+        if (this.terminal) return t('sala.tiempo.finalizado');
+        const tiempo = this.hh + ':' + this.mm + ':' + this.ss;
+        if (this.antesDeAbrir) return t('sala.tiempo.abre_en', { tiempo });
+        return this.vencido ? t('sala.tiempo.cerrado') : t('sala.tiempo.cierra_en', { tiempo });
     },
 
     formatoClp(n) { return clp(n); },
@@ -215,14 +216,14 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     get sobreBase() { return '+' + Math.round((this.actual / this.lote.precio_base - 1) * 100) + '%'; },
 
     get estadoTitulo() {
-        if (!this.hayPujas) return 'Sin posturas';
-        return this.yoGanando ? 'Vas ganando' : 'Te superaron';
+        if (!this.hayPujas) return t('sala.sin_posturas');
+        return t(this.yoGanando ? 'sala.vas_ganando' : 'sala.te_superaron');
     },
     get estadoDetalle() {
-        if (!this.hayPujas) return 'Nadie ha pujado todavía. La primera postura parte en ' + clp(this.minimo) + '.';
+        if (!this.hayPujas) return t('sala.detalle_sin_posturas', { monto: clp(this.minimo) });
         return this.yoGanando
-            ? 'Tu postura es la más alta registrada en este remate.'
-            : 'La puja más alta es de otro postor. Puedes ofertar desde ' + clp(this.minimo) + '.';
+            ? t('sala.detalle_ganando')
+            : t('sala.detalle_superado', { monto: clp(this.minimo) });
     },
 
     get rapidas() {
@@ -240,13 +241,13 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
 
     get ayuda() {
         if (this.error) return this.error;
-        if (this.antesDeAbrir) return 'La puja abre en ' + this.hh + ':' + this.mm + ':' + this.ss + '.';
-        if (this.yoGanando) return 'Tienes la puja más alta: espera a que otro postor la supere.';
-        if (this.escrito > 0 && this.montoPuja < this.minimo) return 'La postura debe ser al menos ' + clp(this.minimo) + '.';
-        return 'Incremento mínimo ' + clp(this.paso) + '.' + (uf ? ' Referencia: ' + this.enUf(this.montoPuja) + '.' : '');
+        if (this.antesDeAbrir) return t('sala.ayuda_abre', { tiempo: this.hh + ':' + this.mm + ':' + this.ss });
+        if (this.yoGanando) return t('sala.ayuda_ganando');
+        if (this.escrito > 0 && this.montoPuja < this.minimo) return t('sala.ayuda_minimo', { monto: clp(this.minimo) });
+        return uf ? t('sala.ayuda_incremento_uf', { monto: clp(this.paso), uf: this.enUf(this.montoPuja) }) : t('sala.ayuda_incremento', { monto: clp(this.paso) });
     },
-    get placeholder() { return 'Mínimo ' + clp(this.minimo); },
-    get botonTexto() { return this.enviando ? 'Enviando…' : 'Pujar ' + clp(this.montoPuja); },
+    get placeholder() { return t('sala.placeholder', { monto: clp(this.minimo) }); },
+    get botonTexto() { return this.enviando ? t('sala.enviando') : t('sala.pujar', { monto: clp(this.montoPuja) }); },
 
     abrirModal() {
         this.error = '';
@@ -274,19 +275,19 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
                 this.monto = '';
                 if (cuerpo.mi_alias) this.miAlias = cuerpo.mi_alias;
             } else if (r.status === 422) {
-                this.error = cuerpo.mensaje || 'La puja fue rechazada.';
+                this.error = cuerpo.mensaje || t('sala.error.rechazada');
             } else if (r.status === 419) {
-                this.error = 'Tu sesión expiró. Recarga la página para seguir pujando.';
+                this.error = t('sala.error.sesion');
             } else if (r.status === 403) {
-                this.error = cuerpo.mensaje || cuerpo.message || 'No tienes acceso para pujar. Recarga la página.';
+                this.error = cuerpo.mensaje || cuerpo.message || t('sala.error.acceso');
             } else if (r.status === 429) {
-                this.error = 'Estás enviando pujas muy seguido. Espera unos segundos.';
+                this.error = t('sala.error.seguido');
             } else {
-                this.error = 'No pudimos confirmar tu puja. Revisa el historial: si no aparece, vuelve a intentarlo.';
+                this.error = t('sala.error.no_confirmada');
             }
             if (cuerpo.lote) this.mezclarResumen(cuerpo.lote);
         } catch (e) {
-            this.error = 'Sin conexión: no sabemos si la puja llegó. Revisa el historial antes de reintentar.';
+            this.error = t('sala.error.sin_conexion');
         } finally {
             this.enviando = false;
             this.modal = false;
@@ -314,29 +315,29 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
             const seg = Math.max(0, Math.floor((this.ahora - p.en_ms) / 1000));
             return {
                 monto: clp(p.monto),
-                postor: p.postor === this.miAlias ? p.postor + ' (tú)' : p.postor,
+                postor: p.postor === this.miAlias ? t('sala.postor_tu', { postor: p.postor }) : p.postor,
                 yo: p.postor === this.miAlias,
                 hora: new Date(p.en_ms).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour12: false }),
-                hace: seg < 60 ? 'hace ' + seg + ' seg' : seg < 3600 ? 'hace ' + Math.floor(seg / 60) + ' min' : 'hace ' + Math.floor(seg / 3600) + ' h',
+                hace: seg < 60 ? t('sala.hace_seg', { n: seg }) : seg < 3600 ? t('sala.hace_min', { n: Math.floor(seg / 60) }) : t('sala.hace_h', { n: Math.floor(seg / 3600) }),
             };
         });
     },
 
     get resultadoTitulo() {
-        if (this.retirado === 'cancelado') return 'Colliers canceló este remate';
-        if (this.retirado) return 'Este remate ya no está disponible';
-        if (!this.terminal) return 'Remate cerrado';
-        if (!this.hayPujas) return 'El remate se cerró sin posturas';
-        return this.yoGanando ? 'Te adjudicaste la propiedad' : 'Adjudicado a otro postor';
+        if (this.retirado === 'cancelado') return t('sala.resultado.cancelado_titulo');
+        if (this.retirado) return t('sala.resultado.no_disponible_titulo');
+        if (!this.terminal) return t('sala.resultado.cerrado_titulo');
+        if (!this.hayPujas) return t('sala.resultado.desierto_titulo');
+        return t(this.yoGanando ? 'sala.resultado.ganado_titulo' : 'sala.resultado.otro_titulo');
     },
     get resultadoTexto() {
-        if (this.retirado === 'cancelado') return 'No se reciben pujas. Tus remates y el estado de tu garantía están en «Mi cuenta».';
-        if (this.retirado) return 'Colliers retiró este remate: no se reciben pujas.';
-        if (!this.terminal) return 'Estamos confirmando la adjudicación con las posturas recibidas antes del cierre.';
-        if (!this.hayPujas) return 'No se registraron posturas sobre el precio base. La propiedad se publicará en un remate nuevo, con fecha y condiciones propias.';
+        if (this.retirado === 'cancelado') return t('sala.resultado.cancelado_texto');
+        if (this.retirado) return t('sala.resultado.no_disponible_texto');
+        if (!this.terminal) return t('sala.resultado.cerrado_texto');
+        if (!this.hayPujas) return t('sala.resultado.desierto_texto');
         // Neutro a propósito: qué pasa con la garantía (devolución o imputación) está pendiente con el cliente.
         return this.yoGanando
-            ? 'Precio final ' + clp(this.actual) + '. Colliers te contactará para la firma y el pago del saldo, según las bases del remate.'
-            : 'Precio final ' + clp(this.actual) + '. Colliers te informará sobre tu garantía según las bases del remate.';
+            ? t('sala.resultado.ganado_texto', { precio: clp(this.actual) })
+            : t('sala.resultado.otro_texto', { precio: clp(this.actual) });
     },
 });

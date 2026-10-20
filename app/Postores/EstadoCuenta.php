@@ -21,6 +21,9 @@ use Illuminate\Support\Collection;
  */
 class EstadoCuenta
 {
+    /** Estados de la garantía con etiqueta propia en «Mi cuenta» (lang/es/cuenta.php, «estados»). */
+    private const ESTADOS_GARANTIA = ['pendiente', 'en_revision', 'aprobada', 'rechazada'];
+
     public static function para(User $user, ?string $slug = null): array
     {
         $postor = $user->postor;
@@ -51,24 +54,28 @@ class EstadoCuenta
         $montoTexto = $garantia ? Formato::clp($garantia->monto) : '';
         $nombreRemate = $remate?->titulo ?? '';
 
-        $textos = [
-            'cuenta-revision' => ['CUENTA EN REVISIÓN', 'Estamos revisando tu registro', "Recibimos tus antecedentes. Un ejecutivo de Colliers los valida de forma manual y te informará por correo, normalmente dentro de {$horas} horas hábiles. Hasta entonces no puedes inscribirte en un remate.", '#25408f', 1, 'No iniciada'],
-            'cuenta-rechazada' => ['CUENTA NO APROBADA', 'No pudimos aprobar tu cuenta', 'Colliers revisó tus antecedentes y no aprobó la cuenta' . ($postor?->motivo_rechazo ? ': ' . $postor->motivo_rechazo : '.') . ' Escríbenos si quieres corregir algún dato.', '#8c0f22', 1, 'No iniciada'],
-            'cuenta-bloqueada' => ['CUENTA BLOQUEADA', 'Tu cuenta está bloqueada', 'No puedes inscribirte ni pujar mientras la cuenta esté bloqueada' . ($postor?->motivo_rechazo ? ' (' . $postor->motivo_rechazo . ')' : '') . '. Escríbenos para revisarlo.', '#8c0f22', 2, 'Bloqueada'],
-            'sin-inscripcion' => ['CUENTA APROBADA · SIN INSCRIPCIONES', 'Tu cuenta está aprobada', $modoUnico
-                ? 'Para pujar necesitas constituir la habilitación' . (Habilitacion::montoUnico() ? ' de ' . Formato::clp(Habilitacion::montoUnico()) : '') . ' por vale a la vista o transferencia: con ella quedas habilitado en todos los remates. Es un trámite externo a la plataforma, que Colliers revisa y aprueba.'
-                : 'Para pujar, inscríbete en un remate y constituye su garantía por vale a la vista o transferencia. Es un trámite externo a la plataforma: Colliers lo revisa y marca tu inscripción como aprobada o rechazada.', '#25408f', 2, 'Pendiente'],
-            'garantia-pendiente' => ['CUENTA APROBADA · GARANTÍA PENDIENTE', 'Tu cuenta está aprobada, falta la garantía', 'Para pujar debes constituir la garantía por vale a la vista o transferencia y enviarnos el comprobante. Es un trámite externo a la plataforma: Colliers lo revisa y marca tu inscripción como aprobada o rechazada.', '#25408f', 2, 'Pendiente'],
-            'garantia-revision' => ['GARANTÍA EN REVISIÓN', 'Recibimos tu comprobante de garantía', "Estamos verificando el comprobante. Te avisaremos por correo apenas quede aprobada, normalmente dentro de {$horas} horas hábiles; recién ahí se habilita la sala de pujas" . ($unica ? '.' : ' para este remate.'), '#16265a', 3, 'En revisión'],
-            'aprobada' => ['GARANTÍA APROBADA · HABILITADO PARA PUJAR', 'Estás habilitado para pujar', $unica
-                ? "Tu habilitación por {$montoTexto} fue aprobada: te sirve para todos los remates publicados. Podrás ingresar posturas en pesos cuando comience cada transmisión."
-                : "Tu garantía por {$montoTexto} fue aprobada para {$nombreRemate}. Podrás ingresar posturas en pesos cuando comience la transmisión del remate.", '#1c5330', 4, 'Aprobada'],
-            'remate-cancelado' => ['REMATE CANCELADO', 'Colliers canceló este remate', "El remate {$nombreRemate} fue cancelado"
-                . ($remate?->motivo_cancelacion ? ' (' . $remate->motivo_cancelacion . ')' : '') . ' y no se realizará. No se reciben pujas. '
-                . 'Si Colliers vuelve a rematar la propiedad, lo hará en un remate nuevo, con su propia inscripción. Tu garantía se rige por las bases del remate; escríbenos si tienes dudas.',
-                '#5b6572', 3, ['pendiente' => 'Pendiente', 'en_revision' => 'En revisión', 'aprobada' => 'Aprobada', 'rechazada' => 'Rechazada'][$garantia?->estado] ?? 'Pendiente'],
-            'rechazada' => ['GARANTÍA RECHAZADA', 'No pudimos validar tu garantía', 'Colliers no aprobó el comprobante' . ($garantia?->motivo_rechazo ? ': ' . $garantia->motivo_rechazo : '.') . ' Puedes corregirlo y volver a enviarlo antes del cierre de garantías, o escribirnos si crees que se trata de un error.', '#8c0f22', 2, 'Rechazada'],
-        ][$clave];
+        $b = fn (string $clave, array $marcadores = []) => __('cuenta.bandas.' . $clave, $marcadores);
+        $textos = match ($clave) {
+            'cuenta-revision' => [$b('cuenta_revision.etiqueta'), $b('cuenta_revision.titulo'), $b('cuenta_revision.texto', ['horas' => $horas]), '#25408f', 1, 'no_iniciada'],
+            'cuenta-rechazada' => [$b('cuenta_rechazada.etiqueta'), $b('cuenta_rechazada.titulo'), $postor?->motivo_rechazo
+                ? $b('cuenta_rechazada.texto_motivo', ['motivo' => $postor->motivo_rechazo]) : $b('cuenta_rechazada.texto'), '#8c0f22', 1, 'no_iniciada'],
+            'cuenta-bloqueada' => [$b('cuenta_bloqueada.etiqueta'), $b('cuenta_bloqueada.titulo'), $postor?->motivo_rechazo
+                ? $b('cuenta_bloqueada.texto_motivo', ['motivo' => $postor->motivo_rechazo]) : $b('cuenta_bloqueada.texto'), '#8c0f22', 2, 'bloqueada'],
+            'sin-inscripcion' => [$b('sin_inscripcion.etiqueta'), $b('sin_inscripcion.titulo'), $modoUnico
+                ? (Habilitacion::montoUnico() ? $b('sin_inscripcion.texto_unica_monto', ['monto' => Formato::clp(Habilitacion::montoUnico())]) : $b('sin_inscripcion.texto_unica'))
+                : $b('sin_inscripcion.texto'), '#25408f', 2, 'pendiente'],
+            'garantia-pendiente' => [$b('garantia_pendiente.etiqueta'), $b('garantia_pendiente.titulo'), $b('garantia_pendiente.texto'), '#25408f', 2, 'pendiente'],
+            'garantia-revision' => [$b('garantia_revision.etiqueta'), $b('garantia_revision.titulo'), $b($unica ? 'garantia_revision.texto_unica' : 'garantia_revision.texto', ['horas' => $horas]), '#16265a', 3, 'en_revision'],
+            'aprobada' => [$b('aprobada.etiqueta'), $b('aprobada.titulo'), $unica
+                ? $b('aprobada.texto_unica', ['monto' => $montoTexto])
+                : $b('aprobada.texto', ['monto' => $montoTexto, 'remate' => $nombreRemate]), '#1c5330', 4, 'aprobada'],
+            'remate-cancelado' => [$b('remate_cancelado.etiqueta'), $b('remate_cancelado.titulo'), $remate?->motivo_cancelacion
+                ? $b('remate_cancelado.texto_motivo', ['remate' => $nombreRemate, 'motivo' => $remate->motivo_cancelacion])
+                : $b('remate_cancelado.texto', ['remate' => $nombreRemate]),
+                '#5b6572', 3, in_array($garantia?->estado, self::ESTADOS_GARANTIA, true) ? $garantia->estado : 'pendiente'],
+            'rechazada' => [$b('rechazada.etiqueta'), $b('rechazada.titulo'), $garantia?->motivo_rechazo
+                ? $b('rechazada.texto_motivo', ['motivo' => $garantia->motivo_rechazo]) : $b('rechazada.texto'), '#8c0f22', 2, 'rechazada'],
+        };
 
         // Solo la habilitación ÚNICA aprobada sirve para todos los remates.
         $habilitadoEnTodos = $modoUnico && $unica && $garantia?->estado === Garantia::ESTADO_APROBADA;
@@ -92,9 +99,9 @@ class EstadoCuenta
                 'garantia' => $garantia ? [
                     'id' => $garantia->id,
                     'monto' => $montoTexto,
-                    'plazo' => $unica ? 'Sin plazo: vale para todos los remates'
-                        : ($remate->cierre_garantias_en ? Formato::fechaCorta($remate->cierre_garantias_en, $ahora) : 'Hasta el inicio'),
-                    'medio' => ['vale_vista' => 'vale a la vista', 'transferencia' => 'transferencia'][$garantia->medio] ?? null,
+                    'plazo' => $unica ? __('cuenta.garantia.plazo_unica')
+                        : ($remate->cierre_garantias_en ? Formato::fechaCorta($remate->cierre_garantias_en, $ahora) : __('cuenta.garantia.plazo_inicio')),
+                    'medio' => in_array($garantia->medio, ['vale_vista', 'transferencia'], true) ? __('cuenta.garantia.medios.' . $garantia->medio) : null,
                     'recibido' => $garantia->comprobante_subido_en ? Formato::fecha($garantia->comprobante_subido_en, $ahora) : null,
                     'aprobada' => $garantia->estado === Garantia::ESTADO_APROBADA && $garantia->revisado_en ? Formato::fecha($garantia->revisado_en, $ahora) : null,
                     'comprobante' => $garantia->tieneComprobante() ? route('cuenta.comprobante', $garantia) : null,
@@ -103,7 +110,7 @@ class EstadoCuenta
                 'banco' => self::banco(),
                 'inscripciones' => $garantias->map(fn (Garantia $g) => [
                     'titulo' => $g->remate->titulo, 'folio' => $g->remate->folio,
-                    'estado' => ['pendiente' => 'Pendiente', 'en_revision' => 'En revisión', 'aprobada' => 'Aprobada', 'rechazada' => 'Rechazada'][$g->estado] ?? $g->estado,
+                    'estado' => in_array($g->estado, self::ESTADOS_GARANTIA, true) ? __('cuenta.estados.' . $g->estado) : $g->estado,
                     'url' => route('cuenta.estado', ['remate' => $g->remate->slug]),
                     'actual' => $garantia?->id === $g->id,
                 ])->all(),
@@ -157,7 +164,7 @@ class EstadoCuenta
             ->sortBy(fn (Remate $r) => $r->abreEn()?->getTimestamp())->take(5)
             ->map(fn (Remate $r) => [
                 'titulo' => $r->titulo, 'folio' => $r->folio, 'fecha' => Formato::fecha($r->abreEn(), $ahora),
-                'garantia' => Formato::clp(Habilitacion::montoUnico() ?? 0) . ' (habilitación única)',
+                'garantia' => __('cuenta.garantia.monto_unica', ['monto' => Formato::clp(Habilitacion::montoUnico() ?? 0)]),
                 'url' => route('remates.show', $r->slug), 'inscribir' => route('cuenta.inscribirme', $r->slug),
             ])->values()->all();
     }
@@ -171,20 +178,22 @@ class EstadoCuenta
         return filled($datos['banco_numero_cuenta']) && filled($datos['banco_titular']) ? $datos->all() : null;
     }
 
+    /** $garantia: clave del estado de la garantía (no_iniciada, pendiente, en_revision, aprobada, rechazada, bloqueada). */
     private static function armar(string $clave, string $etiqueta, string $titulo, string $texto, string $fondo, int $etapa, string $garantia): array
     {
         $tonoGarantia = match ($garantia) {
-            'Rechazada', 'Bloqueada' => 'rojo',
-            'En revisión' => 'azul',
-            'Pendiente' => 'ambar',
+            'rechazada', 'bloqueada' => 'rojo',
+            'en_revision' => 'azul',
+            'pendiente' => 'ambar',
             default => 'neutro',
         };
+        $etiquetaGarantia = __('cuenta.estados.' . $garantia);
         $cuentaRechazada = in_array($clave, ['cuenta-rechazada', 'cuenta-bloqueada'], true);
         $pasos = [
-            ['titulo' => 'Registro enviado', 'texto' => 'Datos personales y documentos recibidos.', 'chip' => 'Completado'],
-            ['titulo' => 'Cuenta aprobada', 'texto' => 'Revisión manual de antecedentes por Colliers.', 'chip' => $clave === 'cuenta-rechazada' ? 'Rechazada' : ($clave === 'cuenta-bloqueada' ? 'Bloqueada' : ($etapa >= 2 ? 'Aprobada' : 'En revisión'))],
-            ['titulo' => 'Garantía constituida', 'texto' => 'Vale a la vista o transferencia, fuera de la plataforma.', 'chip' => $garantia],
-            ['titulo' => 'Habilitado para pujar', 'texto' => 'Se activa la sala de pujas del remate inscrito.', 'chip' => $clave === 'remate-cancelado' ? 'Remate cancelado' : ($etapa >= 4 ? 'Habilitado' : 'Bloqueado')],
+            ['titulo' => __('cuenta.pasos.registro.titulo'), 'texto' => __('cuenta.pasos.registro.texto'), 'chip' => __('cuenta.estados.completado')],
+            ['titulo' => __('cuenta.pasos.cuenta.titulo'), 'texto' => __('cuenta.pasos.cuenta.texto'), 'chip' => __('cuenta.estados.' . ($clave === 'cuenta-rechazada' ? 'rechazada' : ($clave === 'cuenta-bloqueada' ? 'bloqueada' : ($etapa >= 2 ? 'aprobada' : 'en_revision'))))],
+            ['titulo' => __('cuenta.pasos.garantia.titulo'), 'texto' => __('cuenta.pasos.garantia.texto'), 'chip' => $etiquetaGarantia],
+            ['titulo' => __('cuenta.pasos.habilitado.titulo'), 'texto' => __('cuenta.pasos.habilitado.texto'), 'chip' => __('cuenta.estados.' . ($clave === 'remate-cancelado' ? 'remate_cancelado' : ($etapa >= 4 ? 'habilitado' : 'bloqueado')))],
         ];
         foreach ($pasos as $i => &$paso) {
             $n = $i + 1;
@@ -199,11 +208,9 @@ class EstadoCuenta
 
         return [
             'clave' => $clave, 'etiqueta' => $etiqueta, 'titulo' => $titulo, 'texto' => $texto, 'fondo' => $fondo, 'etapa' => $etapa,
-            'garantia' => $garantia, 'tonoGarantia' => $tonoGarantia, 'pasos' => $pasos, 'habilitado' => $habilitado,
-            'tituloLateral' => $habilitado ? 'TU PRÓXIMO REMATE' : 'MIENTRAS TANTO',
-            'textoLateral' => $habilitado
-                ? 'Accesos directos a la sala de pujas, al catálogo y a los antecedentes de la propiedad en la que estás inscrito.'
-                : 'Puedes revisar el catálogo de remates y los antecedentes de cada propiedad. La sala de pujas se habilita solo con la garantía aprobada.',
+            'garantia' => $etiquetaGarantia, 'tonoGarantia' => $tonoGarantia, 'pasos' => $pasos, 'habilitado' => $habilitado,
+            'tituloLateral' => __($habilitado ? 'cuenta.lateral.titulo_habilitado' : 'cuenta.lateral.titulo'),
+            'textoLateral' => __($habilitado ? 'cuenta.lateral.texto_habilitado' : 'cuenta.lateral.texto'),
         ];
     }
 }

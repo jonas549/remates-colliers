@@ -19,7 +19,7 @@ class Rol
 
         if ($user === null) {
             return $request->expectsJson()
-                ? response()->json(['message' => 'No autenticado.'], 401)
+                ? response()->json(['message' => __('acceso.mensajes.no_autenticado')], 401)
                 : redirect()->guest(route(array_intersect($roles, [User::ROL_ADMIN, User::ROL_MARTILLERO]) ? 'admin.ingresar' : 'login'));
         }
 

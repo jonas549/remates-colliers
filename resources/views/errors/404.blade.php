@@ -1,1 +1,1 @@
-<x-pagina-error codigo="404" titulo="No encontramos esta página" mensaje="El remate o la página que buscas no existe o ya no está publicada. Si llegaste desde un enlace, puede que el remate haya cerrado." />
+<x-pagina-error codigo="404" :titulo="__('errores.404.titulo')" :mensaje="__('errores.404.mensaje')" />
