@@ -197,6 +197,25 @@ return [
     |
     */
 
-    'attributes' => [],
+    // Same fields as lang/es/validation.php (public site in English, 20/10).
+    'attributes' => [
+        'name' => 'name',
+        'nombres' => 'first names',
+        'apellidos' => 'last names',
+        'email' => 'email',
+        'password' => 'password',
+        'password_confirmation' => 'password confirmation',
+        'current_password' => 'current password',
+        'rut' => 'RUT',
+        'telefono' => 'phone',
+        'direccion' => 'address',
+        'comuna' => 'district (comuna)',
+        'region' => 'region',
+        'fecha_nacimiento' => 'date of birth',
+        'razon_social' => 'company name',
+        'rut_empresa' => 'company RUT',
+        'clave' => 'password',
+        'monto' => 'amount',
+    ],
 
 ];

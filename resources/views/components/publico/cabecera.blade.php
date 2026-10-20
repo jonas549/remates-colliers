@@ -25,7 +25,7 @@
         <div class="pub-cabecera__derecha">
             <a href="{{ route('remates.index') }}#buscar" class="pub-cabecera__buscar" aria-label="{{ __('sitio.cabecera.buscar') }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></a>
             {{-- Conmutador (20/10): el idioma activo va resaltado (span) y el otro es el enlace a la misma página en ese idioma. --}}
-            <span class="pub-cabecera__idioma">@if ($ingles)<span>EN</span> / <a href="{{ \App\Support\Idioma::urlConmutador('es') }}" hreflang="es" lang="es">ES</a>@else<a href="{{ \App\Support\Idioma::urlConmutador('en') }}" hreflang="en" lang="en">EN</a> / <span>ES</span>@endif</span>
+            <x-publico.idioma />
             @if ($logueado)
                 @if ($panel)<a href="{{ route('admin.dashboard') }}" class="pub-cabecera__panel">{{ __('sitio.cabecera.panel_colliers') }}</a>@endif
                 @if ($cuenta)<a href="{{ route('cuenta.estado') }}" class="pub-cabecera__acceso">{{ __('sitio.cabecera.mi_cuenta') }}</a>@else<a href="{{ route('admin.dashboard') }}" class="pub-cabecera__acceso">{{ __('sitio.cabecera.panel') }}</a>@endif

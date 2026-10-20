@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import { clp, dos } from './formato';
-import { t } from './textos';
+import { alias, locale, t } from './textos';
 
 const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 
@@ -161,7 +161,7 @@ export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estad
     },
 
     get pujaEnUf() {
-        return this.precio && uf ? 'UF ' + (this.precio / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }) : '—';
+        return this.precio && uf ? 'UF ' + (this.precio / uf).toLocaleString(locale(), { maximumFractionDigits: 0 }) : '—';
     },
 
     get haceUltima() {
@@ -171,8 +171,8 @@ export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estad
     get historial() {
         return this.pujas.map((p) => ({
             monto: clp(p.monto),
-            postor: p.postor,
-            hora: new Date(p.en_ms).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour12: false }),
+            postor: alias(p.postor, 'remate'),
+            hora: new Date(p.en_ms).toLocaleTimeString(locale(), { timeZone: 'America/Santiago', hourCycle: 'h23' }),
             hace: t('remate.hace', { tiempo: reloj(Math.floor((this.ahora - p.en_ms) / 1000)) }),
         }));
     },

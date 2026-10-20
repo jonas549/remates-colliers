@@ -1,6 +1,7 @@
-// Formatos compartidos por las pantallas (idénticos a los del prototipo).
+// Formatos compartidos por las pantallas (idénticos a los del prototipo). En inglés, miles con coma (20/10).
+import { locale } from './textos';
 
-export const clp = (n) => '$' + Math.round(n).toLocaleString('es-CL');
+export const clp = (n) => '$' + Math.round(n).toLocaleString(locale());
 
 export const dos = (n) => String(n).padStart(2, '0');
 

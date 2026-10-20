@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-10-20** (sitio público en inglés: mecanismo y cadenas migradas; falta escribir el inglés).
+> **Registro vivo del avance.** Última actualización: **2026-10-20** (sitio público en inglés completo en local; falta que Jonas revise el glosario y las cadenas dudosas).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -26,7 +26,7 @@ nota *(verifica Jonas en el sandbox)*.
 | G | Postores | **Completo** | 6/6 |
 | H | Garantías | En progreso | 10/12 |
 | M | Notificaciones | En progreso | 8/9 |
-| N | Sitio público | En progreso | 16/18 |
+| N | Sitio público | En progreso | 20/21 |
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 7/8 |
@@ -67,9 +67,9 @@ prueba en el sandbox pendiente de Jonas (plan en `docs/progreso/2026-09-21.md` �
 (detalle en `docs/progreso/2026-10-18.md`). Siguiente: lo que salga del sandbox → L (streaming) → resto de E/F → P → Q → R → S.
 OPcache sigue apagado en el sandbox: el camino de la puja y la presencia no ejecutan Laravel donde no hace falta
 (`docs/RENDIMIENTO-SIN-OPCACHE.md`).
-**20/10: sitio público en inglés** (ver N). Listos el mecanismo `/en` y la migración de las cadenas a `lang/es/` sin cambiar
-el español. Falta escribir el inglés, los formatos de fecha y monto por idioma, los documentos «(in Spanish)» y que Jonas
-revise el glosario. Todo local y sin push.
+**20/10: sitio público en inglés** (ver N), completo en local y sin push: mecanismo `/en`, 886 cadenas en `lang/es` y
+`lang/en`, formatos por idioma, conmutador en todas las cabeceras públicas y documentos «(in Spanish)». Falta que Jonas
+revise el glosario y las cadenas dudosas, y que el cliente confirme la línea de la versión que rige.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -392,7 +392,12 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - **Sitio público en inglés** *(pedido de Jonas, 20/10: solo el exterior; el panel, los correos y el modelo de datos no cambian)*
   - [x] **Mecanismo:** idioma por prefijo (`/en/…`, el español sin prefijo). Las rutas públicas y las de Fortify se registran dos veces (`routes/web.php`, nombres `en.x`) y `App\Support\UrlLocalizada` hace que `route('x')` dé la del idioma actual, así que vistas, redirecciones y Fortify no cambian. El middleware global `EstablecerIdioma` toma el idioma de la URL, también en los errores sin ruta. Conmutador EN / ES (el activo resaltado; en el menú móvil, «English»/«Español») por `/idioma/{es|en}?a=…`: misma página y consulta, guarda la cookie `idioma`, nunca lleva a otro sitio. La cookie solo actúa al entrar por la portada `/`. `lang` y `hreflang` (es, en, x-default) en el `<head>` del sitio público. Los correos salen siempre en español y con enlaces en español (`User::preferredLocale()`, `AvisoColliers::$locale`). La puja por `/en` conserva el reintento de conexión *(`IdiomaTest`, 9 pruebas)*
   - [x] **Cadenas migradas a `lang/es/`** sin cambiar el español: 886 textos en `sitio`, `listado`, `remate`, `sala`, `cuenta`, `acceso`, `errores` y `catalogo`. Los del JavaScript van por `t()` (`resources/js/modulos/textos.js`) desde un bloque JSON del layout. Lo que es dato (tipos, ocupación, estados, opciones del registro) se guarda igual y solo se traduce al mostrarlo. Verificado: foto del HTML de 322 páginas y respuestas antes y después (solo cambian el bloque JSON, los `value` de las opciones del registro y espacios), 196 pruebas, y los recorridos de los tres roles, la sala real, la cuenta, los filtros, el listado, el registro y el ingreso en navegador
-  - [ ] Inglés (`lang/en/`), fechas y montos con formato de cada idioma (siempre hora de Santiago), «(in Spanish)» en los documentos y la línea de «la versión en español rige» como cadena de idioma (texto a confirmar con el cliente)
+  - [x] **Inglés escrito** (`lang/en/`, las 886 cadenas, con el glosario aprobado). Inglés neutro; errores y rechazos de puja cortos y directos. No se traducen regiones, comunas, direcciones ni lo que carga el administrador (título, descripción, ficha, condiciones de la garantía, datos bancarios, motivos), ni los asuntos de los `mailto` a Colliers *(Jonas, 20/10)*
+  - [x] **Formatos por idioma** (`App\Support\Formato`, `formato.js`): en inglés, miles con coma (`$142,000,000`), fechas con el mes en letras («9 Sep 2026, 12:00»), 24 h y «(Santiago time)». El español no cambia; el panel y los correos siguen en español. Tipo de propiedad y ocupación se traducen al mostrarlos (el dato guardado no cambia). «Postor #N» se muestra como «Bidder #N» (el JSON público no cambia). En español, los rechazos dicen «(hora de Santiago)» en vez de «(hora de Chile)» *(Jonas, 20/10)*
+  - [x] **Conmutador también en las cabeceras de ingreso, registro, mi cuenta, errores y la sala** *(Jonas, 20/10)*: la misma pieza del diseño (`x-publico.idioma`). El idioma que no está activo va en el gris del diseño y tiene área táctil de 44 px bajo 1120
+  - [x] **Documentos «(in Spanish)»** en la ficha y en los enlaces a las bases. La línea «la versión en español es la que rige» es la cadena `remate.documentos.version_que_rige` (inglés; vacía en español): Jonas confirma el texto con el cliente
+  - Verificado: 200 pruebas (`IdiomaTest`: montos, fechas, alias, documentos, conmutador, ninguna clave sin traducir). La foto del HTML en español solo cambia en el conmutador y en «hora de Santiago». La foto en inglés no tiene claves sin traducir ni montos con formato chileno. `tools/comparar/ingles.mjs` a 375, 768 y 1440 px: sin desborde, táctiles ≥ 44, conmutador de ida y vuelta, ingreso por `/en` y sala. Recorrido de los tres roles en español OK. La sala a 1440 sigue 1:1 (0,05 %); ingreso y listado sin cambio frente al commit anterior al idioma (la diferencia con el prototipo es la de siempre: fotos y datos)
+  - Corregido de paso: el nombre del postor en la cabecera de la sala medía 22 px de alto en tablet (ya pasaba en español)
   - [ ] Lista de términos del negocio revisada por Jonas (glosario base aprobado el 20/10)
 
 ## L — Streaming · Pendiente

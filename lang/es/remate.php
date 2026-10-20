@@ -185,6 +185,9 @@ return [
         'en_preparacion' => 'Documentos en preparación',
         'pidelos' => 'Pídelos a Colliers',
         'nota' => 'Los antecedentes legales completos se entregan a los postores con garantía aprobada.',
+        // Solo en inglés (20/10): los documentos están en español. Vacíos aquí a propósito.
+        'idioma' => '',
+        'version_que_rige' => '',
     ],
 
     'ayuda' => [
@@ -203,6 +206,7 @@ return [
 
     // detalle.js
     'js' => [
+        'alias' => 'Postor #:n',
         'seg' => ':n seg',
         'min' => ':n min',
         'h' => ':n h',

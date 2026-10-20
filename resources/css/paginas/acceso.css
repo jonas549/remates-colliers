@@ -23,6 +23,11 @@
 .acceso__cabecera {
   border-bottom: 1px solid #dbe1ec;
   padding: 22px 48px;
+  /* Logo a la izquierda y el conmutador EN / ES a la derecha (20/10). */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 .acceso__logo { height: 46px; width: auto; display: block; }
 
@@ -216,7 +221,7 @@
   .acceso__contacto button { display: inline-block; padding: 12px 0; margin: -12px 0; }
   .acceso__recordar { padding: 11px 0; margin: -11px 0; }
   .acceso__ver-clave { padding: 14px 4px; bottom: 6px; }
-  .acceso__cabecera a { display: block; width: fit-content; padding: 4px 0; margin: -4px 0; }
+  .acceso__cabecera > a { display: block; width: fit-content; padding: 4px 0; margin: -4px 0; }
 }
 
 @media (max-width: 759.98px) {

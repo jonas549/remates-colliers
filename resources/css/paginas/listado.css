@@ -245,6 +245,8 @@
   .listado__uf-divisor { display: none; }
   .listado__hero-interior { padding: 28px 20px; }
   .listado__hero-titulo { font-size: 26px; }
+  /* En inglés la fecha lleva «(Santiago time)»: en el celular puede pasar a dos líneas en vez de desbordar (20/10). */
+  .listado__hero-dato { white-space: normal; }
   .listado__caja-tiempo { padding: 10px 12px; min-width: 66px; }
   .listado__digito { font-size: 26px; }
   .listado__hero-cta, .listado__hero-cta2 { display: block; width: 100%; box-sizing: border-box; text-align: center; }

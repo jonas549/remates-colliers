@@ -116,6 +116,58 @@ class IdiomaTest extends TestCase
         $this->assertSame('es', (new \App\Notifications\RemateNuevoAviso(Remate::first()))->locale);
     }
 
+    public function test_las_paginas_en_ingles_no_dejan_claves_sin_traducir(): void
+    {
+        $postor = User::where('email', 'mpgonzalez@correo.test')->first();
+        $paginas = ['/en', '/en/remates/militares', '/en/remates/apoquindo', '/en/remates/sanmartin', '/en/ingresar', '/en/registro', '/en/recuperar-clave', '/en/no-existe'];
+        foreach ($paginas as $url) {
+            $html = $this->get($url)->getContent();
+            $this->assertDoesNotMatchRegularExpression('/>[^<]*\b(sitio|listado|remate|sala|cuenta|acceso|errores|catalogo|formato)\.[a-z_]+\.[a-z_]+/', $html, $url);
+            $this->assertStringContainsString('<html lang="en"', $html, $url);
+        }
+        foreach (['/en/mi-cuenta', '/en/remates/apoquindo/sala'] as $url) {
+            $html = $this->actingAs($postor)->get($url)->assertOk()->getContent();
+            $this->assertDoesNotMatchRegularExpression('/>[^<]*\b(sitio|listado|remate|sala|cuenta|acceso|errores|catalogo|formato)\.[a-z_]+\.[a-z_]+/', $html, $url);
+        }
+    }
+
+    public function test_en_ingles_montos_fechas_y_datos_van_en_su_formato(): void
+    {
+        $postor = User::where('email', 'mpgonzalez@correo.test')->first();
+
+        // Miles con coma, hora de Santiago explícita, tipo y ocupación traducidos al mostrarlos.
+        $this->get('/en/remates/militares')->assertOk()->assertSee('$142,000,000')->assertDontSee('$142.000.000')
+            ->assertSee('(Santiago time)')->assertSee('Apartment')->assertSee('Vacant');
+        $this->get('/remates/militares')->assertOk()->assertSee('$142.000.000')->assertDontSee('Santiago time')->assertSee('Departamento');
+
+        // El alias del feed y la cabecera de la sala, en el idioma de la página.
+        $this->actingAs($postor)->get('/en/remates/apoquindo/sala')->assertOk()->assertSee('· Bidder #1')->assertDontSee('· Postor #1'); // en el JSON de datos sigue «Postor #N»
+        $this->actingAs($postor)->get('/remates/apoquindo/sala')->assertOk()->assertSee('· Postor #1');
+    }
+
+    public function test_el_conmutador_esta_en_las_cabeceras_sin_menu(): void
+    {
+        $postor = User::where('email', 'mpgonzalez@correo.test')->first();
+        foreach (['/ingresar', '/registro'] as $url) {
+            $this->get($url)->assertSee('pub-cabecera__idioma--siempre', false);
+        }
+        foreach (['/mi-cuenta', '/remates/apoquindo/sala'] as $url) {
+            $this->actingAs($postor)->get($url)->assertSee('pub-cabecera__idioma--siempre', false)
+                ->assertSee('href="' . e(route('idioma.cambiar', ['idioma' => 'en', 'a' => $url])) . '"', false);
+        }
+    }
+
+    public function test_los_documentos_se_marcan_en_espanol_solo_en_ingles(): void
+    {
+        $remate = Remate::where('slug', 'militares')->firstOrFail();
+        \App\Models\Documento::create(['remate_id' => $remate->id, 'titulo' => 'Bases del remate', 'nombre_original' => 'bases.pdf',
+            'ruta' => 'documentos/bases.pdf', 'publico' => true, 'tamano_bytes' => 2048]);
+
+        $this->get('/en/remates/militares')->assertSee('Bases del remate (in Spanish)')
+            ->assertSee(__('remate.documentos.version_que_rige', [], 'en'));
+        $this->get('/remates/militares')->assertSee('Bases del remate')->assertDontSee('(in Spanish)');
+    }
+
     public function test_la_puja_tambien_entra_por_en(): void
     {
         $remate = Remate::where('slug', 'apoquindo')->firstOrFail();

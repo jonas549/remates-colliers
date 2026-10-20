@@ -13,8 +13,11 @@
 .pub-cabecera__links a.es-actual { color: #25408f; font-weight: 700; padding-bottom: 4px; border-bottom: 2px solid #25408f; }
 .pub-cabecera__derecha { margin-left: auto; display: flex; align-items: center; gap: 16px; font-size: 13px; color: #5b6572; }
 .pub-cabecera__buscar { display: flex; }
-.pub-cabecera__idioma { letter-spacing: 0.06em; white-space: nowrap; }
+.pub-cabecera__idioma { letter-spacing: 0.06em; white-space: nowrap; font-size: 13px; color: #5b6572; }
 .pub-cabecera__idioma span { color: #25408f; font-weight: 700; }
+/* El idioma que no está activo es el enlace (20/10): mismo gris que el texto del diseño, no el azul de los enlaces. */
+.pub-cabecera__idioma a { color: inherit; }
+.pub-cabecera__idioma a:hover { color: #25408f; }
 .pub-cabecera__panel { background: #16265a; color: #ffffff; padding: 9px 16px; font-weight: 700; font-size: 14px; white-space: nowrap; }
 .pub-cabecera__acceso { border: 1px solid #25408f; color: #25408f; padding: 8px 16px; font-weight: 600; font-size: 14px; white-space: nowrap; }
 .pub-cabecera__menu-boton { display: none; }
@@ -70,6 +73,7 @@
   .pub-garantia__accion { padding-block: 12px; margin-block: -12px; }
   .pub-pie__links a, .pub-pie__abajo > a { padding-block: 12px; margin-block: -12px; }
   .pub-pie__sociales a { min-width: 44px; min-height: 44px; align-items: center; justify-content: center; margin: -11px; }
+  .pub-cabecera__idioma a { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; margin: -14px -12px; }
 }
 
 /* ── Móvil (< 760) ───────────────────────────────────────────────────────────────── */
@@ -77,7 +81,8 @@
   .pub-cabecera__nav { padding: 0 20px; height: 64px; }
   .pub-cabecera__logo { height: 36px; }
   .pub-cabecera__nav > a { padding: 4px 0; margin: -4px 0; }
-  .pub-cabecera__idioma, .pub-cabecera__panel, .pub-cabecera__acceso { display: none; }
+  /* En la cabecera pública el idioma pasa al menú ☰; en las cabeceras sin menú (ingreso, registro, cuenta, sala) se queda. */
+  .pub-cabecera__idioma:not(.pub-cabecera__idioma--siempre), .pub-cabecera__panel, .pub-cabecera__acceso { display: none; }
   .pub-garantia__interior { padding: 12px 20px; }
 
   .pub-pie__arriba { padding: 28px 20px; gap: 20px; align-items: flex-start; flex-direction: column; }

@@ -5,6 +5,7 @@
         <span class="tramite-cabecera__separador"></span>
         <div class="tramite-cabecera__etiqueta">{{ $etiqueta }}</div>
         <div class="tramite-cabecera__acciones">
+            <x-publico.idioma class="pub-cabecera__idioma--siempre" />
             {{ $slot }}
         </div>
     </div>

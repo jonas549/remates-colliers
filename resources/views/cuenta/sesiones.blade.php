@@ -40,7 +40,7 @@
             @foreach ($sesiones as $sesion)
                 {{-- --clave: da el punto de referencia al botón CERRAR, igual que MOSTRAR en el Login. --}}
                 <div class="acceso__campo acceso__campo--clave">
-                    <span class="acceso__etiqueta">{{ $sesion->actual ? __('cuenta.sesiones.este_dispositivo') : __('cuenta.sesiones.ultima_actividad', ['fecha' => $sesion->ultima_actividad->setTimezone($zona)->format('d-m-Y H:i')]) }}</span>
+                    <span class="acceso__etiqueta">{{ $sesion->actual ? __('cuenta.sesiones.este_dispositivo') : __('cuenta.sesiones.ultima_actividad', ['fecha' => $sesion->ultima_actividad->setTimezone($zona)->format(\App\Support\Idioma::esIngles() ? 'j M Y H:i' : 'd-m-Y H:i') . \App\Support\Formato::zona()]) }}</span>
                     <span class="acceso__input">{{ $navegador($sesion->navegador) }} · {{ $sesion->ip }}</span>
                     @unless ($sesion->actual)
                         <form method="POST" action="{{ route('cuenta.sesiones.cerrar', $sesion->id) }}" class="formulario-en-linea">

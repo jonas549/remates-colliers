@@ -9,6 +9,7 @@
         <div class="acceso__columna">
             <div class="acceso__cabecera">
                 <a href="{{ route('remates.index') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="acceso__logo"></a>
+                <x-publico.idioma class="pub-cabecera__idioma--siempre" />
             </div>
 
             <div class="acceso__contenido" @if ($alpine) x-data="{{ $alpine }}" @endif>

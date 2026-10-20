@@ -164,6 +164,8 @@
   .sala-soporte__enlaces a { display: inline-block; width: fit-content; padding-block: 12px; margin-block: -12px; }
   .sala__antecedentes { padding-block: 13px; }
   .sala-cabecera__nav > a { padding: 15px 0; margin: -15px 0; }
+  /* El nombre que lleva a «Mi cuenta» medía 22 px de alto en tablet (visto el 20/10). */
+  .sala-cabecera__usuario--enlace { display: inline-block; padding-block: 12px; margin-block: -12px; }
 
   /* Espacio para la barra fija */
   .sala { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }

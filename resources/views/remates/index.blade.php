@@ -58,7 +58,7 @@
                 <div class="listado__uf">
                     <div>
                         <div class="listado__uf-etiqueta">{{ __('listado.encabezado.uf_etiqueta') }}</div>
-                        <div class="listado__uf-valor">{{ $uf['valor'] ? '$' . number_format($uf['valor'], 2, ',', '.') : '—' }}</div>
+                        <div class="listado__uf-valor">{{ $uf['valor'] ? '$' . (\App\Support\Idioma::esIngles() ? number_format($uf['valor'], 2, '.', ',') : number_format($uf['valor'], 2, ',', '.')) : '—' }}</div>
                         <div class="listado__uf-fecha">{{ $uf['fecha'] ? Formato::fechaLarga(\Carbon\CarbonImmutable::parse($uf['fecha'], Formato::ZONA)) : __('listado.encabezado.uf_sin_valor') }}</div>
                     </div>
                     <div class="listado__uf-divisor"></div>
@@ -73,7 +73,7 @@
                 <div>
                     <div class="listado__hero-chip">{{ $hero['enVivo'] ? __('listado.hero.en_vivo') : __('listado.hero.proximo') }}</div>
                     <h2 class="listado__hero-titulo">{{ $hero['direccion'] }}</h2>
-                    <div class="listado__hero-meta">{{ collect([trim($hero['comuna'] . ', ' . $hero['region'], ', '), $hero['tipo'], $hero['sup'] ? __('listado.hero.superficie', ['sup' => Formato::numero($hero['sup'], 2)]) : null, $hero['dorm'] ? __('listado.hero.dorm_banos', ['dorm' => $hero['dorm'], 'banos' => $hero['banos']]) : null, $hero['ocupacion']])->filter()->join(' · ') }}</div>
+                    <div class="listado__hero-meta">{{ collect([trim($hero['comuna'] . ', ' . $hero['region'], ', '), \App\Publico\Catalogo::etiquetaTipo($hero['tipo']), $hero['sup'] ? __('listado.hero.superficie', ['sup' => Formato::numero($hero['sup'], 2)]) : null, $hero['dorm'] ? __('listado.hero.dorm_banos', ['dorm' => $hero['dorm'], 'banos' => $hero['banos']]) : null, \App\Publico\Catalogo::etiquetaOcupacion($hero['ocupacion'])])->filter()->join(' · ') }}</div>
                     <div class="listado__contador">
                         @foreach (['d' => __('listado.hero.dias'), 'h' => __('listado.hero.horas'), 'm' => __('listado.hero.min'), 's' => __('listado.hero.seg')] as $parte => $etiqueta)
                             <div class="listado__caja-tiempo">
@@ -191,7 +191,7 @@
                             <summary>{{ __('listado.filtros.tipo') }} <span x-text="abierto ? '–' : '+'">+</span></summary>
                             <div class="listado__opciones">
                                 @foreach ($tipos as $tipo)
-                                    <label class="listado__opcion"><input type="checkbox" value="{{ $tipo }}" x-model="extra.tipo" @change="marcarExtra('tipo')">{{ $tipo }}</label>
+                                    <label class="listado__opcion"><input type="checkbox" value="{{ $tipo }}" x-model="extra.tipo" @change="marcarExtra('tipo')">{{ \App\Publico\Catalogo::etiquetaTipo($tipo) }}</label>
                                 @endforeach
                             </div>
                         </details>

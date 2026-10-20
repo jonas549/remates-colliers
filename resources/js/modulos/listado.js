@@ -1,5 +1,5 @@
 import { clp, cuentaRegresiva, partes, dos } from './formato';
-import { t } from './textos';
+import { etiquetaDato, idioma, t } from './textos';
 
 // El estado del catálogo («En vivo», «Próximo», «Cerrado») es un dato del filtro: se traduce solo al mostrarlo.
 const CLAVE_ESTADO = { 'En vivo': 'en_vivo', 'Próximo': 'proximo', 'Cerrado': 'cerrado' };
@@ -144,10 +144,10 @@ export default ({ remates, sesion, rutas, columnas = 3 }) => ({
             foto: l.foto,
             direccion: l.direccion,
             ubicacion: l.comuna + ', ' + l.region,
-            tipoSup: l.tipo + (l.sup ? ' · ' + t('listado.superficie', { sup: String(l.sup).replace('.', ',') }) : ''),
-            dormBanos: l.dorm ? t('listado.dorm_banos', { dorm: l.dorm, banos: l.banos }) : l.tipo,
+            tipoSup: etiquetaDato('tipos', l.tipo) + (l.sup ? ' · ' + t('listado.superficie', { sup: idioma() === 'en' ? String(l.sup) : String(l.sup).replace('.', ',') }) : ''),
+            dormBanos: l.dorm ? t('listado.dorm_banos', { dorm: l.dorm, banos: l.banos }) : etiquetaDato('tipos', l.tipo),
             extras,
-            ocupacion: l.ocupacion,
+            ocupacion: etiquetaDato('ocupaciones', l.ocupacion),
             ocupacionClase: l.ocupacion === 'Ocupada' ? 'tarjeta__chip--ocupada' : 'tarjeta__chip--desocupada',
             precio: clp(l.precio),
             garantia: clp(l.garantia),

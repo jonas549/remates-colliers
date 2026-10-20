@@ -105,9 +105,9 @@ return [
         'generico' => 'Puja rechazada.',
 
         'lote_cerrado_sin_hora' => 'El lote ya cerró.',
-        'lote_cerrado_a_las' => 'El lote cerró a las :hora (hora de Chile): tu puja llegó después.',
+        'lote_cerrado_a_las' => 'El lote cerró a las :hora (hora de Santiago): tu puja llegó después.',
         'ya_adjudicado' => ' Ya está adjudicado.',
-        'lote_abre_a_las' => 'El lote abre a las :hora (hora de Chile): todavía no se puede pujar.',
+        'lote_abre_a_las' => 'El lote abre a las :hora (hora de Santiago): todavía no se puede pujar.',
         'monto_menor_que' => 'El monto es menor que la puja mínima: :minima.',
 
         'cuenta' => [
@@ -128,7 +128,10 @@ return [
     ],
 
     // Textos de resources/js/modulos/sala.js: t('sala.<clave>').
+    // Alias del postor en el feed («Postor #N» viaja como dato en el JSON público; se muestra traducido).
+    'alias' => 'Postor #:n',
     'js' => [
+        'alias' => 'Postor #:n',
         'conectado' => ':n CONECTADO',
         'conectados' => ':n CONECTADOS',
         'lote_de' => 'Lote :orden de :total',

@@ -375,14 +375,18 @@
                         <div class="detalle-docs">
                             @forelse ($r['documentos'] as [$nombre, $peso, $url])
                                 @if ($url)
-                                    <a href="{{ $url }}" class="detalle-doc"><span class="detalle-doc__nombre">{{ $nombre }}</span><span class="detalle-doc__peso">{{ $peso }}</span></a>
+                                    <a href="{{ $url }}" class="detalle-doc"><span class="detalle-doc__nombre">{{ $nombre }}{{ __('remate.documentos.idioma') }}</span><span class="detalle-doc__peso">{{ $peso }}</span></a>
                                 @else
-                                    <div class="detalle-doc detalle-doc--bloqueado"><span class="detalle-doc__nombre">{{ $nombre }}</span><span class="detalle-doc__peso">{{ __('remate.documentos.con_garantia') }}</span></div>
+                                    <div class="detalle-doc detalle-doc--bloqueado"><span class="detalle-doc__nombre">{{ $nombre }}{{ __('remate.documentos.idioma') }}</span><span class="detalle-doc__peso">{{ __('remate.documentos.con_garantia') }}</span></div>
                                 @endif
                             @empty
                                 <div class="detalle-doc detalle-doc--bloqueado"><span class="detalle-doc__nombre">{{ __('remate.documentos.en_preparacion') }}</span><span class="detalle-doc__peso">{{ __('remate.documentos.pidelos') }}</span></div>
                             @endforelse
                             <div class="detalle-docs__nota">{{ __('remate.documentos.nota') }}</div>
+                            {{-- Solo en inglés: qué versión rige (texto en revisión con el cliente; vacío en español). --}}
+                            @if (__('remate.documentos.version_que_rige') !== '')
+                                <div class="detalle-docs__nota">{{ __('remate.documentos.version_que_rige') }}</div>
+                            @endif
                         </div>
                     </div>
 

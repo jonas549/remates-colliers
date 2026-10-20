@@ -95,7 +95,8 @@ class SalaController extends Controller
                 'garantia' => $garantia->monto,
                 'martillero' => $remate->martillero?->name,
                 'video' => $remate->youtube_video_id,
-                'usuario' => $user->name . ($alias ? ' · ' . $alias : ''),
+                // El alias es dato («Postor #N»); se muestra en el idioma de la página.
+                'usuario' => $user->name . ($alias ? ' · ' . (preg_match('/^Postor #(\d+)$/', $alias, $m) ? __('sala.alias', ['n' => $m[1]]) : $alias) : ''),
             ],
         ]);
     }
@@ -111,10 +112,10 @@ class SalaController extends Controller
     {
         $partes = array_filter([
             trim(implode(', ', array_filter([$lote->comuna, $lote->region])), ', '),
-            $lote->tipo_propiedad,
-            $lote->superficie_util ? __('sala.ficha.superficie', ['superficie' => rtrim(rtrim(number_format((float) $lote->superficie_util, 2, ',', '.'), '0'), ',')]) : null,
+            \App\Publico\Catalogo::etiquetaTipo($lote->tipo_propiedad),
+            $lote->superficie_util ? __('sala.ficha.superficie', ['superficie' => \App\Support\Formato::numero($lote->superficie_util, 2)]) : null,
             $lote->dormitorios !== null ? __('sala.ficha.dormitorios_banos', ['dormitorios' => $lote->dormitorios, 'banos' => $lote->banos ?? 0]) : null,
-            $lote->ocupacion,
+            \App\Publico\Catalogo::etiquetaOcupacion($lote->ocupacion),
         ]);
 
         return implode(' · ', $partes);

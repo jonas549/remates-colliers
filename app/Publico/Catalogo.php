@@ -80,7 +80,7 @@ class Catalogo
             'precio' => (int) $r->lotes->sum('precio_base'),
             'garantia' => $r->montoGarantia(),
             'limite' => $vista === Remate::VISTA_PROXIMO && $r->cierre_garantias_en
-                ? ($ahora->greaterThanOrEqualTo($r->cierre_garantias_en) ? __('catalogo.tarjeta.garantias_vencido') : __('catalogo.tarjeta.garantias_hasta', ['fecha' => CarbonImmutable::instance($r->cierre_garantias_en)->setTimezone(Formato::ZONA)->format('d-m, H:i')]))
+                ? ($ahora->greaterThanOrEqualTo($r->cierre_garantias_en) ? __('catalogo.tarjeta.garantias_vencido') : __('catalogo.tarjeta.garantias_hasta', ['fecha' => Formato::diaHora($r->cierre_garantias_en)]))
                 : ($vista === Remate::VISTA_EN_VIVO ? __('catalogo.tarjeta.garantias_vencido') : ''),
             'estado' => $estado,
             'fecha' => $estado === 'Cerrado' ? Formato::dia($r->cierraEn() ?? $r->abreEn()) : Formato::fecha($r->abreEn(), $ahora),
@@ -190,8 +190,8 @@ class Catalogo
                 'texto' => collect([collect([$lote->direccion, $lote->comuna])->filter()->join(', '), $a['referencia_mapa'] ?? null])->filter()->join(' · '),
             ] : null,
             'visitas' => $lote->visitas->filter(fn (LoteVisita $v) => $v->termina_en->greaterThan($ahora))->map(fn (LoteVisita $v) => [
-                Formato::fechaLarga($v->inicia_en) === '' ? '' : preg_replace('/ de \d{4}$/', '', Formato::fechaLarga($v->inicia_en)),
-                $v->inicia_en->setTimezone(Formato::ZONA)->format('H:i') . ' – ' . $v->termina_en->setTimezone(Formato::ZONA)->format('H:i'),
+                Formato::diaMes($v->inicia_en),
+                $v->inicia_en->setTimezone(Formato::ZONA)->format('H:i') . ' – ' . $v->termina_en->setTimezone(Formato::ZONA)->format('H:i') . Formato::zona(),
             ])->values()->all(),
             'documentos' => $r->documentos->filter(fn (Documento $d) => $d->lote_id === null || $d->lote_id === $lote->id)->map(fn (Documento $d) => [
                 $d->titulo,

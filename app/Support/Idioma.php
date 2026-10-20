@@ -74,7 +74,7 @@ class Idioma
     }
 
     /** Archivos de idioma con textos para el JavaScript del sitio público (clave «js» de cada uno). */
-    public const GRUPOS_JS = ['sitio', 'listado', 'remate', 'sala', 'cuenta', 'acceso', 'errores', 'catalogo'];
+    public const GRUPOS_JS = ['sitio', 'listado', 'remate', 'sala', 'cuenta', 'acceso', 'errores', 'catalogo', 'formato'];
 
     /** La página actual es del sitio público (tiene versión en los dos idiomas): no el panel ni un error sin ruta. */
     public static function esPaginaPublica(?Request $request = null): bool

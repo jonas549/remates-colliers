@@ -1,5 +1,5 @@
 import { clp, dos } from './formato';
-import { t } from './textos';
+import { alias, locale, t } from './textos';
 
 const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 
@@ -154,7 +154,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     },
     get avisoLoteGanado() { return !!this.anterior?.gane && this.anterior.siguiente === this.lote.orden; },
     get avisoLoteEtiqueta() { return t('sala.cambio_de_lote', { lote: this.etiquetaLote.toUpperCase() }); },
-    horaDe(ms) { return new Date(ms).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hour12: false }); },
+    horaDe(ms) { return new Date(ms).toLocaleTimeString(locale(), { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) + t('formato.zona', {}, ''); },
     // Estado con el lote delante cuando hay varios: «LOTE 2 DE 2 · EN VIVO · PUJA ABIERTA».
     get estadoConLote() { return (this.etiquetaLote && !this.retirado ? this.etiquetaLote.toUpperCase() + ' · ' : '') + this.estadoTexto; },
     get mensajeMartillero() { return this.estado.mensaje_martillero?.texto || ''; },
@@ -211,7 +211,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     formatoClp(n) { return clp(n); },
     get actualTexto() { return clp(this.actual); },
     // UF: solo referencia visual y solo si hay un valor vigente (Administración → Configuración).
-    enUf(n) { return uf ? 'UF ' + (n / uf).toLocaleString('es-CL', { maximumFractionDigits: 0 }) : ''; },
+    enUf(n) { return uf ? 'UF ' + (n / uf).toLocaleString(locale(), { maximumFractionDigits: 0 }) : ''; },
     get actualEnUf() { return this.enUf(this.actual) || '—'; },
     get sobreBase() { return '+' + Math.round((this.actual / this.lote.precio_base - 1) * 100) + '%'; },
 
@@ -315,9 +315,9 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
             const seg = Math.max(0, Math.floor((this.ahora - p.en_ms) / 1000));
             return {
                 monto: clp(p.monto),
-                postor: p.postor === this.miAlias ? t('sala.postor_tu', { postor: p.postor }) : p.postor,
+                postor: p.postor === this.miAlias ? t('sala.postor_tu', { postor: alias(p.postor) }) : alias(p.postor),
                 yo: p.postor === this.miAlias,
-                hora: new Date(p.en_ms).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour12: false }),
+                hora: new Date(p.en_ms).toLocaleTimeString(locale(), { timeZone: 'America/Santiago', hourCycle: 'h23' }),
                 hace: seg < 60 ? t('sala.hace_seg', { n: seg }) : seg < 3600 ? t('sala.hace_min', { n: Math.floor(seg / 60) }) : t('sala.hace_h', { n: Math.floor(seg / 3600) }),
             };
         });

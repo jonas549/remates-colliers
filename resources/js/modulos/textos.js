@@ -16,9 +16,10 @@ function cargar() {
     return datos;
 }
 
-export function t(clave, reemplazos = {}) {
+// `respaldo`: lo que se muestra si la clave no existe (p. ej. un tipo de propiedad nuevo: se ve el dato tal cual).
+export function t(clave, reemplazos = {}, respaldo = clave) {
     const valor = clave.split('.').reduce((o, k) => (o && typeof o === 'object' ? o[k] : undefined), cargar());
-    let texto = typeof valor === 'string' ? valor : clave;
+    let texto = typeof valor === 'string' ? valor : respaldo;
     for (const [k, v] of Object.entries(reemplazos)) {
         texto = texto.replaceAll(':' + k, String(v));
     }
@@ -27,3 +28,15 @@ export function t(clave, reemplazos = {}) {
 
 // Idioma de la página (atributo lang del <html>): «es» o «en».
 export const idioma = () => (document.documentElement.lang === 'en' ? 'en' : 'es');
+
+// Locale de Intl para números y horas: «es-CL» o, en inglés, miles con coma.
+export const locale = () => (idioma() === 'en' ? 'en-US' : 'es-CL');
+
+// Dato del catálogo (tipo de propiedad, ocupación) para mostrar: el valor guardado sigue en español.
+export const etiquetaDato = (grupo, valor) => (valor ? t('catalogo.' + grupo + '.' + valor, {}, valor) : valor);
+
+// «Postor #N» viaja como dato en el JSON público; en pantalla se muestra en el idioma de la página.
+export function alias(valor, grupo = 'sala') {
+    const m = /^Postor #(\d+)$/.exec(valor || '');
+    return m ? t(grupo + '.alias', { n: m[1] }, valor) : valor;
+}

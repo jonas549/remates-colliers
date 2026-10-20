@@ -3,7 +3,7 @@
      * Sala de puja. Datos desde SalaController: `componente` es salaPuja (motor real, Bloque K) o salaPujaDemo
      * (datos fijos del prototipo, solo local con ?demo=1, para la comparación visual 1:1).
      */
-    $clp = fn ($n) => \App\Demo\RematesDemo::clp($n);
+    $clp = fn ($n) => \App\Support\Formato::clp($n);
     // Enlaces a datos que cambian con el lote vigente: solo en la sala real (la demo tiene un solo lote fijo).
     $real = $componente === 'salaPuja';
 @endphp
@@ -15,6 +15,7 @@
                 <a href="{{ route('remates.index') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="sala-cabecera__logo"></a>
                 <div class="sala-cabecera__titulo">{{ __('sala.titulo') }} · <span>{{ $propiedad['folio'] }}</span>@if ($real)<span x-show="etiquetaLote" x-text="' · ' + etiquetaLote.toUpperCase()"></span>@endif</div>
                 <div class="sala-cabecera__derecha">
+                    <x-publico.idioma class="pub-cabecera__idioma--siempre" />
                     <span class="sala-cabecera__chip">{{ __('sala.cabecera.garantia_aprobada') }}</span>
                     {{-- El nombre lleva a «Mi cuenta» (21/09): la sala no tenía salida hacia la cuenta del postor. --}}
                     @if ($real)

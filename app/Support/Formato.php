@@ -14,52 +14,95 @@ class Formato
 
     public const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
-    public static function clp(?int $monto): string
+    /*
+     * Sitio en inglés (20/10): cada formato tiene su versión en inglés (miles con coma, mes en letras para que el día y
+     * el mes no se confundan, 24 h como en español) y la hora lleva «(Santiago time)». En español no cambia nada: el
+     * panel y los correos corren siempre en español.
+     */
+    private static function ingles(): bool
     {
-        return $monto === null ? '—' : '$' . number_format($monto, 0, ',', '.');
+        return Idioma::esIngles();
     }
 
-    /** «Hoy, 12:00» o «09-09, 12:00» (tablas del panel). */
+    /** « (Santiago time)» en inglés; nada en español. */
+    public static function zona(): string
+    {
+        return (string) __('formato.zona');
+    }
+
+    public static function clp(?int $monto): string
+    {
+        if ($monto === null) {
+            return '—';
+        }
+
+        return '$' . (self::ingles() ? number_format($monto, 0, '.', ',') : number_format($monto, 0, ',', '.'));
+    }
+
+    /** «Hoy, 12:00» o «09-09, 12:00» (tablas del panel). En inglés: «Today, 12:00» o «9 Sep, 12:00 (Santiago time)». */
     public static function fechaCorta(?CarbonInterface $fecha, ?CarbonInterface $ahora = null): string
     {
         if ($fecha === null) {
-            return 'Sin fecha';
+            return __('formato.sin_fecha');
         }
         $local = CarbonImmutable::instance($fecha)->setTimezone(self::ZONA);
         $hoy = CarbonImmutable::instance($ahora ?? CarbonImmutable::now())->setTimezone(self::ZONA);
 
-        return ($local->isSameDay($hoy) ? 'Hoy' : $local->format('d-m')) . ', ' . $local->format('H:i');
+        return ($local->isSameDay($hoy) ? __('formato.hoy') : $local->format(self::ingles() ? 'j M' : 'd-m')) . ', ' . $local->format('H:i') . self::zona();
     }
 
-    /** «09-09-2026, 12:00» o «Hoy, 12:00» (sitio público). */
+    /** «09-09-2026, 12:00» o «Hoy, 12:00» (sitio público). En inglés: «9 Sep 2026, 12:00 (Santiago time)». */
     public static function fecha(?CarbonInterface $fecha, ?CarbonInterface $ahora = null): string
     {
         if ($fecha === null) {
-            return 'Sin fecha';
+            return __('formato.sin_fecha');
         }
         $local = CarbonImmutable::instance($fecha)->setTimezone(self::ZONA);
         $hoy = CarbonImmutable::instance($ahora ?? CarbonImmutable::now())->setTimezone(self::ZONA);
 
-        return ($local->isSameDay($hoy) ? 'Hoy' : $local->format('d-m-Y')) . ', ' . $local->format('H:i');
+        return ($local->isSameDay($hoy) ? __('formato.hoy') : $local->format(self::ingles() ? 'j M Y' : 'd-m-Y')) . ', ' . $local->format('H:i') . self::zona();
     }
 
+    /** «09-09-2026»; en inglés «9 Sep 2026». */
     public static function dia(?CarbonInterface $fecha): string
     {
-        return $fecha === null ? '' : CarbonImmutable::instance($fecha)->setTimezone(self::ZONA)->format('d-m-Y');
+        return $fecha === null ? '' : CarbonImmutable::instance($fecha)->setTimezone(self::ZONA)->format(self::ingles() ? 'j M Y' : 'd-m-Y');
     }
 
-    /** «31 de agosto de 2026». */
+    /** «09-09, 12:00»; en inglés «9 Sep, 12:00 (Santiago time)». */
+    public static function diaHora(CarbonInterface $fecha): string
+    {
+        $local = CarbonImmutable::instance($fecha)->setTimezone(self::ZONA);
+
+        return $local->format(self::ingles() ? 'j M, H:i' : 'd-m, H:i') . self::zona();
+    }
+
+    /** «31 de agosto de 2026»; en inglés «31 August 2026». */
     public static function fechaLarga(CarbonInterface $fecha): string
     {
         $local = CarbonImmutable::instance($fecha)->setTimezone(self::ZONA);
+        if (self::ingles()) {
+            return $local->format('j F Y');
+        }
 
         return $local->day . ' de ' . self::MESES[$local->month - 1] . ' de ' . $local->year;
     }
 
-    /** «Lunes 31 de agosto de 2026». */
+    /** «31 de agosto» (sin el año); en inglés «31 August». */
+    public static function diaMes(CarbonInterface $fecha): string
+    {
+        $local = CarbonImmutable::instance($fecha)->setTimezone(self::ZONA);
+
+        return self::ingles() ? $local->format('j F') : $local->day . ' de ' . self::MESES[$local->month - 1];
+    }
+
+    /** «Lunes 31 de agosto de 2026»; en inglés «Monday, 31 August 2026». */
     public static function fechaConDia(CarbonInterface $fecha): string
     {
         $local = CarbonImmutable::instance($fecha)->setTimezone(self::ZONA);
+        if (self::ingles()) {
+            return $local->format('l, j F Y');
+        }
 
         return ucfirst(self::DIAS[$local->dayOfWeek]) . ' ' . self::fechaLarga($local);
     }
@@ -75,11 +118,11 @@ class Formato
         $local = CarbonImmutable::instance($fecha)->setTimezone(self::ZONA);
 
         return match (true) {
-            $segundos < 60 => "hace {$segundos} seg",
-            $segundos < 3600 => 'hace ' . intdiv($segundos, 60) . ' min',
-            $local->isSameDay($ahora->setTimezone(self::ZONA)) => 'hace ' . intdiv($segundos, 3600) . ' h',
-            $local->isSameDay($ahora->setTimezone(self::ZONA)->subDay()) => 'ayer, ' . $local->format('H:i'),
-            default => $local->format('d-m, H:i'),
+            $segundos < 60 => __('formato.hace_seg', ['n' => $segundos]),
+            $segundos < 3600 => __('formato.hace_min', ['n' => intdiv($segundos, 60)]),
+            $local->isSameDay($ahora->setTimezone(self::ZONA)) => __('formato.hace_h', ['n' => intdiv($segundos, 3600)]),
+            $local->isSameDay($ahora->setTimezone(self::ZONA)->subDay()) => __('formato.ayer') . ', ' . $local->format('H:i'),
+            default => $local->format(self::ingles() ? 'j M, H:i' : 'd-m, H:i'),
         };
     }
 
@@ -102,8 +145,9 @@ class Formato
         if ($n === null || $n === '') {
             return '';
         }
-        $texto = number_format((float) $n, $decimales, ',', '.');
+        [$decimal, $miles] = self::ingles() ? ['.', ','] : [',', '.'];
+        $texto = number_format((float) $n, $decimales, $decimal, $miles);
 
-        return $decimales > 0 ? rtrim(rtrim($texto, '0'), ',') : $texto;
+        return $decimales > 0 ? rtrim(rtrim($texto, '0'), $decimal) : $texto;
     }
 }
