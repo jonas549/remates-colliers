@@ -49,11 +49,18 @@
                         @include('sala._avisos', ['donde' => 'contenido'])
                     @endif
                     <div class="sala__video">
-                        @if ($propiedad['video'])
+                        @if ($real)
+                            {{-- El video llega en el estado público: aparece, cambia o se quita sin recargar (QA 21/10). x-for con
+                                 clave: el iframe se crea una vez por video y nunca se le vuelve a fijar el src (eso lo recargaría). --}}
+                            <template x-for="id in (video ? [video] : [])" :key="id">
+                                <iframe :src="videoSrc" title="{{ __('sala.video.titulo') }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                            </template>
+                        @elseif ($propiedad['video'])
                             <iframe src="https://www.youtube-nocookie.com/embed/{{ $propiedad['video'] }}?rel=0" title="{{ __('sala.video.titulo') }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-                        @else
+                        @endif
+                        @if ($real || ! $propiedad['video'])
                             {{-- QA 21/10, 3.1: sin video cargado no queda un recuadro negro. Se puede pujar igual. --}}
-                            <div class="sala__sin-video" data-sin-video>
+                            <div class="sala__sin-video" data-sin-video @if ($real) x-show="! video" @if ($propiedad['video']) x-cloak @endif @endif>
                                 <strong class="sala__sin-video-titulo">{{ __('sala.video.sin_transmision.titulo') }}</strong>
                                 <p>{{ __('sala.video.sin_transmision.texto') }}</p>
                                 <p class="sala__sin-video-nota">{{ __('sala.video.sin_transmision.recargar') }}</p>

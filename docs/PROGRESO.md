@@ -25,10 +25,11 @@
   probar en el sandbox: `docs/progreso/2026-10-18.md`.
 - **Mañana (22/09): Jonas prueba en el sandbox** con el plan de `docs/progreso/2026-09-21.md` §11.
 - **20/10: sitio público en inglés** completo en local, sin push (`docs/progreso/2026-10-20.md`). Pendiente de Jonas: revisar el glosario y las cadenas dudosas, confirmar con el cliente la línea «la versión en español rige» y el registro de extranjeros sin RUT. Antes de tocar textos del sitio: van en `lang/es` y `lang/en` (mismas claves); `tools/comparar/ingles.mjs` revisa `/en` en navegador.
-- **21/10: QA de Jonas sobre el sandbox, 18 hallazgos en 4 grupos**, hechos en local y sin push (un commit por grupo:
-  `6dc3a3b`, `080f99e`, `0055101` y el del grupo 4). Pendiente de Jonas: el umbral del límite de pujas (hoy 30/min por
-  usuario, cuenta también los rechazados), cargar `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY`, una imagen de 1200 × 630
-  para compartir si Colliers la quiere, y probar en el sandbox lo de cada grupo (`docs/progreso/2026-10-21.md`). El 2FA
+- **21/10: QA de Jonas sobre el sandbox, 18 hallazgos en 4 grupos**, subidos a `main` el 21/10 con aprobación de Jonas (un commit por grupo:
+  `6dc3a3b`, `080f99e`, `0055101`, `7bc11d1` y el cierre de decisiones). Límite de pujas: queda en 30/min por
+  usuario. Video de la sala en el estado público (aparece sin recargar). Pendiente de Jonas: cargar `TURNSTILE_SITE_KEY` /
+  `TURNSTILE_SECRET_KEY`, reemplazar `public/img/compartir.png` cuando Colliers mande la imagen de 1200 × 630, y probar en
+  el sandbox lo de cada grupo (`docs/progreso/2026-10-21.md`). El 2FA
   queda fuera de la tanda. Fuera de la tanda también OPcache, el rol Editor y los enlaces sin destino. Recorrido nuevo de
   esta tanda: `tools/comparar/qa-visibles.mjs`; de seguridad, `tools/comparar/seguridad.mjs`.
 - **Antes de reportar algo como listo:** `node tools/comparar/recorrido-roles.mjs` (los tres roles con clics) en verde.

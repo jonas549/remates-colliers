@@ -58,6 +58,9 @@ final class EstadoRemate
                 'texto' => $remate->mensaje_martillero,
                 'en_ms' => self::ms($remate->mensaje_martillero_en),
             ],
+            // Video de YouTube (QA 21/10): la sala lo muestra o lo quita sin recargar. Solo un id válido (el formulario ya lo
+            // valida; aquí se repite porque este JSON lo arma el navegador como dirección del iframe).
+            'video' => preg_match('/^[A-Za-z0-9_-]{6,20}$/', (string) $remate->youtube_video_id) ? $remate->youtube_video_id : null,
             'lotes' => $lotes->values()->all(),
             // Solo el número de postores con la sala abierta: este estado es público, nunca lleva nombres. Leerlo
             // limpia los vencidos (PresenciaSala); el emisor lo escribe bajo su bloqueo, que es el mismo del latido.

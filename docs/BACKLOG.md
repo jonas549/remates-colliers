@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-10-21** (QA de Jonas sobre el sandbox: los cuatro grupos hechos en local y sin push).
+> **Registro vivo del avance.** Última actualización: **2026-10-21** (QA de Jonas sobre el sandbox: los cuatro grupos y el cierre de decisiones, subidos a `main`).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -77,9 +77,10 @@ HTTPS forzado por la aplicación, cabeceras con CSP, Turnstile en el registro; e
 espera la decisión de Jonas). El 2FA queda fuera de la tanda (Jonas lo confirma con el cliente). Grupo 3 hecho (L: la
 sala sin video avisa que la transmisión no comienza; N: condición de garantía en inglés, descripción y Open Graph por
 remate; G: el dashboard explica las cuentas que esperan el correo). Grupo 4 hecho (hover en el listado, «+0,3% sobre la
-base», promedio de pujas con un decimal, página propia para el 405, buscador de Postores sin cortar). Pendiente de
-Jonas: el umbral del límite de pujas (2.4), las claves de Turnstile y probar todo en el sandbox. Detalle en
-`docs/progreso/2026-10-21.md`.
+base», promedio de pujas con un decimal, página propia para el 405, buscador de Postores sin cortar). Decisiones
+cerradas por Jonas el mismo día: el límite de pujas queda en 30/min; el porcentaje sin «sobre la base»; el video llega
+en el estado y aparece sin recargar; la imagen para compartir es un archivo reemplazable. Pendiente de Jonas: claves de
+Turnstile y la imagen de 1200 × 630 de Colliers. Detalle en `docs/progreso/2026-10-21.md`.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -263,7 +264,7 @@ interacción idéntica; escritorio 0,05 % en 1280–1440 y 1,9 % en 1120 por el 
 - [x] **Presencia en la sala** *(QA de Jonas, 18/10)*: el postor ve cuántos están conectados («2 CONECTADOS», en la línea del conteo de posturas); el martillero y la administración ven además **quiénes**, en «En la sala ahora» del panel en vivo: nombre y apellido del postor o, si puja por una empresa, la razón social. Nada de RUT ni correo, y sin marca de habilitación (a la sala solo entra quien está habilitado). Sin websockets ni procesos persistentes: latido cada 15 s a `public/presencia.php`, **sin Laravel** (como `hora.php`), con un token firmado (HMAC derivado de `APP_KEY`) que la sala entrega al abrir; la presencia va a un archivo por remate en `storage/app/presencia` (no a la base: un latido no abre conexiones). Activo = latido en los últimos 45 s; al cerrar la pestaña, `sendBeacon` lo baja al instante. El JSON público lleva **solo el número** (`presencia.conectados`), escrito bajo el mismo bloqueo del emisor; los nombres salen de `GET /admin/subastas/{id}/presencia`, solo para administración y el martillero del remate, que el panel consulta cada 15 s. Los vencidos se limpian al construir el estado y en el cron de cada minuto (`colliers:liquidar`). Lógica en `App\Subastas\PresenciaSala`, sin dependencias, compartida por Laravel y el script *(`PresenciaSalaTest` 7, incluido el script en un proceso aparte que no carga ni Composer ni Laravel; `recorrido-roles.mjs` con 8 comprobaciones nuevas: dos postores ven «2 CONECTADOS», el martillero los ve por nombre, uno sale y baja a 1, vuelve y sube, el navegador del postor no recibe el nombre del otro, y la sala a 375 px sin desborde; `sala-real.mjs` y `panel-remates.mjs` sin regresiones)*
 - [x] **Indicador de conexión y aviso de reconexión** *(QA de Jonas 21/10, 1.1: cortó la red 10 s a 390 px, otro postor pujó y la sala siguió en el precio viejo con «Te superaron», sin aviso)*: si el estado no llega en 5 s (cuatro sondeos perdidos) o el navegador queda sin red, una banda roja «SIN CONEXIÓN. El precio y el cronómetro pueden no estar actualizados. Pujar queda bloqueado hasta reconectar.» se pega arriba en todos los anchos; precio y cronómetro se atenúan, la barra del celular dice «SIN CONEXIÓN» y Pujar (panel, hoja, barra y confirmación del modal) queda bloqueado. Las consultas tienen un límite de 5 s para que una red colgada sin error no deje la sala esperando. Al volver el estado, todo se restablece solo *(`sala-real.mjs`: corte con `setOffline` en escritorio y a 375 px, y red caída **sin** evento «offline» bloqueando el JSON: la banda aparece sola en ~5,7 s y se va en < 1 s al volver)*
 - [x] **El ganador ve su adjudicación después del cierre** *(QA 21/10, 1.2: lote 1 adjudicado y lote 2 desierto; el ganador entraba después y solo leía «LOTE 2 DE 2 · CERRADO SIN POSTORES»)*: con varios lotes y todos terminados, la franja dice «REMATE FINALIZADO» y el resultado lista cada lote para ese postor con los textos existentes (`lote_ganado` en verde, `lote_de_otro`, `lote_sin_posturas`); título `ganado_titulo` si ganó alguno, «Remate finalizado» si no. **Mi cuenta**: bloque «TUS ADJUDICACIONES» («Te adjudicaste el lote X en $Y…», enlace al remate), y con el remate terminado la banda deja de decir «Estás habilitado para pujar»: «REMATE FINALIZADO · Te adjudicaste la propiedad» o «El remate terminó». Mi cuenta materializa antes los lotes vencidos (cierre perezoso) *(`SalaTest` nuevo con dos lotes; `sala-real.mjs`: ganador y perdedor al cerrar, el ganador recarga la sala y sigue viendo su lote, y llega a Mi cuenta con un clic; 55/55)*
-- [x] **«+0,3% sobre la base»** *(QA de Jonas 21/10, 4.2: con el precio en $120.300.000 decía «+0% sobre el mínimo»)*: un decimal (`sobreBase` en `formato.js`, con la coma o el punto del idioma), y si aun así redondea a cero estando por encima, el monto («+$100.000»). «sobre el mínimo» pasó a «sobre la base» («above the starting price») *(`qa-visibles.mjs`: «+7,3% sobre la base» y «+7.3% above the starting price» con el remate del seeder; el arnés 1:1 de la sala pasa de 0,05 % a 0,07 % por el texto)*
+- [x] **«Base $185.000.000 · +7,3%»** *(QA de Jonas 21/10, 4.2: con el precio en $120.300.000 decía «+0% sobre el mínimo»)*: un decimal (`sobreBase` en `formato.js`, con la coma o el punto del idioma), y si aun así redondea a cero estando por encima, el monto («+$100.000»). Sin texto al final, por decisión de Jonas *(`qa-visibles.mjs`: «Base $185.000.000 · +7,3%» y «Starting $185,000,000 · +7.3%» con el remate del seeder)*
 - [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración, **incluida la presencia** (`presencia.php` bajo LiteSpeed y la lista del panel) *(Jonas)*
 
 ## I — Remates y lotes, incluido el panel del martillero · Completo
@@ -424,7 +425,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [ ] Iframe de YouTube embebido por remate
 - [ ] Identificador del video cargado desde el panel
 - [ ] Aviso de retraso del video (10–30 s) visible en pantalla
-- [x] **Estado sin transmisión** *(QA de Jonas 21/10, 3.1: sin video, la sala era un recuadro negro)*: sin video cargado, el reproductor dice «La transmisión aún no comienza», que se puede pujar igual con el precio y el cronómetro oficiales del panel, que al comenzar se recargue la página, y enlaza al canal de Colliers (el de Configuración o, si está vacío, el del pie). Un video cargado que todavía no empieza o ya no está disponible lo informa el propio reproductor de YouTube *(`SalaTest`; `qa-visibles.mjs` a 1440 y 375 px: sin desborde y el enlace de 44 px dentro del reproductor)*
+- [x] **Estado sin transmisión** *(QA de Jonas 21/10, 3.1: sin video, la sala era un recuadro negro)*: sin video cargado, el reproductor dice «La transmisión aún no comienza», que se puede pujar igual con el precio y el cronómetro oficiales del panel, que el video aparecerá ahí sin recargar, y enlaza al canal de Colliers (el de Configuración o, si está vacío, el del pie). Un video cargado que todavía no empieza o ya no está disponible lo informa el propio reproductor de YouTube. **El video viaja en el estado público** (`video` en el JSON, solo un id válido; +20 bytes): cargarlo, cambiarlo o quitarlo en el panel llega a la sala abierta en ~1 s, sin recargar; el iframe se crea una vez por video (no se recarga con cada sondeo) y al quitarlo vuelve el aviso *(Jonas, 21/10)* *(`SalaTest`; `qa-visibles.mjs` a 1440 y 375 px: sin desborde y el enlace de 44 px dentro del reproductor; video puesto, cambiado y quitado con la sala abierta, una sola carga del reproductor, sin recargar la página, sin bloqueos de la CSP, JSON de 916 bytes)*
 
 ## E/F — Componentes y estructura del panel · En progreso
 
@@ -537,7 +538,9 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [x] Exportar a PDF (Bloque O): **se quita** *(Jonas, 20/09: no está en el acta; es alcance extra)*
 - [ ] Reportes (17/09): CSV y XLSX de arriba descargan el desempeño comercial en CSV y el libro completo en XLSX; cada «Descargar» de exportables baja esa hoja en XLSX. ¿Sirve así?
 - [ ] Activar el filtro «Garantía requerida» (hoy oculto; pasa a ajuste del panel en V)
-- [ ] Imagen para compartir del listado y de las páginas sin foto *(QA 21/10, 3.4)*: hoy es el logo de Colliers (475 × 263, se ve como tarjeta chica). Si Colliers quiere una tarjeta grande, hace falta una imagen de 1200 × 630 suya
+- [ ] Imagen para compartir del listado y de las páginas sin foto *(QA 21/10, 3.4)*: Jonas la pidió a Colliers (1200 × 630). **Preparado:** basta reemplazar `public/img/compartir.png` (o subir `compartir.jpg`, que tiene prioridad) y hacer push; las medidas y la tarjeta grande salen del archivo. Hoy es una copia del logo
+- [x] Límite de pujas: **queda en 30 por minuto por usuario**, contando también los rechazados *(Jonas, 21/10)*
+- [x] Condición de garantía editada en el panel: se muestra tal cual (en español) también en `/en`. **Sin cambios: es lo acordado** el 20/10 *(Jonas, 21/10)*
 
 ### Supuestos vigentes (16/09, mientras el cliente no defina; cambiar cualquiera no borra datos)
 

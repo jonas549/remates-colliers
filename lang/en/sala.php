@@ -20,7 +20,7 @@ return [
         'sin_transmision' => [
             'titulo' => 'The broadcast has not started yet',
             'texto' => 'You can still bid: the official price and timer are in the bidding panel.',
-            'recargar' => 'Once it starts, reload the page to watch it here.',
+            'recargar' => 'It will appear here as soon as it starts, no need to reload.',
             'ver_canal' => 'Watch the Colliers channel on YouTube',
         ],
     ],
@@ -46,7 +46,7 @@ return [
     'panel' => [
         'precio_actual' => 'CURRENT PRICE',
         // :base and :sobre arrive as HTML from the view.
-        'base' => 'Starting :base · :sobre above the starting price',
+        'base' => 'Starting :base · :sobre',
         'cierra_en' => 'CLOSES IN',
         'horas' => 'HOURS',
         'min' => 'MIN',

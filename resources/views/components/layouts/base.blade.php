@@ -25,9 +25,20 @@
         <meta property="og:title" content="{{ $tituloCompleto }}">
         <meta property="og:description" content="{{ $descripcionSeo }}">
         <meta property="og:url" content="{{ url()->current() }}">
-        <meta property="og:image" content="{{ $imagen ?: asset('img/colliers-logo.png') }}">
-        @unless ($imagen)<meta property="og:image:alt" content="{{ __('sitio.seo.imagen_alt') }}">@endunless
-        <meta name="twitter:card" content="{{ $imagen ? 'summary_large_image' : 'summary' }}">
+        @if ($imagen)
+            <meta property="og:image" content="{{ $imagen }}">
+            <meta name="twitter:card" content="summary_large_image">
+        @else
+            {{-- public/img/compartir.(jpg|png): reemplazar el archivo basta, las medidas salen de él. --}}
+            @php($compartir = \App\Support\Sitio::imagenCompartir())
+            <meta property="og:image" content="{{ $compartir['url'] }}">
+            @if ($compartir['ancho'])
+                <meta property="og:image:width" content="{{ $compartir['ancho'] }}">
+                <meta property="og:image:height" content="{{ $compartir['alto'] }}">
+            @endif
+            <meta property="og:image:alt" content="{{ __('sitio.seo.imagen_alt') }}">
+            <meta name="twitter:card" content="{{ $compartir['ancho'] >= 1000 ? 'summary_large_image' : 'summary' }}">
+        @endif
     @endunless
     {{-- Ícono del sitio de Colliers (activosespeciales.colliers.cl). Este layout es el único <head>: el panel lo envuelve. --}}
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">

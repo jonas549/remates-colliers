@@ -7,6 +7,7 @@ use App\Models\Lote;
 use App\Models\Postor;
 use App\Models\Remate;
 use App\Models\User;
+use App\Subastas\EstadoRemate;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -73,7 +74,6 @@ class SalaTest extends TestCase
             ->assertSee('Ana Postora · Postor #2')
             ->assertSee('Las Condes, Región Metropolitana · Departamento · 118 m² útiles · 3D / 2B · Desocupada')
             ->assertSee('Precio y cronómetro oficiales: el video tiene 10–30 s de retraso')
-            ->assertSee('youtube-nocookie.com/embed/jfKfPfyJRdk', false)
             ->assertDontSee('salaPujaDemo(', false);
 
         $config = $this->configDe($respuesta->getContent());
@@ -112,15 +112,29 @@ class SalaTest extends TestCase
     public function test_sin_video_la_sala_avisa_que_la_transmision_no_comienza(): void
     {
         $ana = $this->postor('Ana');
-        $this->actingAs($ana)->get('/remates/apoquindo/sala')->assertOk()
-            ->assertSee('youtube-nocookie.com/embed/jfKfPfyJRdk', false)->assertDontSee('data-sin-video', false);
+        // El video viaja en el estado: la sala lo pone, lo cambia o lo quita sin recargar. El aviso está siempre en la página.
+        $respuesta = $this->actingAs($ana)->get('/remates/apoquindo/sala')->assertOk()->assertSee('data-sin-video', false);
+        $this->assertSame('jfKfPfyJRdk', $this->configDe($respuesta->getContent())['estado']['video']);
 
         $this->remate->update(['youtube_video_id' => null]);
-        $this->actingAs($ana)->get('/remates/apoquindo/sala')->assertOk()
-            ->assertDontSee('youtube-nocookie.com/embed', false)
+        $respuesta = $this->actingAs($ana)->get('/remates/apoquindo/sala')->assertOk()
             ->assertSee('La transmisión aún no comienza')
             ->assertSee('el precio y el cronómetro oficiales están en el panel de la puja')
             ->assertSee('href="https://www.youtube.com/@collierscl"', false);
+        $this->assertNull($this->configDe($respuesta->getContent())['estado']['video']);
+    }
+
+    /** QA 21/10: el JSON público lleva el video, solo con un id válido, y el panel lo publica al guardarlo. */
+    public function test_el_estado_publico_lleva_el_video_y_se_publica_al_cambiarlo(): void
+    {
+        $this->assertSame('jfKfPfyJRdk', EstadoRemate::construir($this->remate)['video']);
+        $this->remate->forceFill(['youtube_video_id' => 'x"><script>'])->save();
+        $this->assertNull(EstadoRemate::construir($this->remate)['video']);
+
+        $this->remate->forceFill(['youtube_video_id' => null])->save();
+        app(\App\Remates\GestionRemates::class)->actualizar($this->remate->fresh(), ['youtube_video_id' => 'dQw4w9WgXcQ']);
+        $publicado = json_decode(File::get($this->carpeta . '/apoquindo.json'), true);
+        $this->assertSame('dQw4w9WgXcQ', $publicado['video']);
     }
 
     /** QA 21/10: lote 1 adjudicado y lote 2 desierto; el ganador vuelve después del cierre y tiene que ver lo que ganó. */

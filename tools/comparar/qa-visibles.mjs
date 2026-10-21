@@ -48,6 +48,43 @@ for (const ancho of [1440, 375]) {
     await p.screenshot({ path: `${SALIDA}/sala-sin-video-${ancho}.png` });
     await c.close();
 }
+
+// El video viaja en el estado público: se pone, se cambia y se quita con la sala abierta, sin recargar.
+console.log('\n— Video en vivo, sin recargar');
+{
+    const c = await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL', timezoneId: 'America/Santiago' });
+    await c.addInitScript(() => document.addEventListener('securitypolicyviolation', (e) => console.error(`CSP-BLOQUEO ${e.effectiveDirective} ${e.blockedURI}`)));
+    const p = await c.newPage();
+    const bloqueos = [];
+    const cargasVideo = [];
+    p.on('console', (m) => { if (m.text().startsWith('CSP-BLOQUEO')) bloqueos.push(m.text()); });
+    p.on('framenavigated', (f) => { if (f.url().includes('youtube-nocookie.com/embed/')) cargasVideo.push(f.url()); });
+    await entrar(p, 'postor', '/remates/apoquindo/sala', 'mpgonzalez@correo.test');
+    await p.locator('[data-sin-video]').waitFor({ state: 'visible', timeout: 5000 });
+    const recargas = [];
+    p.on('framenavigated', (f) => { if (f === p.mainFrame()) recargas.push(f.url()); });
+
+    ayudante('video', 'apoquindo', 'jfKfPfyJRdk');
+    const iframe = p.locator('.sala__video iframe');
+    const aparece = await iframe.waitFor({ timeout: 6000 }).then(() => true, () => false);
+    comprobar('el video aparece solo al cargarlo en el panel', aparece && (await iframe.getAttribute('src')) === 'https://www.youtube-nocookie.com/embed/jfKfPfyJRdk?rel=0');
+    comprobar('el aviso «aún no comienza» se oculta', !(await p.locator('[data-sin-video]').isVisible()));
+    await p.waitForTimeout(5000); // ~5 sondeos del estado
+    comprobar('el reproductor no se recarga con cada sondeo', cargasVideo.filter((u) => u.includes('jfKfPfyJRdk')).length === 1, `${cargasVideo.length} carga(s)`);
+
+    ayudante('video', 'apoquindo', 'dQw4w9WgXcQ');
+    await p.waitForFunction(() => document.querySelector('.sala__video iframe')?.src.includes('dQw4w9WgXcQ'), null, { timeout: 6000 }).catch(() => {});
+    comprobar('cambiar el video lo reemplaza', (await iframe.count()) === 1 && (await iframe.getAttribute('src')).includes('dQw4w9WgXcQ'));
+
+    ayudante('video', 'apoquindo');
+    const vuelve = await p.locator('[data-sin-video]').waitFor({ state: 'visible', timeout: 6000 }).then(() => true, () => false);
+    comprobar('quitar el video vuelve al aviso «aún no comienza»', vuelve && (await iframe.count()) === 0);
+    comprobar('la página nunca se recargó', recargas.length === 0, recargas.join(' '));
+    comprobar('ningún bloqueo de la CSP', bloqueos.length === 0, bloqueos.join(' | '));
+    const peso = (await (await p.request.get(URL + '/tiempo-real/apoquindo.json')).body()).length;
+    comprobar('el JSON público sigue liviano', peso < 4096, `${peso} bytes`);
+    await c.close();
+}
 ayudante('video', 'apoquindo', 'jfKfPfyJRdk');
 
 // ── 3.2 Ficha en inglés: condiciones del remate ──────────────────────────────────────────────────────────
@@ -72,7 +109,7 @@ comprobar('ficha: og:title, og:description y og:url', (await meta(V, 'meta[prope
 await V.goto(URL + '/?orden=fecha', { waitUntil: 'load' });
 comprobar('listado: valores por defecto (descripción del sitio, logo, url sin filtros)',
     (await meta(V, 'meta[name="description"]')).startsWith('Remates de propiedades en línea de Colliers Chile')
-    && (await meta(V, 'meta[property="og:image"]')).endsWith('/img/colliers-logo.png')
+    && (await meta(V, 'meta[property="og:image"]')).endsWith('/img/compartir.png')
     && [URL, URL + '/'].includes(await meta(V, 'meta[property="og:url"]')));
 
 // ── 3.3 Dashboard y Postores con el mismo criterio ───────────────────────────────────────────────────────
@@ -143,11 +180,11 @@ await entrar(P, 'postor', '/remates/apoquindo/sala', 'mpgonzalez@correo.test');
 const linea = P.locator('.sala-panel__base');
 const esperarTexto = async (re) => { for (let i = 0; i < 25 && !re.test(await linea.innerText()); i++) await P.waitForTimeout(200); return linea.innerText(); };
 // Seeder: base $185.000.000 y precio $198.500.000 → 7,297 %.
-let base = await esperarTexto(/\+7,3% sobre la base$/);
-comprobar('«+7,3% sobre la base» (antes «+7% sobre el mínimo»)', /^Base \$185\.000\.000 · \+7,3% sobre la base$/.test(base), base);
+let base = await esperarTexto(/\+7,3%$/);
+comprobar('«Base $185.000.000 · +7,3%» (antes «+7% sobre el mínimo»)', base === 'Base $185.000.000 · +7,3%', base);
 await P.goto(URL + '/en/remates/apoquindo/sala', { waitUntil: 'load' });
-base = await esperarTexto(/\+7\.3% above the starting price$/);
-comprobar('en inglés: «+7.3% above the starting price»', /\+7\.3% above the starting price$/.test(base), base);
+base = await esperarTexto(/\+7\.3%$/);
+comprobar('en inglés: «Starting $185,000,000 · +7.3%»', base === 'Starting $185,000,000 · +7.3%', base);
 
 await navegador.close();
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');

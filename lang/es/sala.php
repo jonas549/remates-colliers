@@ -20,7 +20,7 @@ return [
         'sin_transmision' => [
             'titulo' => 'La transmisión aún no comienza',
             'texto' => 'Puedes pujar igual: el precio y el cronómetro oficiales están en el panel de la puja.',
-            'recargar' => 'Cuando comience, recarga la página para verla aquí.',
+            'recargar' => 'Aparecerá aquí apenas comience, sin recargar la página.',
             'ver_canal' => 'Ver el canal de Colliers en YouTube',
         ],
     ],
@@ -46,7 +46,7 @@ return [
     'panel' => [
         'precio_actual' => 'PRECIO ACTUAL',
         // :base y :sobre llegan como HTML de la vista.
-        'base' => 'Base :base · :sobre sobre la base',
+        'base' => 'Base :base · :sobre',
         'cierra_en' => 'CIERRA EN',
         'horas' => 'HORAS',
         'min' => 'MIN',

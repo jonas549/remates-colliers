@@ -83,4 +83,22 @@ class Sitio
     {
         return (int) (self::valor('garantias_revision_horas') ?: 24);
     }
+    /**
+     * Imagen al compartir el listado y las páginas sin foto propia (QA 21/10, 3.4). Para cambiarla basta reemplazar
+     * public/img/compartir.png (o subir compartir.jpg, que tiene prioridad): las medidas y el tipo de tarjeta salen del
+     * archivo. Hoy es una copia del logo; Colliers enviará una de 1200 × 630.
+     *
+     * @return array{url: string, ancho: int|null, alto: int|null}
+     */
+    public static function imagenCompartir(): array
+    {
+        static $imagen = null;
+        if ($imagen === null) {
+            $archivo = collect(['img/compartir.jpg', 'img/compartir.png'])->first(fn ($ruta) => is_file(public_path($ruta))) ?? 'img/colliers-logo.png';
+            $medidas = @getimagesize(public_path($archivo)) ?: [null, null];
+            $imagen = ['ruta' => $archivo, 'ancho' => $medidas[0], 'alto' => $medidas[1]];
+        }
+
+        return ['url' => asset($imagen['ruta']), 'ancho' => $imagen['ancho'], 'alto' => $imagen['alto']];
+    }
 }

@@ -186,7 +186,8 @@ class IdiomaTest extends TestCase
             ->assertSee('<meta name="description" content="' . e(__('sitio.seo.descripcion')) . '">', false)
             ->assertSee('<meta property="og:title" content="Remates · Remates Colliers">', false)
             ->assertSee('<meta property="og:url" content="' . url('/') . '">', false)
-            ->assertSee('<meta property="og:image" content="' . asset('img/colliers-logo.png') . '">', false);
+            ->assertSee('<meta property="og:image" content="' . asset('img/compartir.png') . '">', false)
+            ->assertSee('<meta property="og:image:width" content="475">', false)->assertSee('<meta name="twitter:card" content="summary">', false);
 
         $admin = User::where('rol', User::ROL_ADMIN)->firstOrFail();
         $this->actingAs($admin)->get('/admin')->assertOk()->assertDontSee('og:title', false)->assertDontSee('name="description"', false);

@@ -20,6 +20,8 @@ const conLimite = (opciones = {}) => (typeof AbortSignal !== 'undefined' && Abor
 // - Remate terminado con varios lotes: el resultado de cada lote para este postor, no solo el del último.
 // - Presencia: latido cada ~15 s a presencia.php (sin Laravel) con un token firmado; el número de conectados llega en el
 //   mismo JSON del estado. El postor solo ve el número: los nombres nunca llegan a su navegador.
+const idVideo = (id) => (typeof id === 'string' && /^[A-Za-z0-9_-]{6,20}$/.test(id) ? id : '');
+
 export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado, servidorMs, urls, uf = null, presencia = null }) => ({
     estado,
     loteId: loteInicial,
@@ -142,6 +144,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         if (!nuevo || !Array.isArray(nuevo.lotes)) return;
         if (nuevo.generado_en_ms < this.estado.generado_en_ms) return; // nunca retroceder
         this.estado = nuevo;
+        this.cambiarVideo(nuevo.video);
         if (nuevo.estado === 'cancelado') this.retirado = 'cancelado';
         const vigente = nuevo.lotes.find((l) => !TERMINALES.includes(l.estado)) || nuevo.lotes[nuevo.lotes.length - 1];
         const actual = nuevo.lotes.find((l) => l.id === this.loteId);
@@ -196,6 +199,14 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         });
     },
     get resultadoDesierto() { return this.resumenLotes.length ? !this.resumenLotes.some((r) => r.adjudicado) : !this.hayPujas; },
+    // Video (QA 21/10): llega en el estado. Solo se reasigna si cambia: volver a fijar el src del iframe lo recarga.
+    video: idVideo(estado.video),
+    get videoSrc() { return this.video ? `https://www.youtube-nocookie.com/embed/${this.video}?rel=0` : ''; },
+    cambiarVideo(id) {
+        const nuevo = idVideo(id);
+        if (nuevo !== this.video) this.video = nuevo;
+    },
+
     get mensajeMartillero() { return this.estado.mensaje_martillero?.texto || ''; },
     get mensajeHace() {
         const en = this.estado.mensaje_martillero?.en_ms;

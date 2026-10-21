@@ -54,7 +54,10 @@ switch ($accion) {
         break;
 
     case 'video':
-        Remate::where('slug', $argv[2] ?? '')->firstOrFail()->update(['youtube_video_id' => ($argv[3] ?? '') ?: null]);
+        // Como el panel: guarda y publica el estado, para que la sala abierta lo vea sin recargar.
+        $remate = Remate::where('slug', $argv[2] ?? '')->firstOrFail();
+        $remate->update(['youtube_video_id' => ($argv[3] ?? '') ?: null]);
+        app(Emisor::class)->publicarEstado($remate);
         echo "ok
 ";
         break;
