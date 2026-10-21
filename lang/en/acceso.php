@@ -210,6 +210,7 @@ return [
         'telefono' => 'Enter a valid phone number, e.g. +56 9 1234 5678.',
         'mayor_de_edad' => 'You must be of legal age.',
         'acepta' => 'Accept the terms and conditions to sign up.',
+        'captcha' => 'We could not verify that you are not a robot. Complete the check and try again.',
         'rut_invalido' => 'Invalid RUT: check the verification digit.',
         'rut_existente' => 'An account with this RUT already exists. If it is yours, sign in or recover your password.',
         'empresa_existente' => 'This company already has an account. Write to :correo if you need another representative.',

@@ -14,7 +14,7 @@
         </div>
         @if ($editada)
             <div class="admin-encabezado__acciones">
-                <form method="POST" action="{{ route('admin.configuracion.plantilla.restaurar', $clave) }}" class="formulario-en-linea" onsubmit="return confirm('¿Volver al texto original? Se pierde lo editado.')">
+                <form method="POST" action="{{ route('admin.configuracion.plantilla.restaurar', $clave) }}" class="formulario-en-linea" x-data @submit="if (! confirm('¿Volver al texto original? Se pierde lo editado.')) $event.preventDefault()">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="admin-form__borrador">Restaurar la original</button>

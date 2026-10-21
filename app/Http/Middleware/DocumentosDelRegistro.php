@@ -113,6 +113,10 @@ class DocumentosDelRegistro
     private function conservar(Request $request): void
     {
         $errores = $request->session()->get('errors')?->getBag('default');
+        // Captcha rechazado: no se valida nada más ni se guardan adjuntos (un bot no deja archivos en el disco).
+        if ($errores?->has('captcha')) {
+            return;
+        }
         $guardados = self::guardados($request);
         $token = $request->session()->get(self::SESION_CARPETA) ?: Str::random(24);
         $request->session()->put(self::SESION_CARPETA, $token);

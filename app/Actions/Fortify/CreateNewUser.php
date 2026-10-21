@@ -6,6 +6,7 @@ use App\Models\Empresa;
 use App\Models\Postor;
 use App\Models\User;
 use App\Support\Rut;
+use App\Support\Turnstile;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,11 @@ class CreateNewUser implements CreatesNewUsers
 
     public function create(array $input): User
     {
+        // Captcha antes que todo lo demás: un registro automático no llega a validarse ni a guardar adjuntos.
+        if (! Turnstile::verificar($input[Turnstile::CAMPO] ?? null, request()->ip())) {
+            throw ValidationException::withMessages(['captcha' => __('acceso.validacion.captcha')]);
+        }
+
         $juridica = ($input['tipo'] ?? null) === Postor::TIPO_JURIDICA;
         $mandatario = $juridica && ($input['calidad'] ?? null) === 'Mandatario con poder';
         $archivo = ['file', 'mimes:jpg,jpeg,png,pdf', 'max:' . self::MAX_DOCUMENTO_KB];

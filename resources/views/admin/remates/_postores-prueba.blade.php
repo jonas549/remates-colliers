@@ -98,7 +98,7 @@
     </div>
 
     <form method="POST" action="{{ route('admin.remates.prueba-clave', $remate) }}" class="admin-pruebas__acciones"
-          onsubmit="return confirm('¿Generar una clave nueva? La actual deja de servir y se cierran las sesiones de estos postores.')">
+          x-data @submit="if (! confirm('¿Generar una clave nueva? La actual deja de servir y se cierran las sesiones de estos postores.')) $event.preventDefault()">
         @csrf
         <button type="submit" class="{{ $clave ? 'admin-accion' : 'admin-boton-borde' }}">Generar clave nueva</button>
     </form>

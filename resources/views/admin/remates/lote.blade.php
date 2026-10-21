@@ -108,7 +108,7 @@
                                         <button type="submit" class="admin-accion">Hacer principal</button>
                                     </form>
                                 @endif
-                                <form method="POST" action="{{ route('admin.lotes.imagenes.destroy', [$remate, $lote, $imagen]) }}" class="formulario-en-linea" onsubmit="return confirm('¿Eliminar esta foto?')">
+                                <form method="POST" action="{{ route('admin.lotes.imagenes.destroy', [$remate, $lote, $imagen]) }}" class="formulario-en-linea" x-data @submit="if (! confirm('¿Eliminar esta foto?')) $event.preventDefault()">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="admin-accion admin-accion--peligro">Eliminar</button>

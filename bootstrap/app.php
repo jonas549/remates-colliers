@@ -14,7 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Hora de recepción de cada petición, antes de cualquier otro trabajo (validez de pujas por recepción).
         // Después, solo en la puja: abrir la conexión a la base con reintento, antes que la sesión (la hora ya quedó sellada).
-        $middleware->prepend([\App\Http\Middleware\HoraRecepcion::class, \App\Http\Middleware\ConexionPujaConReintento::class]);
+        // http → https (QA 21/10, 2.1) va justo después: una petición por http no abre la base ni la sesión.
+        $middleware->prepend([\App\Http\Middleware\HoraRecepcion::class, \App\Http\Middleware\ForzarHttps::class, \App\Http\Middleware\ConexionPujaConReintento::class]);
+        // Cabeceras de seguridad y CSP en toda respuesta de Laravel, también en los errores (QA 21/10, 2.2).
+        $middleware->append(\App\Http\Middleware\CabecerasSeguridad::class);
+        $middleware->validateCsrfTokens(except: ['csp-informe']);
         // Idioma por el prefijo de la URL (/en). Global, para que también los errores sin ruta salgan en ese idioma.
         $middleware->append(\App\Http\Middleware\EstablecerIdioma::class);
         // La cookie del conmutador solo dice «es» o «en»: se lee antes de la sesión, sin cifrar.

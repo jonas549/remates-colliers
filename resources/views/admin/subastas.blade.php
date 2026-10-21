@@ -75,7 +75,7 @@
                                         <a href="{{ $prueba['ficha'] }}" class="admin-accion">Ficha</a>
                                         <a href="{{ $prueba['enVivo'] }}" class="admin-accion">Panel en vivo</a>
                                         <form method="POST" action="{{ $prueba['borrar'] }}" class="formulario-en-linea"
-                                            onsubmit="return confirm('¿Borrar {{ $prueba['folio'] }} con sus postores de prueba?')">
+                                            x-data @submit="if (! confirm('¿Borrar {{ $prueba['folio'] }} con sus postores de prueba?')) $event.preventDefault()">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="admin-accion admin-accion--peligro">Borrar</button>

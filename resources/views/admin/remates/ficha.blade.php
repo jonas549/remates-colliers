@@ -201,7 +201,7 @@
                         <div class="admin-acciones">
                             <a href="{{ route('admin.documentos.descargar', [$remate, $documento]) }}" class="admin-accion">Descargar</a>
                             @if ($puedeEditar)
-                                <form method="POST" action="{{ route('admin.documentos.destroy', [$remate, $documento]) }}" class="formulario-en-linea" onsubmit="return confirm('¿Eliminar este documento?')">
+                                <form method="POST" action="{{ route('admin.documentos.destroy', [$remate, $documento]) }}" class="formulario-en-linea" x-data @submit="if (! confirm('¿Eliminar este documento?')) $event.preventDefault()">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="admin-accion admin-accion--peligro">Eliminar</button>

@@ -8,6 +8,7 @@ use App\Models\Postor;
 use App\Models\PostorDocumento;
 use App\Models\User;
 use App\Support\Rut;
+use App\Support\Turnstile;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cookie\CookieValuePrefix;
@@ -17,6 +18,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
@@ -198,6 +200,42 @@ class AutenticacionTest extends TestCase
         $this->assertSame(Postor::ESTADO_EN_REVISION, $postor->fresh()->estado);
         $this->get('/mi-cuenta')->assertOk()->assertSee('Estamos revisando tu registro');
         $this->assertSame(1, AccessLog::where('evento', 'correo_verificado')->count());
+    }
+
+    /** QA 21/10, 2.3: con las claves de Turnstile, el registro exige el captcha y lo valida en el servidor. */
+    public function test_registro_con_turnstile_valida_el_token_en_el_servidor(): void
+    {
+        Storage::fake('local');
+        Notification::fake();
+        $this->get('/registro')->assertOk()->assertDontSee('cf-turnstile', false)->assertDontSee('challenges.cloudflare.com', false);
+
+        config(['services.turnstile.site_key' => '1x00000000000000000000AA', 'services.turnstile.secret_key' => 'secreto-de-prueba']);
+        $this->get('/registro')->assertOk()->assertSee('data-sitekey="1x00000000000000000000AA"', false)->assertSee('challenges.cloudflare.com/turnstile/v0/api.js', false);
+
+        // Sin token: rechazado sin consultar a Cloudflare, sin cuenta y sin adjuntos guardados.
+        // Un solo fake (los fakes de Http se apilan): la respuesta de Cloudflare cambia con $cloudflare.
+        $cloudflare = fn () => Http::response(['success' => false, 'error-codes' => ['invalid-input-response']]);
+        Http::fake(['challenges.cloudflare.com/*' => function () use (&$cloudflare) { return $cloudflare(); }]);
+        $this->from('/registro')->post('/registro', $this->formulario())->assertRedirect('/registro')->assertSessionHasErrors('captcha');
+        Http::assertNothingSent();
+        $this->assertSame(0, User::count());
+        $this->assertSame([], Storage::disk('local')->allFiles());
+
+        // Token que Cloudflare rechaza.
+        $this->from('/registro')->post('/registro', $this->formulario([Turnstile::CAMPO => 'token-falso']))->assertSessionHasErrors('captcha');
+        $this->assertSame(0, User::count());
+
+        // Cloudflare no responde: falla cerrado.
+        $cloudflare = fn () => throw new \Illuminate\Http\Client\ConnectionException('sin red');
+        $this->from('/registro')->post('/registro', $this->formulario([Turnstile::CAMPO => 'token']))->assertSessionHasErrors('captcha');
+        $this->assertSame(0, User::count());
+
+        // Token válido: entra, y la verificación llevó la clave secreta y el token.
+        $cloudflare = fn () => Http::response(['success' => true]);
+        $this->post('/registro', $this->formulario([Turnstile::CAMPO => 'token-bueno']))->assertRedirect(route('verification.notice') . '?ingreso=1');
+        $this->assertSame(1, User::count());
+        Http::assertSent(fn ($r) => $r->url() === 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+            && $r['secret'] === 'secreto-de-prueba' && $r['response'] === 'token-bueno');
     }
 
     public function test_registro_de_persona_juridica_exige_empresa_y_poder(): void

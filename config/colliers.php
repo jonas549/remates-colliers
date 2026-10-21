@@ -64,6 +64,18 @@ return [
     ],
 
     /*
+     * Seguridad de transporte y cabeceras (QA 21/10, 2.1 y 2.2). La redirección de http a https del servidor la
+     * configura Jonas; esta es la de la aplicación. Por defecto activa fuera de local y pruebas (Laragon va por http).
+     * CSP: 'activa' | 'reporte' (Content-Security-Policy-Report-Only: no bloquea, solo avisa en la consola) | 'apagada',
+     * para poder aflojarla desde el .env sin un deploy si algo legítimo quedara bloqueado.
+     */
+    'seguridad' => [
+        'forzar_https' => (bool) env('COLLIERS_FORZAR_HTTPS', ! in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)),
+        'hsts_segundos' => (int) env('COLLIERS_HSTS_SEGUNDOS', 31536000),
+        'csp' => env('COLLIERS_CSP', 'activa'),
+    ],
+
+    /*
      * Reintento de la conexión a la base en la petición de puja (21/09). En un hosting compartido MariaDB puede rechazar
      * conexiones unos segundos (1040 Too many connections) o reiniciarse (2002). La hora de recepción ya está sellada
      * antes de arrancar Laravel (HoraRecepcion), así que esperar no cambia la validez de la puja.

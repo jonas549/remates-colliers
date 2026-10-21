@@ -32,6 +32,20 @@ use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
  */
 
 /*
+ * Informes de la CSP (QA 21/10, 2.2): el navegador avisa aquí lo que la política bloqueó y queda en el log de Laravel.
+ * Sin sesión ni CSRF (el navegador no manda token); acotado por minuto y por tamaño.
+ */
+Route::post('/csp-informe', function (\Illuminate\Http\Request $request) {
+    $informe = json_decode(mb_substr((string) $request->getContent(), 0, 4000), true);
+    $datos = $informe['csp-report'] ?? $informe ?? [];
+    \Illuminate\Support\Facades\Log::warning('CSP bloqueó un recurso', array_map(fn ($v) => is_string($v) ? mb_substr($v, 0, 300) : $v, array_intersect_key(
+        is_array($datos) ? $datos : [], array_flip(['document-uri', 'violated-directive', 'effective-directive', 'blocked-uri', 'source-file', 'line-number']),
+    )));
+
+    return response()->noContent();
+})->middleware('throttle:30,1')->name('csp.informe');
+
+/*
  * Bloque J: motor de pujas y tiempo real. Los espectadores leen /tiempo-real/{remate}.json (estático);
  * estas rutas ejecutan PHP solo para pujar, sincronizar el reloj, reconectar y cerrar.
  */

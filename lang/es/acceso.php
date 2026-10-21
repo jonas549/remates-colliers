@@ -210,6 +210,7 @@ return [
         'telefono' => 'Ingresa un teléfono válido, por ejemplo +56 9 1234 5678.',
         'mayor_de_edad' => 'Debes ser mayor de edad.',
         'acepta' => 'Debes aceptar las bases y los términos para registrarte.',
+        'captcha' => 'No pudimos comprobar que no eres un robot. Marca la verificación e inténtalo de nuevo.',
         'rut_invalido' => 'El RUT no es válido: revisa el dígito verificador.',
         'rut_existente' => 'Ya existe una cuenta con este RUT. Si es tuya, ingresa o recupera tu contraseña.',
         'empresa_existente' => 'Esta empresa ya tiene una cuenta registrada. Escribe a :correo si necesitas otro representante.',

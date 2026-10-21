@@ -45,7 +45,7 @@
             </div>
             <div class="admin-encabezado__acciones" style="gap: 10px">
                 <form method="GET" action="{{ route('admin.reportes') }}" class="formulario-en-linea">
-                    <select name="periodo" onchange="this.form.submit()" class="admin-reportes__periodo" aria-label="Período">
+                    <select name="periodo" x-data @change="$el.form.submit()" class="admin-reportes__periodo" aria-label="Período">
                         @foreach ($opciones as $grupo => $valores)
                             <optgroup label="{{ $grupo }}">
                                 @foreach ($valores as $clave => $nombre)

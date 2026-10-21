@@ -30,7 +30,7 @@ nota *(verifica Jonas en el sandbox)*.
 | L | Streaming | Pendiente | 0/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 7/8 |
-| P | Seguridad | Pendiente | 0/8 |
+| P | Seguridad | En progreso | 3/11 |
 | Q | QA y carga | Pendiente | 0/6 |
 | R | Despliegue a producción | Pendiente | 0/9 |
 | S | Documentación | Pendiente | 0/4 |
@@ -72,8 +72,10 @@ OPcache sigue apagado en el sandbox: el camino de la puja y la presencia no ejec
 revise el glosario y las cadenas dudosas, y que el cliente confirme la línea de la versión que rige.
 
 **21/10, QA de Jonas sobre el sandbox (18 hallazgos en 4 grupos, en local y sin push):** grupo 1 hecho (K: aviso de
-conexión con Pujar bloqueado, y el ganador ve su adjudicación en la sala cerrada y en Mi cuenta). Siguen los grupos 2
-(seguridad), 3 (visibles) y 4 (menores). Detalle en `docs/progreso/2026-10-21.md`.
+conexión con Pujar bloqueado, y el ganador ve su adjudicación en la sala cerrada y en Mi cuenta). Grupo 2 hecho (P:
+HTTPS forzado por la aplicación, cabeceras con CSP, Turnstile en el registro; el límite de pujas solo se investigó y
+espera la decisión de Jonas). El 2FA queda fuera de la tanda (Jonas lo confirma con el cliente). Siguen los grupos 3
+(visibles) y 4 (menores). Detalle en `docs/progreso/2026-10-21.md`.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -447,12 +449,16 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [x] **Exportar PDF: fuera del alcance** *(decisión de Jonas, 20/09: no está en el acta; si el cliente lo pide, se agrega)*. Se quitó el botón «Descargar PDF», que se veía y no hacía nada. Quedan CSV y XLSX
 - [ ] Probar las descargas en el sandbox (extensiones `zip`, `xmlwriter`, `iconv`, `simplexml`, `xmlreader`, `zlib`: `colliers:diagnostico` ahora las revisa)
 
-## P — Seguridad · Pendiente
+## P — Seguridad · En progreso
 
 - [ ] Revisión de policies y consultas filtradas por dueño
 - [ ] Rate limiting en login, registro y pujas
 - [ ] RUT cifrado con índice ciego verificado
-- [ ] Cabeceras de seguridad en LiteSpeed
+- [x] **Cabeceras de seguridad y CSP** *(QA de Jonas 21/10, 2.2: no había ninguna)*, en la aplicación y no en LiteSpeed (`CabecerasSeguridad`, global: páginas, errores, JSON y descargas): `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin` (YouTube necesita el origen), `Permissions-Policy` sin cámara, micrófono, ubicación ni pagos (sin tocar autoplay ni pantalla completa del video), y CSP: solo el propio dominio, `frame-src` de YouTube (`youtube-nocookie.com`, el que usan sala y ficha, y `youtube.com`), mosaicos de OpenStreetMap, Turnstile solo si está configurado. `'unsafe-eval'` porque Alpine evalúa las expresiones de las vistas; `'unsafe-inline'` solo en estilos (el diseño trae estilos en línea); **sin scripts en línea**: los 6 `onsubmit`/`onchange` del panel (los `confirm()` de borrar) se pasaron a Alpine, porque con la CSP el navegador los habría ignorado y el formulario se habría enviado **sin confirmar**. `report-uri /csp-informe`: lo bloqueado queda en el log de Laravel («CSP bloqueó un recurso»). `COLLIERS_CSP=reporte|apagada` la afloja desde el .env sin deploy *(`SeguridadTest`; `tools/comparar/seguridad.mjs` en Chrome: video de YouTube en ficha y sala, mapa, latido de presencia, estado de la sala, Alpine en listado y registro, los confirm del panel, con un control que confirma que un script en línea sí se bloquea y se detecta; los 16 recorridos en navegador corridos con la CSP activa y 0 bloqueos en el log)*. Los archivos estáticos (JSON del tiempo real, `hora.php`, `presencia.php`) no pasan por Laravel y no llevan estas cabeceras
+- [x] **HTTPS forzado por la aplicación** *(QA 21/10, 2.1: http:// respondía 200)*: `ForzarHttps` redirige toda petición http a la misma dirección en https (301 GET/HEAD; 308 el resto, que conserva método y cuerpo), antes de abrir la base o la sesión; `Strict-Transport-Security: max-age=31536000` (sin `includeSubDomains` ni `preload`), y todos los enlaces generados en https. Activo por defecto fuera de local y pruebas (`COLLIERS_FORZAR_HTTPS`). `X-Forwarded-Proto: https` cuenta como https, para no entrar en bucle si el hosting termina el TLS en un proxy. La redirección del servidor la configura Jonas *(`SeguridadTest`)*
+- [x] **Captcha en el registro: Cloudflare Turnstile** *(QA 21/10, 2.3)*: se verifica en el servidor (`siteverify`) antes de validar el resto del formulario; si falla, no se valida nada más ni se guardan adjuntos, y si Cloudflare no responde el registro se rechaza (falla cerrado, queda en el log). Sin las claves en el .env no se muestra ni se exige (local y pruebas) *(`AutenticacionTest`: sin claves, sin token, token rechazado, Cloudflare caído y token válido)*
+- [ ] Claves de Turnstile cargadas en el sandbox y registro probado con el widget *(Jonas: `TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY`)*
+- [ ] HTTPS y cabeceras comprobados en el sandbox: `http://` → 301 a https, HSTS y CSP en las respuestas, sala con video y presencia sin «CSP bloqueó» en el log *(Jonas)*
 - [ ] Carga de archivos (comprobantes, documentos) validada y fuera de `public`
 - [ ] Sin secretos en el repositorio público
 - [ ] 2FA *(pendiente con el cliente: ¿solo administradores o también postores?)*

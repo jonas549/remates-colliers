@@ -228,3 +228,6 @@
 .registro__errores ul { margin: 10px 0 0; padding-left: 20px; }
 .registro__errores li { margin-top: 4px; }
 .registro__errores:focus { outline: 2px solid #c8102e; outline-offset: 3px; }
+
+/* Captcha del registro (Turnstile, QA 21/10). */
+.registro__captcha { margin-top: 20px; min-height: 65px; }

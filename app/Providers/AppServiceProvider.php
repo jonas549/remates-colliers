@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
 
@@ -46,6 +47,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // QA 21/10, 2.1: con https forzado, todo enlace generado (también en correos desde la cola) sale en https.
+        if (config('colliers.seguridad.forzar_https')) {
+            URL::forceScheme('https');
+        }
+
         Event::subscribe(RegistroDeAccesos::class);
         // Bloque M: correos por la cola y su bitácora.
         Event::subscribe(\App\Listeners\EnviarAvisos::class);

@@ -139,6 +139,15 @@
                 </label>
                 @error('acepta')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
 
+                {{-- Captcha (QA 21/10): solo con las claves de Turnstile en el .env; sin ellas el registro funciona igual. --}}
+                @if (\App\Support\Turnstile::activo())
+                    <div class="registro__captcha">
+                        <div class="cf-turnstile" data-sitekey="{{ \App\Support\Turnstile::claveSitio() }}" data-language="{{ app()->getLocale() }}" data-theme="light" data-size="flexible"></div>
+                        @error('captcha')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
+                    </div>
+                    <script src="{{ \App\Support\Turnstile::SCRIPT }}" async defer></script>
+                @endif
+
                 <div class="registro__acciones">
                     <button type="submit" class="registro__enviar" :class="{ 'es-listo': acepta }">{{ __('acceso.registro.enviar') }}</button>
                     <a href="{{ route('login') }}" class="registro__ya-tengo">{{ __('acceso.registro.ya_tengo_cuenta') }}</a>

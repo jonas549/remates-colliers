@@ -53,7 +53,8 @@ await p.goto(`${URL}/admin/configuracion/remates`, { waitUntil: 'load' });
 const confirmar = p.locator('[data-confirmar-margen]');
 comprobar('con 5 s no hay aviso ni casilla', (await p.locator('[data-aviso-margen]').count()) === 0 && !(await confirmar.isVisible()));
 await p.fill('input[name="config[margen_liquidacion_segundos]"]', '3');
-comprobar('al escribir 3 s aparece la casilla de confirmación', await confirmar.isVisible());
+// Alpine la muestra en el siguiente ciclo: se espera (hasta 2 s) en vez de mirar en el mismo instante del fill.
+comprobar('al escribir 3 s aparece la casilla de confirmación', await confirmar.waitFor({ state: 'visible', timeout: 2000 }).then(() => true, () => false));
 await p.getByRole('button', { name: 'Guardar cambios' }).click();
 comprobar('sin confirmar no se guarda y explica el riesgo', (await p.locator('.admin-errores').innerText()).includes('una puja válida podría rechazarse'));
 comprobar('la casilla sigue a la vista tras el error', await confirmar.isVisible());
@@ -61,7 +62,7 @@ await confirmar.locator('input[type=checkbox]').check();
 await p.getByRole('button', { name: 'Guardar cambios' }).click();
 comprobar('confirmado: se guarda', (await p.locator('.admin-aviso--ok').innerText()).includes('Configuración guardada'));
 comprobar('aviso fijo mientras el margen esté bajo lo seguro', (await p.locator('[data-aviso-margen]').innerText()).includes('por debajo de los 5 s seguros'));
-comprobar('sin cambiar el margen no vuelve a pedir la casilla', !(await confirmar.isVisible()));
+comprobar('sin cambiar el margen no vuelve a pedir la casilla', await confirmar.waitFor({ state: 'hidden', timeout: 2000 }).then(() => true, () => false));
 await p.screenshot({ path: path.join(SALIDA, 'margen-bajo.png'), fullPage: true });
 
 // 2. Garantías.
