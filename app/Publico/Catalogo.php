@@ -179,6 +179,16 @@ class Catalogo
             'martillero' => $r->martillero?->name ?? 'Colliers',
             'video' => $r->youtube_video_id,
             'fotoPrincipal' => $fotos->first() ?? asset('img/demo/prop-hero.jpg'),
+            // SEO y vista previa al compartir (QA 21/10, 3.4): la foto principal real, nunca la de muestra.
+            'seo' => [
+                'descripcion' => __('remate.seo.' . ($vista === Remate::VISTA_PROXIMO ? 'proximo' : ($enVivo ? 'en_vivo' : 'cerrado')), [
+                    'direccion' => $lote->direccion ?: $r->titulo,
+                    'lugar' => collect([$lote->comuna, self::etiquetaTipo($lote->tipo_propiedad)])->filter()->join(', '),
+                    'base' => Formato::clp((int) $r->lotes->sum('precio_base')),
+                    'fecha' => $r->abreEn() ? Formato::fechaLarga($r->abreEn()) . ', ' . $r->abreEn()->setTimezone(Formato::ZONA)->format('H:i') . Formato::zona() : '',
+                ]),
+                'imagen' => $fotos->first(),
+            ],
             'galeria' => $fotos->slice($enVivo ? 0 : 1, 4)->values()->all(),
             'totalFotos' => $fotos->count(),
             'descripcion' => $lote->descripcion ?: $r->descripcion,
@@ -198,7 +208,7 @@ class Catalogo
                 strtoupper(pathinfo($d->nombre_original, PATHINFO_EXTENSION)) . ' · ' . Formato::numero(max(1, (int) round(($d->tamano_bytes ?? 0) / 1024))) . ' KB',
                 ($d->publico || $garantiaAprobada) ? route('remates.documento', [$r->slug, $d->id]) : null,
             ])->values()->all(),
-            'garantiaCondicion' => (string) Configuracion::valor('texto_condiciones_garantia'),
+            'garantiaCondicion' => self::condicionGarantia(),
             'recomendados' => self::recomendados($r, $ahora),
             'bases' => self::urlBases($r),
             'canal' => Configuracion::valor('enlace_canal_youtube') ?: null,
@@ -228,6 +238,17 @@ class Catalogo
                 'estadoUrl' => route('tiempo-real.estado', $r->slug),
             ],
         ];
+    }
+
+    /**
+     * Tercer párrafo de «Condiciones del remate» (QA 21/10, 3.2). Mientras el texto sea el de fábrica, sale de los
+     * archivos de idioma; si Colliers lo editó en el panel, se muestra tal cual (el contenido del panel va en español, 20/10).
+     */
+    private static function condicionGarantia(): string
+    {
+        $texto = (string) Configuracion::valor('texto_condiciones_garantia');
+
+        return trim($texto) === Configuracion::DEFECTOS['texto_condiciones_garantia']['valor'] ? __('remate.secciones.condicion_garantia') : $texto;
     }
 
     private static function recomendados(Remate $actual, CarbonImmutable $ahora): array

@@ -51,6 +51,16 @@
                     <div class="sala__video">
                         @if ($propiedad['video'])
                             <iframe src="https://www.youtube-nocookie.com/embed/{{ $propiedad['video'] }}?rel=0" title="{{ __('sala.video.titulo') }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                        @else
+                            {{-- QA 21/10, 3.1: sin video cargado no queda un recuadro negro. Se puede pujar igual. --}}
+                            <div class="sala__sin-video" data-sin-video>
+                                <strong class="sala__sin-video-titulo">{{ __('sala.video.sin_transmision.titulo') }}</strong>
+                                <p>{{ __('sala.video.sin_transmision.texto') }}</p>
+                                <p class="sala__sin-video-nota">{{ __('sala.video.sin_transmision.recargar') }}</p>
+                                @if ($propiedad['canal'] ?? null)
+                                    <a href="{{ $propiedad['canal'] }}" target="_blank" rel="noopener" class="sala__sin-video-canal">{{ __('sala.video.sin_transmision.ver_canal') }}</a>
+                                @endif
+                            </div>
                         @endif
                     </div>
                     <div class="sala__video-pie">

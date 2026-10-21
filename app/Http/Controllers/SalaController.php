@@ -95,6 +95,8 @@ class SalaController extends Controller
                 'garantia' => $garantia->monto,
                 'martillero' => $remate->martillero?->name,
                 'video' => $remate->youtube_video_id,
+                // Sin video cargado, el reproductor muestra un aviso con el enlace al canal (QA 21/10, 3.1).
+                'canal' => Configuracion::valor('enlace_canal_youtube') ?: config('colliers.sitio_produccion.redes.youtube'),
                 // El alias es dato («Postor #N»); se muestra en el idioma de la página.
                 'usuario' => $user->name . ($alias ? ' · ' . (preg_match('/^Postor #(\d+)$/', $alias, $m) ? __('sala.alias', ['n' => $m[1]]) : $alias) : ''),
             ],

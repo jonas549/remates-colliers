@@ -43,6 +43,9 @@ class DashboardController extends Controller
 
         $postores = Postor::reales()->count();
         $enRevision = Postor::reales()->where('estado', Postor::ESTADO_EN_REVISION)->count();
+        // QA 21/10, 3.3: la pestaña «Cuentas por aprobar» de Postores incluye las que no confirman el correo, que todavía no
+        // se pueden aprobar. El indicador cuenta solo las aprobables y dice cuántas esperan el correo.
+        $sinCorreo = Postor::reales()->where('estado', Postor::ESTADO_REGISTRADO)->count();
         $garantiasRevision = Garantia::where('estado', Garantia::ESTADO_EN_REVISION)->whereHas('remate', fn ($q) => $q->where('es_demostracion', false));
         $uf = Configuracion::valor('uf_valor');
 
@@ -51,7 +54,7 @@ class DashboardController extends Controller
             'kpis' => [
                 ['SUBASTAS ACTIVAS', (string) ($enVivo->count() + $proximos->count()), $enVivo->count() . ' en vivo · ' . $proximos->count() . ' próximas', false],
                 ['POSTORES REGISTRADOS', (string) $postores, '+' . Postor::reales()->where('created_at', '>=', $ahora->subWeek()->format('Y-m-d H:i:s'))->count() . ' esta semana', false],
-                ['CUENTAS POR APROBAR', (string) $enRevision, 'Revisión manual pendiente', $enRevision > 0],
+                ['CUENTAS POR APROBAR', (string) $enRevision, $sinCorreo ? ($sinCorreo === 1 ? '1 más espera confirmar su correo' : "{$sinCorreo} más esperan confirmar su correo") : 'Revisión manual pendiente', $enRevision > 0],
                 ['GARANTÍAS EN REVISIÓN', (string) (clone $garantiasRevision)->count(), Formato::clp((int) (clone $garantiasRevision)->sum('monto')) . ' comprometidos', (clone $garantiasRevision)->exists()],
                 ['ADJUDICADO EN ' . mb_strtoupper(Formato::MESES[$ahora->setTimezone(Formato::ZONA)->month - 1]), $this->millones((int) $adjudicadoMes->sum('monto')),
                     "{$concretados} de {$cerradosMes->count()} remates concretados", false],

@@ -104,6 +104,13 @@ return [
         'ver_fotos' => 'View all :total photos',
     ],
 
+    // Description for search engines and link previews (QA 21/10, 3.4).
+    'seo' => [
+        'proximo' => 'Auction of :direccion (:lugar). Starting price :base. Starts :fecha. Colliers Chile.',
+        'en_vivo' => 'Live auction of :direccion (:lugar). Starting price :base. Watch the broadcast and bid online with Colliers Chile.',
+        'cerrado' => 'Auction of :direccion (:lugar), starting price :base. See the result and upcoming Colliers Chile auctions.',
+    ],
+
     'transmision' => [
         'se_habilita' => 'The broadcast opens',
         'texto' => 'The auction is streamed live on the Colliers Chile YouTube channel. The player will appear on this page when it starts, together with the bid history.',
@@ -123,6 +130,7 @@ return [
         'condiciones' => 'Auction conditions',
         'condicion_pesos' => 'Bids are placed in Chilean pesos. The UF value is shown for reference only and does not determine the bid or bid deposit amounts.',
         'condicion_cierre' => 'The auction closes automatically when the timer runs out, with no extensions for last-minute bids. Colliers may close the auction early.',
+        'condicion_garantia' => 'The bid deposit is paid by bank draft (vale a la vista) or bank transfer and is reviewed manually by Colliers before the auction starts. If the auction does not succeed, the property is listed in a new auction with its own date and conditions.',
     ],
 
     'visitas' => [

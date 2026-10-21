@@ -17,6 +17,12 @@ return [
         'canal' => 'Transmisión del canal de Colliers Chile',
         'martillero' => 'Martillero',
         'oficial' => 'Precio y cronómetro oficiales: el video tiene 10–30 s de retraso',
+        'sin_transmision' => [
+            'titulo' => 'La transmisión aún no comienza',
+            'texto' => 'Puedes pujar igual: el precio y el cronómetro oficiales están en el panel de la puja.',
+            'recargar' => 'Cuando comience, recarga la página para verla aquí.',
+            'ver_canal' => 'Ver el canal de Colliers en YouTube',
+        ],
     ],
 
     'ficha' => [

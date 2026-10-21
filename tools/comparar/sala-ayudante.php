@@ -7,6 +7,7 @@
  *   php tools/comparar/sala-ayudante.php cerrar-en N    cierra_en = ahora + N s y publica el estado
  *   php tools/comparar/sala-ayudante.php dos-lotes N    remate «dos-lotes»: lote 1 cierra en N s, lote 2 abre 3 s después
  *   php tools/comparar/sala-ayudante.php mensaje SLUG T mensaje del martillero en ese remate
+ *   php tools/comparar/sala-ayudante.php video SLUG [ID] id del video de YouTube del remate (sin ID, lo quita)
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -50,6 +51,12 @@ switch ($accion) {
             'cierra_en_ms' => (int) $l->cierra_en->format('Uv'),
             'adjudicado_a' => Adjudicacion::where('lote_id', $l->id)->first()?->user?->email,
         ]) . "\n";
+        break;
+
+    case 'video':
+        Remate::where('slug', $argv[2] ?? '')->firstOrFail()->update(['youtube_video_id' => ($argv[3] ?? '') ?: null]);
+        echo "ok
+";
         break;
 
     case 'cerrar-en':

@@ -42,7 +42,7 @@
     $iconoCalendario = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><rect x="3" y="5" width="18" height="16"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>';
     $correoVisita = 'mailto:' . Sitio::correo() . '?subject=' . rawurlencode(__('remate.correo.asunto_visita', ['direccion' => $r['direccion'], 'folio' => $r['folio']]));
 @endphp
-<x-layouts.base :titulo="$r['direccion']" pagina-completa>
+<x-layouts.base :titulo="$r['direccion']" :descripcion="$r['seo']['descripcion'] ?? null" :imagen="$r['seo']['imagen'] ?? null" pagina-completa>
     <div class="detalle" x-data="detalleRemate(@js($config))">
 
         <x-publico.cabecera :sesion="$sesion" :visitante="$visitante" :z-index="1200">

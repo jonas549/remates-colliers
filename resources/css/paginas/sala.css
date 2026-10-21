@@ -28,6 +28,24 @@
 
 .sala__video { position: relative; background: #0f1723; aspect-ratio: 16 / 9; width: 100%; border: 1px solid #dbe1ec; }
 .sala__video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* QA 21/10, 3.1: sin video cargado, aviso en lugar del recuadro negro. */
+.sala__sin-video {
+  position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+  gap: 8px; padding: 20px; text-align: center; color: #c9d2e0; font-size: 14px; line-height: 1.5;
+}
+.sala__sin-video p { margin: 0; max-width: 46ch; }
+.sala__sin-video-titulo { font-family: 'Source Serif 4', serif; font-size: 26px; font-weight: 400; line-height: 1.2; color: #fff; }
+.sala__sin-video-nota { font-size: 13px; color: #8f9bb0; }
+.sala__sin-video-canal {
+  display: inline-flex; align-items: center; min-height: 44px; margin-top: 4px; padding: 0 18px;
+  border: 1px solid #c9d2e0; color: #fff; font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.sala__sin-video-canal:hover { background: #fff; color: #0f1723; }
+@media (max-width: 759px) {
+  .sala__sin-video { gap: 4px; padding: 12px; font-size: 13px; }
+  .sala__sin-video-titulo { font-size: 19px; }
+  .sala__sin-video-nota { display: none; }
+}
 .sala__video-pie {
   display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
   border: 1px solid #dbe1ec; border-top: 0; padding: 12px 16px; font-size: 13px; color: #5b6572;

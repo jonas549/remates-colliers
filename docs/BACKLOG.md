@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-10-20** (sitio público en inglés completo en local; falta que Jonas revise el glosario y las cadenas dudosas).
+> **Registro vivo del avance.** Última actualización: **2026-10-21** (QA de Jonas sobre el sandbox: grupos 1 a 3 hechos en local y sin push).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -23,11 +23,11 @@ nota *(verifica Jonas en el sandbox)*.
 | K | Sala de puja conectada al motor real | En progreso | 19/20 |
 | I | Remates y lotes + panel del martillero | **Completo** | 20/20 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
-| G | Postores | **Completo** | 6/6 |
+| G | Postores | **Completo** | 7/7 |
 | H | Garantías | En progreso | 10/12 |
 | M | Notificaciones | En progreso | 8/9 |
-| N | Sitio público | En progreso | 20/21 |
-| L | Streaming | Pendiente | 0/4 |
+| N | Sitio público | En progreso | 22/23 |
+| L | Streaming | En progreso | 1/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 7/8 |
 | P | Seguridad | En progreso | 3/11 |
@@ -74,8 +74,10 @@ revise el glosario y las cadenas dudosas, y que el cliente confirme la línea de
 **21/10, QA de Jonas sobre el sandbox (18 hallazgos en 4 grupos, en local y sin push):** grupo 1 hecho (K: aviso de
 conexión con Pujar bloqueado, y el ganador ve su adjudicación en la sala cerrada y en Mi cuenta). Grupo 2 hecho (P:
 HTTPS forzado por la aplicación, cabeceras con CSP, Turnstile en el registro; el límite de pujas solo se investigó y
-espera la decisión de Jonas). El 2FA queda fuera de la tanda (Jonas lo confirma con el cliente). Siguen los grupos 3
-(visibles) y 4 (menores). Detalle en `docs/progreso/2026-10-21.md`.
+espera la decisión de Jonas). El 2FA queda fuera de la tanda (Jonas lo confirma con el cliente). Grupo 3 hecho (L: la
+sala sin video avisa que la transmisión no comienza; N: condición de garantía en inglés, descripción y Open Graph por
+remate; G: el dashboard explica las cuentas que esperan el correo). Sigue el grupo 4 (menores). Detalle en
+`docs/progreso/2026-10-21.md`.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -338,6 +340,7 @@ recargar). Pantalla del diseño «Admin Postores» ahora solo para administrador
 - [x] Bloquear (con motivo) / desbloquear cuenta *(supuesto de la máquina de estados propuesta: aprobado ↔ bloqueado)*
 - [x] Aprobación usable desde el celular (tarjetas, botones ≥ 44 px, ficha a pantalla completa)
 - [x] Correo de aprobación, rechazo (con motivo), bloqueo y desbloqueo de la cuenta *(Bloque M, 17/09)*
+- [x] **«Cuentas por aprobar» con el mismo criterio en el dashboard y en Postores** *(QA de Jonas 21/10, 3.3: el dashboard decía 0 y la pestaña 1, una cuenta «Sin confirmar correo»)*: una cuenta sin el correo confirmado todavía no se puede aprobar, así que el indicador sigue contando solo las aprobables y lo dice: «1 más espera confirmar su correo» / «N más esperan confirmar su correo». La pestaña de Postores las sigue mostrando, porque desde ahí se pueden rechazar *(`PostoresGarantiasTest`; `qa-visibles.mjs`: el número del dashboard más los que esperan el correo coincide con la pestaña)*
 
 ## H — Garantías · En progreso
 
@@ -392,6 +395,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [x] Documentos descargables: públicos para todos; reservados solo con garantía aprobada del remate
 - [x] Recomendados (próximos y en vivo)
 - [x] Enlace al canal de YouTube de Colliers (Configuración; se oculta si está vacío) y «Compartir»
+- [x] **Descripción y vista previa al compartir** *(QA de Jonas 21/10, 3.4: no había meta description ni Open Graph)*: cada ficha de remate lleva `description`, `og:title`, `og:description`, `og:url` (sin filtros ni parámetros) y `og:image` con la **foto principal real del lote** (`twitter:card` grande). La descripción dice dirección, comuna y tipo, precio base y, según el estado, la fecha de inicio, «en vivo» o el resultado; en inglés, en inglés. El listado y el resto de las páginas públicas usan los valores del sitio (`sitio.seo`) y el logo de Colliers. El panel no los lleva *(`IdiomaTest`; `qa-visibles.mjs`: la imagen de la ficha existe y carga)*
 - [x] **Favicon** *(QA de Jonas, 18/10)*: el ícono de activosespeciales.colliers.cl (original de 512 px) en `favicon.ico` (16/32/48), PNG de 32, 180 (apple-touch), 192 y 512 y `site.webmanifest`, enlazados en `x-layouts.base`, que es el único `<head>`: el panel, el acceso, la sala y las páginas de error lo envuelven. `.htaccess` sirve el manifiesto como `application/manifest+json` *(verificado en local: sitio, acceso y panel con sesión; 179 pruebas)*
 - [x] **Cabecera y pie hacia el sitio corporativo** *(QA de Jonas, 18/10)*: los ítems que no son de la aplicación enlazan a la página que existe en activosespeciales.colliers.cl, en pestaña nueva (`target="_blank" rel="noopener"`): Servicios, Nosotros, Política de privacidad, Términos de uso y las redes que publica ese sitio (LinkedIn, Instagram, YouTube). Sin página allí quedan **sin enlace**, con el mismo aspecto: Expertos, Propiedades, Investigación, Artículos, Carreras, Accionistas, Cookies, Accesibilidad y X; nada va a la portada como relleno. Los enlaces de Configuración → Sitio (privacidad, términos, bases) **mandan cuando tienen valor**; vacíos, la página corporativa (las bases no tienen: sin valor, sin enlace). URL base en `config/colliers.php` → `sitio_produccion` con `COLLIERS_SITIO_PRODUCCION` (por defecto la de producción: no hace falta tocar el servidor). El menú del panel no cambió *(`SitioPublicoTest::test_menu_y_pie_enlazan_al_sitio_corporativo_solo_donde_hay_pagina`)*
 - [x] Contacto «Coordinar visita» y «Contactar al ejecutivo» con el correo de Configuración
@@ -406,6 +410,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
   - [x] **Documentos «(in Spanish)»** en la ficha y en los enlaces a las bases. La línea «la versión en español es la que rige» es la cadena `remate.documentos.version_que_rige` (inglés; vacía en español): Jonas confirma el texto con el cliente
   - Verificado: 200 pruebas (`IdiomaTest`: montos, fechas, alias, documentos, conmutador, ninguna clave sin traducir). La foto del HTML en español solo cambia en el conmutador y en «hora de Santiago». La foto en inglés no tiene claves sin traducir ni montos con formato chileno. `tools/comparar/ingles.mjs` a 375, 768 y 1440 px: sin desborde, táctiles ≥ 44, conmutador de ida y vuelta, ingreso por `/en` y sala. Recorrido de los tres roles en español OK. La sala a 1440 sigue 1:1 (0,05 %); ingreso y listado sin cambio frente al commit anterior al idioma (la diferencia con el prototipo es la de siempre: fotos y datos)
   - Corregido de paso: el nombre del postor en la cabecera de la sala medía 22 px de alto en tablet (ya pasaba en español)
+  - [x] **Condiciones del remate: el párrafo de la garantía en inglés** *(QA de Jonas 21/10, 3.2)*: salía de Configuración, solo en español. Mientras el texto sea el de fábrica, sale de `remate.secciones.condicion_garantia` en cada idioma; si Colliers lo edita en el panel, se muestra tal cual en los dos (regla del 20/10: el contenido del panel va en español). La ayuda del campo en el panel lo explica *(`IdiomaTest`; `qa-visibles.mjs`: los tres párrafos en inglés)*
   - [ ] Lista de términos del negocio revisada por Jonas (glosario base aprobado el 20/10)
 
 ## L — Streaming · Pendiente
@@ -413,7 +418,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [ ] Iframe de YouTube embebido por remate
 - [ ] Identificador del video cargado desde el panel
 - [ ] Aviso de retraso del video (10–30 s) visible en pantalla
-- [ ] Estado sin transmisión (antes de empezar / video no disponible)
+- [x] **Estado sin transmisión** *(QA de Jonas 21/10, 3.1: sin video, la sala era un recuadro negro)*: sin video cargado, el reproductor dice «La transmisión aún no comienza», que se puede pujar igual con el precio y el cronómetro oficiales del panel, que al comenzar se recargue la página, y enlaza al canal de Colliers (el de Configuración o, si está vacío, el del pie). Un video cargado que todavía no empieza o ya no está disponible lo informa el propio reproductor de YouTube *(`SalaTest`; `qa-visibles.mjs` a 1440 y 375 px: sin desborde y el enlace de 44 px dentro del reproductor)*
 
 ## E/F — Componentes y estructura del panel · En progreso
 
@@ -525,6 +530,7 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [x] Exportar a PDF (Bloque O): **se quita** *(Jonas, 20/09: no está en el acta; es alcance extra)*
 - [ ] Reportes (17/09): CSV y XLSX de arriba descargan el desempeño comercial en CSV y el libro completo en XLSX; cada «Descargar» de exportables baja esa hoja en XLSX. ¿Sirve así?
 - [ ] Activar el filtro «Garantía requerida» (hoy oculto; pasa a ajuste del panel en V)
+- [ ] Imagen para compartir del listado y de las páginas sin foto *(QA 21/10, 3.4)*: hoy es el logo de Colliers (475 × 263, se ve como tarjeta chica). Si Colliers quiere una tarjeta grande, hace falta una imagen de 1200 × 630 suya
 
 ### Supuestos vigentes (16/09, mientras el cliente no defina; cambiar cualquiera no borra datos)
 

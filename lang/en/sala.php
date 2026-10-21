@@ -17,6 +17,12 @@ return [
         'canal' => 'Broadcast from the Colliers Chile channel',
         'martillero' => 'Auctioneer',
         'oficial' => 'Official price and timer: the video runs 10–30 s behind',
+        'sin_transmision' => [
+            'titulo' => 'The broadcast has not started yet',
+            'texto' => 'You can still bid: the official price and timer are in the bidding panel.',
+            'recargar' => 'Once it starts, reload the page to watch it here.',
+            'ver_canal' => 'Watch the Colliers channel on YouTube',
+        ],
     ],
 
     'ficha' => [

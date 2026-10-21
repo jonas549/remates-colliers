@@ -108,6 +108,21 @@ class SalaTest extends TestCase
         $this->assertSame('desierto', $this->configDe($respuesta->getContent())['estado']['lotes'][0]['estado']);
     }
 
+    /** QA 21/10, 3.1: sin video cargado, aviso con el enlace al canal en lugar de un recuadro negro. */
+    public function test_sin_video_la_sala_avisa_que_la_transmision_no_comienza(): void
+    {
+        $ana = $this->postor('Ana');
+        $this->actingAs($ana)->get('/remates/apoquindo/sala')->assertOk()
+            ->assertSee('youtube-nocookie.com/embed/jfKfPfyJRdk', false)->assertDontSee('data-sin-video', false);
+
+        $this->remate->update(['youtube_video_id' => null]);
+        $this->actingAs($ana)->get('/remates/apoquindo/sala')->assertOk()
+            ->assertDontSee('youtube-nocookie.com/embed', false)
+            ->assertSee('La transmisión aún no comienza')
+            ->assertSee('el precio y el cronómetro oficiales están en el panel de la puja')
+            ->assertSee('href="https://www.youtube.com/@collierscl"', false);
+    }
+
     /** QA 21/10: lote 1 adjudicado y lote 2 desierto; el ganador vuelve después del cierre y tiene que ver lo que ganó. */
     public function test_el_ganador_ve_su_adjudicacion_despues_del_cierre_de_un_remate_de_dos_lotes(): void
     {

@@ -59,6 +59,19 @@ class PostoresGarantiasTest extends TestCase
         return $user->fresh();
     }
 
+    /** QA 21/10, 3.3: el dashboard decía 0 mientras la pestaña de Postores mostraba la cuenta sin confirmar correo. */
+    public function test_el_dashboard_explica_las_cuentas_que_esperan_el_correo(): void
+    {
+        $kpi = fn () => collect($this->actingAs($this->admin)->get('/admin')->assertOk()->viewData('datos')['kpis'])->firstWhere(0, 'CUENTAS POR APROBAR');
+
+        $this->postor(Postor::ESTADO_REGISTRADO, 'Sin correo');
+        $this->assertSame(['0', '1 más espera confirmar su correo'], array_slice($kpi(), 1, 2));
+
+        $this->postor(Postor::ESTADO_EN_REVISION);
+        $this->postor(Postor::ESTADO_REGISTRADO, 'Otra');
+        $this->assertSame(['1', '2 más esperan confirmar su correo'], array_slice($kpi(), 1, 2));
+    }
+
     public function test_listado_real_solo_para_administradores(): void
     {
         $this->postor(nombre: 'Camila');

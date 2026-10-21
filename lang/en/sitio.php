@@ -3,6 +3,11 @@
 // Public site: header, footer, process header, page title and pagination.
 return [
     'titulo_sufijo' => 'Colliers Auctions',
+    // Default description and link preview (QA 21/10, 3.4). Auction pages bring their own.
+    'seo' => [
+        'descripcion' => 'Online property auctions by Colliers Chile. Review each auction\'s details, watch the live broadcast and bid in Chilean pesos with your approved account.',
+        'imagen_alt' => 'Colliers',
+    ],
 
     'cabecera' => [
         'servicios' => 'Services',

@@ -157,6 +157,41 @@ class IdiomaTest extends TestCase
         }
     }
 
+    /** QA 21/10, 3.2: el párrafo de la garantía de «Condiciones del remate» salía en español en /en. */
+    public function test_la_condicion_de_garantia_se_traduce_mientras_no_se_edite(): void
+    {
+        $this->get('/en/remates/militares')->assertOk()->assertSee('The bid deposit is paid by bank draft (vale a la vista) or bank transfer')
+            ->assertDontSee('La garantía se constituye por vale a la vista');
+        $this->get('/remates/militares')->assertOk()->assertSee('La garantía se constituye por vale a la vista o transferencia');
+
+        // Editado en el panel: es contenido de Colliers y se muestra tal cual en los dos idiomas.
+        Configuracion::guardar('texto_condiciones_garantia', 'Garantía solo por transferencia.');
+        $this->get('/en/remates/militares')->assertSee('Garantía solo por transferencia.')->assertDontSee('The bid deposit is paid by bank draft');
+    }
+
+    /** QA 21/10, 3.4: descripción y Open Graph por remate; el listado y el resto, con los del sitio. El panel, sin ellos. */
+    public function test_seo_y_vista_previa_al_compartir(): void
+    {
+        $this->get('/remates/militares')->assertOk()
+            ->assertSee('<meta name="description" content="Remate de Los Militares 5620, Depto. 703 (Las Condes, Departamento). Precio base $142.000.000. Comienza el', false)
+            ->assertSee('<meta property="og:title" content="Los Militares 5620, Depto. 703 · Remates Colliers">', false)
+            ->assertSee('<meta property="og:url" content="' . url('/remates/militares') . '">', false)
+            ->assertSee('<meta property="og:image" content="' . asset('img/demo/prop-militares.jpg') . '">', false)
+            ->assertSee('<meta name="twitter:card" content="summary_large_image">', false);
+        $this->get('/en/remates/militares')->assertOk()
+            ->assertSee('content="Auction of Los Militares 5620, Depto. 703 (Las Condes, Apartment). Starting price $142,000,000. Starts', false)
+            ->assertSee('<meta property="og:locale" content="en_US">', false);
+
+        $this->get('/?orden=fecha')->assertOk()
+            ->assertSee('<meta name="description" content="' . e(__('sitio.seo.descripcion')) . '">', false)
+            ->assertSee('<meta property="og:title" content="Remates · Remates Colliers">', false)
+            ->assertSee('<meta property="og:url" content="' . url('/') . '">', false)
+            ->assertSee('<meta property="og:image" content="' . asset('img/colliers-logo.png') . '">', false);
+
+        $admin = User::where('rol', User::ROL_ADMIN)->firstOrFail();
+        $this->actingAs($admin)->get('/admin')->assertOk()->assertDontSee('og:title', false)->assertDontSee('name="description"', false);
+    }
+
     public function test_los_documentos_se_marcan_en_espanol_solo_en_ingles(): void
     {
         $remate = Remate::where('slug', 'militares')->firstOrFail();

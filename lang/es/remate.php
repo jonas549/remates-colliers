@@ -103,6 +103,13 @@ return [
         'ver_fotos' => 'Ver las :total fotos',
     ],
 
+    // Descripción para buscadores y vista previa al compartir (QA 21/10, 3.4).
+    'seo' => [
+        'proximo' => 'Remate de :direccion (:lugar). Precio base :base. Comienza el :fecha. Colliers Chile.',
+        'en_vivo' => 'Remate en vivo de :direccion (:lugar). Precio base :base. Mira la transmisión y puja en línea con Colliers Chile.',
+        'cerrado' => 'Remate de :direccion (:lugar), precio base :base. Revisa el resultado y los próximos remates de Colliers Chile.',
+    ],
+
     'transmision' => [
         'se_habilita' => 'La transmisión se habilita el',
         'texto' => 'El remate se emite en vivo por el canal de YouTube de Colliers Chile. El reproductor aparecerá en esta misma página al comenzar, y el historial de pujas se abrirá junto con él.',
@@ -122,6 +129,7 @@ return [
         'condiciones' => 'Condiciones del remate',
         'condicion_pesos' => 'Las posturas se ingresan en pesos chilenos. El valor de la UF se muestra solo como referencia informativa y no determina el monto de las pujas ni de la garantía.',
         'condicion_cierre' => 'El remate cierra automáticamente al vencer el temporizador, sin extensiones por posturas de último minuto. Colliers puede cerrar el remate de forma anticipada.',
+        'condicion_garantia' => 'La garantía se constituye por vale a la vista o transferencia y es revisada manualmente por Colliers antes del inicio. Si el remate no se concreta, la propiedad se publica en un remate nuevo con fecha y condiciones propias.',
     ],
 
     'visitas' => [

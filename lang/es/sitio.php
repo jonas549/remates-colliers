@@ -3,6 +3,11 @@
 // Sitio público: cabecera, pie, encabezado de los trámites, título de la página y paginación.
 return [
     'titulo_sufijo' => 'Remates Colliers',
+    // Valores por defecto de la descripción y la vista previa al compartir (QA 21/10, 3.4). La ficha de remate trae los suyos.
+    'seo' => [
+        'descripcion' => 'Remates de propiedades en línea de Colliers Chile. Revisa los antecedentes de cada remate, mira la transmisión en vivo y puja en pesos con tu cuenta habilitada.',
+        'imagen_alt' => 'Colliers',
+    ],
 
     'cabecera' => [
         'servicios' => 'Servicios',
