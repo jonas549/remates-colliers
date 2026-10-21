@@ -10,7 +10,8 @@
 .admin-pestanas--postores .admin-pestana { min-width: 130px; }
 /* Envoltura de las pestañas: transparente en escritorio (display: contents), tira con scroll en tablet. */
 .admin-pestanas__tira { display: contents; }
-.admin-buscador { flex: 2; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 0 32px; border-left: 1px solid #e6eaf1; }
+/* QA 21/10, 4.5: 24 px en lugar de 32 a los lados, para que el placeholder no quede justo con la sexta pestaña. */
+.admin-buscador { flex: 2; min-width: 240px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-left: 1px solid #e6eaf1; }
 .admin-buscador input { border: 0; outline: none; flex: 1; min-width: 0; font-family: inherit; font-size: 15px; background: transparent; height: 100%; }
 
 .admin-postores { padding: 24px 32px 48px; }

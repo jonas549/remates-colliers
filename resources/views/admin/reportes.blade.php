@@ -9,7 +9,10 @@
     $t = $reporte->totales();
     $filas = $reporte->desempeno();
     $porLote = $t['lotes'] !== $t['remates'];
-    $promedioPujas = $t['lotes'] ? round($t['pujas'] / $t['lotes']) : 0;
+    // QA 21/10, 4.3: con un decimal; el entero decía «Promedio de 0» con pujas en el período.
+    $promedio = $t['lotes'] ? $t['pujas'] / $t['lotes'] : 0;
+    $unidad = $porLote ? 'lote' : 'remate';
+    $notaPujas = $promedio > 0 && $promedio < 0.05 ? "Menos de 0,1 por {$unidad}" : 'Promedio de ' . Formato::numero($promedio, 1) . " por {$unidad}";
 
     $kpis = [
         ['VOLUMEN ADJUDICADO', $millones($t['volumen']), $t['vendidos'] === 1 ? '1 propiedad vendida' : "{$t['vendidos']} propiedades vendidas"],
@@ -17,7 +20,7 @@
         ['SOBREPRECIO MEDIO', $porcentaje($t['sobreprecio'], true), 'Final sobre precio base'],
         ['POSTORES REGISTRADOS', (string) $t['registrados'], "{$t['con_garantia']} con garantía aprobada"],
         ['POSTORES ACTIVOS', (string) $t['activos'], 'Ingresaron al menos una puja'],
-        ['PUJAS TOTALES', (string) $t['pujas'], "Promedio de {$promedioPujas} por " . ($porLote ? 'lote' : 'remate')],
+        ['PUJAS TOTALES', (string) $t['pujas'], $notaPujas],
     ];
 
     // Barras relativas a los postores registrados, como el diseño.

@@ -90,6 +90,18 @@ class InfraestructuraTest extends TestCase
         $this->get('/esta-pagina-no-existe')->assertNotFound()->assertSee('No encontramos esta página');
     }
 
+    /** QA 21/10, 4.4: GET a una ruta que solo recibe POST mostraba la página de Symfony en inglés. */
+    public function test_pagina_405_propia_en_el_sitio_y_en_el_panel(): void
+    {
+        $admin = User::create(['name' => 'Admin', 'email' => 'admin405@colliers.test', 'password' => 'x-clave-larga-1', 'rol' => User::ROL_ADMIN, 'estado' => User::ESTADO_ACTIVO]);
+        $this->actingAs($admin)->get('/admin/usuarios/crear')->assertStatus(405)
+            ->assertSee('Esta página no se abre directamente')->assertSee('Volver al panel')
+            ->assertSee('href="' . route('admin.dashboard') . '"', false)->assertDontSee('MethodNotAllowedHttpException');
+
+        auth()->logout();
+        $this->get('/csp-informe')->assertStatus(405)->assertSee('Esta página no se abre directamente')->assertSee('Volver a los remates');
+    }
+
     public function test_la_raiz_es_el_listado_y_remates_redirige(): void
     {
         $this->get('/')->assertOk()->assertSee('Cargar más remates');

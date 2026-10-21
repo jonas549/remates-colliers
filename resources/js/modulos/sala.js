@@ -1,4 +1,4 @@
-import { clp, dos } from './formato';
+import { clp, dos, sobreBase } from './formato';
 import { alias, locale, t } from './textos';
 
 const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
@@ -252,7 +252,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     // UF: solo referencia visual y solo si hay un valor vigente (Administración → Configuración).
     enUf(n) { return uf ? 'UF ' + (n / uf).toLocaleString(locale(), { maximumFractionDigits: 0 }) : ''; },
     get actualEnUf() { return this.enUf(this.actual) || '—'; },
-    get sobreBase() { return '+' + Math.round((this.actual / this.lote.precio_base - 1) * 100) + '%'; },
+    get sobreBase() { return sobreBase(this.actual, this.lote.precio_base); },
 
     get estadoTitulo() {
         if (!this.hayPujas) return t('sala.sin_posturas');

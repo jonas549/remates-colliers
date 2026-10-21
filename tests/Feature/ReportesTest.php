@@ -113,9 +113,12 @@ class ReportesTest extends TestCase
             ->assertSee('Remates realizados · agosto 2026')->assertSee('$175M')->assertSee('67%')->assertSee('+15%')
             ->assertSee('R-2026-201')->assertSee('$120.000.000')->assertSee('+20%')->assertSee('25 min')
             ->assertSee('Cierre anticipado')->assertSee('No adjudicado')->assertDontSee('R-DEMO-1')->assertDontSee('Datos de ejemplo')
-            ->assertDontSee('ana@correo.test');
+            ->assertDontSee('ana@correo.test')
+            // QA 21/10, 4.3: 5 pujas en 3 remates, con un decimal (antes «Promedio de 2»; con menos pujas, «de 0»).
+            ->assertSee('Promedio de 1,7 por remate');
 
-        $this->actingAs($this->admin)->get('/admin/reportes?periodo=2026-07')->assertOk()->assertSee('R-2026-199')->assertDontSee('R-2026-201');
+        $this->actingAs($this->admin)->get('/admin/reportes?periodo=2026-07')->assertOk()->assertSee('R-2026-199')->assertDontSee('R-2026-201')
+            ->assertSee('Promedio de 1 por remate');
         $this->actingAs($this->admin)->get('/admin/reportes?periodo=2026-13')->assertNotFound();
         $this->actingAs($this->admin)->get('/admin/reportes?periodo=2026-09')->assertOk()->assertSee('Sin remates cerrados en septiembre 2026');
 

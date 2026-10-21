@@ -5,6 +5,7 @@ return [
     'etiqueta' => 'AUCTIONS',
     'kicker' => 'ERROR :codigo',
     'volver_remates' => 'Back to auctions',
+    'volver_panel' => 'Back to the admin panel',
     'ayuda' => 'Need help? Email us at :correo or call :telefono.',
 
     '403' => [
@@ -14,6 +15,10 @@ return [
     '404' => [
         'titulo' => 'Page not found',
         'mensaje' => 'The auction or page you’re looking for doesn’t exist or is no longer published. If you followed a link, the auction may have closed.',
+    ],
+    '405' => [
+        'titulo' => 'This page can’t be opened directly',
+        'mensaje' => 'This address only accepts a form submission. Go back to the previous page and use the button there.',
     ],
     '413' => [
         'titulo' => 'Upload too large',

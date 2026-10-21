@@ -72,6 +72,11 @@
 .listado__vista { display: flex; height: 48px; border: 1px solid #dbe1ec; }
 .listado__vista button { padding: 0 22px; border: 0; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; background: #ffffff; color: #4a5563; }
 .listado__vista button.es-activa { background: #25408f; color: #ffffff; }
+/* QA 21/10, 4.1: hover en «Filtros», «Grilla» y «Tabla», con los tonos de los demás botones del listado. */
+.listado__btn-filtros, .listado__vista button { transition: background-color .15s, border-color .15s, color .15s; }
+.listado__btn-filtros:hover { background: #f0f4fb; border-color: #25408f; }
+.listado__vista button:hover { background: #f0f4fb; color: #25408f; }
+.listado__vista button.es-activa:hover { background: #16265a; color: #ffffff; }
 
 .listado__layout { display: grid; gap: 40px; align-items: start; grid-template-columns: 250px 1fr; }
 .listado__layout.sin-filtros { grid-template-columns: 1fr; }

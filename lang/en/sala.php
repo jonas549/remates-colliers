@@ -46,7 +46,7 @@ return [
     'panel' => [
         'precio_actual' => 'CURRENT PRICE',
         // :base and :sobre arrive as HTML from the view.
-        'base' => 'Starting :base · :sobre above the minimum',
+        'base' => 'Starting :base · :sobre above the starting price',
         'cierra_en' => 'CLOSES IN',
         'horas' => 'HOURS',
         'min' => 'MIN',

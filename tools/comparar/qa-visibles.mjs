@@ -90,6 +90,65 @@ const pestana = Number(await A.locator('.admin-pestana', { hasText: 'CUENTAS POR
 comprobar('el número del dashboard más «N más esperan el correo» coincide con la pestaña de Postores', valor + sinCorreo === pestana,
     `dashboard ${valor} · nota «${nota}» · pestaña ${pestana}`);
 
+// ── 4.3 Reportes: promedio de pujas con un decimal ──────────────────────────────────────────────────────
+console.log('\n— 4.3 Reportes');
+await A.goto(URL + '/admin/reportes', { waitUntil: 'load' });
+const notaPujas = await A.locator('.admin-reportes__kpi', { hasText: 'PUJAS TOTALES' }).locator('.admin-reportes__kpi-nota').innerText().catch(() => '');
+comprobar('«Promedio de N por …» con un decimal como máximo', /^(Promedio de \d+(,\d)? por (lote|remate)|Menos de 0,1 por (lote|remate))$/.test(notaPujas), notaPujas);
+
+// ── 4.4 Error 405 con página propia ──────────────────────────────────────────────────────────────────────
+console.log('\n— 4.4 Error 405');
+const r405 = await A.goto(URL + '/admin/usuarios/crear', { waitUntil: 'load' });
+comprobar('GET a una ruta POST: 405 con la página del sitio, en español', r405.status() === 405
+    && (await A.locator('h1').innerText()) === 'Esta página no se abre directamente', `${r405.status()}`);
+await A.getByRole('link', { name: 'Volver al panel' }).click();
+await A.waitForLoadState('load');
+comprobar('«Volver al panel» lleva al dashboard', new globalThis.URL(A.url()).pathname === '/admin');
+await A.goto(URL + '/admin/usuarios/crear', { waitUntil: 'load' });
+await A.waitForTimeout(800);
+await A.screenshot({ path: `${SALIDA}/error-405-1440.png` });
+
+// ── 4.5 Buscador de Postores sin cortar ──────────────────────────────────────────────────────────────────
+console.log('\n— 4.5 Buscador de Postores');
+for (const ancho of [1120, 1280, 1366, 1440, 760, 375]) {
+    await A.setViewportSize({ width: ancho, height: 900 });
+    await A.goto(URL + '/admin/postores', { waitUntil: 'load' });
+    const medida = await A.locator('.admin-buscador input').evaluate((i) => {
+        const ctx = document.createElement('canvas').getContext('2d');
+        ctx.font = getComputedStyle(i).font;
+        return { texto: Math.ceil(ctx.measureText(i.placeholder).width), caja: i.clientWidth };
+    });
+    comprobar(`${ancho}: el placeholder cabe entero`, medida.texto <= medida.caja, `${medida.texto} de ${medida.caja} px`);
+}
+await A.setViewportSize({ width: 1440, height: 900 });
+
+// ── 4.1 Hover en «Ocultar filtros», «Grilla» y «Tabla» ───────────────────────────────────────────────────
+console.log('\n— 4.1 Hover en el listado');
+await V.goto(URL + '/', { waitUntil: 'load' });
+for (const [nombre, boton] of [['Ocultar filtros', V.locator('.listado__btn-filtros')], ['Grilla', V.locator('.listado__vista button').nth(0)], ['Tabla', V.locator('.listado__vista button').nth(1)]]) {
+    await V.mouse.move(0, 0);
+    await V.waitForTimeout(250);
+    const antes = await boton.evaluate((b) => getComputedStyle(b).backgroundColor);
+    await boton.hover();
+    await V.waitForTimeout(250);
+    const durante = await boton.evaluate((b) => getComputedStyle(b).backgroundColor);
+    comprobar(`«${nombre}» cambia al pasar el mouse`, antes !== durante, `${antes} → ${durante}`);
+}
+
+// ── 4.2 Sala: porcentaje sobre la base con un decimal ────────────────────────────────────────────────────
+console.log('\n— 4.2 Sala: sobre la base');
+const cP = await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-CL', timezoneId: 'America/Santiago' });
+const P = await cP.newPage();
+await entrar(P, 'postor', '/remates/apoquindo/sala', 'mpgonzalez@correo.test');
+const linea = P.locator('.sala-panel__base');
+const esperarTexto = async (re) => { for (let i = 0; i < 25 && !re.test(await linea.innerText()); i++) await P.waitForTimeout(200); return linea.innerText(); };
+// Seeder: base $185.000.000 y precio $198.500.000 → 7,297 %.
+let base = await esperarTexto(/\+7,3% sobre la base$/);
+comprobar('«+7,3% sobre la base» (antes «+7% sobre el mínimo»)', /^Base \$185\.000\.000 · \+7,3% sobre la base$/.test(base), base);
+await P.goto(URL + '/en/remates/apoquindo/sala', { waitUntil: 'load' });
+base = await esperarTexto(/\+7\.3% above the starting price$/);
+comprobar('en inglés: «+7.3% above the starting price»', /\+7\.3% above the starting price$/.test(base), base);
+
 await navegador.close();
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');
 process.exit(fallas ? 1 : 0);

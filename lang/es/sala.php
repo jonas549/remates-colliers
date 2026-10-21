@@ -46,7 +46,7 @@ return [
     'panel' => [
         'precio_actual' => 'PRECIO ACTUAL',
         // :base y :sobre llegan como HTML de la vista.
-        'base' => 'Base :base · :sobre sobre el mínimo',
+        'base' => 'Base :base · :sobre sobre la base',
         'cierra_en' => 'CIERRA EN',
         'horas' => 'HORAS',
         'min' => 'MIN',

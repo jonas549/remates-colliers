@@ -1,4 +1,4 @@
-import { clp, dos } from './formato';
+import { clp, dos, sobreBase } from './formato';
 
 const UF = 39412.73;
 
@@ -56,7 +56,7 @@ export default ({ base, paso, actual, deltaCierre, historial, postor }) => ({
 
     get actualTexto() { return clp(this.actual); },
     get actualEnUf() { return 'UF ' + (this.actual / UF).toLocaleString('es-CL', { maximumFractionDigits: 0 }); },
-    get sobreBase() { return '+' + Math.round((this.actual / this.base - 1) * 100) + '%'; },
+    get sobreBase() { return sobreBase(this.actual, this.base); },
 
     get estadoTitulo() { return this.yoGanando ? 'Vas ganando' : 'Te superaron'; },
     get estadoDetalle() {

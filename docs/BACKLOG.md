@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-10-21** (QA de Jonas sobre el sandbox: grupos 1 a 3 hechos en local y sin push).
+> **Registro vivo del avance.** Última actualización: **2026-10-21** (QA de Jonas sobre el sandbox: los cuatro grupos hechos en local y sin push).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -16,20 +16,20 @@ nota *(verifica Jonas en el sandbox)*.
 |---|---|---|---|
 | A | Entorno y servidor | **Completo** | 5/5 |
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
-| B | Base del proyecto Laravel | **Completo** | 19/19 |
+| B | Base del proyecto Laravel | **Completo** | 20/20 |
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 31/35 |
 | D | Autenticación y registro de postores | En progreso | 13/16 |
-| K | Sala de puja conectada al motor real | En progreso | 19/20 |
+| K | Sala de puja conectada al motor real | En progreso | 20/21 |
 | I | Remates y lotes + panel del martillero | **Completo** | 20/20 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
-| G | Postores | **Completo** | 7/7 |
+| G | Postores | **Completo** | 8/8 |
 | H | Garantías | En progreso | 10/12 |
 | M | Notificaciones | En progreso | 8/9 |
-| N | Sitio público | En progreso | 22/23 |
+| N | Sitio público | En progreso | 23/24 |
 | L | Streaming | En progreso | 1/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
-| O | Reportes | En progreso | 7/8 |
+| O | Reportes | En progreso | 8/9 |
 | P | Seguridad | En progreso | 3/11 |
 | Q | QA y carga | Pendiente | 0/6 |
 | R | Despliegue a producción | Pendiente | 0/9 |
@@ -76,7 +76,9 @@ conexión con Pujar bloqueado, y el ganador ve su adjudicación en la sala cerra
 HTTPS forzado por la aplicación, cabeceras con CSP, Turnstile en el registro; el límite de pujas solo se investigó y
 espera la decisión de Jonas). El 2FA queda fuera de la tanda (Jonas lo confirma con el cliente). Grupo 3 hecho (L: la
 sala sin video avisa que la transmisión no comienza; N: condición de garantía en inglés, descripción y Open Graph por
-remate; G: el dashboard explica las cuentas que esperan el correo). Sigue el grupo 4 (menores). Detalle en
+remate; G: el dashboard explica las cuentas que esperan el correo). Grupo 4 hecho (hover en el listado, «+0,3% sobre la
+base», promedio de pujas con un decimal, página propia para el 405, buscador de Postores sin cortar). Pendiente de
+Jonas: el umbral del límite de pujas (2.4), las claves de Turnstile y probar todo en el sandbox. Detalle en
 `docs/progreso/2026-10-21.md`.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
@@ -118,6 +120,7 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] Programador: latido y cola por minuto con `--stop-when-empty`
 - [x] ~~Clave de acceso al sandbox~~ **quitada el 21/09 a pedido de Jonas**: el sandbox es de acceso libre. Se mantiene `X-Robots-Tag: noindex, nofollow` fuera de producción (`NoIndexar`) *(`InfraestructuraTest::test_el_sitio_es_de_acceso_libre_y_fuera_de_produccion_no_se_indexa`)*
 - [x] Páginas de error propias: 403, 404, 419, 429, 500, 503
+- [x] **Página propia para el 405** *(QA de Jonas 21/10, 4.4: un GET a `/admin/usuarios/crear`, que solo recibe POST/PUT, mostraba la página de Symfony en inglés)*: «Esta página no se abre directamente» con la misma plantilla que la 404, en el idioma de la URL; dentro del panel, el botón vuelve al panel *(`InfraestructuraTest`; `qa-visibles.mjs`)*
 - [x] Traducciones al español en `lang/es/`
 - [x] `.env.example` completo y sin secretos
 - [x] `users` con rol, estado y cambio de clave obligatorio (migración aditiva)
@@ -260,6 +263,7 @@ interacción idéntica; escritorio 0,05 % en 1280–1440 y 1,9 % en 1120 por el 
 - [x] **Presencia en la sala** *(QA de Jonas, 18/10)*: el postor ve cuántos están conectados («2 CONECTADOS», en la línea del conteo de posturas); el martillero y la administración ven además **quiénes**, en «En la sala ahora» del panel en vivo: nombre y apellido del postor o, si puja por una empresa, la razón social. Nada de RUT ni correo, y sin marca de habilitación (a la sala solo entra quien está habilitado). Sin websockets ni procesos persistentes: latido cada 15 s a `public/presencia.php`, **sin Laravel** (como `hora.php`), con un token firmado (HMAC derivado de `APP_KEY`) que la sala entrega al abrir; la presencia va a un archivo por remate en `storage/app/presencia` (no a la base: un latido no abre conexiones). Activo = latido en los últimos 45 s; al cerrar la pestaña, `sendBeacon` lo baja al instante. El JSON público lleva **solo el número** (`presencia.conectados`), escrito bajo el mismo bloqueo del emisor; los nombres salen de `GET /admin/subastas/{id}/presencia`, solo para administración y el martillero del remate, que el panel consulta cada 15 s. Los vencidos se limpian al construir el estado y en el cron de cada minuto (`colliers:liquidar`). Lógica en `App\Subastas\PresenciaSala`, sin dependencias, compartida por Laravel y el script *(`PresenciaSalaTest` 7, incluido el script en un proceso aparte que no carga ni Composer ni Laravel; `recorrido-roles.mjs` con 8 comprobaciones nuevas: dos postores ven «2 CONECTADOS», el martillero los ve por nombre, uno sale y baja a 1, vuelve y sube, el navegador del postor no recibe el nombre del otro, y la sala a 375 px sin desborde; `sala-real.mjs` y `panel-remates.mjs` sin regresiones)*
 - [x] **Indicador de conexión y aviso de reconexión** *(QA de Jonas 21/10, 1.1: cortó la red 10 s a 390 px, otro postor pujó y la sala siguió en el precio viejo con «Te superaron», sin aviso)*: si el estado no llega en 5 s (cuatro sondeos perdidos) o el navegador queda sin red, una banda roja «SIN CONEXIÓN. El precio y el cronómetro pueden no estar actualizados. Pujar queda bloqueado hasta reconectar.» se pega arriba en todos los anchos; precio y cronómetro se atenúan, la barra del celular dice «SIN CONEXIÓN» y Pujar (panel, hoja, barra y confirmación del modal) queda bloqueado. Las consultas tienen un límite de 5 s para que una red colgada sin error no deje la sala esperando. Al volver el estado, todo se restablece solo *(`sala-real.mjs`: corte con `setOffline` en escritorio y a 375 px, y red caída **sin** evento «offline» bloqueando el JSON: la banda aparece sola en ~5,7 s y se va en < 1 s al volver)*
 - [x] **El ganador ve su adjudicación después del cierre** *(QA 21/10, 1.2: lote 1 adjudicado y lote 2 desierto; el ganador entraba después y solo leía «LOTE 2 DE 2 · CERRADO SIN POSTORES»)*: con varios lotes y todos terminados, la franja dice «REMATE FINALIZADO» y el resultado lista cada lote para ese postor con los textos existentes (`lote_ganado` en verde, `lote_de_otro`, `lote_sin_posturas`); título `ganado_titulo` si ganó alguno, «Remate finalizado» si no. **Mi cuenta**: bloque «TUS ADJUDICACIONES» («Te adjudicaste el lote X en $Y…», enlace al remate), y con el remate terminado la banda deja de decir «Estás habilitado para pujar»: «REMATE FINALIZADO · Te adjudicaste la propiedad» o «El remate terminó». Mi cuenta materializa antes los lotes vencidos (cierre perezoso) *(`SalaTest` nuevo con dos lotes; `sala-real.mjs`: ganador y perdedor al cerrar, el ganador recarga la sala y sigue viendo su lote, y llega a Mi cuenta con un clic; 55/55)*
+- [x] **«+0,3% sobre la base»** *(QA de Jonas 21/10, 4.2: con el precio en $120.300.000 decía «+0% sobre el mínimo»)*: un decimal (`sobreBase` en `formato.js`, con la coma o el punto del idioma), y si aun así redondea a cero estando por encima, el monto («+$100.000»). «sobre el mínimo» pasó a «sobre la base» («above the starting price») *(`qa-visibles.mjs`: «+7,3% sobre la base» y «+7.3% above the starting price» con el remate del seeder; el arnés 1:1 de la sala pasa de 0,05 % a 0,07 % por el texto)*
 - [ ] Probar la sala en el sandbox (LiteSpeed + MariaDB) sobre el remate de demostración, **incluida la presencia** (`presencia.php` bajo LiteSpeed y la lista del panel) *(Jonas)*
 
 ## I — Remates y lotes, incluido el panel del martillero · Completo
@@ -339,6 +343,7 @@ recargar). Pantalla del diseño «Admin Postores» ahora solo para administrador
 - [x] Revisión de cuenta: aprobar / rechazar con motivo, con quién y cuándo, en la bitácora de accesos
 - [x] Bloquear (con motivo) / desbloquear cuenta *(supuesto de la máquina de estados propuesta: aprobado ↔ bloqueado)*
 - [x] Aprobación usable desde el celular (tarjetas, botones ≥ 44 px, ficha a pantalla completa)
+- [x] **El buscador de Postores no se corta** *(QA de Jonas 21/10, 4.5: «Buscar por nombre, RUT o» con la sexta pestaña)*: placeholder «Nombre, RUT o remate» (la lupa ya dice buscar; la etiqueta accesible sigue completa) y 24 px a los lados en lugar de 32 *(`qa-visibles.mjs` mide el texto contra el campo en 375, 760, 1120, 1280, 1366 y 1440 px: el más justo, 143 de 162 px)*
 - [x] Correo de aprobación, rechazo (con motivo), bloqueo y desbloqueo de la cuenta *(Bloque M, 17/09)*
 - [x] **«Cuentas por aprobar» con el mismo criterio en el dashboard y en Postores** *(QA de Jonas 21/10, 3.3: el dashboard decía 0 y la pestaña 1, una cuenta «Sin confirmar correo»)*: una cuenta sin el correo confirmado todavía no se puede aprobar, así que el indicador sigue contando solo las aprobables y lo dice: «1 más espera confirmar su correo» / «N más esperan confirmar su correo». La pestaña de Postores las sigue mostrando, porque desde ahí se pueden rechazar *(`PostoresGarantiasTest`; `qa-visibles.mjs`: el número del dashboard más los que esperan el correo coincide con la pestaña)*
 
@@ -387,6 +392,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 375–1440 px). Ya no se usan `App\Demo\RematesDemo` ni `DetalleDemo` (quedan para el índice de revisión y `?demo=1`).
 
 - [x] Listado con datos reales (sin borradores, cancelados ni remates de demostración) y filtros generados desde los datos; UF de Configuración; hero con el próximo remate real
+- [x] **Hover en «Ocultar filtros», «Grilla» y «Tabla»** *(QA de Jonas 21/10, 4.1)*: el fondo celeste de los demás botones del listado; la vista activa se oscurece *(`qa-visibles.mjs`)*
 - [x] Detalle de remate próximo, en vivo y cerrado con datos reales (ficha, antecedentes, fotos, varios lotes); bloqueo y botón según la cuenta y la garantía de ESE remate
 - [x] Detalle en vivo que solo lee el JSON estático (cada 2 s) y `hora.php`: los espectadores no ejecutan el framework *(docs/RENDIMIENTO-SIN-OPCACHE.md)*
 - [x] «Constituir la garantía» inscribe al postor desde el detalle (Bloque H)
@@ -451,6 +457,7 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [x] Generales: volumen total adjudicado y desempeño por categoría de activo (volumen, sobreprecio, tasa)
 - [x] Exportación con `maatwebsite/excel` 4.0: CSV (punto y coma + BOM, abre bien en Excel de Chile) y XLSX; libro completo con 6 hojas y un XLSX por exportable. El paquete **no se autodescubre**: se registra solo al exportar, para no sumar archivos a cada petición sin OPcache
 - [x] Comparación entre eventos: tabla por remate del período elegido; períodos por mes, trimestre, año o todo el historial *(supuesto: el diseño no tiene una pantalla de comparación lado a lado)*
+- [x] **Promedio de pujas con un decimal** *(QA de Jonas 21/10, 4.3: «Promedio de 0 por lote» con pujas en el período)*: «Promedio de 1,7 por remate»; si queda bajo 0,05, «Menos de 0,1 por lote» *(`ReportesTest`; `qa-visibles.mjs`)*
 - [x] **Exportar PDF: fuera del alcance** *(decisión de Jonas, 20/09: no está en el acta; si el cliente lo pide, se agrega)*. Se quitó el botón «Descargar PDF», que se veía y no hacía nada. Quedan CSV y XLSX
 - [ ] Probar las descargas en el sandbox (extensiones `zip`, `xmlwriter`, `iconv`, `simplexml`, `xmlreader`, `zlib`: `colliers:diagnostico` ahora las revisa)
 

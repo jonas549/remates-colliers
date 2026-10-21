@@ -30,7 +30,8 @@
             </div>
             <label class="admin-buscador">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#a3abb8" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
-                <input x-model="q" placeholder="Buscar por nombre, RUT o remate" aria-label="Buscar postores">
+                {{-- QA 21/10, 4.5: «Buscar por nombre, RUT o remate» quedaba cortado con la sexta pestaña. La lupa ya dice «buscar». --}}
+                <input x-model="q" placeholder="Nombre, RUT o remate" aria-label="Buscar postores por nombre, RUT o remate">
             </label>
         </div>
 

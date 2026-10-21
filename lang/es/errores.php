@@ -5,6 +5,7 @@ return [
     'etiqueta' => 'REMATES',
     'kicker' => 'ERROR :codigo',
     'volver_remates' => 'Volver a los remates',
+    'volver_panel' => 'Volver al panel',
     'ayuda' => '¿Necesitas ayuda? Escríbenos a :correo o llama al :telefono.',
 
     '403' => [
@@ -14,6 +15,10 @@ return [
     '404' => [
         'titulo' => 'No encontramos esta página',
         'mensaje' => 'El remate o la página que buscas no existe o ya no está publicada. Si llegaste desde un enlace, puede que el remate haya cerrado.',
+    ],
+    '405' => [
+        'titulo' => 'Esta página no se abre directamente',
+        'mensaje' => 'La dirección que abriste solo recibe el envío de un formulario. Vuelve a la página anterior y usa el botón que corresponde.',
     ],
     '413' => [
         'titulo' => 'El envío es demasiado pesado',

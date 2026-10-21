@@ -3,6 +3,15 @@ import { locale } from './textos';
 
 export const clp = (n) => '$' + Math.round(n).toLocaleString(locale());
 
+// Sobre el precio base (QA 21/10, 4.2): con un decimal («+0,3%»), porque al principio del remate el entero redondea a
+// «+0%». Si aun así redondea a cero estando por encima, el monto («+$100.000»).
+export function sobreBase(actual, base) {
+    if (!base) return '';
+    const pct = Math.round((actual / base - 1) * 1000) / 10;
+    if (pct === 0 && actual > base) return '+' + clp(actual - base);
+    return '+' + pct.toLocaleString(locale(), { maximumFractionDigits: 1 }) + '%';
+}
+
 export const dos = (n) => String(n).padStart(2, '0');
 
 export function partes(ms) {
