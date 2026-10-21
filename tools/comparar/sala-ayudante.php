@@ -60,6 +60,16 @@ switch ($accion) {
         echo "ok\n";
         break;
 
+    case 'cerrar-lote-en':
+        // cerrar-lote-en SLUG ORDEN SEGUNDOS: adelanta el cierre de un lote cualquiera.
+        $l = Remate::where('slug', $argv[2] ?? '')->firstOrFail()->lotes()->where('orden', (int) ($argv[3] ?? 1))->firstOrFail();
+        $l->cierra_en = CarbonImmutable::now('UTC')->addSeconds((int) ($argv[4] ?? 5));
+        $l->save();
+        app(Emisor::class)->publicarEstado($l->remate);
+        echo "ok
+";
+        break;
+
     case 'dos-lotes':
         $ahora = CarbonImmutable::now('UTC');
         $cierre = $ahora->addSeconds((int) ($argv[2] ?? 8));

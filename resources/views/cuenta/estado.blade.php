@@ -62,6 +62,18 @@
         <div class="cuenta__cuerpo">
 
             <div class="cuenta__columna">
+                @if (! empty($d['adjudicaciones']))
+                    {{-- Lotes adjudicados al postor (QA 21/10): lo primero que ve al volver después del cierre. --}}
+                    <div class="cuenta__adjudicaciones" data-adjudicaciones>
+                        <div class="cuenta__subtitulo cuenta__subtitulo--ok">{{ __('cuenta.adjudicaciones.subtitulo') }}</div>
+                        @foreach ($d['adjudicaciones'] as $a)
+                            <div class="cuenta__item">
+                                <span class="cuenta__item-marca cuenta__item-marca--ok">✓</span>
+                                <div class="cuenta__item-texto"><strong>{{ $a['texto'] }}</strong><br><a href="{{ $a['url'] }}">{{ $a['remate'] }}</a></div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
                 <div class="cuenta__bloque-titulo">
                     <div class="cuenta__kicker">{{ __($r ? 'cuenta.garantia.kicker_remate' : 'cuenta.garantia.kicker_inscripcion') }}</div>
                 </div>
@@ -173,7 +185,7 @@
                             </div>
                             <div class="cuenta__item">
                                 <span class="cuenta__item-marca">→</span>
-                                <div class="cuenta__item-texto">{!! $r['enVivo'] ? __('cuenta.aprobada.en_vivo') : __('cuenta.aprobada.abre', ['fecha' => '<strong>' . e($r['abre']) . '</strong>']) !!}</div>
+                                <div class="cuenta__item-texto">{!! ($r['finalizado'] ?? false) ? e(__('cuenta.aprobada.finalizado')) : ($r['enVivo'] ? __('cuenta.aprobada.en_vivo') : __('cuenta.aprobada.abre', ['fecha' => '<strong>' . e($r['abre']) . '</strong>'])) !!}</div>
                             </div>
 
                             <div class="cuenta__botones">

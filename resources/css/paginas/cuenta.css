@@ -184,3 +184,5 @@ button.cuenta__boton-secundario { border: 1px solid #dbe1ec; background: #ffffff
   .cuenta__item-texto a { display: inline-block; padding-block: 10px; margin-block: -10px; }
   button.cuenta__boton, button.cuenta__boton-secundario { min-height: 44px; }
 }
+.cuenta__adjudicaciones { margin-bottom: 28px; }
+.cuenta__adjudicaciones .cuenta__item-texto a { color: #25408f; font-size: 14px; }

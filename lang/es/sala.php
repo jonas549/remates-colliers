@@ -130,6 +130,13 @@ return [
     // Textos de resources/js/modulos/sala.js: t('sala.<clave>').
     // Alias del postor en el feed («Postor #N» viaja como dato en el JSON público; se muestra traducido).
     'alias' => 'Postor #:n',
+    // Banda de sin conexión (QA 21/10).
+    'conexion' => [
+        'titulo' => 'Sin conexión.',
+        'texto' => 'El precio y el cronómetro pueden no estar actualizados. Pujar queda bloqueado hasta reconectar.',
+        'barra' => 'SIN CONEXIÓN',
+    ],
+
     'js' => [
         'alias' => 'Postor #:n',
         'conectado' => ':n CONECTADO',
@@ -159,6 +166,7 @@ return [
             'proximo' => 'PRÓXIMO · PUJA AÚN NO ABRE',
             'adjudicando' => 'CERRADO · ADJUDICANDO',
             'en_vivo' => 'EN VIVO · PUJA ABIERTA',
+            'finalizado' => 'REMATE FINALIZADO',
         ],
 
         'tiempo' => [
@@ -178,6 +186,7 @@ return [
         'detalle_superado' => 'La puja más alta es de otro postor. Puedes ofertar desde :monto.',
 
         'ayuda_abre' => 'La puja abre en :tiempo.',
+        'ayuda_sin_conexion' => 'Sin conexión: espera a que la sala se reconecte para pujar.',
         'ayuda_ganando' => 'Tienes la puja más alta: espera a que otro postor la supere.',
         'ayuda_minimo' => 'La postura debe ser al menos :monto.',
         'ayuda_incremento' => 'Incremento mínimo :monto.',
@@ -201,6 +210,7 @@ return [
             'cancelado_titulo' => 'Colliers canceló este remate',
             'no_disponible_titulo' => 'Este remate ya no está disponible',
             'cerrado_titulo' => 'Remate cerrado',
+            'finalizado_titulo' => 'Remate finalizado',
             'desierto_titulo' => 'El remate se cerró sin posturas',
             'ganado_titulo' => 'Te adjudicaste la propiedad',
             'otro_titulo' => 'Adjudicado a otro postor',

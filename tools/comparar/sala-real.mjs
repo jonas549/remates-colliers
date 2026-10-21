@@ -115,8 +115,16 @@ await B.pagina.locator('.sala-modal__confirmar').click();
 await esperar('B puja +$500k mientras A está sin conexión', async () => (await texto(B.pagina, '.sala-estado__titulo')) === 'Vas ganando');
 await A.pagina.waitForTimeout(2500);
 comprobar('A sin conexión conserva el último estado conocido', (await texto(A.pagina, '.sala-panel__precio')) === '$199.000.000');
+// QA 21/10: el estado viejo no puede pasar por actual. Banda visible y Pujar bloqueado hasta reconectar.
+await esperar('A sin conexión: banda «Sin conexión» visible', async () =>
+    (await A.pagina.locator('[data-sin-conexion]').isVisible()) && (await texto(A.pagina, '[data-sin-conexion]')).includes('puede'), 8000);
+await panel(A.pagina).locator('.sala-puja__input').fill('205000000');
+comprobar('A sin conexión: Pujar bloqueado aunque el monto sea válido', await panel(A.pagina).locator('.sala-puja__boton').isDisabled());
+comprobar('A sin conexión: la ayuda explica por qué', (await texto(A.pagina, '.sala-panel .sala-puja__ayuda')).startsWith('Sin conexión'));
+await panel(A.pagina).locator('.sala-puja__input').fill('');
 await A.contexto.setOffline(false);
 await esperar('A se reconecta y recupera el estado actual', async () => (await texto(A.pagina, '.sala-panel__precio')) === '$199.500.000', 10000);
+await esperar('A reconectado: la banda desaparece', async () => !(await A.pagina.locator('[data-sin-conexion]').isVisible()), 5000);
 
 // ── Móvil: barra fija, hoja de puja y modal ──────────────────────────────────────────────────────────────
 const M = await abrir(navegador, 'contacto@andes.test', { ancho: 375 });
@@ -176,6 +184,46 @@ await D.pagina.screenshot({ path: path.join(SALIDA, 'cambio-de-lote-1440.png'), 
 await DM.pagina.screenshot({ path: path.join(SALIDA, 'cambio-de-lote-375.png'), fullPage: true });
 const desbordeDM = await DM.pagina.evaluate(() => document.documentElement.scrollWidth > innerWidth);
 comprobar('móvil con avisos: sin scroll horizontal', !desbordeDM);
+
+// Móvil sin red (QA 21/10, 390 px): la barra lo dice y su botón Pujar queda bloqueado.
+await DM.contexto.setOffline(true);
+await esperar('móvil sin conexión: banda visible, barra «SIN CONEXIÓN» y Pujar bloqueado', async () =>
+    (await DM.pagina.locator('[data-sin-conexion]').isVisible()) && (await texto(DM.pagina, '.sala-barra__estado')) === 'SIN CONEXIÓN'
+    && (await DM.pagina.locator('button.sala-barra__boton').isDisabled()), 8000);
+await DM.pagina.waitForTimeout(800); // animación de entrada
+await DM.pagina.screenshot({ path: path.join(SALIDA, 'sin-conexion-375.png') });
+await DM.contexto.setOffline(false);
+await esperar('móvil reconectado: vuelve Pujar', async () => !(await DM.pagina.locator('[data-sin-conexion]').isVisible())
+    && !(await DM.pagina.locator('button.sala-barra__boton').isDisabled()), 10000);
+// Red caída sin evento «offline» (wifi sin internet): el estado deja de llegar y la sala lo detecta sola en ~5 s.
+const sinEstado = (r) => r.abort('internetdisconnected');
+await DM.pagina.route('**/tiempo-real/**', sinEstado);
+await esperar('estado sin llegar (sin evento offline): la banda aparece sola', async () => (await DM.pagina.locator('[data-sin-conexion]').isVisible()), 10000);
+await DM.pagina.unroute('**/tiempo-real/**', sinEstado);
+await esperar('el estado vuelve a llegar: la banda se va', async () => !(await DM.pagina.locator('[data-sin-conexion]').isVisible()), 10000);
+
+// Remate terminado (QA 21/10): lote 1 desierto, lote 2 para D. Cada postor ve cómo terminó cada lote, también al volver.
+await panel(D.pagina).locator('.sala-puja__boton').click();
+await D.pagina.locator('.sala-modal__confirmar').click();
+await esperar('D puja en el lote 2', async () => (await texto(D.pagina, '.sala-estado__titulo')) === 'Vas ganando');
+ayudante('cerrar-lote-en', 'dos-lotes', '2', '3');
+await esperar('cierre: D ve «Te adjudicaste la propiedad» y el resultado de los dos lotes', async () =>
+    (await texto(D.pagina, '.sala-resultado__titulo')) === 'Te adjudicaste la propiedad'
+    && (await D.pagina.locator('[data-resumen-lotes] li').allInnerTexts()).join(' | ') === 'El lote 1 cerró sin posturas. | Te adjudicaste el lote 2 en $100.000.000. Colliers te contactará para la firma y el pago del saldo.'
+    && (await texto(D.pagina, '.sala-panel__estado')) === 'REMATE FINALIZADO', 25000);
+await esperar('cierre: el otro postor ve «Remate finalizado» y que el lote 2 fue de otro', async () =>
+    (await texto(DM.pagina, '.sala-resultado__titulo')) === 'Remate finalizado'
+    && (await DM.pagina.locator('[data-resumen-lotes] li').nth(1).innerText()) === 'El lote 2 se adjudicó a otro postor en $100.000.000.', 10000);
+await D.pagina.reload({ waitUntil: 'load' });
+await esperar('el ganador vuelve a la sala después del cierre y sigue viendo su lote', async () =>
+    (await D.pagina.locator('[data-resumen-lotes] li.es-ganado').innerText()).startsWith('Te adjudicaste el lote 2'), 5000);
+await D.pagina.waitForTimeout(800);
+await D.pagina.screenshot({ path: path.join(SALIDA, 'remate-finalizado-1440.png'), fullPage: true });
+await D.pagina.locator('.sala-cabecera__usuario--enlace').click();
+await esperar('Mi cuenta (con clic desde la sala): «Te adjudicaste el lote 2 en $100.000.000»', async () =>
+    (await D.pagina.locator('[data-adjudicaciones]').innerText()).includes('Te adjudicaste el lote 2 en $100.000.000'), 8000);
+await D.pagina.waitForTimeout(800);
+await D.pagina.screenshot({ path: path.join(SALIDA, 'mi-cuenta-adjudicado-1440.png'), fullPage: true });
 
 await navegador.close();
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');

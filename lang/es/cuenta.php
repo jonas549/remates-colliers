@@ -59,6 +59,14 @@ return [
             'texto' => 'Tu garantía por :monto fue aprobada para :remate. Podrás ingresar posturas en pesos cuando comience la transmisión del remate.',
             'texto_unica' => 'Tu habilitación por :monto fue aprobada: te sirve para todos los remates publicados. Podrás ingresar posturas en pesos cuando comience cada transmisión.',
         ],
+        // Remate terminado con la garantía aprobada (QA 21/10): ya no está «habilitado para pujar».
+        'finalizado' => [
+            'etiqueta' => 'REMATE FINALIZADO',
+            'titulo' => 'El remate terminó',
+            'titulo_ganado' => 'Te adjudicaste la propiedad',
+            'texto' => 'El remate :remate terminó y no se reciben pujas. El destino de tu garantía se rige por las bases del remate.',
+            'texto_ganado' => 'Colliers te contactará para la firma y el pago del saldo, según las bases del remate.',
+        ],
         'remate_cancelado' => [
             'etiqueta' => 'REMATE CANCELADO',
             'titulo' => 'Colliers canceló este remate',
@@ -153,6 +161,10 @@ return [
         'nota_recibido' => 'La revisión es manual y no hay pagos en línea. Una vez aprobada quedas habilitado para pujar en ese remate; el destino de la garantía al terminar el remate se rige por sus bases. Comprobante recibido el :fecha.',
     ],
 
+    'adjudicaciones' => [
+        'subtitulo' => 'TUS ADJUDICACIONES',
+    ],
+
     'aprobada' => [
         'subtitulo' => 'GARANTÍA RECIBIDA Y APROBADA',
         'garantia' => 'Garantía',
@@ -164,6 +176,7 @@ return [
         'aprobada_el' => 'Aprobada por Colliers el :fecha. Quedas habilitado para pujar en este remate.',
         'en_vivo' => 'El remate está <strong>en vivo</strong>: entra a la sala de pujas.',
         'abre' => 'La sala de pujas se abre el :fecha, junto con la transmisión del remate.',
+        'finalizado' => 'Este remate ya terminó: no se reciben pujas.',
         'entrar_sala' => 'Entrar a la sala de pujas',
         'ver_comprobante' => 'Ver comprobante',
         'nota' => 'Si te adjudicas la propiedad, Colliers te contactará para la firma y el pago del saldo. El destino de la garantía se rige por las bases del remate.',

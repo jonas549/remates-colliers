@@ -130,6 +130,13 @@ return [
     // Texts from resources/js/modulos/sala.js: t('sala.<key>').
     // Alias del postor en el feed («Postor #N» viaja como dato en el JSON público; se muestra traducido).
     'alias' => 'Bidder #:n',
+    // Connection-lost banner (QA 21/10).
+    'conexion' => [
+        'titulo' => 'Connection lost.',
+        'texto' => 'The price and the countdown may be out of date. Bidding is blocked until you reconnect.',
+        'barra' => 'CONNECTION LOST',
+    ],
+
     'js' => [
         'alias' => 'Bidder #:n',
         'conectado' => ':n ONLINE',
@@ -159,6 +166,7 @@ return [
             'proximo' => 'UPCOMING · BIDDING NOT OPEN YET',
             'adjudicando' => 'CLOSED · AWARDING',
             'en_vivo' => 'LIVE · BIDDING OPEN',
+            'finalizado' => 'AUCTION ENDED',
         ],
 
         'tiempo' => [
@@ -178,6 +186,7 @@ return [
         'detalle_superado' => 'Another bidder has the highest bid. You can bid from :monto.',
 
         'ayuda_abre' => 'Bidding opens in :tiempo.',
+        'ayuda_sin_conexion' => 'Connection lost: wait for the room to reconnect to bid.',
         'ayuda_ganando' => 'You have the highest bid. Wait until another bidder outbids you.',
         'ayuda_minimo' => 'Your bid must be at least :monto.',
         'ayuda_incremento' => 'Minimum bid increment :monto.',
@@ -201,6 +210,7 @@ return [
             'cancelado_titulo' => 'Colliers cancelled this auction',
             'no_disponible_titulo' => 'This auction is no longer available',
             'cerrado_titulo' => 'Auction closed',
+            'finalizado_titulo' => 'Auction ended',
             'desierto_titulo' => 'The auction closed with no bids',
             'ganado_titulo' => 'You were awarded the property',
             'otro_titulo' => 'Awarded to another bidder',

@@ -8,7 +8,7 @@
     $real = $componente === 'salaPuja';
 @endphp
 <x-layouts.base :titulo="__('sala.titulo')" clase-cuerpo="">
-    <div class="sala" x-data="{{ $componente }}(@js($config))" @keydown.escape.window="modal = false; hoja = false">
+    <div class="sala" :class="{ 'es-sin-conexion': sinConexion }" x-data="{{ $componente }}(@js($config))" @keydown.escape.window="modal = false; hoja = false">
 
         <div class="sala-cabecera">
             <div class="sala-cabecera__nav contenedor">
@@ -34,6 +34,12 @@
                 <span class="sala-ticker__tiempo" x-text="tiempoTexto"></span>
             </div>
         </div>
+        @if ($real)
+            {{-- Sin conexión (QA 21/10): se pega arriba al hacer scroll, en todos los anchos; Pujar queda bloqueado hasta que vuelva el estado. --}}
+            <div class="sala-conexion" x-show="sinConexion" x-cloak role="alert" data-sin-conexion>
+                <strong>{{ __('sala.conexion.titulo') }}</strong> {{ __('sala.conexion.texto') }}
+            </div>
+        @endif
 
         <div class="sala__contenido contenedor">
             <div class="sala__layout">
@@ -134,9 +140,17 @@
                                 @include('sala._formulario-puja', ['id' => 'panel'])
                             </template>
                             <template x-if="vencido">
-                                <div class="sala-resultado" :class="{ 'es-desierto': !hayPujas }">
+                                <div class="sala-resultado" :class="{ 'es-desierto': resultadoDesierto }">
                                     <div class="sala-resultado__titulo" x-text="resultadoTitulo"></div>
-                                    <div class="sala-resultado__texto" x-text="resultadoTexto"></div>
+                                    <div class="sala-resultado__texto" x-show="resultadoTexto" x-text="resultadoTexto"></div>
+                                    {{-- Varios lotes: cómo terminó cada uno para este postor (QA 21/10). --}}
+                                    <template x-if="resumenLotes.length">
+                                        <ul class="sala-resultado__lotes" data-resumen-lotes>
+                                            <template x-for="r in resumenLotes" :key="r.orden">
+                                                <li :class="{ 'es-ganado': r.gane, 'es-desierto': !r.adjudicado }" x-text="r.texto"></li>
+                                            </template>
+                                        </ul>
+                                    </template>
                                     @if ($real)
                                         <a x-show="retirado === 'cancelado'" href="{{ route('cuenta.estado') }}" class="sala-resultado__enlace">{{ __('sala.cabecera.ir_a_mi_cuenta') }}</a>
                                         <a x-show="retirado === 'no-disponible'" href="{{ route('remates.index') }}" class="sala-resultado__enlace">{{ __('sala.panel.ver_remates') }}</a>
@@ -165,13 +179,13 @@
                     <span class="sala-barra__precio" x-text="actualTexto"></span>
                     <span class="sala-barra__tiempo" :class="{ 'es-final': enMinutoFinal }" x-text="vencido ? {{ Js::from(__('sala.barra.finalizado')) }} : hh + ':' + mm + ':' + ss"></span>
                 </div>
-                <span class="sala-barra__estado" :class="{ 'es-ganando': yoGanando && !vencido, 'es-cerrado': vencido }" x-text="vencido ? estadoTexto : estadoTitulo.toUpperCase()"></span>
+                <span class="sala-barra__estado" :class="{ 'es-ganando': yoGanando && !vencido && !sinConexion, 'es-cerrado': vencido }" x-text="sinConexion ? {{ Js::from(__('sala.conexion.barra')) }} : (vencido ? (resumenLotes.length ? resultadoTitulo.toUpperCase() : estadoTexto) : estadoTitulo.toUpperCase())"></span>
             </div>
             @if ($real)
                 {{-- Remate cancelado o retirado: en vez de un «Pujar» apagado, la salida a «Mi cuenta». --}}
                 <a x-show="retirado === 'cancelado'" x-cloak href="{{ route('cuenta.estado') }}" class="sala-barra__boton sala-barra__boton--enlace">{{ __('sala.barra.mi_cuenta') }}</a>
                 <a x-show="retirado === 'no-disponible'" x-cloak href="{{ route('remates.index') }}" class="sala-barra__boton sala-barra__boton--enlace">{{ __('sala.barra.remates') }}</a>
-                <button type="button" x-show="!retirado" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">{{ __('sala.barra.pujar') }}</button>
+                <button type="button" x-show="!retirado" class="sala-barra__boton" :disabled="vencido || sinConexion" @click="hoja = true" aria-haspopup="dialog">{{ __('sala.barra.pujar') }}</button>
             @else
                 <button type="button" class="sala-barra__boton" :disabled="vencido" @click="hoja = true" aria-haspopup="dialog">{{ __('sala.barra.pujar') }}</button>
             @endif
@@ -203,7 +217,7 @@
                         <div class="sala-modal__detalle"><span x-text="modalUf ? modalUf + ' · ' : ''"></span>{!! __('sala.modal.supera', ['diferencia' => '<span x-text="modalDiferencia"></span>']) !!}</div>
                         <div class="sala-modal__aviso">{{ __('sala.modal.aviso', ['garantia' => $clp($propiedad['garantia'])]) }}</div>
                         <div class="sala-modal__botones">
-                            <button type="button" class="sala-modal__confirmar" :disabled="enviando" @click="confirmar()">{{ __('sala.modal.confirmar') }}</button>
+                            <button type="button" class="sala-modal__confirmar" :disabled="enviando || sinConexion" @click="confirmar()">{{ __('sala.modal.confirmar') }}</button>
                             <button type="button" class="sala-modal__cancelar" @click="modal = false">{{ __('sala.modal.cancelar') }}</button>
                         </div>
                     </div>

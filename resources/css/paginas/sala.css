@@ -230,3 +230,14 @@
 .sala-aviso--lote .sala-aviso__texto { font-size: 15px; font-weight: 600; color: #16265a; }
 .sala-aviso--lote.es-ganado { border-left-color: #1c5330; background: #e8f3ec; }
 .sala-aviso--lote.es-ganado .sala-aviso__etiqueta, .sala-aviso--lote.es-ganado .sala-aviso__texto { color: #1c5330; }
+
+/* Sin conexión (QA 21/10): banda bajo la franja que se pega arriba al hacer scroll, en todos los anchos; precio y cronómetro atenuados porque pueden estar viejos. */
+.sala-conexion { position: sticky; top: 0; z-index: 90; background: #8c0f22; color: #ffffff; padding: 12px 20px; font-size: 14px; line-height: 1.4; text-align: center; box-shadow: 0 2px 8px rgba(22, 38, 90, .25); }
+.sala-conexion strong { letter-spacing: 0.06em; text-transform: uppercase; margin-right: 6px; }
+.sala.es-sin-conexion .sala-panel__precio, .sala.es-sin-conexion .sala-contador, .sala.es-sin-conexion .sala-barra__fila { opacity: .45; }
+
+/* Remate de varios lotes terminado: el resultado de cada lote. */
+.sala-resultado__lotes { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sala-resultado__lotes li { font-size: 13px; line-height: 1.45; padding-left: 10px; border-left: 3px solid #25408f; }
+.sala-resultado__lotes li.es-ganado { border-left-color: #1c5330; color: #1c5330; font-weight: 600; }
+.sala-resultado__lotes li.es-desierto { border-left-color: #b9c2d0; color: #4a5563; }

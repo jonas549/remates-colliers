@@ -108,6 +108,32 @@ class SalaTest extends TestCase
         $this->assertSame('desierto', $this->configDe($respuesta->getContent())['estado']['lotes'][0]['estado']);
     }
 
+    /** QA 21/10: lote 1 adjudicado y lote 2 desierto; el ganador vuelve después del cierre y tiene que ver lo que ganó. */
+    public function test_el_ganador_ve_su_adjudicacion_despues_del_cierre_de_un_remate_de_dos_lotes(): void
+    {
+        $ana = $this->postor('Ana');
+        $otro = $this->postor('Beto');
+        $lote2 = Lote::create([
+            'remate_id' => $this->remate->id, 'orden' => 2, 'titulo' => 'Bodega 12', 'direccion' => 'Bodega 12', 'precio_base' => 9000000,
+            'abre_en' => $this->lote->cierra_en->addMinutes(5), 'cierra_en' => $this->lote->cierra_en->addMinutes(35),
+        ]);
+        app(\App\Subastas\MotorPujas::class)->pujar($ana, $this->lote->id, 185000000, CarbonImmutable::now('UTC'));
+        CarbonImmutable::setTestNow($lote2->cierra_en->addMinutes(10));
+
+        $config = $this->configDe($this->actingAs($ana)->get('/remates/apoquindo/sala')->assertOk()->getContent());
+        $this->assertSame(['adjudicado', 'desierto'], array_column($config['estado']['lotes'], 'estado'));
+        $this->assertSame($config['miAlias'], $config['estado']['lotes'][0]['ganador'], 'la sala sabe que el lote 1 es de Ana');
+
+        $this->actingAs($ana)->get('/mi-cuenta')->assertOk()
+            ->assertSee('TUS ADJUDICACIONES')
+            ->assertSee('Te adjudicaste el lote 1 en $185.000.000')
+            ->assertSee('Te adjudicaste la propiedad')
+            ->assertDontSee('Estás habilitado para pujar');
+        $this->actingAs($otro)->get('/mi-cuenta')->assertOk()
+            ->assertDontSee('TUS ADJUDICACIONES')
+            ->assertSee('El remate terminó');
+    }
+
     public function test_remate_en_borrador_no_existe_y_el_modo_demo_solo_es_local(): void
     {
         $ana = $this->postor('Ana');

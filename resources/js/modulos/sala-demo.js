@@ -14,6 +14,9 @@ export default ({ base, paso, actual, deltaCierre, historial, postor }) => ({
     modal: false,
     hoja: false,
     cerrado: false,
+    // La demo no consulta al motor: siempre conectada y con un solo lote (mismos nombres que sala.js).
+    sinConexion: false,
+    resumenLotes: [],
     t0: Date.now(),
     ahora: Date.now(),
     historialBruto: historial.map(([monto, numero, seg, yo]) => ({ monto, postor: 'Postor #' + numero, yo: !!yo, t: Date.now() - seg * 1000 })),
@@ -28,6 +31,7 @@ export default ({ base, paso, actual, deltaCierre, historial, postor }) => ({
     },
     get vencido() { return this.restante === 0 || this.cerrado; },
     get hayPujas() { return this.historialBruto.length > 0; },
+    get resultadoDesierto() { return !this.hayPujas; },
     get totalPujas() { return this.historialBruto.length; },
     get etiquetaContador() { return 'CIERRA EN'; },
     get yoGanando() { return !!this.historialBruto[0] && this.historialBruto[0].yo; },

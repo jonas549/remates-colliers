@@ -2,11 +2,13 @@
 
 namespace App\Postores;
 
+use App\Models\Adjudicacion;
 use App\Models\Configuracion;
 use App\Models\Garantia;
 use App\Models\Postor;
 use App\Models\Remate;
 use App\Models\User;
+use App\Subastas\Liquidador;
 use App\Support\Formato;
 use App\Support\Sitio;
 use Carbon\CarbonImmutable;
@@ -30,6 +32,11 @@ class EstadoCuenta
         $ahora = CarbonImmutable::now('UTC');
         // Todas las del postor, también las de un remate de prueba: esa es la cuenta de un postor de prueba, y un postor
         // real no puede inscribirse en uno (InscripcionGarantias). Mostrar menos sería mostrar un estado falso (21/09).
+        // Cierre perezoso: los lotes vencidos se materializan antes de mostrar adjudicaciones (sin esperar al cron).
+        $liquidador = app(Liquidador::class);
+        Garantia::with('remate')->where('user_id', $user->id)->get()->pluck('remate')->filter()->unique('id')
+            ->filter(fn (Remate $r) => $r->estadoVisible($ahora) === Remate::VISTA_EN_VIVO)
+            ->each(fn (Remate $r) => $liquidador->liquidarVencidos($r, $ahora));
         $garantias = Garantia::with('remate.lotes')->where('user_id', $user->id)->get();
         $garantia = $slug ? $garantias->first(fn (Garantia $g) => $g->remate->slug === $slug) : self::relevante($garantias, $ahora);
 
@@ -53,6 +60,12 @@ class EstadoCuenta
         $horas = Sitio::horasRevision();
         $montoTexto = $garantia ? Formato::clp($garantia->monto) : '';
         $nombreRemate = $remate?->titulo ?? '';
+        // Adjudicaciones del postor (QA 21/10: el ganador entraba después del cierre y solo leía el texto genérico).
+        $adjudicaciones = Adjudicacion::with('lote.remate.lotes')->where('user_id', $user->id)
+            ->where('estado', '!=', Adjudicacion::ESTADO_INCUMPLIDO)->orderByDesc('cerrado_en')->get();
+        // Remate terminado: «Estás habilitado para pujar» sería falso.
+        $finalizado = $clave === 'aprobada' && in_array($remate?->estadoVisible($ahora), [Remate::VISTA_ADJUDICADO, Remate::VISTA_CERRADO], true);
+        $ganoAqui = $remate !== null && $adjudicaciones->contains(fn (Adjudicacion $a) => $a->lote?->remate_id === $remate->id);
 
         $b = fn (string $clave, array $marcadores = []) => __('cuenta.bandas.' . $clave, $marcadores);
         $textos = match ($clave) {
@@ -66,7 +79,9 @@ class EstadoCuenta
                 : $b('sin_inscripcion.texto'), '#25408f', 2, 'pendiente'],
             'garantia-pendiente' => [$b('garantia_pendiente.etiqueta'), $b('garantia_pendiente.titulo'), $b('garantia_pendiente.texto'), '#25408f', 2, 'pendiente'],
             'garantia-revision' => [$b('garantia_revision.etiqueta'), $b('garantia_revision.titulo'), $b($unica ? 'garantia_revision.texto_unica' : 'garantia_revision.texto', ['horas' => $horas]), '#16265a', 3, 'en_revision'],
-            'aprobada' => [$b('aprobada.etiqueta'), $b('aprobada.titulo'), $unica
+            'aprobada' => $finalizado ? [$b('finalizado.etiqueta'), $b($ganoAqui ? 'finalizado.titulo_ganado' : 'finalizado.titulo'),
+                $b($ganoAqui ? 'finalizado.texto_ganado' : 'finalizado.texto', ['remate' => $nombreRemate]), $ganoAqui ? '#1c5330' : '#5b6572', 4, 'aprobada']
+                : [$b('aprobada.etiqueta'), $b('aprobada.titulo'), $unica
                 ? $b('aprobada.texto_unica', ['monto' => $montoTexto])
                 : $b('aprobada.texto', ['monto' => $montoTexto, 'remate' => $nombreRemate]), '#1c5330', 4, 'aprobada'],
             'remate-cancelado' => [$b('remate_cancelado.etiqueta'), $b('remate_cancelado.titulo'), $remate?->motivo_cancelacion
@@ -94,6 +109,7 @@ class EstadoCuenta
                     'sala' => $clave === 'aprobada' && in_array($vista, [Remate::VISTA_EN_VIVO, Remate::VISTA_PROXIMO], true) ? route('sala.show', $remate->slug) : null,
                     'abre' => Formato::fecha($remate->abreEn(), $ahora),
                     'enVivo' => $vista === Remate::VISTA_EN_VIVO,
+                    'finalizado' => $finalizado,
                     'cancelado' => $remate->cancelado_en ? Formato::fecha($remate->cancelado_en, $ahora) : null,
                 ] : null,
                 'garantia' => $garantia ? [
@@ -108,6 +124,12 @@ class EstadoCuenta
                     'subir' => $puedeSubir ? route('cuenta.comprobante.store', $garantia) : null,
                 ] : null,
                 'banco' => self::banco(),
+                // Mismo texto que la sala al terminar un lote (sala.js.lote_ganado).
+                'adjudicaciones' => $adjudicaciones->filter(fn (Adjudicacion $a) => $a->lote?->remate !== null)->map(fn (Adjudicacion $a) => [
+                    'remate' => $a->lote->remate->titulo . ' · ' . $a->lote->remate->folio,
+                    'texto' => __('sala.js.lote_ganado', ['orden' => $a->lote->orden, 'precio' => Formato::clp($a->monto)]),
+                    'url' => route('cuenta.estado', ['remate' => $a->lote->remate->slug]),
+                ])->values()->all(),
                 'inscripciones' => $garantias->map(fn (Garantia $g) => [
                     'titulo' => $g->remate->titulo, 'folio' => $g->remate->folio,
                     'estado' => in_array($g->estado, self::ESTADOS_GARANTIA, true) ? __('cuenta.estados.' . $g->estado) : $g->estado,

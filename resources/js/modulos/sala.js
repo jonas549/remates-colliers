@@ -2,6 +2,12 @@ import { clp, dos } from './formato';
 import { alias, locale, t } from './textos';
 
 const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
+// Sin una respuesta del estado en este tiempo, la sala avisa que está desconectada y no deja pujar (QA 21/10).
+// El JSON se consulta cada ~1 s: 5 s son cuatro sondeos perdidos seguidos.
+const SIN_SENAL_MS = 5000;
+const ESPERA_MAXIMA_MS = 5000;
+// Una petición colgada (red que se cae sin error) no puede dejar la sala esperando para siempre.
+const conLimite = (opciones = {}) => (typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? { ...opciones, signal: AbortSignal.timeout(ESPERA_MAXIMA_MS) } : opciones);
 
 // Sala de puja conectada al motor (Bloque K).
 // - Toda hora sale del servidor: el reloj se sincroniza contra /hora compensando la latencia.
@@ -9,6 +15,9 @@ const TERMINALES = ['adjudicado', 'desierto', 'cerrado', 'incumplido'];
 // - Pasado cierra_en + margen sin liquidar, el navegador pide el estado a PHP (detector del cierre perezoso).
 // - La base de datos es la fuente de verdad: tras cada puja se vuelve a leer el estado.
 // - Varios lotes: la ficha sigue al lote vigente y un aviso cuenta cómo terminó el anterior (no hay diseño: mínimo).
+// - Conexión: si el estado deja de llegar (SIN_SENAL_MS) o el navegador queda sin red, una banda lo avisa y Pujar se
+//   bloquea hasta reconectar. Precio y cronómetro viejos no pueden pasar por actuales.
+// - Remate terminado con varios lotes: el resultado de cada lote para este postor, no solo el del último.
 // - Presencia: latido cada ~15 s a presencia.php (sin Laravel) con un token firmado; el número de conectados llega en el
 //   mismo JSON del estado. El postor solo ve el número: los nombres nunca llegan a su navegador.
 export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado, servidorMs, urls, uf = null, presencia = null }) => ({
@@ -25,6 +34,8 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     ahora: servidorMs,
     fallos: 0,
     ultimaConsultaPhp: 0,
+    ultimoOk: servidorMs,
+    enLinea: typeof navigator === 'undefined' || navigator.onLine !== false,
     // El remate dejó de existir para pujar aunque el reloj diga otra cosa (21/09): 'cancelado' (lo dice el JSON) o
     // 'no-disponible' (se borró: el JSON y el endpoint responden 404). La sala nunca debe mostrar «PUJA ABIERTA» ahí.
     retirado: estado.estado === 'cancelado' ? 'cancelado' : null,
@@ -36,7 +47,8 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         this.consultar();
         const reconectar = () => { this.sincronizar(); this.consultarPhp(true); this.latir(); };
         document.addEventListener('visibilitychange', () => { if (!document.hidden) reconectar(); });
-        window.addEventListener('online', reconectar);
+        window.addEventListener('online', () => { this.enLinea = true; reconectar(); });
+        window.addEventListener('offline', () => { this.enLinea = false; });
         if (presencia) {
             this.latir();
             setInterval(() => this.latir(), presencia.latidoMs);
@@ -92,11 +104,12 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         if (this.retirado === 'no-disponible') return; // ya no hay nada que consultar
         let espera = 1000;
         try {
-            const r = await fetch(urls.estadoJson + '?t=' + Date.now(), { cache: 'no-store' });
+            const r = await fetch(urls.estadoJson + '?t=' + Date.now(), conLimite({ cache: 'no-store' }));
             // Sin JSON: o se borró el remate o algo falló. El endpoint lo confirma de inmediato (404 = no existe).
             if (r.status === 404) { await this.consultarPhp(true); throw new Error('HTTP 404'); }
             if (!r.ok) throw new Error('HTTP ' + r.status);
             this.aplicar(await r.json());
+            this.recibido();
             this.fallos = 0;
         } catch (e) {
             this.fallos++;
@@ -112,11 +125,18 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
         if (!forzar && ahora - this.ultimaConsultaPhp < 5000) return;
         this.ultimaConsultaPhp = ahora;
         try {
-            const r = await fetch(urls.estado, { cache: 'no-store', headers: { Accept: 'application/json' } });
+            const r = await fetch(urls.estado, conLimite({ cache: 'no-store', headers: { Accept: 'application/json' } }));
             if (r.status === 404) this.retirado = 'no-disponible';
-            if (r.ok) this.aplicar(await r.json());
+            if (r.ok) { this.aplicar(await r.json()); this.recibido(); }
         } catch (e) { /* el sondeo del JSON sigue */ }
     },
+
+    recibido() {
+        this.enLinea = true;
+        this.ultimoOk = Date.now() + this.desfase;
+    },
+    // Sin señal: lo que muestra la sala puede estar desactualizado. No aplica a un remate retirado (ya no hay nada que esperar).
+    get sinConexion() { return !this.retirado && (!this.enLinea || this.ahora - this.ultimoOk > SIN_SENAL_MS); },
 
     aplicar(nuevo) {
         if (!nuevo || !Array.isArray(nuevo.lotes)) return;
@@ -156,7 +176,26 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     get avisoLoteEtiqueta() { return t('sala.cambio_de_lote', { lote: this.etiquetaLote.toUpperCase() }); },
     horaDe(ms) { return new Date(ms).toLocaleTimeString(locale(), { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) + t('formato.zona', {}, ''); },
     // Estado con el lote delante cuando hay varios: «LOTE 2 DE 2 · EN VIVO · PUJA ABIERTA».
-    get estadoConLote() { return (this.etiquetaLote && !this.retirado ? this.etiquetaLote.toUpperCase() + ' · ' : '') + this.estadoTexto; },
+    get estadoConLote() {
+        if (this.resumenLotes.length) return t('sala.estado.finalizado');
+        return (this.etiquetaLote && !this.retirado ? this.etiquetaLote.toUpperCase() + ' · ' : '') + this.estadoTexto;
+    },
+    // Remate de varios lotes ya terminado (QA 21/10): el ganador del lote 1 leía «se cerró sin posturas» porque la sala
+    // solo mostraba el último lote. Aquí va cómo terminó cada uno para este postor, con los textos del cambio de lote.
+    get resumenLotes() {
+        const lotes = this.estado.lotes;
+        if (this.retirado || lotes.length < 2 || !lotes.every((l) => TERMINALES.includes(l.estado))) return [];
+        return lotes.map((l) => {
+            const gane = !!this.miAlias && l.ganador === this.miAlias;
+            const adjudicado = l.estado !== 'desierto';
+            return {
+                orden: l.orden, gane, adjudicado,
+                texto: !adjudicado ? t('sala.lote_sin_posturas', { orden: l.orden })
+                    : t(gane ? 'sala.lote_ganado' : 'sala.lote_de_otro', { orden: l.orden, precio: clp(l.precio_actual) }),
+            };
+        });
+    },
+    get resultadoDesierto() { return this.resumenLotes.length ? !this.resumenLotes.some((r) => r.adjudicado) : !this.hayPujas; },
     get mensajeMartillero() { return this.estado.mensaje_martillero?.texto || ''; },
     get mensajeHace() {
         const en = this.estado.mensaje_martillero?.en_ms;
@@ -182,7 +221,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     get paso() { return this.estado.incremento_minimo; },
     get escrito() { return parseInt(String(this.monto).replace(/[^\d]/g, ''), 10) || 0; },
     get montoPuja() { return this.escrito > 0 ? this.escrito : this.minimo; },
-    get montoValido() { return this.abierto && !this.yoGanando && this.montoPuja >= this.minimo; },
+    get montoValido() { return this.abierto && !this.sinConexion && !this.yoGanando && this.montoPuja >= this.minimo; },
     get montoInvalidoVisible() { return !!this.error || (this.escrito > 0 && this.montoPuja < this.minimo); },
 
     get hh() { return dos(Math.floor(this.restante / 3600)); },
@@ -241,6 +280,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
 
     get ayuda() {
         if (this.error) return this.error;
+        if (this.sinConexion) return t('sala.ayuda_sin_conexion');
         if (this.antesDeAbrir) return t('sala.ayuda_abre', { tiempo: this.hh + ':' + this.mm + ':' + this.ss });
         if (this.yoGanando) return t('sala.ayuda_ganando');
         if (this.escrito > 0 && this.montoPuja < this.minimo) return t('sala.ayuda_minimo', { monto: clp(this.minimo) });
@@ -257,6 +297,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     // Registra la puja en el motor. El modal de confirmación es obligatorio (acta).
     async confirmar() {
         if (this.enviando) return;
+        if (this.sinConexion) { this.modal = false; this.error = t('sala.ayuda_sin_conexion'); return; }
         this.enviando = true;
         const monto = this.montoPuja;
         try {
@@ -326,6 +367,9 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     get resultadoTitulo() {
         if (this.retirado === 'cancelado') return t('sala.resultado.cancelado_titulo');
         if (this.retirado) return t('sala.resultado.no_disponible_titulo');
+        if (this.resumenLotes.length) {
+            return t(this.resumenLotes.some((r) => r.gane) ? 'sala.resultado.ganado_titulo' : 'sala.resultado.finalizado_titulo');
+        }
         if (!this.terminal) return t('sala.resultado.cerrado_titulo');
         if (!this.hayPujas) return t('sala.resultado.desierto_titulo');
         return t(this.yoGanando ? 'sala.resultado.ganado_titulo' : 'sala.resultado.otro_titulo');
@@ -333,6 +377,7 @@ export default ({ remate, loteInicial, lotes = {}, miAlias, pujasRapidas, estado
     get resultadoTexto() {
         if (this.retirado === 'cancelado') return t('sala.resultado.cancelado_texto');
         if (this.retirado) return t('sala.resultado.no_disponible_texto');
+        if (this.resumenLotes.length) return ''; // lo cuenta la lista de lotes
         if (!this.terminal) return t('sala.resultado.cerrado_texto');
         if (!this.hayPujas) return t('sala.resultado.desierto_texto');
         // Neutro a propósito: qué pasa con la garantía (devolución o imputación) está pendiente con el cliente.

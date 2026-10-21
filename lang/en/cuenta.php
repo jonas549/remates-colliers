@@ -59,6 +59,14 @@ return [
             'texto' => 'Your bid deposit of :monto was approved for :remate. You can place bids in pesos once the auction broadcast starts.',
             'texto_unica' => 'Your bidding approval of :monto was approved: it covers every published auction. You can place bids in pesos once each broadcast starts.',
         ],
+        // Auction ended with an approved deposit (QA 21/10).
+        'finalizado' => [
+            'etiqueta' => 'AUCTION ENDED',
+            'titulo' => 'The auction has ended',
+            'titulo_ganado' => 'You were awarded the property',
+            'texto' => 'The auction :remate has ended and no more bids are accepted. Your bid deposit is governed by the auction terms and conditions.',
+            'texto_ganado' => 'Colliers will contact you to sign and pay the balance, as set out in the auction terms and conditions.',
+        ],
         'remate_cancelado' => [
             'etiqueta' => 'AUCTION CANCELED',
             'titulo' => 'Colliers canceled this auction',
@@ -153,6 +161,10 @@ return [
         'nota_recibido' => 'Review is manual and there are no online payments. Once approved, you can bid in that auction; what happens to the bid deposit after the auction is governed by its terms and conditions. Proof of payment received on :fecha.',
     ],
 
+    'adjudicaciones' => [
+        'subtitulo' => 'YOUR AWARDED LOTS',
+    ],
+
     'aprobada' => [
         'subtitulo' => 'BID DEPOSIT RECEIVED AND APPROVED',
         'garantia' => 'Bid deposit',
@@ -164,6 +176,7 @@ return [
         'aprobada_el' => 'Approved by Colliers on :fecha. You’re approved to bid in this auction.',
         'en_vivo' => 'The auction is <strong>live</strong>: enter the bidding room.',
         'abre' => 'The bidding room opens on :fecha, together with the auction broadcast.',
+        'finalizado' => 'This auction has ended: no more bids are accepted.',
         'entrar_sala' => 'Enter the bidding room',
         'ver_comprobante' => 'View proof of payment',
         'nota' => 'If you are awarded the property, Colliers will contact you to sign and pay the balance. What happens to the bid deposit is governed by the auction terms and conditions.',
