@@ -1,6 +1,6 @@
 # PROGRESO — Remates Colliers · Fase 3
 
-> Punto de retome. Última actualización: **2026-10-21.**
+> Punto de retome. Última actualización: **2026-10-22.**
 > Leer junto con `CLAUDE.md` (reglas) y **`docs/BACKLOG.md` (estado vivo de cada tarea)**.
 > El detalle de cada jornada está en `docs/progreso/AAAA-MM-DD.md`.
 
@@ -32,6 +32,12 @@
   el sandbox lo de cada grupo (`docs/progreso/2026-10-21.md`). El 2FA
   queda fuera de la tanda. Fuera de la tanda también OPcache, el rol Editor y los enlaces sin destino. Recorrido nuevo de
   esta tanda: `tools/comparar/qa-visibles.mjs`; de seguridad, `tools/comparar/seguridad.mjs`.
+- **22/10: última tanda de Jonas, en local y SIN push** (un commit por punto): cabecera y pie como el sitio corporativo,
+  ficha sin bloque de visitas vacío, **rol Editor** (permisos a confirmar con el cliente, en `App\Autenticacion\Permisos`) y
+  **segundo factor por correo para Administración**. ⚠️ Antes del push: el correo saliente del sandbox tiene que funcionar
+  (emergencia: `php artisan colliers:codigo-ingreso correo`) y correr `composer test:mysql` (no se corrió: MySQL apagado).
+  Los recorridos que entran como administración leen el código del log local (`tools/comparar/segundo-factor.mjs`).
+  Detalle: `docs/progreso/2026-10-22.md`.
 - **Antes de reportar algo como listo:** `node tools/comparar/recorrido-roles.mjs` (los tres roles con clics) en verde.
 - **Criterio de Jonas (21/09), para todo el proyecto:** si algo necesita que alguien escriba una URL o sepa algo que la
   pantalla no dice, está mal. Los recorridos en navegador tampoco escriben URL: hacen clic, copian y pegan.
@@ -54,6 +60,7 @@
 | 2026-09-21 | [`docs/progreso/2026-09-21.md`](progreso/2026-09-21.md) | Folio (500 en el sandbox), suite contra MySQL, `1040 Too many connections` y reintento en la puja, experiencia de prueba sin URL, martillero y «Tus remates», sandbox sin clave, sala ante remate borrado/cancelado, cambio de lote evidente, recorrido de los tres roles. §11: plan de prueba del 22/09 |
 | 2026-10-18 | [`docs/progreso/2026-10-18.md`](progreso/2026-10-18.md) | Favicon, menú y pie hacia el sitio corporativo, presencia en la sala (latido sin Laravel, nombres solo en el panel) |
 | 2026-10-20 | [`docs/progreso/2026-10-20.md`](progreso/2026-10-20.md) | Sitio público en inglés: prefijo `/en`, conmutador en todas las cabeceras públicas, 886 cadenas en `lang/es` y `lang/en`, formatos por idioma, documentos «(in Spanish)». Local, sin push |
+| 2026-10-22 | [`docs/progreso/2026-10-22.md`](progreso/2026-10-22.md) | Última tanda: enlaces de cabecera y pie, horarios de visita, rol Editor, segundo factor por correo. Local, sin push |
 | 2026-10-21 | [`docs/progreso/2026-10-21.md`](progreso/2026-10-21.md) | QA de Jonas sobre el sandbox en 4 grupos: aviso de conexión y adjudicación visible (sala, Mi cuenta); HTTPS forzado, cabeceras con CSP y Turnstile; sala sin transmisión, condiciones en inglés, cuentas por aprobar y SEO; menores (hover, «sobre la base», promedio, 405, buscador). Local, sin push |
 | 2026-09-20 | [`docs/progreso/2026-09-20.md`](progreso/2026-09-20.md) | Los 8 puntos del QA de Jonas: martillero, cierre anticipado, hover, registro que no pierde nada, subasta de prueba, ayudas del formulario, «06 Usuarios» y `Habilitacion`. Tarde: push, habilitación única configurable y PDF fuera de alcance |
 
