@@ -140,8 +140,6 @@
 .detalle-visita { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f2f6; font-size: 14px; }
 .detalle-visita__fecha { color: #1d2530; font-weight: 600; }
 .detalle-visita__hora { color: #5b6572; }
-.detalle-visitas__boton { display: block; text-align: center; border: 1px solid #25408f; color: #25408f; font-weight: 600; font-size: 14px; padding: 12px; margin-top: 14px; }
-.detalle-visitas__boton:hover { background: #25408f; color: #ffffff; text-decoration: none; }
 
 .detalle-docs { padding: 6px 18px 14px; }
 .detalle-doc { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f2f6; font-size: 14px; }

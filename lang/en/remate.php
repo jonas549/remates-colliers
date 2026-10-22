@@ -135,8 +135,6 @@ return [
 
     'visitas' => [
         'titulo' => 'Viewing times',
-        'sin_horarios' => 'No viewing times published',
-        'coordinala' => 'Arrange it with Colliers',
         'coordinar' => 'Arrange a viewing',
     ],
 

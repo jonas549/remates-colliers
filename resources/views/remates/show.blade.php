@@ -73,6 +73,8 @@
                 </div>
                 <div class="detalle__acciones">
                     <a href="{{ $r['bases'] ?? '#condiciones' }}" class="detalle__accion">{{ __('remate.cabeza.bases') }}</a>
+                    {{-- Siempre visible mientras el remate no cierra (22/10); antes vivía dentro de «Horarios de visita». --}}
+                    @unless ($cerrado)<a href="{{ $correoVisita }}" class="detalle__accion">{{ __('remate.visitas.coordinar') }}</a>@endunless
                     <a href="{{ url()->current() }}" class="detalle__accion detalle__accion--gris" @click.prevent="compartir()" x-text="compartido || @js(__('remate.cabeza.compartir'))">{{ __('remate.cabeza.compartir') }}</a>
                 </div>
             </div>
@@ -192,17 +194,17 @@
 
                 <div class="detalle__lateral">
                     @if ($vivo)
+                        {{-- Sin horarios cargados no hay bloque (22/10): «Coordinar visita» va junto a «Bases y condiciones». --}}
+                        @if ($r['visitas'])
                         <div class="detalle-caja">
                             <div class="detalle-caja__cabeza">{!! $iconoCalendario !!}<h2 class="detalle-caja__titulo">{{ __('remate.visitas.titulo') }}</h2></div>
                             <div class="detalle-visitas">
-                                @forelse ($r['visitas'] as [$fecha, $hora])
+                                @foreach ($r['visitas'] as [$fecha, $hora])
                                     <div class="detalle-visita"><span class="detalle-visita__fecha">{{ $fecha }}</span><span class="detalle-visita__hora">{{ $hora }}</span></div>
-                                @empty
-                                    <div class="detalle-visita"><span class="detalle-visita__fecha">{{ __('remate.visitas.sin_horarios') }}</span><span class="detalle-visita__hora">{{ __('remate.visitas.coordinala') }}</span></div>
-                                @endforelse
-                                <a href="{{ $correoVisita }}" class="detalle-visitas__boton">{{ __('remate.visitas.coordinar') }}</a>
+                                @endforeach
                             </div>
                         </div>
+                        @endif
                     @endif
 
                     <div class="detalle-caja">
@@ -354,17 +356,17 @@
                         </div>
                         @endunless
 
+                        {{-- Sin horarios cargados no hay bloque (22/10): «Coordinar visita» va junto a «Bases y condiciones». --}}
+                        @if ($r['visitas'])
                         <div class="detalle-caja">
                             <div class="detalle-caja__cabeza">{!! $iconoCalendario !!}<h2 class="detalle-caja__titulo">{{ __('remate.visitas.titulo') }}</h2></div>
                             <div class="detalle-visitas">
-                                @forelse ($r['visitas'] as [$fecha, $hora])
+                                @foreach ($r['visitas'] as [$fecha, $hora])
                                     <div class="detalle-visita"><span class="detalle-visita__fecha">{{ $fecha }}</span><span class="detalle-visita__hora">{{ $hora }}</span></div>
-                                @empty
-                                    <div class="detalle-visita"><span class="detalle-visita__fecha">{{ __('remate.visitas.sin_horarios') }}</span><span class="detalle-visita__hora">{{ __('remate.visitas.coordinala') }}</span></div>
-                                @endforelse
-                                <a href="{{ $correoVisita }}" class="detalle-visitas__boton">{{ __('remate.visitas.coordinar') }}</a>
+                                @endforeach
                             </div>
                         </div>
+                        @endif
                     @endif
 
                     <div class="detalle-caja">

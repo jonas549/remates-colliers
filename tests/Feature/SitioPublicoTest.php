@@ -166,6 +166,33 @@ class SitioPublicoTest extends TestCase
         $this->get('/remates/borrador')->assertNotFound();
     }
 
+    public function test_horarios_de_visita_solo_si_hay_y_coordinar_visita_siempre_junto_a_las_bases(): void
+    {
+        $remate = $this->remate('militares', Remate::ESTADO_PUBLICADO, 3 * 24 * 60);
+        $acciones = fn () => Str::between($this->get('/remates/militares')->assertOk()->getContent(), 'class="detalle__acciones"', 'class="detalle__layout"');
+
+        // Sin horarios: ni el bloque ni «Sin horarios publicados»; el botón queda junto a «Bases y condiciones».
+        $html = $this->get('/remates/militares')->getContent();
+        $this->assertStringNotContainsString('Horarios de visita', $html);
+        $this->assertStringNotContainsString('Sin horarios publicados', $html);
+        $this->assertStringContainsString('Bases y condiciones', $acciones());
+        $this->assertStringContainsString('mailto:remates@colliers.cl?subject=', $acciones());
+        $this->assertStringContainsString('>Coordinar visita</a>', $acciones());
+        $this->assertSame(1, substr_count($html, '>Coordinar visita</a>'));
+
+        // Con horarios: el bloque aparece, sin repetir el botón.
+        $remate->lotes()->first()->visitas()->create(['inicia_en' => CarbonImmutable::now('UTC')->addDay(), 'termina_en' => CarbonImmutable::now('UTC')->addDay()->addHours(2)]);
+        $html = $this->get('/remates/militares')->getContent();
+        $this->assertStringContainsString('Horarios de visita', $html);
+        $this->assertSame(1, substr_count($html, '>Coordinar visita</a>'));
+
+        // Remate en vivo: lo mismo.
+        $this->remate('vivo', Remate::ESTADO_EN_CURSO, -5);
+        $html = $this->get('/remates/vivo')->assertOk()->getContent();
+        $this->assertStringNotContainsString('Horarios de visita', $html);
+        $this->assertSame(1, substr_count($html, '>Coordinar visita</a>'));
+    }
+
     public function test_variantes_del_visitante_segun_su_cuenta_y_garantia_en_ese_remate(): void
     {
         $remate = $this->remate('militares', Remate::ESTADO_PUBLICADO, 3 * 24 * 60);

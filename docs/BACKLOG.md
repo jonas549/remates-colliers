@@ -26,7 +26,7 @@ nota *(verifica Jonas en el sandbox)*.
 | G | Postores | **Completo** | 8/8 |
 | H | Garantías | En progreso | 10/12 |
 | M | Notificaciones | En progreso | 8/9 |
-| N | Sitio público | En progreso | 24/25 |
+| N | Sitio público | En progreso | 25/26 |
 | L | Streaming | En progreso | 1/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 8/9 |
@@ -82,7 +82,7 @@ cerradas por Jonas el mismo día: el límite de pujas queda en 30/min; el porcen
 en el estado y aparece sin recargar; la imagen para compartir es un archivo reemplazable. Pendiente de Jonas: claves de
 Turnstile y la imagen de 1200 × 630 de Colliers. Detalle en `docs/progreso/2026-10-21.md`.
 
-**22/10, última tanda de Jonas (en local, sin push; un commit por punto):** (2) cabecera y pie como el sitio corporativo (ver N).
+**22/10, última tanda de Jonas (en local, sin push; un commit por punto):** (2) cabecera y pie como el sitio corporativo (ver N); (3) ficha sin el bloque de visitas vacío y «Coordinar visita» junto a las bases (ver N).
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -408,6 +408,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [x] **Favicon** *(QA de Jonas, 18/10)*: el ícono de activosespeciales.colliers.cl (original de 512 px) en `favicon.ico` (16/32/48), PNG de 32, 180 (apple-touch), 192 y 512 y `site.webmanifest`, enlazados en `x-layouts.base`, que es el único `<head>`: el panel, el acceso, la sala y las páginas de error lo envuelven. `.htaccess` sirve el manifiesto como `application/manifest+json` *(verificado en local: sitio, acceso y panel con sesión; 179 pruebas)*
 - [x] **Cabecera y pie hacia el sitio corporativo** *(QA de Jonas, 18/10)*: los ítems que no son de la aplicación enlazan a la página que existe en activosespeciales.colliers.cl, en pestaña nueva (`target="_blank" rel="noopener"`): Servicios, Nosotros, Política de privacidad, Términos de uso y las redes que publica ese sitio (LinkedIn, Instagram, YouTube). Sin página allí quedan **sin enlace**, con el mismo aspecto: Expertos, Propiedades, Investigación, Artículos, Carreras, Accionistas, Cookies, Accesibilidad y X; nada va a la portada como relleno. Los enlaces de Configuración → Sitio (privacidad, términos, bases) **mandan cuando tienen valor**; vacíos, la página corporativa (las bases no tienen: sin valor, sin enlace). URL base en `config/colliers.php` → `sitio_produccion` con `COLLIERS_SITIO_PRODUCCION` (por defecto la de producción: no hace falta tocar el servidor). El menú del panel no cambió *(`SitioPublicoTest::test_menu_y_pie_enlazan_al_sitio_corporativo_solo_donde_hay_pagina`)*
 - [x] **Cabecera y pie sin enlaces muertos** *(Jonas, 22/10)*: revisado el sitio corporativo antes de borrar. Cabecera: **Expertos** enlaza a `activosespeciales.colliers.cl/expertos/` en pestaña nueva; **Propiedades** e **Investigación** (404 allá) se quitaron, también del menú móvil. Pie, igual al de activosespeciales.colliers.cl: «Contacto:» con el correo de Configuración → Sitio (allá muestran un correo personal; decisión de Jonas), LinkedIn, **Facebook** (nuevo), Instagram, YouTube, Política de privacidad y Términos de Uso. Se quitaron Nosotros (no está en su pie; sigue en la cabecera), Artículos, Carreras, Accionistas, X, Cookies y Accesibilidad. «Bases y condiciones» del pie de trámites (404, registro, mi cuenta, baja) **solo aparece si hay enlace en Configuración → Sitio** *(`SitioPublicoTest`; capturas antes y después con `tools/comparar/antes-despues.mjs`)*
+- [x] **Ficha: horarios de visita solo si hay** *(Jonas, 22/10)*: sin horarios cargados el bloque «Horarios de visita» no aparece (antes decía «Sin horarios publicados»), en el remate próximo y en vivo. «Coordinar visita» salió del bloque y va junto a «Bases y condiciones», visible siempre mientras el remate no cierra (en uno cerrado no tiene sentido coordinar una visita) *(`SitioPublicoTest::test_horarios_de_visita_solo_si_hay_y_coordinar_visita_siempre_junto_a_las_bases`; capturas a 1440 y 375 px)*
 - [x] Contacto «Coordinar visita» y «Contactar al ejecutivo» con el correo de Configuración
 - [x] «Avísame» en el listado y en el detalle; foto y datos del próximo remate real en el Login y demás pantallas de acceso
 - [x] **El espectador que espera en la página de un remate próximo lo ve empezar sin recargar** *(21/09)*: antes la cuenta llegaba a cero y la página se quedaba quieta. Ahora se recarga sola al comenzar, cada espectador con una espera al azar de hasta 15 s (cada recarga es una petición al servidor). Con el remate borrado con la página abierta: «NO DISPONIBLE» *(recorrido de los tres roles)*

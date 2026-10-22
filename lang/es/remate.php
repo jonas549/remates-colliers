@@ -134,8 +134,6 @@ return [
 
     'visitas' => [
         'titulo' => 'Horarios de visita',
-        'sin_horarios' => 'Sin horarios publicados',
-        'coordinala' => 'Coordínala con Colliers',
         'coordinar' => 'Coordinar visita',
     ],
 
