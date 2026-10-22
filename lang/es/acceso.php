@@ -183,13 +183,9 @@ return [
         'comuna' => 'COMUNA',
         'region' => 'REGIÓN',
         // Regiones: nombres propios. Solo «Otra» se traduce.
-        'regiones' => [
-            'Metropolitana' => 'Metropolitana',
-            'Valparaíso' => 'Valparaíso',
-            'Biobío' => 'Biobío',
-            'La Araucanía' => 'La Araucanía',
-            'Otra' => 'Otra',
-        ],
+        // Las 16 regiones salen de App\Support\RegionesChile (QA 22/10); aquí solo lo que no es un nombre de región.
+        'region_elige' => 'Elige tu región',
+        'region_otra' => 'Otra / extranjero',
         'origen' => '¿CÓMO NOS CONOCISTE?',
         'origenes' => [
             'Sitio de Colliers' => 'Sitio de Colliers',

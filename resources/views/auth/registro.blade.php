@@ -90,9 +90,12 @@
                     <label class="registro__campo"><span class="registro__etiqueta">{{ __('acceso.registro.comuna') }}</span><input name="comuna" placeholder="Providencia" value="{{ old('comuna') }}" class="registro__input">@error('comuna')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror</label>
                     <label class="registro__campo"><span class="registro__etiqueta">{{ __('acceso.registro.region') }}</span>
                         <select name="region" class="registro__input">
-                            {{-- El valor se guarda en español (dato); solo la etiqueta va en el idioma de la página. --}}
-                            @foreach (__('acceso.registro.regiones') as $valor => $etiqueta)
-                                <option value="{{ $valor }}" @selected(old('region') === $valor)>{{ $etiqueta }}</option>
+                            {{-- Las 16 regiones de norte a sur y «Otra / extranjero» (QA 22/10). Sin región elegida de antemano:
+                                 con Arica primera, una opción por defecto habría dejado datos equivocados. Los nombres de las
+                                 regiones no se traducen (decisión del 20/10); el valor guardado es el nombre corto en español. --}}
+                            <option value="" disabled @selected(! old('region'))>{{ __('acceso.registro.region_elige') }}</option>
+                            @foreach (\App\Support\RegionesChile::delRegistro() as $valor)
+                                <option value="{{ $valor }}" @selected(old('region') === $valor)>{{ $valor === \App\Support\RegionesChile::OTRA ? __('acceso.registro.region_otra') : $valor }}</option>
                             @endforeach
                         </select>@error('region')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
                     </label>

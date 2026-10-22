@@ -183,13 +183,9 @@ return [
         'comuna' => 'DISTRICT (COMUNA)',
         'region' => 'REGION',
         // Regions: proper names. Only «Otra» is translated.
-        'regiones' => [
-            'Metropolitana' => 'Metropolitana',
-            'Valparaíso' => 'Valparaíso',
-            'Biobío' => 'Biobío',
-            'La Araucanía' => 'La Araucanía',
-            'Otra' => 'Other',
-        ],
+        // The 16 regions come from App\Support\RegionesChile (QA 22/10); region names are not translated.
+        'region_elige' => 'Choose your region',
+        'region_otra' => 'Other / outside Chile',
         'origen' => 'HOW DID YOU HEAR ABOUT US?',
         'origenes' => [
             'Sitio de Colliers' => 'Colliers website',

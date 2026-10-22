@@ -64,6 +64,8 @@ async function llenarRegistro(p, datos) {
             await p.setInputFiles(`input[name="documentos[${doc}]"]`, pdf);
         }
     }
+    // Sin región elegida de antemano desde el 22/10 (16 regiones de norte a sur).
+    await p.selectOption('select[name=region]', { label: 'Metropolitana' });
     await p.fill('input[name=password]', 'Clave-QA-2026');
     await p.fill('input[name=password_confirmation]', 'Clave-QA-2026');
     await p.check('input[name=acepta]');

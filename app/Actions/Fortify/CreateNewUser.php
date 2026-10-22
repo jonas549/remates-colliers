@@ -61,7 +61,7 @@ class CreateNewUser implements CreatesNewUsers
             'telefono' => ['required', 'string', 'max:30', 'regex:/^[0-9+()\s-]{8,30}$/'],
             'direccion' => ['required', 'string', 'max:200'],
             'comuna' => ['required', 'string', 'max:80'],
-            'region' => ['required', 'string', 'max:80'],
+            'region' => ['required', 'string', Rule::in(\App\Support\RegionesChile::delRegistro())],
             'origen' => ['nullable', 'string', 'max:50'],
             'documentos' => ['required', 'array'],
             'documentos.ci-frente' => ['required', ...$archivo],

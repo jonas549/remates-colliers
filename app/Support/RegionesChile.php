@@ -33,6 +33,20 @@ class RegionesChile
         return preg_replace('/^Región (del |de )?/u', '', $region);
     }
 
+    /** Valor guardado para «Otra / extranjero» en el registro de postores (el mismo que ya existía). */
+    public const OTRA = 'Otra';
+
+    /**
+     * Opciones de región del registro de postores (QA 22/10: antes eran 4 y «Otra»), de norte a sur y «Otra» al final.
+     * Se guarda el nombre corto, el mismo formato que ya tenían los registros («Metropolitana», «Biobío», «Otra»).
+     *
+     * @return list<string>
+     */
+    public static function delRegistro(): array
+    {
+        return [...array_map(self::nombreCorto(...), self::ORDEN), self::OTRA];
+    }
+
     /** Ordena una lista de regiones según ORDEN; las desconocidas van al final, alfabéticamente. */
     public static function ordenar(array $regiones): array
     {

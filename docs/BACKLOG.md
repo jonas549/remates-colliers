@@ -19,7 +19,7 @@ nota *(verifica Jonas en el sandbox)*.
 | B | Base del proyecto Laravel | **Completo** | 20/20 |
 | C | Modelo de datos | **Completo** | 12/12 |
 | J | Motor de subastas en tiempo real ⚠️ | En progreso | 31/35 |
-| D | Autenticación y registro de postores | En progreso | 13/16 |
+| D | Autenticación y registro de postores | En progreso | 14/17 |
 | K | Sala de puja conectada al motor real | En progreso | 20/21 |
 | I | Remates y lotes + panel del martillero | **Completo** | 20/20 |
 | V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
@@ -237,6 +237,7 @@ táctiles < 44 px en 375/760/1120/1440, y revisadas a ojo.
 - [ ] En el sandbox: el primer administrador entra por `/admin/ingresar` y cambia su clave temporal *(Jonas en el sandbox; si vuelve a fallar, la pantalla lo dice y el log `storage/logs/laravel-AAAA-MM-DD.log` trae «Ingreso sin sesión»)*
 - [x] **El registro no pierde nada al fallar la validación** *(QA del 20/09, punto 5)*: los documentos válidos se guardan en el disco privado y se reponen en el intento siguiente (`DocumentosDelRegistro`), el formulario abre con un resumen de lo que falta y el foco en el primer error, cada documento dice «Ya adjuntado: archivo» y el botón pasa a «Reemplazar». La contraseña nunca vuelve al navegador (Laravel la excluye a propósito) y el aviso lo dice. `colliers:limpiar-temporales` (programador, 04:10) borra los de registros abandonados a las 24 h *(`AutenticacionTest` 3 pruebas nuevas; `registro-acceso.mjs` 6 comprobaciones nuevas)*
 - [x] **Un envío más pesado que `post_max_size` se explica** *(misma causa raíz)*: PHP descarta el cuerpo entero —campos, archivos y token—, así que el formulario volvía vacío o con un 419 «sesión expirada». `SubidaDemasiadoGrande` (antes del CSRF) responde la página 413 diciendo cuánto pesó el envío y cuánto acepta el servidor. `colliers:diagnostico` avisa si `post_max_size` no alcanza para el registro completo (3 documentos de 5 MB) ni para los documentos de 20 MB del panel
+- [x] **Región del registro: las 16 regiones** *(QA de Jonas, 22/10: había 4 y «Otra»)*: de Arica y Parinacota a Magallanes, de norte a sur, y «Otra / extranjero» al final (`RegionesChile::delRegistro()`, la misma lista que ordena los filtros del sitio). Se guarda el nombre corto, **el mismo formato que ya tenían los registros** («Metropolitana», «Biobío», «Otra»): los existentes no cambian. Ahora se valida contra la lista (antes aceptaba cualquier texto). Sin región elegida de antemano («Elige tu región»): con Arica primera, una opción por defecto habría dejado datos equivocados. Los nombres de región no se traducen en `/en` (decisión del 20/10). La comuna sigue como texto libre y no se valida contra la región: el selector dependiente queda propuesto a Jonas *(`AutenticacionTest`; `registro-acceso.mjs` 33/33 eligiendo la región como una persona; `ingles.mjs` en verde)*
 - [ ] Correos reales de verificación y recuperación: hoy `MAIL_MAILER=log` (el enlace queda en `storage/logs`); SMTP en el Bloque V
 - [ ] **Subir `post_max_size` y `upload_max_filesize` en el sandbox** *(Jonas, cPanel → MultiPHP INI Editor)*: hoy el local tiene 12 MB / 8 MB y el registro necesita ~21 MB; con menos, el envío no llega nunca. Recomendado: `post_max_size=64M`, `upload_max_filesize=20M`. Verificar después con `colliers:diagnostico`
 

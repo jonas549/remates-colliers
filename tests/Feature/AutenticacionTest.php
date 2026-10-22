@@ -208,6 +208,34 @@ class AutenticacionTest extends TestCase
         $this->assertSame(1, AccessLog::where('evento', 'correo_verificado')->count());
     }
 
+    /** QA 22/10: las 16 regiones de norte a sur y «Otra / extranjero», con el mismo formato guardado que antes. */
+    public function test_registro_ofrece_las_16_regiones_y_guarda_el_nombre_corto(): void
+    {
+        Storage::fake('local');
+        Notification::fake();
+
+        $html = $this->get('/registro')->assertOk()->getContent();
+        preg_match_all('/<option value="([^"]*)"[^>]*>([^<]*)<\/option>/u', Str::betweenFirst($html, '<select name="region"', '</select>'), $m);
+        $this->assertSame('', $m[1][0], 'sin región elegida de antemano');
+        $this->assertSame('Elige tu región', $m[2][0]);
+        $this->assertSame([
+            'Arica y Parinacota', 'Tarapacá', 'Antofagasta', 'Atacama', 'Coquimbo', 'Valparaíso', 'Metropolitana',
+            'Libertador General Bernardo O&#039;Higgins', 'Maule', 'Ñuble', 'Biobío', 'La Araucanía', 'Los Ríos', 'Los Lagos',
+            'Aysén del General Carlos Ibáñez del Campo', 'Magallanes y de la Antártica Chilena', 'Otra',
+        ], array_slice($m[1], 1));
+        $this->assertSame('Otra / extranjero', end($m[2]));
+        $this->get('/en/registro')->assertSee('Other / outside Chile')->assertSee('Choose your region')->assertSee('>Ñuble</option>', false);
+
+        // Una región que no está en la lista no pasa; sin región tampoco.
+        $this->from('/registro')->post('/registro', $this->formulario(['region' => 'Narnia']))->assertSessionHasErrors('region');
+        $this->from('/registro')->post('/registro', $this->formulario(['region' => '']))->assertSessionHasErrors('region');
+        $this->assertSame(0, User::count());
+
+        // Se guarda el nombre corto, como los registros que ya existen («Metropolitana», «Biobío», «Otra»).
+        $this->post('/registro', $this->formulario(['region' => "Libertador General Bernardo O'Higgins"]))->assertRedirect();
+        $this->assertSame("Libertador General Bernardo O'Higgins", Postor::sole()->region);
+    }
+
     /** 22/10 (antes Turnstile, QA 21/10): con las claves de reCAPTCHA v2, el registro exige el captcha y lo valida en el servidor. */
     public function test_registro_con_recaptcha_valida_el_token_en_el_servidor(): void
     {
