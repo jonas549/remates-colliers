@@ -48,7 +48,9 @@ class SeguridadTest extends TestCase
             $this->assertStringContainsString("frame-ancestors 'self'", $csp);
             $this->assertMatchesRegularExpression("/script-src [^;]*'self'/", $csp);
             $this->assertDoesNotMatchRegularExpression("/script-src [^;]*'unsafe-inline'/", $csp, 'sin scripts en línea');
-            $this->assertStringNotContainsString('challenges.cloudflare.com', $csp, 'sin Turnstile configurado no se abre su dominio');
+            $this->assertStringNotContainsString('google.com', $csp, 'sin reCAPTCHA configurado no se abre Google');
+            $this->assertStringNotContainsString('gstatic.com', $csp);
+            $this->assertStringNotContainsString('cloudflare', $csp, 'Turnstile se quitó (22/10)');
         }
     }
 
@@ -62,12 +64,14 @@ class SeguridadTest extends TestCase
         Log::shouldHaveReceived('warning')->once()->with('CSP bloqueó un recurso', ['document-uri' => 'https://localhost/', 'violated-directive' => 'script-src-elem', 'blocked-uri' => 'inline']);
     }
 
-    public function test_csp_abre_turnstile_solo_si_esta_configurado_y_se_puede_pasar_a_reporte(): void
+    public function test_csp_abre_recaptcha_solo_si_esta_configurado_y_se_puede_pasar_a_reporte(): void
     {
-        config(['services.turnstile.site_key' => 'clave', 'services.turnstile.secret_key' => 'secreto']);
+        config(['services.recaptcha.site_key' => 'clave', 'services.recaptcha.secret_key' => 'secreto']);
         $csp = $this->get('/')->headers->get('Content-Security-Policy');
-        $this->assertMatchesRegularExpression('#script-src [^;]*https://challenges\.cloudflare\.com#', $csp);
-        $this->assertMatchesRegularExpression('#frame-src [^;]*https://challenges\.cloudflare\.com#', $csp);
+        $this->assertMatchesRegularExpression('#script-src [^;]*https://www\.google\.com/recaptcha/ https://www\.gstatic\.com/recaptcha/#', $csp);
+        $this->assertMatchesRegularExpression('#frame-src [^;]*https://www\.google\.com/recaptcha/ https://recaptcha\.google\.com/recaptcha/#', $csp);
+        $this->assertMatchesRegularExpression("#connect-src 'self' https://www\.google\.com/recaptcha/#", $csp);
+        $this->assertStringNotContainsString('cloudflare', $csp);
 
         config(['colliers.seguridad.csp' => 'reporte']);
         $this->get('/')->assertHeaderMissing('Content-Security-Policy')->assertHeader('Content-Security-Policy-Report-Only');

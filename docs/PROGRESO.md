@@ -27,15 +27,15 @@
 - **20/10: sitio público en inglés** completo en local, sin push (`docs/progreso/2026-10-20.md`). Pendiente de Jonas: revisar el glosario y las cadenas dudosas, confirmar con el cliente la línea «la versión en español rige» y el registro de extranjeros sin RUT. Antes de tocar textos del sitio: van en `lang/es` y `lang/en` (mismas claves); `tools/comparar/ingles.mjs` revisa `/en` en navegador.
 - **21/10: QA de Jonas sobre el sandbox, 18 hallazgos en 4 grupos**, subidos a `main` el 21/10 con aprobación de Jonas (un commit por grupo:
   `6dc3a3b`, `080f99e`, `0055101`, `7bc11d1` y el cierre de decisiones). Límite de pujas: queda en 30/min por
-  usuario. Video de la sala en el estado público (aparece sin recargar). Pendiente de Jonas: cargar `TURNSTILE_SITE_KEY` /
-  `TURNSTILE_SECRET_KEY`, reemplazar `public/img/compartir.png` cuando Colliers mande la imagen de 1200 × 630, y probar en
+  usuario. Video de la sala en el estado público (aparece sin recargar). Pendiente de Jonas: cargar `RECAPTCHA_SITE_KEY` /
+  `RECAPTCHA_SECRET_KEY` (22/10: reCAPTCHA v2 reemplazó a Turnstile), reemplazar `public/img/compartir.png` cuando Colliers mande la imagen de 1200 × 630, y probar en
   el sandbox lo de cada grupo (`docs/progreso/2026-10-21.md`). El 2FA
   queda fuera de la tanda. Fuera de la tanda también OPcache, el rol Editor y los enlaces sin destino. Recorrido nuevo de
   esta tanda: `tools/comparar/qa-visibles.mjs`; de seguridad, `tools/comparar/seguridad.mjs`.
 - **22/10: última tanda de Jonas, en local y SIN push** (un commit por punto): cabecera y pie como el sitio corporativo,
   ficha sin bloque de visitas vacío, **rol Editor** (permisos a confirmar con el cliente, en `App\Autenticacion\Permisos`) y
   **segundo factor por correo para Administración**. ⚠️ Antes del push: el correo saliente del sandbox tiene que funcionar
-  (emergencia: `php artisan colliers:codigo-ingreso correo`) y correr `composer test:mysql` (no se corrió: MySQL apagado).
+  (emergencia: `php artisan colliers:codigo-ingreso correo`) (`composer test:mysql` 232/232 el 22/10). Mismo día: **reCAPTCHA v2 reemplaza a Turnstile** en el registro.
   Los recorridos que entran como administración leen el código del log local (`tools/comparar/segundo-factor.mjs`).
   Detalle: `docs/progreso/2026-10-22.md`.
 - **Antes de reportar algo como listo:** `node tools/comparar/recorrido-roles.mjs` (los tres roles con clics) en verde.

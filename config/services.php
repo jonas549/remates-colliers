@@ -28,10 +28,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    // Captcha del registro (App\Support\Turnstile). Sin las dos claves, el registro funciona sin captcha.
-    'turnstile' => [
-        'site_key' => env('TURNSTILE_SITE_KEY'),
-        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    // Captcha del registro: reCAPTCHA v2 (App\Support\Recaptcha). Sin las dos claves, el registro funciona sin captcha.
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
     ],
 
     'slack' => [

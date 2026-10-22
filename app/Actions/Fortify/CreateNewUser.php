@@ -6,7 +6,7 @@ use App\Models\Empresa;
 use App\Models\Postor;
 use App\Models\User;
 use App\Support\Rut;
-use App\Support\Turnstile;
+use App\Support\Recaptcha;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +37,7 @@ class CreateNewUser implements CreatesNewUsers
     public function create(array $input): User
     {
         // Captcha antes que todo lo demás: un registro automático no llega a validarse ni a guardar adjuntos.
-        if (! Turnstile::verificar($input[Turnstile::CAMPO] ?? null, request()->ip())) {
+        if (! Recaptcha::verificar($input[Recaptcha::CAMPO] ?? null, request()->ip())) {
             throw ValidationException::withMessages(['captcha' => __('acceso.validacion.captcha')]);
         }
 

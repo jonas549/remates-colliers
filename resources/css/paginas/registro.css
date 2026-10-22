@@ -229,5 +229,5 @@
 .registro__errores li { margin-top: 4px; }
 .registro__errores:focus { outline: 2px solid #c8102e; outline-offset: 3px; }
 
-/* Captcha del registro (Turnstile, QA 21/10). */
-.registro__captcha { margin-top: 20px; min-height: 65px; }
+/* Captcha del registro (reCAPTCHA v2, 22/10): el widget mide 304 × 78 px. */
+.registro__captcha { margin-top: 20px; min-height: 78px; }

@@ -8,7 +8,7 @@ use App\Models\Postor;
 use App\Models\PostorDocumento;
 use App\Models\User;
 use App\Support\Rut;
-use App\Support\Turnstile;
+use App\Support\Recaptcha;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cookie\CookieValuePrefix;
@@ -208,39 +208,45 @@ class AutenticacionTest extends TestCase
         $this->assertSame(1, AccessLog::where('evento', 'correo_verificado')->count());
     }
 
-    /** QA 21/10, 2.3: con las claves de Turnstile, el registro exige el captcha y lo valida en el servidor. */
-    public function test_registro_con_turnstile_valida_el_token_en_el_servidor(): void
+    /** 22/10 (antes Turnstile, QA 21/10): con las claves de reCAPTCHA v2, el registro exige el captcha y lo valida en el servidor. */
+    public function test_registro_con_recaptcha_valida_el_token_en_el_servidor(): void
     {
         Storage::fake('local');
         Notification::fake();
-        $this->get('/registro')->assertOk()->assertDontSee('cf-turnstile', false)->assertDontSee('challenges.cloudflare.com', false);
+        \Illuminate\Support\Facades\Log::spy();
+        // Sin claves: ni el widget ni el script, y el registro funciona igual.
+        $this->get('/registro')->assertOk()->assertDontSee('g-recaptcha', false)->assertDontSee('www.google.com/recaptcha', false);
 
-        config(['services.turnstile.site_key' => '1x00000000000000000000AA', 'services.turnstile.secret_key' => 'secreto-de-prueba']);
-        $this->get('/registro')->assertOk()->assertSee('data-sitekey="1x00000000000000000000AA"', false)->assertSee('challenges.cloudflare.com/turnstile/v0/api.js', false);
+        config(['services.recaptcha.site_key' => '6Lc-clave-de-sitio', 'services.recaptcha.secret_key' => 'secreto-de-prueba']);
+        $this->get('/registro')->assertOk()->assertSee('class="g-recaptcha" data-sitekey="6Lc-clave-de-sitio"', false)
+            ->assertSee('https://www.google.com/recaptcha/api.js?hl=es', false);
+        $this->get('/en/registro')->assertOk()->assertSee('https://www.google.com/recaptcha/api.js?hl=en', false);
 
-        // Sin token: rechazado sin consultar a Cloudflare, sin cuenta y sin adjuntos guardados.
-        // Un solo fake (los fakes de Http se apilan): la respuesta de Cloudflare cambia con $cloudflare.
-        $cloudflare = fn () => Http::response(['success' => false, 'error-codes' => ['invalid-input-response']]);
-        Http::fake(['challenges.cloudflare.com/*' => function () use (&$cloudflare) { return $cloudflare(); }]);
+        // Sin token: rechazado sin consultar a Google, sin cuenta y sin adjuntos guardados.
+        // Un solo fake (los fakes de Http se apilan): la respuesta de Google cambia con $google.
+        $google = fn () => Http::response(['success' => false, 'error-codes' => ['invalid-input-response']]);
+        Http::fake(['www.google.com/recaptcha/*' => function () use (&$google) { return $google(); }]);
         $this->from('/registro')->post('/registro', $this->formulario())->assertRedirect('/registro')->assertSessionHasErrors('captcha');
         Http::assertNothingSent();
         $this->assertSame(0, User::count());
         $this->assertSame([], Storage::disk('local')->allFiles());
 
-        // Token que Cloudflare rechaza.
-        $this->from('/registro')->post('/registro', $this->formulario([Turnstile::CAMPO => 'token-falso']))->assertSessionHasErrors('captcha');
+        // Token que Google rechaza: tampoco se guardan los adjuntos.
+        $this->from('/registro')->post('/registro', $this->formulario([Recaptcha::CAMPO => 'token-falso']))->assertSessionHasErrors('captcha');
         $this->assertSame(0, User::count());
+        $this->assertSame([], Storage::disk('local')->allFiles());
 
-        // Cloudflare no responde: falla cerrado.
-        $cloudflare = fn () => throw new \Illuminate\Http\Client\ConnectionException('sin red');
-        $this->from('/registro')->post('/registro', $this->formulario([Turnstile::CAMPO => 'token']))->assertSessionHasErrors('captcha');
+        // Google no responde: falla cerrado y queda en el log.
+        $google = fn () => throw new \Illuminate\Http\Client\ConnectionException('sin red');
+        $this->from('/registro')->post('/registro', $this->formulario([Recaptcha::CAMPO => 'token']))->assertSessionHasErrors('captcha');
         $this->assertSame(0, User::count());
+        \Illuminate\Support\Facades\Log::shouldHaveReceived('warning')->with('reCAPTCHA no respondió: el registro se rechaza', ['error' => 'sin red']);
 
         // Token válido: entra, y la verificación llevó la clave secreta y el token.
-        $cloudflare = fn () => Http::response(['success' => true]);
-        $this->post('/registro', $this->formulario([Turnstile::CAMPO => 'token-bueno']))->assertRedirect(route('verification.notice') . '?ingreso=1');
+        $google = fn () => Http::response(['success' => true]);
+        $this->post('/registro', $this->formulario([Recaptcha::CAMPO => 'token-bueno']))->assertRedirect(route('verification.notice') . '?ingreso=1');
         $this->assertSame(1, User::count());
-        Http::assertSent(fn ($r) => $r->url() === 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
+        Http::assertSent(fn ($r) => $r->url() === 'https://www.google.com/recaptcha/api/siteverify'
             && $r['secret'] === 'secreto-de-prueba' && $r['response'] === 'token-bueno');
     }
 

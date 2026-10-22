@@ -10,6 +10,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { completarSegundoFactor } from './segundo-factor.mjs';
+import { marcarCaptcha } from './captcha.mjs';
 
 const URL = process.env.LARAVEL_URL || 'http://127.0.0.1:8000';
 const LOG = path.resolve('storage/logs/laravel.log');
@@ -66,6 +67,7 @@ async function llenarRegistro(p, datos) {
     await p.fill('input[name=password]', 'Clave-QA-2026');
     await p.fill('input[name=password_confirmation]', 'Clave-QA-2026');
     await p.check('input[name=acepta]');
+    await marcarCaptcha(p);
     await p.getByRole('button', { name: 'Enviar solicitud de registro' }).click();
     await p.waitForLoadState('load');
 }
@@ -121,6 +123,7 @@ async function ingresar(p, usuario, clave, admin = false) {
     await p.fill('input[name=telefono]', '+56 9 5555 0000');
     await p.fill('input[name=password]', 'Clave-QA-2026');
     await p.fill('input[name=password_confirmation]', 'Clave-QA-2026');
+    await marcarCaptcha(p);
     await p.getByRole('button', { name: 'Enviar solicitud de registro' }).click();
     await p.waitForLoadState('load');
     comprobar('corrigiendo solo el campo malo, el registro entra con los documentos del primer intento',

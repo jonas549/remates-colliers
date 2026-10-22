@@ -139,13 +139,13 @@
                 </label>
                 @error('acepta')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
 
-                {{-- Captcha (QA 21/10): solo con las claves de Turnstile en el .env; sin ellas el registro funciona igual. --}}
-                @if (\App\Support\Turnstile::activo())
+                {{-- Captcha (22/10): reCAPTCHA v2, solo con sus claves en el .env; sin ellas el registro funciona igual. --}}
+                @if (\App\Support\Recaptcha::activo())
                     <div class="registro__captcha">
-                        <div class="cf-turnstile" data-sitekey="{{ \App\Support\Turnstile::claveSitio() }}" data-language="{{ app()->getLocale() }}" data-theme="light" data-size="flexible"></div>
+                        <div class="g-recaptcha" data-sitekey="{{ \App\Support\Recaptcha::claveSitio() }}" data-theme="light"></div>
                         @error('captcha')<span class="registro__ayuda es-invalido">{{ $message }}</span>@enderror
                     </div>
-                    <script src="{{ \App\Support\Turnstile::SCRIPT }}" async defer></script>
+                    <script src="{{ \App\Support\Recaptcha::script() }}" async defer></script>
                 @endif
 
                 <div class="registro__acciones">

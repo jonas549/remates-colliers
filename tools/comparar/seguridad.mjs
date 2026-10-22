@@ -1,13 +1,27 @@
 // QA 21/10, grupo 2: cabeceras de seguridad y CSP en navegador real. Lo que la política no puede romper:
 // Alpine en todas las pantallas, la sala (estado, latido de presencia, video de YouTube), el mapa de la ficha y los
 // confirm() del panel, que eran manejadores en línea. Cualquier bloqueo de la CSP en cualquier página es una falla.
-// Requiere `php artisan serve` (APP_ENV=local) e internet (YouTube y mosaicos del mapa). REINICIA la base local.
+// Requiere `php artisan serve` (APP_ENV=local) e internet (YouTube, mosaicos del mapa y reCAPTCHA). REINICIA la base local.
+// Correrlo dos veces: sin claves de reCAPTCHA y con las de prueba de Google (ver «reCAPTCHA v2» más abajo).
 //
 //   node tools/comparar/seguridad.mjs
+import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 
 const URL = process.env.LARAVEL_URL || 'http://127.0.0.1:8000';
+// Log de Laravel: los informes de la CSP («CSP bloqueó un recurso») llegan ahí por /csp-informe.
+const LOG = 'storage/logs/laravel.log';
+const tamanoLog = () => (fs.existsSync(LOG) ? fs.statSync(LOG).size : 0);
+const logLaravel = (desde = Math.max(0, tamanoLog() - 200000)) => {
+    if (!fs.existsSync(LOG)) return '';
+    const fd = fs.openSync(LOG, 'r');
+    const largo = Math.max(0, tamanoLog() - desde);
+    const buf = Buffer.alloc(largo);
+    fs.readSync(fd, buf, 0, largo, desde);
+    fs.closeSync(fd);
+    return buf.toString('utf8');
+};
 let fallas = 0;
 const bloqueos = [];
 
@@ -57,9 +71,13 @@ comprobar('cabeceras: nosniff, SAMEORIGIN, Referrer-Policy y Permissions-Policy'
     h['x-content-type-options'] === 'nosniff' && h['x-frame-options'] === 'SAMEORIGIN'
     && h['referrer-policy'] === 'strict-origin-when-cross-origin' && (h['permissions-policy'] || '').includes('camera=()'));
 // Control: un script en línea tiene que quedar bloqueado y detectado (si no, el «sin bloqueos» del final no prueba nada).
+const antesControl = tamanoLog();
 await V.evaluate(() => { const e = document.createElement('script'); e.textContent = 'window.__enLinea = 1'; document.body.append(e); });
 await esperar('control: un script en línea queda bloqueado y se detecta', async () => bloqueos.length > 0
     && (await V.evaluate(() => window.__enLinea === undefined)), 5000);
+// El informe del control también llega al log de Laravel: se espera a que llegue y desde ahí el log tiene que quedar limpio.
+await esperar('control: el bloqueo queda en el log de Laravel («CSP bloqueó»)', async () => logLaravel(antesControl).includes('CSP bloqueó'), 8000);
+const inicioLog = tamanoLog();
 bloqueos.length = 0;
 comprobar('CSP activa con frame-src de YouTube', (h['content-security-policy'] || '').includes('frame-src https://www.youtube-nocookie.com https://www.youtube.com'));
 await V.getByRole('button', { name: 'Ocultar filtros' }).click();
@@ -76,6 +94,26 @@ await V.waitForLoadState('load');
 await V.locator('input[name=rut]').fill('17.998.221-0');
 await esperar('registro: Alpine valida el RUT al escribir', async () =>
     (await V.locator('input[name=rut]').getAttribute('class')).includes('es-invalido'), 5000);
+
+// reCAPTCHA v2 (22/10). Con claves en el servidor (las de prueba de Google sirven:
+// RECAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI RECAPTCHA_SECRET_KEY=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe php artisan serve)
+// la casilla tiene que cargar dentro de su frame, marcarse y dejar el token en el formulario, sin bloqueos de la CSP.
+if (await V.locator('.g-recaptcha').count()) {
+    console.log('  (servidor con claves de reCAPTCHA)');
+    const csp = (await (await V.request.get(URL + '/registro')).headers())['content-security-policy'] || '';
+    comprobar('CSP con reCAPTCHA: script de www.google.com y www.gstatic.com, frame del desafío, sin Cloudflare',
+        /script-src [^;]*https:\/\/www\.google\.com\/recaptcha\/ https:\/\/www\.gstatic\.com\/recaptcha\//.test(csp)
+        && /frame-src [^;]*https:\/\/www\.google\.com\/recaptcha\//.test(csp) && !csp.includes('cloudflare'));
+    await esperar('registro: la casilla «No soy un robot» carga en su frame', async () =>
+        V.frames().some((f) => f.url().startsWith('https://www.google.com/recaptcha/api2/anchor')), 20000);
+    const casilla = V.frames().find((f) => f.url().startsWith('https://www.google.com/recaptcha/api2/anchor'));
+    await casilla?.locator('#recaptcha-anchor').click();
+    await esperar('registro: al marcarla queda el token en el formulario', async () =>
+        (await V.locator('textarea[name="g-recaptcha-response"]').inputValue()).length > 20, 20000);
+} else {
+    console.log('  (servidor sin claves de reCAPTCHA)');
+    comprobar('registro sin claves: ni widget ni script de Google', (await V.locator('script[src*="google.com/recaptcha"]').count()) === 0);
+}
 
 // ── Postor en la sala: estado, presencia y video ─────────────────────────────────────────────────────────
 console.log('\n— Postor en la sala');
@@ -118,6 +156,9 @@ if (await restaurar.count()) {
 }
 
 comprobar('ningún bloqueo de la CSP en todo el recorrido', bloqueos.length === 0, bloqueos.slice(0, 5).join(' | '));
+await new Promise((r) => setTimeout(r, 2000)); // los informes de la CSP llegan por su cuenta, sin apuro
+const nuevos = logLaravel(inicioLog).split('\n').filter((l) => l.includes('CSP bloqueó'));
+comprobar('log de Laravel: ninguna entrada «CSP bloqueó» después del control', nuevos.length === 0, nuevos.slice(0, 3).join(' | '));
 
 await navegador.close();
 console.log(fallas ? `\n${fallas} falla(s)` : '\nTodo OK');

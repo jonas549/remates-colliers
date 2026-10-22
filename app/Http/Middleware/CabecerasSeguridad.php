@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Support\Turnstile;
+use App\Support\Recaptcha;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Vite;
@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
  * La CSP se arma con lo que el sitio usa de verdad:
  * - script: solo los propios. 'unsafe-eval' porque Alpine evalúa las expresiones de las vistas con `new Function`
  *   (quitarlo exige la versión CSP de Alpine y reescribir todas las expresiones). Sin 'unsafe-inline': no hay scripts
- *   ni manejadores en línea (los confirm() del panel se pasaron a Alpine). Turnstile, solo si está configurado.
+ *   ni manejadores en línea (los confirm() del panel se pasaron a Alpine). reCAPTCHA (Google), solo si está configurado.
  * - style: 'unsafe-inline' porque el diseño trae estilos en línea (Bloque T).
  * - img: propias, data:/blob: (vista previa de fotos) y los mosaicos de OpenStreetMap del mapa.
  * - frame: el reproductor de YouTube (la sala y la ficha usan youtube-nocookie.com) y el captcha.
@@ -49,7 +49,10 @@ class CabecerasSeguridad
 
     public static function politica(bool $https = false): string
     {
-        $captcha = Turnstile::activo() ? ' https://challenges.cloudflare.com' : '';
+        // reCAPTCHA v2 (22/10), solo con claves: el script y su desafío en un frame (www.google.com y www.gstatic.com).
+        $captchaScript = Recaptcha::activo() ? ' ' . implode(' ', Recaptcha::CSP_SCRIPT) : '';
+        $captchaFrame = Recaptcha::activo() ? ' ' . implode(' ', Recaptcha::CSP_FRAME) : '';
+        $captchaConnect = Recaptcha::activo() ? ' ' . implode(' ', Recaptcha::CSP_CONNECT) : '';
         // `npm run dev` en local: el servidor de Vite sirve los módulos y la recarga en caliente por websocket.
         $vite = '';
         $viteWs = '';
@@ -61,12 +64,12 @@ class CabecerasSeguridad
 
         $directivas = [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-eval'{$captcha}{$vite}",
+            "script-src 'self' 'unsafe-eval'{$captchaScript}{$vite}",
             "style-src 'self' 'unsafe-inline'{$vite}",
             "img-src 'self' data: blob: https://tile.openstreetmap.org",
             "font-src 'self' data:{$vite}",
-            "connect-src 'self'{$vite}{$viteWs}",
-            "frame-src https://www.youtube-nocookie.com https://www.youtube.com{$captcha}",
+            "connect-src 'self'{$captchaConnect}{$vite}{$viteWs}",
+            "frame-src https://www.youtube-nocookie.com https://www.youtube.com{$captchaFrame}",
             "media-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",
