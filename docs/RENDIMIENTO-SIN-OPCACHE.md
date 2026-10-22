@@ -151,3 +151,50 @@ php tools/rendimiento/medir.php 10 5
 php tools/concurrencia/prueba.php 10
 CONCURRENCIA_MARGEN=5 php tools/concurrencia/prueba.php 10                          # con otro margen
 ```
+
+## 9. Medición por tramos (22/10, QA de Jonas: 20 postores, ~3 s por puja en el sandbox)
+
+Herramienta nueva: `tools/rendimiento/tramos.php` contra el Apache de prueba (mod_php, MySQL 8.4, 2 núcleos). La puja
+lleva una cabecera `Server-Timing` con cada tramo cuando `COLLIERS_MEDIR_PUJA=true` (`App\Subastas\CronometroPuja`,
+apagado por defecto). Mediana / p95 en ms, «misma puja» = los N envían el mismo monto a la vez (una aceptada).
+
+| Tramo | 1 · sin OPcache | 10 · sin OPcache (rech.) | 20 · sin OPcache (rech.) | 20 · **con** OPcache (rech.) |
+|---|---|---|---|---|
+| arranque (compilar y arrancar Laravel, sesión, usuario) | 390–770 | 3.100–3.400 / 5.600–6.200 | 5.400–5.600 / 7.100–8.800 | 417 / 615 |
+| espera del bloqueo del lote | 1 | 1–2 / 18–59 | 1 / 20 | 85 / 197 |
+| con el lote bloqueado (validar, insertar, commit) | 31–35 | 28–29 / 53–69 | 26 / 41 | 12 / 31 |
+| registrar el rechazo (fuera de la transacción) | — | 14–15 | 12 | — |
+| publicar el JSON (solo aceptadas, fuera de la transacción) | 17–24 | 19–22 | 22 | 22 |
+| └ espera del bloqueo de archivo del emisor | 0 | 0 | 0 | 0 (p95 ≤ 182 con montos distintos) |
+| total en el servidor | 450–850 | 3.200–3.500 / 5.000–6.300 | 5.400–5.700 / 7.200–8.900 | 627 / 829 |
+
+- **Lo serializado no explica la demora.** Sin OPcache, esperar y tener el bloqueo del lote suma ~30–60 ms y el
+  bloqueo de archivo del emisor 0 ms (en «misma puja» solo 1 de N publica). El ~95 % es el **arranque**: cada
+  petición compila **607 archivos y ~7 MB de PHP** (laravel/framework 2,4 MB, carbon 2,0, mapa de Composer 1,3) y
+  N peticiones se reparten los núcleos. Las rechazadas tardan más que la aceptada porque gana la que termina de
+  arrancar primero.
+- **Con OPcache** el arranque baja ~10× y recién ahí la espera del bloqueo del lote aparece (≈ 85 ms de mediana con 20).
+- **La publicación ya estaba fuera de la transacción** (`MotorPujas::emitir()` después del commit). La garantía de que
+  el JSON nunca retrocede es el `flock` por remate + leer la base después del commit, no la transacción.
+- **Probado y descartado:** autoloader PSR-4 en vez del mapa optimizado: −1 MB compilado (−15 %), tiempos dentro del
+  ruido entre corridas en Windows.
+
+### Riesgo de corrección encontrado: pujas válidas perdidas bajo carga sin OPcache
+
+Escenario D de `tools/concurrencia/prueba.php` (N pujas 400 ms antes de T y N liquidaciones en T + margen), 2 núcleos:
+
+| | sin OPcache | con OPcache |
+|---|---|---|
+| 10 postores, margen 2 s | **2, 5 y 7 pujas perdidas** (3 corridas; respuestas de 4–12 s) | 0 perdidas (p95 0,7 s) |
+| 20 postores, margen 2 s | **8 perdidas** | 0 perdidas (p95 1,1 s) |
+| 20 postores, margen 5 s | **11 perdidas** (respuestas de 10–14 s) | — |
+
+Una puja recibida antes de T que todavía está compilando Laravel cuando alguien liquida en T + margen se rechaza como
+«lote cerrado»: viola la validez por hora de recepción. No lo causa la medición (sin ella también falla). El 17/09 D
+pasaba con 10 postores: esta máquina hoy responde más lento, y eso basta para cruzar el margen. **Ningún margen fijo lo
+garantiza sin OPcache.** Propuesta pendiente de Jonas en `docs/progreso/2026-10-22.md`.
+
+```
+CONCURRENCIA_OPCACHE=0 CONCURRENCIA_NUCLEOS=2 php tools/concurrencia/servidor.php   # en otra terminal
+php tools/rendimiento/tramos.php 6
+```

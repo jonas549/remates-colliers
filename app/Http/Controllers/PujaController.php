@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Middleware\HoraRecepcion;
 use App\Models\Lote;
 use App\Models\Remate;
+use App\Subastas\CronometroPuja;
 use App\Subastas\EstadoRemate;
 use App\Subastas\MotorPujas;
 use App\Subastas\PujaRechazada;
@@ -20,6 +21,8 @@ class PujaController extends Controller
 {
     public function store(Request $request, Remate $remate, int $lote, MotorPujas $motor): JsonResponse
     {
+        // Medición por tramos (apagada salvo COLLIERS_MEDIR_PUJA): arranque = framework, middleware, sesión y usuario.
+        CronometroPuja::desdeRecepcion('arranque');
         $user = $request->user();
         // Un lote de otro remate se trata como inexistente: no se revela que existe.
         $pertenece = Lote::whereKey($lote)->where('remate_id', $remate->id)->exists();
@@ -28,22 +31,38 @@ class PujaController extends Controller
             $puja = $motor->pujar($user, $pertenece ? $lote : 0, $request->input('monto'),
                 HoraRecepcion::de($request), $request->ip(), $request->userAgent());
         } catch (PujaRechazada $rechazo) {
-            return response()->json([
+            CronometroPuja::iniciar('respuesta');
+            $respuesta = response()->json([
                 'aceptada' => false,
                 'motivo' => $rechazo->motivo,
                 'mensaje' => $rechazo->getMessage(),
                 'lote' => $pertenece ? $this->resumenLote($remate, $lote, EstadoRemate::alias($remate)) : null,
             ], 422);
+            CronometroPuja::terminar('respuesta');
+
+            return $this->conMedicion($respuesta);
         }
 
+        CronometroPuja::iniciar('respuesta');
         $alias = EstadoRemate::alias($remate);
-
-        return response()->json([
+        $respuesta = response()->json([
             'aceptada' => true,
             'puja' => ['monto' => $puja->monto, 'recibida_en_ms' => (int) $puja->recibida_en->format('Uv')],
             'lote' => $this->resumenLote($remate, $lote, $alias),
             'mi_alias' => $alias[$user->id] ?? null,
         ], 201);
+        CronometroPuja::terminar('respuesta');
+
+        return $this->conMedicion($respuesta);
+    }
+
+    private function conMedicion(JsonResponse $respuesta): JsonResponse
+    {
+        if ($tramos = CronometroPuja::cabecera()) {
+            $respuesta->headers->set('Server-Timing', $tramos);
+        }
+
+        return $respuesta;
     }
 
     /** @param array<int, string> $alias */

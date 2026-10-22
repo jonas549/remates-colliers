@@ -37,6 +37,12 @@ return [
      * Tiempo real (Bloque J). `json`: estado del remate como archivo estático en `carpeta`, servido por
      * LiteSpeed sin ejecutar PHP. La capa está abstraída (App\Subastas\Difusion\Emisor) para cambiar a Pusher.
      */
+    /*
+     * Medición por tramos de la puja (22/10): la respuesta lleva `Server-Timing` (App\Subastas\CronometroPuja).
+     * Apagada por defecto; se enciende para medir (tools/rendimiento/tramos.php) y se vuelve a apagar.
+     */
+    'medir_puja' => (bool) env('COLLIERS_MEDIR_PUJA', false),
+
     'tiempo_real' => [
         'driver' => env('COLLIERS_TIEMPO_REAL', 'json'),
         'carpeta' => env('COLLIERS_TIEMPO_REAL_CARPETA', public_path('tiempo-real')),

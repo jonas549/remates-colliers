@@ -30,6 +30,7 @@ function enParalelo(array $peticiones): array
     $multi = curl_multi_init();
     $manejadores = [];
     $pendientes = [];
+    $tramos = [];
     foreach ($peticiones as $i => $p) {
         $h = curl_init($e['url'] . $p['ruta']);
         $cabeceras = ['Accept: application/json'];
@@ -42,6 +43,15 @@ function enParalelo(array $peticiones): array
             curl_setopt($h, CURLOPT_POSTFIELDS, json_encode($p['json']));
         }
         curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => $cabeceras, CURLOPT_TIMEOUT => 120, CURLOPT_USERAGENT => 'colliers-concurrencia']);
+        // Server-Timing de la puja (App\Subastas\CronometroPuja), para tools/rendimiento/tramos.php.
+        $tramos[$i] = '';
+        curl_setopt($h, CURLOPT_HEADERFUNCTION, function ($h, $linea) use (&$tramos, $i) {
+            if (stripos($linea, 'Server-Timing:') === 0) {
+                $tramos[$i] = trim(substr($linea, 14));
+            }
+
+            return strlen($linea);
+        });
         $manejadores[$i] = $h;
         if (isset($p['en_ms'])) {
             $pendientes[$i] = $p['en_ms'];
@@ -70,6 +80,7 @@ function enParalelo(array $peticiones): array
             'estado' => curl_getinfo($h, CURLINFO_RESPONSE_CODE),
             'cuerpo' => json_decode((string) curl_multi_getcontent($h), true),
             'ms' => curl_getinfo($h, CURLINFO_TOTAL_TIME) * 1000,
+            'tramos' => $tramos[$i],
         ];
         curl_multi_remove_handle($multi, $h);
         curl_close($h);

@@ -42,9 +42,15 @@ class MotorPujas
                 throw new PujaRechazada('monto_invalido', ['valor' => is_scalar($montoCrudo) ? mb_substr((string) $montoCrudo, 0, 40) : gettype($montoCrudo)]);
             }
 
+            CronometroPuja::iniciar('transaccion');
             [$puja, $remate] = DB::transaction(function () use ($user, $loteId, $monto, $recibidaEn, $ip, $userAgent) {
+                CronometroPuja::contar('intentos_tx');
+                CronometroPuja::iniciar('espera_bloqueo');
                 $lote = Lote::whereKey($loteId)->lockForUpdate()->first()
                     ?? throw new PujaRechazada('lote_inexistente');
+                CronometroPuja::terminar('espera_bloqueo');
+                // Desde aquí hasta el commit (o el rollback) el lote está bloqueado: es la parte serializada.
+                CronometroPuja::iniciar('con_bloqueo');
                 $remate = $lote->remate;
 
                 $this->validar($lote, $remate, $user, $monto, $recibidaEn);
@@ -69,8 +75,14 @@ class MotorPujas
 
                 return [$puja, $remate];
             }, self::REINTENTOS);
+            CronometroPuja::terminar('con_bloqueo');
+            CronometroPuja::terminar('transaccion');
         } catch (PujaRechazada $rechazo) {
+            CronometroPuja::terminar('con_bloqueo');
+            CronometroPuja::terminar('transaccion');
+            CronometroPuja::iniciar('intento_rechazado');
             $this->registrarIntento($user, $loteId, $monto, $rechazo, $recibidaEn, $ip, $userAgent);
+            CronometroPuja::terminar('intento_rechazado');
             if ($rechazo->motivo === 'lote_cerrado') {
                 // Detector del cierre perezoso: quien encuentra el lote vencido lo liquida (idempotente).
                 $this->liquidador->liquidarPorId($loteId);
@@ -78,7 +90,9 @@ class MotorPujas
             throw $rechazo;
         }
 
+        CronometroPuja::iniciar('emitir');
         $this->emitir($remate);
+        CronometroPuja::terminar('emitir');
 
         return $puja;
     }

@@ -3,6 +3,7 @@
 namespace App\Subastas\Difusion;
 
 use App\Models\Remate;
+use App\Subastas\CronometroPuja;
 use App\Subastas\EstadoRemate;
 use Illuminate\Support\Facades\File;
 use RuntimeException;
@@ -24,18 +25,24 @@ class EmisorJsonEstatico implements Emisor
         File::ensureDirectoryExists($this->carpeta);
         $destino = $this->rutaDe($remate);
 
+        CronometroPuja::iniciar('emisor_espera_archivo');
         $bloqueo = fopen($this->carpeta . DIRECTORY_SEPARATOR . '.bloqueo-' . $remate->slug, 'c');
         if ($bloqueo === false || ! flock($bloqueo, LOCK_EX)) {
             throw new RuntimeException("No se pudo bloquear la publicación de {$remate->slug}.");
         }
+        CronometroPuja::terminar('emisor_espera_archivo');
 
         try {
+            CronometroPuja::iniciar('emisor_construir');
             $json = json_encode(EstadoRemate::construir($remate), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+            CronometroPuja::terminar('emisor_construir');
+            CronometroPuja::iniciar('emisor_escribir');
             $temporal = $destino . '.' . bin2hex(random_bytes(6)) . '.tmp';
             if (file_put_contents($temporal, $json) === false || ! $this->reemplazar($temporal, $destino)) {
                 @unlink($temporal);
                 throw new RuntimeException("No se pudo escribir el estado de {$remate->slug}.");
             }
+            CronometroPuja::terminar('emisor_escribir');
         } finally {
             flock($bloqueo, LOCK_UN);
             fclose($bloqueo);

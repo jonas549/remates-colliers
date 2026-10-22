@@ -37,6 +37,25 @@ class RendimientoTest extends TestCase
         }
     }
 
+    /** 22/10: la medición por tramos de la puja va apagada; encendida, arma la cabecera Server-Timing. */
+    public function test_cronometro_de_la_puja_apagado_por_defecto_y_encendido_arma_server_timing(): void
+    {
+        \App\Subastas\CronometroPuja::iniciar('transaccion');
+        \App\Subastas\CronometroPuja::terminar('transaccion');
+        $this->assertNull(\App\Subastas\CronometroPuja::cabecera());
+
+        config(['colliers.medir_puja' => true]);
+        \App\Subastas\CronometroPuja::iniciar('transaccion');
+        usleep(2000);
+        \App\Subastas\CronometroPuja::terminar('transaccion');
+        \App\Subastas\CronometroPuja::contar('intentos_tx');
+        $cabecera = (string) \App\Subastas\CronometroPuja::cabecera();
+        $this->assertMatchesRegularExpression('/^transaccion;dur=\d+\.\d, intentos_tx;dur=1\.0, total;dur=[\d.]+, archivos;dur=\d+(\.\d)?, kb_php;dur=[\d.]+$/', $cabecera);
+        $this->assertGreaterThanOrEqual(2.0, (float) explode('dur=', explode(',', $cabecera)[0])[1]);
+        // Después de armar la cabecera queda limpio para la petición siguiente.
+        $this->assertStringNotContainsString('transaccion', (string) \App\Subastas\CronometroPuja::cabecera());
+    }
+
     public function test_hora_php_responde_sin_arrancar_laravel(): void
     {
         $antes = (int) floor(microtime(true) * 1000);
