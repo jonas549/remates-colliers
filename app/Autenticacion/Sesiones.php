@@ -39,10 +39,16 @@ final class Sesiones
             ]);
     }
 
-    /** Cierra todas las sesiones del usuario salvo `$excepto`. Devuelve cuántas cerró. */
-    public static function cerrarTodas(User $user, ?string $excepto = null): int
+    /**
+     * Cierra todas las sesiones del usuario salvo `$excepto`. Devuelve cuántas cerró. Por defecto también olvida los
+     * dispositivos recordados del segundo factor (cambio de contraseña, cuenta desactivada, cierre desde «06 Usuarios»).
+     */
+    public static function cerrarTodas(User $user, ?string $excepto = null, bool $olvidarDispositivos = true): int
     {
         $user->forceFill(['remember_token' => \Illuminate\Support\Str::random(60)])->saveQuietly();
+        if ($olvidarDispositivos) {
+            SegundoFactor::olvidarDispositivos($user);
+        }
 
         if (! self::disponible()) {
             return 0;

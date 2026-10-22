@@ -224,6 +224,13 @@ return [
         'cambiar_clave' => 'Change password',
         'cerrar_sesion' => 'Sign out',
         'usar_cerrar_sesion' => 'To end the current session, use «Sign out».',
+        // Remembered devices for the sign-in code (22/10).
+        'dispositivos_titulo' => 'DEVICES THAT DON\'T ASK FOR A CODE',
+        'dispositivo_hasta' => 'REMEMBERED UNTIL :fecha',
+        'olvidar' => 'FORGET',
+        'olvidar_todos' => 'Forget all devices',
+        'dispositivo_olvidado' => 'That device will ask for the code again at sign-in.',
+        'dispositivos_olvidados' => '{1} 1 device will ask for the code again.|[0,*] :count devices will ask for the code again.',
         'cerrada' => 'That session was signed out.',
         'cerradas' => '{1} 1 session signed out.|[0,*] :count sessions signed out.',
     ],

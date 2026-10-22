@@ -106,6 +106,7 @@ class AutenticacionTest extends TestCase
 
     public function test_accesos_separados_para_postores_y_administracion(): void
     {
+        Notification::fake();
         $this->postor('15482331K', 'ana@correo.test');
         $admin = $this->usuario(User::ROL_ADMIN, 'admin@colliers.test');
         $martillero = $this->usuario(User::ROL_MARTILLERO, 'martillero@colliers.test');
@@ -116,7 +117,10 @@ class AutenticacionTest extends TestCase
             ->assertSessionHasErrors(['usuario' => 'Esta cuenta es de postor: ingresa por el acceso de postores.']);
         $this->assertGuest();
 
-        $this->post('/admin/ingresar', ['usuario' => 'admin@colliers.test', 'password' => self::CLAVE])->assertRedirect('/admin?ingreso=1');
+        // Administración: la clave lleva al código del correo (segundo factor, 22/10); con el código, al panel.
+        $this->post('/admin/ingresar', ['usuario' => 'admin@colliers.test', 'password' => self::CLAVE])->assertRedirect(route('admin.ingresar.codigo'));
+        $this->assertGuest();
+        $this->conCodigo($admin)->assertRedirect('/admin?ingreso=1');
         $this->assertAuthenticatedAs($admin);
         $this->post('/salir');
         $this->post('/admin/ingresar', ['usuario' => 'martillero@colliers.test', 'password' => self::CLAVE])->assertRedirect('/admin?ingreso=1');
@@ -125,11 +129,13 @@ class AutenticacionTest extends TestCase
 
     public function test_ingreso_que_pierde_la_sesion_nunca_termina_en_silencio(): void
     {
+        Notification::fake();
         $admin = $this->usuario(User::ROL_ADMIN, 'admin@colliers.test');
         $admin->forceFill(['debe_cambiar_clave' => true])->save();
 
         // Con sesión: la marca se quita y sigue su flujo (aquí, el cambio de clave obligatorio).
-        $this->post('/admin/ingresar', ['usuario' => 'admin@colliers.test', 'password' => self::CLAVE])->assertRedirect('/admin?ingreso=1');
+        $this->post('/admin/ingresar', ['usuario' => 'admin@colliers.test', 'password' => self::CLAVE]);
+        $this->conCodigo($admin)->assertRedirect('/admin?ingreso=1');
         $this->get('/admin?ingreso=1')->assertRedirect(url('/admin'));
         $this->get('/admin')->assertRedirect(route('cuenta.clave'));
         $this->post('/salir');
@@ -449,10 +455,12 @@ class AutenticacionTest extends TestCase
 
     public function test_cambio_de_contrasena_obligatorio_antes_de_usar_el_panel(): void
     {
+        Notification::fake();
         $admin = $this->usuario(User::ROL_ADMIN, 'admin@colliers.test');
         $admin->forceFill(['debe_cambiar_clave' => true])->save();
 
         $this->post('/admin/ingresar', ['usuario' => 'admin@colliers.test', 'password' => self::CLAVE]);
+        $this->conCodigo($admin);
         $this->get('/admin')->assertRedirect(route('cuenta.clave'));
         $this->postJson('/admin/usuarios/' . $admin->id . '/desbloquear')->assertForbidden();
         $this->get('/mi-cuenta/cambiar-clave')->assertOk()->assertSee('Cambia tu contraseña para continuar');
@@ -567,6 +575,15 @@ class AutenticacionTest extends TestCase
     }
 
     // ── Ayudantes ────────────────────────────────────────────────────────────────────────────────────────────
+
+    /** Segundo paso del ingreso de Administración: escribe el código que «llegó al correo». */
+    private function conCodigo(User $user)
+    {
+        $aviso = Notification::sent($user, \App\Notifications\CodigoIngresoAviso::class)->last();
+        $this->assertNotNull($aviso, 'No se envió el código de ingreso');
+
+        return $this->post(route('admin.ingresar.codigo.verificar'), ['codigo' => $aviso->codigo]);
+    }
 
     private function usuario(string $rol, string $email): User
     {

@@ -30,7 +30,7 @@ nota *(verifica Jonas en el sandbox)*.
 | L | Streaming | En progreso | 1/4 |
 | E/F | Componentes y estructura del panel | En progreso | 3/5 |
 | O | Reportes | En progreso | 8/9 |
-| P | Seguridad | En progreso | 3/11 |
+| P | Seguridad | En progreso | 4/12 |
 | Q | QA y carga | Pendiente | 0/6 |
 | R | Despliegue a producción | Pendiente | 0/9 |
 | S | Documentación | Pendiente | 0/4 |
@@ -82,7 +82,7 @@ cerradas por Jonas el mismo día: el límite de pujas queda en 30/min; el porcen
 en el estado y aparece sin recargar; la imagen para compartir es un archivo reemplazable. Pendiente de Jonas: claves de
 Turnstile y la imagen de 1200 × 630 de Colliers. Detalle en `docs/progreso/2026-10-21.md`.
 
-**22/10, última tanda de Jonas (en local, sin push; un commit por punto):** (2) cabecera y pie como el sitio corporativo (ver N); (3) ficha sin el bloque de visitas vacío y «Coordinar visita» junto a las bases (ver N); (4) **rol Editor**, con los permisos propuestos por Jonas **a confirmar con el cliente** (ver E/F).
+**22/10, última tanda de Jonas (en local, sin push; un commit por punto):** (2) cabecera y pie como el sitio corporativo (ver N); (3) ficha sin el bloque de visitas vacío y «Coordinar visita» junto a las bases (ver N); (4) **rol Editor**, con los permisos propuestos por Jonas **a confirmar con el cliente** (ver E/F); (1) **segundo factor por correo** para Administración al entrar al panel (ver P). ⚠️ **Antes del push: el correo saliente del sandbox tiene que funcionar**, o nadie de Administración entra al panel (salida de emergencia: `php artisan colliers:codigo-ingreso correo` en la terminal del servidor).
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -479,7 +479,8 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] HTTPS y cabeceras comprobados en el sandbox: `http://` → 301 a https, HSTS y CSP en las respuestas, sala con video y presencia sin «CSP bloqueó» en el log *(Jonas)*
 - [ ] Carga de archivos (comprobantes, documentos) validada y fuera de `public`
 - [ ] Sin secretos en el repositorio público
-- [ ] 2FA *(pendiente con el cliente: ¿solo administradores o también postores?)*
+- [x] **Segundo factor por correo para Administración** *(Jonas, 22/10)*. En `/admin/ingresar`, usuario y clave correctos **no abren sesión**: llega un código de 6 dígitos al correo de la cuenta y se pide en «Revisa tu correo» (diseño del Login). Sin el código correcto no hay sesión. El código se guarda como hash, vence en 10 min, sirve una vez y admite 5 intentos; reenvío con 1 minuto de espera y tope de 5 códigos por hora y cuenta (también al volver a escribir la clave), para que no sirva para inundar un buzón. **Recordar el dispositivo** 7 días (casilla; cookie con token al azar, en la base su hash), por dispositivo y **revocable en «Sesiones activas»** (botón OLVIDAR y «Olvidar todos»); también se olvidan al cambiar o restablecer la contraseña, al desactivar la cuenta o al cerrar sus sesiones desde «06 Usuarios». Si el correo falla, la pantalla lo dice («No pudimos enviar el código…»), queda «Fallida» en Registro de correos con el error y en `access_logs`, y no deja entrar; con el correo en modo «registro» fuera de local tampoco se da por enviado. Plantilla «Código de ingreso al panel» editable en Plantillas de correo (el asunto no lleva el código; si alguien quita `{{ codigo }}` del texto, el código va igual). Valores en Configuración → Seguridad (vigencia, intentos, códigos por hora, días de recordar). **A quién se exige: `Permisos::MAPA['dos_pasos']`** (hoy solo `admin`; extenderlo a martillero o editor es agregar el rol ahí). Salida de emergencia si el correo del servidor no funciona: `php artisan colliers:codigo-ingreso correo` (requiere la terminal). Enlace nuevo «Sesiones y contraseña» en el pie del menú lateral del panel (antes no había cómo llegar a esas pantallas sin escribir la dirección) *(`SegundoFactorTest` 12 pruebas; `tools/comparar/dos-pasos.mjs` 18/18 en navegador real, también a 375 px; los recorridos que entran como administración leen el código del correo del log local: `recorrido-roles.mjs` 58/58, `registro-acceso.mjs` 33/33, `ingreso-servidor.mjs` 7/7)*
+- [ ] Segundo factor en el sandbox *(Jonas)*: **antes del push**, Configuración → Correo → enviar un correo de prueba y confirmar que llega; después del deploy, ingresar con la clave, recibir el código y entrar; probar «recordar dispositivo» y olvidarlo en «Sesiones activas»
 - [ ] Revisión de registros de acceso
 
 ## Q — QA y carga · Pendiente
@@ -579,6 +580,6 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] ¿Se enmascara la identidad de los postores en el feed? (el diseño usa «Postor #N»)
 - [ ] Garantía del perdedor: ¿devolución? (el diseño lo afirma; el acta no lo define)
 - [ ] Habilitación única: el modo ya está construido y apagado. Si Colliers lo quiere, debe fijar **el monto** en Configuración → Garantías y decidir qué pasa si un postor gana varios remates respaldado por una sola garantía
-- [ ] 2FA: ¿solo administradores o también postores?
+- [x] 2FA: **solo Administración por ahora** *(Jonas, 22/10)*, preparado para extenderlo por rol (`Permisos::MAPA['dos_pasos']`)
 - [ ] **Permisos del rol Editor** (propuesta de Jonas del 22/10, construida así; Jonas la confirma con el cliente). Cambiarla es editar `App\Autenticacion\Permisos::MAPA`
 - [ ] Lista exacta de gráficos y columnas de los reportes

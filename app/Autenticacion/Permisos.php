@@ -40,6 +40,9 @@ final class Permisos
         'usuarios' => [User::ROL_ADMIN],
         // «05 Configuración»: cada sección tiene su permiso; las que no figuran en CONFIGURACION son solo de administración.
         'configuracion' => [User::ROL_ADMIN],
+        // Segundo factor por correo al ingresar (22/10). Por ahora solo Administración; extenderlo a otro rol es
+        // agregarlo aquí (App\Autenticacion\SegundoFactor no cambia).
+        'dos_pasos' => [User::ROL_ADMIN],
     ];
 
     /** Secciones de Configuración abiertas a otros roles además de administración. */

@@ -49,6 +49,16 @@ class Plantillas
             'cuerpo' => "Pediste restablecer la contraseña de tu cuenta.\n\nEl enlace vence en {{ minutos }} minutos. Si no lo pediste, ignora este mensaje: tu contraseña no cambia.",
             'boton' => 'Crear una contraseña nueva',
         ],
+        'codigo_ingreso' => [
+            'nombre' => 'Código de ingreso al panel',
+            'cuando' => 'Al ingresar al panel con usuario y clave (segundo factor)',
+            'destinatario' => 'La persona de Administración que ingresa',
+            'activable' => false,
+            'variables' => ['codigo' => 'Código de 6 dígitos', 'minutos' => 'Minutos de vigencia'],
+            'asunto' => 'Tu código de ingreso',
+            'cuerpo' => "Tu código para ingresar al panel de Remates Colliers es:\n\n{{ codigo }}\n\nVence en {{ minutos }} minutos y sirve una sola vez. Nadie de Colliers te lo va a pedir.\n\nSi no fuiste tú, alguien tiene tu contraseña: cámbiala y avisa a {{ contacto }}.",
+            'boton' => null,
+        ],
         'cuenta_aprobada' => [
             'nombre' => 'Cuenta aprobada',
             'cuando' => 'Cuando Colliers aprueba la cuenta',
@@ -275,7 +285,7 @@ El remate comienza el {{ inicio }}. Para pujar necesitas cuenta aprobada y garan
             'monto' => '$19.850.000', 'inicio' => 'viernes 26 de septiembre, 12:00', 'cierre' => 'viernes 26 de septiembre, 12:30',
             'horas' => '24', 'minutos' => '60', 'faltan' => '24 horas', 'base' => '$185.000.000', 'baja' => rtrim((string) config('app.url'), '/') . '/avisame/baja/ejemplo',
             'resumen' => "Lote 1 · Av. Apoquindo 4501: adjudicado en $199.600.000\nLote 2 · Estacionamiento 12: desierto",
-            'total' => '$199.600.000', 'adjudicados' => '1', 'lotes' => '2',
+            'total' => '$199.600.000', 'adjudicados' => '1', 'lotes' => '2', 'codigo' => '482913',
         ];
 
         return array_intersect_key($ejemplos, self::variables($clave)) + ['nombre' => $ejemplos['nombre']];

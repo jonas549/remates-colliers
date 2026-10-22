@@ -10,6 +10,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
 import { revisarUsabilidad } from './usabilidad.mjs';
+import { completarSegundoFactor } from './segundo-factor.mjs';
 
 const URL = process.env.LARAVEL_URL || 'http://127.0.0.1:8000';
 const SALIDA = path.resolve('tools/comparar/salida/recorrido-roles');
@@ -53,6 +54,9 @@ await A.fill('input[name=usuario]', 'admin@colliers.test');
 await A.fill('input[name=password]', CLAVE_INTERNA);
 await A.getByRole('button', { name: 'Ingresar' }).click();
 await A.waitForLoadState('load');
+// Segundo factor (22/10): la clave lleva a «Revisa tu correo»; el código se copia del correo (log local) y se escribe.
+comprobar('admin: la clave lleva a pedir el código del correo', A.url().endsWith('/admin/ingresar/codigo'), A.url());
+await completarSegundoFactor(A, 'admin@colliers.test');
 comprobar('admin: del sitio al panel con clics (Ingresar → Acceso administradores)', A.url().endsWith('/admin'), A.url());
 
 // Configuración como la dejará Jonas en el sandbox: margen 5 s y aviso del cierre al 10 %.

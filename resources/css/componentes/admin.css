@@ -27,6 +27,7 @@
 .admin-lateral__salir { color: #c9d5ec; display: inline-block; margin-top: 12px; font-size: 13px; }
 /* El hover de .boton-enlace pinta el texto del azul del fondo de esta barra: sobre el marino queda invisible. */
 .admin-lateral__salir:hover { color: #ffffff; }
+a.admin-lateral__salir { display: block; }
 
 .admin-principal { flex: 1; min-width: 0; }
 .admin-encabezado { border-bottom: 2px solid #16265a; padding: 26px 32px 20px; display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }

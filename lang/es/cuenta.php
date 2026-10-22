@@ -224,6 +224,13 @@ return [
         'cambiar_clave' => 'Cambiar contraseña',
         'cerrar_sesion' => 'Cerrar sesión',
         'usar_cerrar_sesion' => 'Para cerrar la sesión actual usa «Cerrar sesión».',
+        // Dispositivos recordados del segundo factor (22/10).
+        'dispositivos_titulo' => 'DISPOSITIVOS QUE NO PIDEN CÓDIGO',
+        'dispositivo_hasta' => 'RECORDADO HASTA :fecha',
+        'olvidar' => 'OLVIDAR',
+        'olvidar_todos' => 'Olvidar todos los dispositivos',
+        'dispositivo_olvidado' => 'Ese dispositivo volverá a pedir el código al ingresar.',
+        'dispositivos_olvidados' => '{1} 1 dispositivo volverá a pedir el código.|[0,*] :count dispositivos volverán a pedir el código.',
         'cerrada' => 'Cerramos esa sesión.',
         'cerradas' => '{1} Cerramos 1 sesión.|[0,*] Cerramos :count sesiones.',
     ],

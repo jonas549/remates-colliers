@@ -8,6 +8,7 @@
  *   php tools/comparar/sala-ayudante.php dos-lotes N    remate «dos-lotes»: lote 1 cierra en N s, lote 2 abre 3 s después
  *   php tools/comparar/sala-ayudante.php mensaje SLUG T mensaje del martillero en ese remate
  *   php tools/comparar/sala-ayudante.php video SLUG [ID] id del video de YouTube del remate (sin ID, lo quita)
+ *   php tools/comparar/sala-ayudante.php codigo CORREO   último código de ingreso al panel enviado a esa cuenta (correo en el log)
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -110,6 +111,26 @@ switch ($accion) {
         $user = User::where('email', $argv[3] ?? '')->firstOrFail();
         $puja = app(App\Subastas\MotorPujas::class)->pujar($user, $remate->lotes()->first()->id, (int) ($argv[4] ?? 0), CarbonImmutable::now('UTC'));
         echo "ok {$puja->monto}\n";
+        break;
+
+    case 'codigo':
+        // codigo CORREO: «abrir el correo» en local. Con MAIL_MAILER=log el correo del código de ingreso (segundo factor,
+        // 22/10) queda en storage/logs/laravel.log: se toma el último dirigido a esa cuenta y se imprime el código.
+        $correo = $argv[2] ?? '';
+        $log = (string) @file_get_contents(storage_path('logs/laravel.log'), false, null, max(0, (int) @filesize(storage_path('logs/laravel.log')) - 2_000_000));
+        $codigo = null;
+        foreach (preg_split('/^(?=\[\d{4}-\d{2}-\d{2}[ T])/m', $log) as $entrada) {
+            $texto = quoted_printable_decode($entrada);
+            if (preg_match('/^To: .*' . preg_quote($correo, '/') . '/mi', $texto)
+                && preg_match('/al panel de Remates Colliers es:\s*(\d{6})/', $texto, $m)) {
+                $codigo = $m[1];
+            }
+        }
+        if ($codigo === null) {
+            fwrite(STDERR, "No hay un correo con código para {$correo} en storage/logs/laravel.log.\n");
+            exit(1);
+        }
+        echo $codigo . "\n";
         break;
 
     default:

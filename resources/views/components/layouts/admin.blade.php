@@ -47,6 +47,9 @@
             <div class="admin-lateral__pie">
                 <div class="admin-lateral__usuario">{{ auth()->user()?->name }}</div>
                 <div class="admin-lateral__rol">{{ $usuario?->nombreRol() }}</div>
+                {{-- Sesiones activas, dispositivos recordados del segundo factor y cambio de contraseña (22/10): sin esto
+                     había que escribir la dirección. --}}
+                <a href="{{ route('cuenta.sesiones') }}" class="admin-lateral__salir">Sesiones y contraseña</a>
                 <form method="POST" action="{{ route('logout') }}" class="formulario-en-linea">
                     @csrf
                     <button type="submit" class="boton-enlace admin-lateral__salir">Cerrar sesión</button>

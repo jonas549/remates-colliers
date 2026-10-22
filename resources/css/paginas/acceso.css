@@ -65,6 +65,8 @@
 }
 
 .acceso__campos { border-top: 2px solid #16265a; }
+/* Segundo bloque de la misma pantalla (dispositivos recordados en «Sesiones activas», 22/10). */
+.acceso__campos--seccion { margin-top: 32px; padding-top: 14px; }
 .acceso__campo { display: block; border-bottom: 1px solid #dbe1ec; padding: 14px 0; }
 .acceso__campo--clave { position: relative; }
 .acceso__etiqueta {
@@ -86,6 +88,8 @@
   font-size: 19px;
   color: #16265a;
 }
+/* Código de ingreso del panel (22/10): seis dígitos espaciados, sin el hueco del botón MOSTRAR. */
+.acceso__input--codigo { padding-right: 0; font-size: 24px; letter-spacing: .4em; font-variant-numeric: tabular-nums; }
 .acceso__ver-clave {
   position: absolute;
   right: 0;

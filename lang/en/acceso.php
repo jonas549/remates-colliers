@@ -54,6 +54,28 @@ return [
         'acceso_admin' => 'Administrator access',
     ],
 
+    // Two-step sign-in for the panel (22/10). Admin portal only.
+    'dos_pasos' => [
+        'pagina' => 'Sign-in code',
+        'titulo' => 'Check your email',
+        'intro' => 'We sent a 6-digit code to :correo. Enter it here to open the panel. It expires in :minutos minutes.',
+        'etiqueta' => 'SIGN-IN CODE',
+        'confirmar' => 'Open the panel',
+        'recordar' => '{1} Don\'t ask for a code on this device for 1 day|[2,*] Don\'t ask for a code on this device for :dias days',
+        'nota' => 'Didn\'t get it? Check your spam folder or request another code. If you didn\'t enter your password, change it.',
+        'reenviar' => 'Send another code',
+        'otra_cuenta' => 'Sign in with another account',
+        'reenviado' => 'We sent a new code to :correo. The previous one no longer works.',
+        'incorrecto' => '{1} That code is not correct. 1 attempt left with this code.|[2,*] That code is not correct. :quedan attempts left with this code.',
+        'agotado' => 'That code no longer works: no attempts left. Request another code.',
+        'vencido' => 'The code expired or was already used. Request another code.',
+        'espera' => 'We just sent you a code. Wait :segundos seconds before requesting another.',
+        'tope' => 'We already sent :envios codes to this account in the last hour. Wait a while or write to :correo.',
+        'envio_fallido' => 'We couldn\'t send the code: the mail server didn\'t respond. You can\'t sign in without it. Try again in a few minutes; if it keeps failing, write to :correo.',
+        'sin_correo' => 'We couldn\'t send the code: outgoing email is not set up to reach the Internet. You can\'t sign in without it. Contact the server administrator or write to :correo.',
+        'sin_pendiente' => 'Enter your email and password again to receive a code.',
+    ],
+
     'cambiar_clave' => [
         'pagina' => 'Change password',
         'titulo_obligatorio' => 'Change your password to continue',

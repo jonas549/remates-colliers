@@ -19,6 +19,7 @@ use App\Http\Controllers\IngresarComoController;
 use App\Http\Controllers\PublicoController;
 use App\Http\Controllers\PujaController;
 use App\Http\Controllers\RevisionController;
+use App\Http\Controllers\SegundoFactorController;
 use App\Http\Controllers\SalaController;
 use App\Http\Controllers\SuscripcionesController;
 use App\Http\Controllers\TiempoRealController;
@@ -103,6 +104,9 @@ $publicas = function (string $prefijo) {
             Route::get('/mi-cuenta/sesiones', [CuentaController::class, 'sesiones'])->name('cuenta.sesiones');
             Route::delete('/mi-cuenta/sesiones', [CuentaController::class, 'cerrarOtrasSesiones'])->name('cuenta.sesiones.cerrar-otras');
             Route::delete('/mi-cuenta/sesiones/{sesion}', [CuentaController::class, 'cerrarSesion'])->name('cuenta.sesiones.cerrar');
+            // Dispositivos recordados del segundo factor (22/10).
+            Route::delete('/mi-cuenta/dispositivos', [CuentaController::class, 'olvidarDispositivos'])->name('cuenta.dispositivos.olvidar-todos');
+            Route::delete('/mi-cuenta/dispositivos/{dispositivo}', [CuentaController::class, 'olvidarDispositivo'])->whereNumber('dispositivo')->name('cuenta.dispositivos.olvidar');
         });
 
         Route::middleware(['rol:postor', 'verified', 'clave.vigente'])->group(function () {
@@ -127,6 +131,13 @@ Route::middleware('guest')->group(function () {
         ->name('admin.ingresar');
     Route::post('/admin/ingresar', [AuthenticatedSessionController::class, 'store'])
         ->middleware('throttle:login')->name('admin.ingresar.store');
+    // Segundo factor por correo (22/10): la clave ya se validó; falta el código que llegó al correo.
+    Route::get('/admin/ingresar/codigo', [SegundoFactorController::class, 'show'])->name('admin.ingresar.codigo');
+    Route::post('/admin/ingresar/codigo', [SegundoFactorController::class, 'verificar'])
+        ->middleware('throttle:20,1')->name('admin.ingresar.codigo.verificar');
+    Route::post('/admin/ingresar/codigo/reenviar', [SegundoFactorController::class, 'reenviar'])
+        ->middleware('throttle:10,1')->name('admin.ingresar.codigo.reenviar');
+    Route::post('/admin/ingresar/codigo/cancelar', [SegundoFactorController::class, 'cancelar'])->name('admin.ingresar.codigo.cancelar');
 });
 
 // Panel: administración, martilleros y editores. Sin sesión redirige a /admin/ingresar.

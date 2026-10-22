@@ -53,10 +53,6 @@
             @endforeach
         </div>
 
-        <div class="acceso__opciones">
-            <a href="{{ $destino }}" class="acceso__olvide">{{ __(auth()->user()->esAdministracion() ? 'cuenta.sesiones.volver_panel' : 'cuenta.sesiones.volver_cuenta') }}</a>
-        </div>
-
         @if ($sesiones->where('actual', false)->isNotEmpty())
             <form method="POST" action="{{ route('cuenta.sesiones.cerrar-otras') }}">
                 @csrf
@@ -65,6 +61,35 @@
             </form>
         @endif
     @endif
+
+    {{-- Segundo factor (22/10): navegadores que no piden el código al ingresar, revocables uno a uno. --}}
+    @if ($dispositivos->isNotEmpty())
+        <div class="acceso__campos acceso__campos--seccion" data-dispositivos>
+            <span class="acceso__etiqueta">{{ __('cuenta.sesiones.dispositivos_titulo') }}</span>
+            @foreach ($dispositivos as $dispositivo)
+                <div class="acceso__campo acceso__campo--clave">
+                    <span class="acceso__etiqueta">{{ __('cuenta.sesiones.dispositivo_hasta', ['fecha' => $dispositivo->expira_en->setTimezone($zona)->format(\App\Support\Idioma::esIngles() ? 'j M Y' : 'd-m-Y')]) }}</span>
+                    <span class="acceso__input">{{ $navegador($dispositivo->user_agent) }} · {{ $dispositivo->ip }}</span>
+                    <form method="POST" action="{{ route('cuenta.dispositivos.olvidar', $dispositivo->id) }}" class="formulario-en-linea">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="acceso__ver-clave">{{ __('cuenta.sesiones.olvidar') }}</button>
+                    </form>
+                </div>
+            @endforeach
+        </div>
+        @if ($dispositivos->count() > 1)
+            <form method="POST" action="{{ route('cuenta.dispositivos.olvidar-todos') }}">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="acceso__entrar es-listo">{{ __('cuenta.sesiones.olvidar_todos') }}</button>
+            </form>
+        @endif
+    @endif
+
+    <div class="acceso__opciones">
+        <a href="{{ $destino }}" class="acceso__olvide">{{ __(auth()->user()->esAdministracion() ? 'cuenta.sesiones.volver_panel' : 'cuenta.sesiones.volver_cuenta') }}</a>
+    </div>
 
     <div class="acceso__contacto">
         <a href="{{ route('cuenta.clave') }}">{{ __('cuenta.sesiones.cambiar_clave') }}</a>

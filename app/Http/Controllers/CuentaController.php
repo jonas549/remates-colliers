@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Autenticacion\SegundoFactor;
 use App\Autenticacion\Sesiones;
 use App\Demo\EstadoCuentaDemo;
 use App\Publico\Catalogo;
 use App\Models\AccessLog;
+use App\Models\DispositivoConfiable;
 use App\Models\Garantia;
 use App\Models\Postor;
 use App\Models\PostorDocumento;
@@ -91,7 +93,28 @@ class CuentaController extends Controller
             'proximo' => Catalogo::destacado(),
             'sesiones' => Sesiones::de($request->user(), $request->session()->getId()),
             'disponible' => Sesiones::disponible(),
+            // Segundo factor (22/10): navegadores recordados de esta cuenta, que no piden código al ingresar.
+            'dispositivos' => DispositivoConfiable::vigentes()->where('user_id', $request->user()->id)->latest('id')->get(),
         ]);
+    }
+
+    /** «Olvidar» un dispositivo recordado: vuelve a pedir el código. Solo uno de la propia cuenta. */
+    public function olvidarDispositivo(Request $request, int $dispositivo): RedirectResponse
+    {
+        $revocados = DispositivoConfiable::vigentes()->where('user_id', $request->user()->id)->whereKey($dispositivo)
+            ->update(['revocado_en' => now('UTC')->format('Y-m-d H:i:s')]);
+        abort_unless($revocados === 1, 404);
+        $this->anotar($request, 'dispositivo_olvidado', ['dispositivo' => $dispositivo]);
+
+        return back()->with('estado', __('cuenta.sesiones.dispositivo_olvidado'));
+    }
+
+    public function olvidarDispositivos(Request $request): RedirectResponse
+    {
+        $cantidad = SegundoFactor::olvidarDispositivos($request->user());
+        $this->anotar($request, 'dispositivo_olvidado', ['cantidad' => $cantidad]);
+
+        return back()->with('estado', trans_choice('cuenta.sesiones.dispositivos_olvidados', $cantidad));
     }
 
     public function cerrarSesion(Request $request, string $sesion): RedirectResponse
@@ -105,7 +128,8 @@ class CuentaController extends Controller
 
     public function cerrarOtrasSesiones(Request $request): RedirectResponse
     {
-        $cantidad = Sesiones::cerrarTodas($request->user(), $request->session()->getId());
+        // Los dispositivos recordados tienen su propio botón: cerrar las demás sesiones no los olvida.
+        $cantidad = Sesiones::cerrarTodas($request->user(), $request->session()->getId(), olvidarDispositivos: false);
         $this->anotar($request, 'sesion_cerrada_remota', ['cantidad' => $cantidad]);
 
         return back()->with('estado', trans_choice('cuenta.sesiones.cerradas', $cantidad));

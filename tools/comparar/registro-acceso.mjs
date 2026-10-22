@@ -9,6 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright';
+import { completarSegundoFactor } from './segundo-factor.mjs';
 
 const URL = process.env.LARAVEL_URL || 'http://127.0.0.1:8000';
 const LOG = path.resolve('storage/logs/laravel.log');
@@ -76,6 +77,8 @@ async function ingresar(p, usuario, clave, admin = false) {
     await p.fill('input[name=password]', clave);
     await p.getByRole('button', { name: 'Ingresar' }).click();
     await p.waitForLoadState('load');
+    // Administración: segundo factor por correo (22/10).
+    if (admin) await completarSegundoFactor(p, usuario);
     return (await p.locator('.acceso__error').allInnerTexts()).join(' ');
 }
 

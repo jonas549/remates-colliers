@@ -64,6 +64,12 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::authenticateUsing(fn (Request $request) => app(AutenticarUsuario::class)($request));
+        // Segundo factor por correo (22/10): IngresoConSegundoFactor valida la clave y decide si pide el código.
+        Fortify::authenticateThrough(fn (Request $request) => array_filter([
+            config('fortify.lowercase_usernames') ? \Laravel\Fortify\Actions\CanonicalizeUsername::class : null,
+            \App\Actions\Fortify\IngresoConSegundoFactor::class,
+            \Laravel\Fortify\Actions\PrepareAuthenticatedSession::class,
+        ]));
 
         Fortify::loginView(fn () => view('auth.login', ['proximo' => Catalogo::destacado(), 'portal' => 'postores']));
         Fortify::registerView(fn () => view('auth.registro'));

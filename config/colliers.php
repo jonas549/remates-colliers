@@ -73,6 +73,10 @@ return [
         'forzar_https' => (bool) env('COLLIERS_FORZAR_HTTPS', ! in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)),
         'hsts_segundos' => (int) env('COLLIERS_HSTS_SEGUNDOS', 31536000),
         'csp' => env('COLLIERS_CSP', 'activa'),
+        // Segundo factor (22/10): con el correo en modo «log» el código queda en un archivo y no llega a nadie. Solo en
+        // local y pruebas eso cuenta como enviado (los recorridos leen el código del log); en el servidor, no.
+        // COLLIERS_CODIGO_POR_LOG=true solo para tools/comparar/ingreso-servidor.mjs (APP_ENV=staging en local).
+        'codigo_por_log' => (bool) env('COLLIERS_CODIGO_POR_LOG', in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)),
     ],
 
     /*

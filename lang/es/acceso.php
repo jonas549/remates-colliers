@@ -54,6 +54,28 @@ return [
         'acceso_admin' => 'Acceso administradores',
     ],
 
+    // Segundo factor por correo del panel (22/10). Solo Administración: la pantalla es del portal de administración.
+    'dos_pasos' => [
+        'pagina' => 'Código de ingreso',
+        'titulo' => 'Revisa tu correo',
+        'intro' => 'Te enviamos un código de 6 dígitos a :correo. Escríbelo aquí para entrar al panel. Vence en :minutos minutos.',
+        'etiqueta' => 'CÓDIGO DE INGRESO',
+        'confirmar' => 'Entrar al panel',
+        'recordar' => '{1} No pedir el código en este dispositivo por 1 día|[2,*] No pedir el código en este dispositivo por :dias días',
+        'nota' => '¿No llegó? Revisa la carpeta de spam o pide otro código. Si no fuiste tú quien ingresó la contraseña, cámbiala.',
+        'reenviar' => 'Enviar otro código',
+        'otra_cuenta' => 'Ingresar con otra cuenta',
+        'reenviado' => 'Te enviamos un código nuevo a :correo. El anterior ya no sirve.',
+        'incorrecto' => '{1} El código no es correcto. Te queda 1 intento con este código.|[2,*] El código no es correcto. Te quedan :quedan intentos con este código.',
+        'agotado' => 'Ese código ya no sirve: se agotaron los intentos. Pide otro código.',
+        'vencido' => 'El código venció o ya se usó. Pide otro código.',
+        'espera' => 'Acabamos de enviarte un código. Espera :segundos segundos antes de pedir otro.',
+        'tope' => 'Ya enviamos :envios códigos a esta cuenta en la última hora. Espera un rato antes de pedir otro o escribe a :correo.',
+        'envio_fallido' => 'No pudimos enviar el código a tu correo: el servidor de correo no respondió. Sin el código no se puede entrar. Intenta enviarlo de nuevo en unos minutos; si sigue fallando, avisa a :correo. Quedó registrado en «Registro de correos».',
+        'sin_correo' => 'No pudimos enviar el código: el correo saliente del sitio no está configurado para salir a Internet. Sin el código no se puede entrar. Avisa a quien administra el servidor o escribe a :correo.',
+        'sin_pendiente' => 'Ingresa de nuevo tu correo y contraseña para recibir un código.',
+    ],
+
     'cambiar_clave' => [
         'pagina' => 'Cambiar contraseña',
         'titulo_obligatorio' => 'Cambia tu contraseña para continuar',
