@@ -12,8 +12,6 @@ return [
     'cabecera' => [
         'servicios' => 'Services',
         'expertos' => 'Experts',
-        'propiedades' => 'Properties',
-        'investigacion' => 'Research',
         'nosotros' => 'About us',
         'remates' => 'Auctions',
         'buscar' => 'Search auctions',
@@ -25,14 +23,9 @@ return [
     ],
 
     'pie' => [
-        'nosotros' => 'About us',
-        'articulos' => 'Articles',
-        'carreras' => 'Careers',
-        'accionistas' => 'Investors',
-        'cookies' => 'Cookie policy',
+        'contacto' => 'Contact:',
         'privacidad' => 'Privacy policy',
         'terminos' => 'Terms of use',
-        'accesibilidad' => 'Accessibility statement',
         'bases' => 'Terms and conditions (in Spanish)',
         'desarrollado_por' => 'Developed by',
         'copyright' => 'Copyright © 2026 Colliers',

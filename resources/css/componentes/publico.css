@@ -43,6 +43,8 @@
 .pub-pie__logo { height: 52px; width: auto; display: block; }
 .pub-pie__links { display: flex; gap: 36px; font-size: 17px; font-weight: 700; flex-wrap: wrap; }
 .pub-pie__links a { color: #ffffff; }
+.pub-pie__contacto { font-size: 15px; font-weight: 400; color: #c9d5ec; }
+.pub-pie__contacto a { font-weight: 600; }
 .pub-pie__sociales { margin-left: auto; display: flex; gap: 20px; align-items: center; }
 .pub-pie__sociales a { color: #ffffff; display: flex; }
 .pub-pie__separador { border-top: 1px solid rgba(255, 255, 255, .2); }

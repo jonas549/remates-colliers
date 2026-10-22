@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-10-21** (QA de Jonas sobre el sandbox: los cuatro grupos y el cierre de decisiones, subidos a `main`).
+> **Registro vivo del avance.** Última actualización: **2026-10-22** (última tanda de Jonas: enlaces de cabecera y pie, horarios de visita, rol Editor y 2FA del panel; en local, sin push).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -26,7 +26,7 @@ nota *(verifica Jonas en el sandbox)*.
 | G | Postores | **Completo** | 8/8 |
 | H | Garantías | En progreso | 10/12 |
 | M | Notificaciones | En progreso | 8/9 |
-| N | Sitio público | En progreso | 23/24 |
+| N | Sitio público | En progreso | 24/25 |
 | L | Streaming | En progreso | 1/4 |
 | E/F | Componentes y estructura del panel | En progreso | 1/4 |
 | O | Reportes | En progreso | 8/9 |
@@ -81,6 +81,8 @@ base», promedio de pujas con un decimal, página propia para el 405, buscador d
 cerradas por Jonas el mismo día: el límite de pujas queda en 30/min; el porcentaje sin «sobre la base»; el video llega
 en el estado y aparece sin recargar; la imagen para compartir es un archivo reemplazable. Pendiente de Jonas: claves de
 Turnstile y la imagen de 1200 × 630 de Colliers. Detalle en `docs/progreso/2026-10-21.md`.
+
+**22/10, última tanda de Jonas (en local, sin push; un commit por punto):** (2) cabecera y pie como el sitio corporativo (ver N).
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -405,6 +407,7 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
 - [x] **Descripción y vista previa al compartir** *(QA de Jonas 21/10, 3.4: no había meta description ni Open Graph)*: cada ficha de remate lleva `description`, `og:title`, `og:description`, `og:url` (sin filtros ni parámetros) y `og:image` con la **foto principal real del lote** (`twitter:card` grande). La descripción dice dirección, comuna y tipo, precio base y, según el estado, la fecha de inicio, «en vivo» o el resultado; en inglés, en inglés. El listado y el resto de las páginas públicas usan los valores del sitio (`sitio.seo`) y el logo de Colliers. El panel no los lleva *(`IdiomaTest`; `qa-visibles.mjs`: la imagen de la ficha existe y carga)*
 - [x] **Favicon** *(QA de Jonas, 18/10)*: el ícono de activosespeciales.colliers.cl (original de 512 px) en `favicon.ico` (16/32/48), PNG de 32, 180 (apple-touch), 192 y 512 y `site.webmanifest`, enlazados en `x-layouts.base`, que es el único `<head>`: el panel, el acceso, la sala y las páginas de error lo envuelven. `.htaccess` sirve el manifiesto como `application/manifest+json` *(verificado en local: sitio, acceso y panel con sesión; 179 pruebas)*
 - [x] **Cabecera y pie hacia el sitio corporativo** *(QA de Jonas, 18/10)*: los ítems que no son de la aplicación enlazan a la página que existe en activosespeciales.colliers.cl, en pestaña nueva (`target="_blank" rel="noopener"`): Servicios, Nosotros, Política de privacidad, Términos de uso y las redes que publica ese sitio (LinkedIn, Instagram, YouTube). Sin página allí quedan **sin enlace**, con el mismo aspecto: Expertos, Propiedades, Investigación, Artículos, Carreras, Accionistas, Cookies, Accesibilidad y X; nada va a la portada como relleno. Los enlaces de Configuración → Sitio (privacidad, términos, bases) **mandan cuando tienen valor**; vacíos, la página corporativa (las bases no tienen: sin valor, sin enlace). URL base en `config/colliers.php` → `sitio_produccion` con `COLLIERS_SITIO_PRODUCCION` (por defecto la de producción: no hace falta tocar el servidor). El menú del panel no cambió *(`SitioPublicoTest::test_menu_y_pie_enlazan_al_sitio_corporativo_solo_donde_hay_pagina`)*
+- [x] **Cabecera y pie sin enlaces muertos** *(Jonas, 22/10)*: revisado el sitio corporativo antes de borrar. Cabecera: **Expertos** enlaza a `activosespeciales.colliers.cl/expertos/` en pestaña nueva; **Propiedades** e **Investigación** (404 allá) se quitaron, también del menú móvil. Pie, igual al de activosespeciales.colliers.cl: «Contacto:» con el correo de Configuración → Sitio (allá muestran un correo personal; decisión de Jonas), LinkedIn, **Facebook** (nuevo), Instagram, YouTube, Política de privacidad y Términos de Uso. Se quitaron Nosotros (no está en su pie; sigue en la cabecera), Artículos, Carreras, Accionistas, X, Cookies y Accesibilidad. «Bases y condiciones» del pie de trámites (404, registro, mi cuenta, baja) **solo aparece si hay enlace en Configuración → Sitio** *(`SitioPublicoTest`; capturas antes y después con `tools/comparar/antes-despues.mjs`)*
 - [x] Contacto «Coordinar visita» y «Contactar al ejecutivo» con el correo de Configuración
 - [x] «Avísame» en el listado y en el detalle; foto y datos del próximo remate real en el Login y demás pantallas de acceso
 - [x] **El espectador que espera en la página de un remate próximo lo ve empezar sin recargar** *(21/09)*: antes la cuenta llegaba a cero y la página se quedaba quieta. Ahora se recarga sola al comenzar, cada espectador con una espera al azar de hasta 15 s (cada recarga es una petición al servidor). Con el remate borrado con la página abierta: «NO DISPONIBLE» *(recorrido de los tres roles)*

@@ -12,8 +12,6 @@ return [
     'cabecera' => [
         'servicios' => 'Servicios',
         'expertos' => 'Expertos',
-        'propiedades' => 'Propiedades',
-        'investigacion' => 'Investigación',
         'nosotros' => 'Nosotros',
         'remates' => 'Remates',
         'buscar' => 'Buscar remates',
@@ -25,14 +23,9 @@ return [
     ],
 
     'pie' => [
-        'nosotros' => 'Nosotros',
-        'articulos' => 'Artículos',
-        'carreras' => 'Carreras',
-        'accionistas' => 'Accionistas',
-        'cookies' => 'Política de información para el uso de Cookies',
+        'contacto' => 'Contacto:',
         'privacidad' => 'Política de privacidad',
         'terminos' => 'Términos de Uso',
-        'accesibilidad' => 'Declaración de accesibilidad',
         'bases' => 'Bases y condiciones',
         'desarrollado_por' => 'Desarrollado por',
         'copyright' => 'Copyright © 2026 Colliers',

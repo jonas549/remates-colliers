@@ -15,6 +15,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /** Bloque N · sitio público con datos reales: listado, detalle, documentos, calendario y variantes del visitante. */
@@ -98,20 +99,30 @@ class SitioPublicoTest extends TestCase
         config(['colliers.sitio_produccion.url' => 'https://corporativo.test/']);
         $html = $this->get('/')->assertOk()->getContent();
 
-        foreach (['servicios/' => 'Servicios', 'nosotros/' => 'Nosotros', 'politica-de-privacidad' => 'Política de privacidad',
+        foreach (['servicios/' => 'Servicios', 'expertos/' => 'Expertos', 'nosotros/' => 'Nosotros', 'politica-de-privacidad' => 'Política de privacidad',
             'terminos-y-condiciones/' => 'Términos de Uso'] as $ruta => $texto) {
             $this->assertStringContainsString('<a href="https://corporativo.test/' . $ruta . '" target="_blank" rel="noopener">' . $texto . '</a>', $html);
         }
-        foreach (['https://cl.linkedin.com/company/colliers-chile', 'https://www.instagram.com/collierschile/', 'https://www.youtube.com/@collierscl'] as $red) {
+        foreach (['https://cl.linkedin.com/company/colliers-chile', 'https://www.facebook.com/p/Colliers-Chile-100088146259403/', 'https://www.instagram.com/collierschile/', 'https://www.youtube.com/@collierscl'] as $red) {
             $this->assertStringContainsString('<a href="' . $red . '" target="_blank" rel="noopener"', $html);
         }
-        // Sin página en producción: el texto se ve igual, pero no enlaza a nada (ni a la portada como relleno).
-        foreach (['Expertos', 'Propiedades', 'Investigación', 'Artículos', 'Carreras', 'Accionistas', 'Declaración de accesibilidad'] as $texto) {
-            $this->assertStringContainsString('<a>' . $texto . '</a>', $html);
+        $this->assertStringContainsString('Contacto: <a href="mailto:remates@colliers.cl">remates@colliers.cl</a>', $html);
+        // 22/10: lo que no tiene página en el sitio corporativo se quita (ni texto muerto ni enlace a la portada como relleno).
+        $cabecera = Str::between($html, 'class="pub-cabecera"', 'class="pub-cabecera__derecha"');
+        $pie = Str::after($html, 'class="pub-pie');
+        foreach (['Propiedades', 'Investigación'] as $texto) {
+            $this->assertStringNotContainsString($texto, $cabecera);
         }
-        $this->assertStringContainsString('<a aria-label="X">', $html);
+        foreach (['Artículos', 'Carreras', 'Accionistas', 'Cookies', 'Declaración de accesibilidad', 'aria-label="X"', 'Nosotros'] as $texto) {
+            $this->assertStringNotContainsString($texto, $pie);
+        }
+        $this->assertStringNotContainsString('<a>', $cabecera . $pie);
         $this->assertStringNotContainsString('href="#"', $html);
         $this->assertStringNotContainsString('href="https://corporativo.test/"', $html);
+
+        // Bases generales sin enlace en el panel: el pie de los trámites y de los errores no las muestra.
+        $this->get('/registro')->assertDontSee('Bases y condiciones');
+        $this->get('/no-existe')->assertNotFound()->assertDontSee('Bases y condiciones');
 
         // Lo que se configure en el panel manda sobre el sitio corporativo.
         Configuracion::guardar('enlace_privacidad', 'https://colliers.test/privacidad.pdf');

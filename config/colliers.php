@@ -108,11 +108,13 @@ return [
         'paginas' => [
             'servicios' => 'servicios/',
             'nosotros' => 'nosotros/',
+            'expertos' => 'expertos/',
             'privacidad' => 'politica-de-privacidad',
             'terminos' => 'terminos-y-condiciones/',
         ],
         'redes' => [
             'linkedin' => 'https://cl.linkedin.com/company/colliers-chile',
+            'facebook' => 'https://www.facebook.com/p/Colliers-Chile-100088146259403/',
             'instagram' => 'https://www.instagram.com/collierschile/',
             'youtube' => 'https://www.youtube.com/@collierscl',
         ],

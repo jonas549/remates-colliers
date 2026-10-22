@@ -16,9 +16,7 @@
         <a href="{{ route('remates.index') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="pub-cabecera__logo"></a>
         <div class="pub-cabecera__links">
             <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('servicios')">{{ __('sitio.cabecera.servicios') }}</x-publico.enlace-externo>
-            <a>{{ __('sitio.cabecera.expertos') }}</a>
-            <a>{{ __('sitio.cabecera.propiedades') }}</a>
-            <a>{{ __('sitio.cabecera.investigacion') }}</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('expertos')">{{ __('sitio.cabecera.expertos') }}</x-publico.enlace-externo>
             <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">{{ __('sitio.cabecera.nosotros') }}</x-publico.enlace-externo>
             <a href="{{ route('remates.index') }}" class="es-actual">{{ __('sitio.cabecera.remates') }}</a>
         </div>
@@ -40,9 +38,7 @@
     <template x-if="menu">
         <div class="pub-menu">
             <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('servicios')">{{ __('sitio.cabecera.servicios') }}</x-publico.enlace-externo>
-            <a>{{ __('sitio.cabecera.expertos') }}</a>
-            <a>{{ __('sitio.cabecera.propiedades') }}</a>
-            <a>{{ __('sitio.cabecera.investigacion') }}</a>
+            <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('expertos')">{{ __('sitio.cabecera.expertos') }}</x-publico.enlace-externo>
             <x-publico.enlace-externo :href="\App\Support\Sitio::produccion('nosotros')">{{ __('sitio.cabecera.nosotros') }}</x-publico.enlace-externo>
             <a href="{{ route('remates.index') }}" class="es-actual">{{ __('sitio.cabecera.remates') }}</a>
             {{-- En móvil el conmutador del encabezado no se ve: el menú lleva al otro idioma. --}}
