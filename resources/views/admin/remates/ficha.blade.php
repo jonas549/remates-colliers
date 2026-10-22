@@ -6,6 +6,10 @@
     $f = $formulario;
     // El martillero del remate abre esta ficha en modo lectura: ve horario, lotes y documentos, no los edita.
     $puedeEditar = $puedeEditar ?? true;
+    // Publicar, cancelar y el panel en vivo tienen permiso propio (Permisos, 22/10): el editor publica y despublica, no cancela.
+    $puedePublicar = auth()->user()?->tienePermiso('remates.publicar');
+    $puedeCerrar = auth()->user()?->tienePermiso('remates.cerrar');
+    $puedeEnVivo = auth()->user()?->tienePermiso('en_vivo') || $remate->martillero_id === auth()->id();
     $editable = $editable && $puedeEditar;
     $campo = fn (string $nombre) => $errors->has($nombre) ? 'es-invalido' : '';
     $estadoLote = ['programado' => ['Programado', 'proximo'], 'abierto' => ['Abierto', 'vivo'], 'liquidando' => ['Liquidando', 'revision'], 'adjudicado' => ['Adjudicado', 'adjudicada'], 'desierto' => ['Desierto', 'cerrado'], 'cerrado' => ['Cerrado', 'cerrado'], 'incumplido' => ['Incumplido', 'rechazada']];
@@ -27,13 +31,25 @@
                 </div>
             </div>
             <div class="admin-encabezado__acciones">
-                @if ($puedeEditar && $remate->estado === Remate::ESTADO_BORRADOR)
+                @if ($puedePublicar && $remate->estado === Remate::ESTADO_BORRADOR)
                     <form method="POST" action="{{ route('admin.remates.publicar', $remate) }}" class="formulario-en-linea">
                         @csrf
                         <button type="submit" class="admin-boton-toggle" @disabled($faltan !== [])>Publicar</button>
                     </form>
                 @endif
-                @if (in_array($vista, [Remate::VISTA_EN_VIVO, Remate::VISTA_PROXIMO, Remate::VISTA_ADJUDICADO, Remate::VISTA_CERRADO], true))
+                {{-- Despublicar (22/10): vuelve a borrador un remate próximo sin inscritos; con inscritos, se cancela. --}}
+                @if ($puedePublicar && $vista === Remate::VISTA_PROXIMO && $remate->estado === Remate::ESTADO_PUBLICADO)
+                    @if ($remate->garantias->isEmpty())
+                        <form method="POST" action="{{ route('admin.remates.despublicar', $remate) }}" class="formulario-en-linea"
+                            x-data @submit="if (! confirm('¿Despublicar {{ $remate->folio }}? Vuelve a borrador y deja de verse en el sitio.')) $event.preventDefault()">
+                            @csrf
+                            <button type="submit" class="admin-boton-borde">Despublicar</button>
+                        </form>
+                    @elseif (! $puedeCerrar)
+                        <span class="admin-gestion__nota">Tiene postores inscritos: para sacarlo del sitio, administración tiene que cancelarlo.</span>
+                    @endif
+                @endif
+                @if ($puedeEnVivo && in_array($vista, [Remate::VISTA_EN_VIVO, Remate::VISTA_PROXIMO, Remate::VISTA_ADJUDICADO, Remate::VISTA_CERRADO], true))
                     <a href="{{ route('admin.remates.en-vivo', $remate) }}" class="admin-boton-borde">Panel en vivo</a>
                 @endif
                 @if ($publico)
@@ -45,7 +61,7 @@
                         <button type="submit" class="admin-boton-borde">Crear remate nuevo</button>
                     </form>
                 @endif
-                @if ($puedeEditar && $puedeCancelar)
+                @if ($puedeCerrar && $puedeCancelar)
                     <button type="button" class="admin-accion admin-accion--peligro" @click="cancelar = true">Cancelar remate</button>
                 @endif
             </div>
@@ -238,7 +254,7 @@
             </div>
         </div>
 
-        @if ($puedeEditar)
+        @if ($puedeCerrar)
         <template x-if="cancelar">
             <div class="admin-modal" role="dialog" aria-modal="true" aria-labelledby="titulo-cancelar">
                 <form method="POST" action="{{ route('admin.remates.cancelar', $remate) }}" class="admin-modal__caja" x-init="$nextTick(() => $el.querySelector('.admin-modal__cancelar').focus())">

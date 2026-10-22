@@ -32,7 +32,7 @@ class UsuariosController extends Controller
 {
     public function index(Request $request): View
     {
-        $usuarios = User::whereIn('rol', [User::ROL_ADMIN, User::ROL_MARTILLERO])
+        $usuarios = User::whereIn('rol', array_keys(User::ROLES_INTERNOS))
             ->withCount(['rematesComoMartillero as remates'])
             ->orderBy('rol')->orderBy('name')->get();
 
@@ -44,7 +44,7 @@ class UsuariosController extends Controller
                 'nombre' => $u->name,
                 'email' => $u->email,
                 'rol' => $u->rol,
-                'rolTexto' => $u->rol === User::ROL_ADMIN ? 'Administración' : 'Martillero/a',
+                'rolTexto' => $u->nombreRol(),
                 'activo' => $u->estado === User::ESTADO_ACTIVO,
                 'estadoTexto' => $u->estado === User::ESTADO_ACTIVO ? 'Activo' : 'Inactivo',
                 'bloqueado' => $u->bloqueado_hasta !== null && $u->bloqueado_hasta->greaterThan($ahora),
@@ -64,13 +64,13 @@ class UsuariosController extends Controller
         ]);
     }
 
-    /** Crea un administrador o martillero con clave temporal de un solo uso (la misma regla que el comando). */
+    /** Crea un administrador, martillero o editor con clave temporal de un solo uso (la misma regla que el comando). */
     public function store(Request $request): RedirectResponse
     {
         $datos = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')],
-            'rol' => ['required', Rule::in([User::ROL_ADMIN, User::ROL_MARTILLERO])],
+            'rol' => ['required', Rule::in(array_keys(User::ROLES_INTERNOS))],
         ], [], ['name' => 'nombre', 'email' => 'correo', 'rol' => 'rol']);
 
         $temporal = Str::password(14, symbols: false);
@@ -86,7 +86,7 @@ class UsuariosController extends Controller
         $user->forceFill(['email_verified_at' => CarbonImmutable::now('UTC')])->save();
         $this->anotar($request, $user, 'usuario_interno_creado', ['rol' => $user->rol]);
 
-        return back()->with('estado', ($user->rol === User::ROL_ADMIN ? 'Administrador' : 'Martillero') . " {$user->name} creado.")
+        return back()->with('estado', (['admin' => 'Administrador', 'martillero' => 'Martillero', 'editor' => 'Editor'][$user->rol] ?? $user->nombreRol()) . " {$user->name} creado.")
             ->with('clave_temporal', ['email' => $user->email, 'clave' => $temporal]);
     }
 
@@ -96,7 +96,7 @@ class UsuariosController extends Controller
         $datos = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($usuario->id)],
-            'rol' => ['required', Rule::in([User::ROL_ADMIN, User::ROL_MARTILLERO])],
+            'rol' => ['required', Rule::in(array_keys(User::ROLES_INTERNOS))],
         ], [], ['name' => 'nombre', 'email' => 'correo', 'rol' => 'rol']);
 
         if ($usuario->is($request->user()) && $datos['rol'] !== $usuario->rol) {

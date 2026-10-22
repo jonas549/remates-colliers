@@ -129,43 +129,33 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:login')->name('admin.ingresar.store');
 });
 
-// Panel: administradores y martilleros. Sin sesión redirige a /admin/ingresar.
-Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'clave.vigente'])->group(function () {
+// Panel: administración, martilleros y editores. Sin sesión redirige a /admin/ingresar.
+// Cada grupo pide un permiso de App\Autenticacion\Permisos (22/10): ahí se ajusta qué puede cada rol.
+Route::prefix('admin')->name('admin.')->middleware(['permiso:panel', 'clave.vigente'])->group(function () {
+    // El editor no tiene dashboard: el controlador lo lleva a «Subastas».
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/subastas', [RematesController::class, 'index'])->name('subastas');
-    // Panel del martillero: administradores y el martillero asignado a ese remate (se revisa en el controlador).
-    Route::get('/subastas/{remate}/en-vivo', [EnVivoController::class, 'show'])->name('remates.en-vivo');
-    // Quién está en la sala, con nombre (solo el panel; el JSON público lleva solo el número).
-    Route::get('/subastas/{remate}/presencia', [EnVivoController::class, 'presencia'])->name('remates.presencia');
-    // Ficha: administración la edita; el martillero del remate la ve en modo lectura (se revisa en el controlador).
-    Route::get('/subastas/{remate}', [RematesController::class, 'show'])->name('remates.show');
+    Route::middleware('permiso:remates.ver')->group(function () {
+        Route::get('/subastas', [RematesController::class, 'index'])->name('subastas');
+        // Ficha: administración y edición la editan; el martillero del remate la ve en modo lectura (se revisa en el controlador).
+        Route::get('/subastas/{remate}', [RematesController::class, 'show'])->name('remates.show');
+    });
+    Route::middleware('permiso:en_vivo')->group(function () {
+        // Panel del martillero: administradores y el martillero asignado a ese remate (se revisa en el controlador).
+        Route::get('/subastas/{remate}/en-vivo', [EnVivoController::class, 'show'])->name('remates.en-vivo');
+        // Quién está en la sala, con nombre (solo el panel; el JSON público lleva solo el número).
+        Route::get('/subastas/{remate}/presencia', [EnVivoController::class, 'presencia'])->name('remates.presencia');
+    });
     // Bloque O: reportes con datos reales y exportables (sin datos personales).
-    Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes');
-    Route::get('/reportes/exportar/{hoja}.{formato}', [ReportesController::class, 'exportar'])
-        ->whereIn('hoja', ['libro', 'desempeno', 'participacion', 'pujas', 'garantias'])->whereIn('formato', ['xlsx', 'csv'])->name('reportes.exportar');
+    Route::middleware('permiso:reportes')->group(function () {
+        Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes');
+        Route::get('/reportes/exportar/{hoja}.{formato}', [ReportesController::class, 'exportar'])
+            ->whereIn('hoja', ['libro', 'desempeno', 'participacion', 'pujas', 'garantias'])->whereIn('formato', ['xlsx', 'csv'])->name('reportes.exportar');
+    });
 
-    Route::middleware('rol:admin')->group(function () {
-        // Bloques G y H: postores y garantías (datos personales: solo administradores).
-        Route::get('/postores', [PostoresController::class, 'index'])->name('postores');
-        Route::get('/postores/exportar', [PostoresController::class, 'exportar'])->name('postores.exportar');
-        Route::post('/postores/{postor}/aprobar', [PostoresController::class, 'aprobarCuenta'])->name('postores.aprobar');
-        Route::post('/postores/{postor}/rechazar', [PostoresController::class, 'rechazarCuenta'])->name('postores.rechazar');
-        Route::post('/postores/{postor}/bloquear', [PostoresController::class, 'bloquear'])->name('postores.bloquear');
-        Route::post('/postores/{postor}/desbloquear', [PostoresController::class, 'desbloquear'])->name('postores.desbloquear');
-        Route::post('/garantias/{garantia}/aprobar', [PostoresController::class, 'aprobarGarantia'])->name('garantias.aprobar');
-        Route::post('/garantias/{garantia}/rechazar', [PostoresController::class, 'rechazarGarantia'])->name('garantias.rechazar');
-        Route::get('/garantias/{garantia}/comprobante', [PostoresController::class, 'comprobante'])->name('garantias.comprobante');
-
-        // Bloque I: remates y lotes.
+    // Bloque I: remates y lotes (administración y edición).
+    Route::middleware('permiso:remates.editar')->group(function () {
         Route::post('/subastas', [RematesController::class, 'store'])->name('remates.store');
-        // Subasta de prueba lista para usar (fuera de producción): el servicio se niega si APP_ENV=production.
-        Route::post('/subastas/prueba', [RematesController::class, 'crearPrueba'])->name('remates.crear-prueba');
-        Route::delete('/subastas/{remate}/prueba', [RematesController::class, 'borrarPrueba'])->name('remates.borrar-prueba');
-        Route::post('/subastas/{remate}/prueba/clave', [RematesController::class, 'nuevaClavePrueba'])->name('remates.prueba-clave');
         Route::put('/subastas/{remate}', [RematesController::class, 'update'])->name('remates.update');
-        Route::post('/subastas/{remate}/publicar', [RematesController::class, 'publicar'])->name('remates.publicar');
-        Route::post('/subastas/{remate}/cancelar', [RematesController::class, 'cancelar'])->name('remates.cancelar');
-        Route::post('/subastas/{remate}/cerrar-ahora', [RematesController::class, 'cerrarAhora'])->name('remates.cerrar-ahora');
         Route::post('/subastas/{remate}/republicar', [RematesController::class, 'republicar'])->name('remates.republicar');
         Route::get('/subastas/{remate}/lotes/nuevo', [LotesController::class, 'create'])->name('lotes.create');
         Route::post('/subastas/{remate}/lotes', [LotesController::class, 'store'])->name('lotes.store');
@@ -180,13 +170,45 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         Route::post('/subastas/{remate}/documentos', [DocumentosController::class, 'store'])->name('documentos.store');
         Route::get('/subastas/{remate}/documentos/{documento}', [DocumentosController::class, 'descargar'])->name('documentos.descargar');
         Route::delete('/subastas/{remate}/documentos/{documento}', [DocumentosController::class, 'destroy'])->name('documentos.destroy');
+    });
+    Route::middleware('permiso:remates.publicar')->group(function () {
+        Route::post('/subastas/{remate}/publicar', [RematesController::class, 'publicar'])->name('remates.publicar');
+        Route::post('/subastas/{remate}/despublicar', [RematesController::class, 'despublicar'])->name('remates.despublicar');
+    });
+    Route::middleware('permiso:remates.cerrar')->group(function () {
+        Route::post('/subastas/{remate}/cancelar', [RematesController::class, 'cancelar'])->name('remates.cancelar');
+        Route::post('/subastas/{remate}/cerrar-ahora', [RematesController::class, 'cerrarAhora'])->name('remates.cerrar-ahora');
+    });
+    // Subasta de prueba lista para usar (fuera de producción): el servicio se niega si APP_ENV=production.
+    Route::middleware('permiso:remates.prueba')->group(function () {
+        Route::post('/subastas/prueba', [RematesController::class, 'crearPrueba'])->name('remates.crear-prueba');
+        Route::delete('/subastas/{remate}/prueba', [RematesController::class, 'borrarPrueba'])->name('remates.borrar-prueba');
+        Route::post('/subastas/{remate}/prueba/clave', [RematesController::class, 'nuevaClavePrueba'])->name('remates.prueba-clave');
+    });
 
-        // Bloque V: configuración autoadministrable.
+    // Bloque V: configuración. Cada sección pide su permiso en el controlador (Sitio también es del editor).
+    Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion');
+    Route::post('/configuracion/actualizar-uf', [ConfiguracionController::class, 'actualizarUf'])->name('configuracion.actualizar-uf');
+
+    Route::middleware('permiso:postores')->group(function () {
+        // Bloques G y H: postores y garantías (datos personales: solo administradores).
+        Route::get('/postores', [PostoresController::class, 'index'])->name('postores');
+        Route::get('/postores/exportar', [PostoresController::class, 'exportar'])->name('postores.exportar');
+        Route::post('/postores/{postor}/aprobar', [PostoresController::class, 'aprobarCuenta'])->name('postores.aprobar');
+        Route::post('/postores/{postor}/rechazar', [PostoresController::class, 'rechazarCuenta'])->name('postores.rechazar');
+        Route::post('/postores/{postor}/bloquear', [PostoresController::class, 'bloquear'])->name('postores.bloquear');
+        Route::post('/postores/{postor}/desbloquear', [PostoresController::class, 'desbloquear'])->name('postores.desbloquear');
+        Route::post('/garantias/{garantia}/aprobar', [PostoresController::class, 'aprobarGarantia'])->name('garantias.aprobar');
+        Route::post('/garantias/{garantia}/rechazar', [PostoresController::class, 'rechazarGarantia'])->name('garantias.rechazar');
+        Route::get('/garantias/{garantia}/comprobante', [PostoresController::class, 'comprobante'])->name('garantias.comprobante');
+        Route::get('/postores/{postor}/documentos/{documento}', [UsuariosController::class, 'documento'])
+            ->whereNumber('documento')->name('postores.documento');
+    });
+
+    Route::middleware('permiso:configuracion')->group(function () {
         // Bloque V: una pantalla por tema, con submenú (17/09).
-        Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion');
         Route::post('/configuracion/probar-correo', [ConfiguracionController::class, 'probarCorreo'])->name('configuracion.probar-correo');
         Route::post('/configuracion/probar-conexion', [ConfiguracionController::class, 'probarConexion'])->name('configuracion.probar-conexion');
-        Route::post('/configuracion/actualizar-uf', [ConfiguracionController::class, 'actualizarUf'])->name('configuracion.actualizar-uf');
         // Editor de plantillas (va antes de {seccion} para que «plantillas/x» no se confunda con una sección).
         Route::get('/configuracion/plantillas/{clave}', [PlantillasCorreoController::class, 'edit'])->name('configuracion.plantilla');
         Route::put('/configuracion/plantillas/{clave}', [PlantillasCorreoController::class, 'update'])->name('configuracion.plantilla.update');
@@ -194,10 +216,13 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         Route::put('/configuracion/plantillas/{clave}/vista-previa', [PlantillasCorreoController::class, 'previsualizar'])->name('configuracion.plantilla.previa');
         Route::delete('/configuracion/plantillas/{clave}', [PlantillasCorreoController::class, 'destroy'])->name('configuracion.plantilla.restaurar');
         Route::get('/configuracion/correos/exportar', [RegistroCorreosController::class, 'exportar'])->name('configuracion.correos.exportar');
-        Route::get('/configuracion/{seccion}', [ConfiguracionController::class, 'show'])->name('configuracion.seccion');
-        Route::put('/configuracion/{seccion}', [ConfiguracionController::class, 'update'])->name('configuracion.update');
+    });
+    // Después de las rutas fijas de configuración, para que «plantillas/x» o «correos/exportar» no se lean como sección.
+    Route::get('/configuracion/{seccion}', [ConfiguracionController::class, 'show'])->name('configuracion.seccion');
+    Route::put('/configuracion/{seccion}', [ConfiguracionController::class, 'update'])->name('configuracion.update');
 
-        // Bloque E/F: usuarios internos (administradores y martilleros). Los postores se administran en «03 Postores».
+    Route::middleware('permiso:usuarios')->group(function () {
+        // Bloque E/F: usuarios internos (administración, martilleros y editores). Los postores se administran en «03 Postores».
         Route::get('/usuarios', [UsuariosController::class, 'index'])->name('usuarios');
         Route::post('/usuarios', [UsuariosController::class, 'store'])->name('usuarios.store');
         Route::put('/usuarios/{usuario}', [UsuariosController::class, 'update'])->name('usuarios.update');
@@ -205,7 +230,5 @@ Route::prefix('admin')->name('admin.')->middleware(['rol:admin,martillero', 'cla
         Route::post('/usuarios/{usuario}/restablecer-clave', [UsuariosController::class, 'restablecerClave'])->name('usuarios.restablecer-clave');
         Route::post('/usuarios/{usuario}/desbloquear', [UsuariosController::class, 'desbloquear'])->name('usuarios.desbloquear');
         Route::delete('/usuarios/{usuario}/sesiones', [UsuariosController::class, 'cerrarSesiones'])->name('usuarios.cerrar-sesiones');
-        Route::get('/postores/{postor}/documentos/{documento}', [UsuariosController::class, 'documento'])
-            ->whereNumber('documento')->name('postores.documento');
     });
 });

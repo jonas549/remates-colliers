@@ -55,7 +55,7 @@ class RematesController extends Controller
             ])->values()->all(),
             'formulario' => $this->datosFormulario(),
             // Fuera de producción, las subastas de prueba van en una franja aparte: no ensucian el listado real.
-            'pruebas' => app()->isProduction() || $esMartillero ? [] : Remate::with('lotes')->where('es_demostracion', true)
+            'pruebas' => app()->isProduction() || ! $user->tienePermiso('remates.prueba') ? [] : Remate::with('lotes')->where('es_demostracion', true)
                 ->orderByDesc('id')->get()
                 ->map(fn (Remate $r) => [
                     'folio' => $r->folio,
@@ -65,7 +65,7 @@ class RematesController extends Controller
                     'enVivo' => route('admin.remates.en-vivo', $r),
                     'borrar' => route('admin.remates.borrar-prueba', $r),
                 ])->all(),
-            'martillerosPrueba' => app()->isProduction() || $esMartillero ? collect() : RemateDePrueba::martillerosActivos(),
+            'martillerosPrueba' => app()->isProduction() || ! $user->tienePermiso('remates.prueba') ? collect() : RemateDePrueba::martillerosActivos(),
         ]);
     }
 
@@ -160,7 +160,7 @@ class RematesController extends Controller
         // El martillero abre la ficha de SUS remates en modo lectura: necesita el horario, las fotos y los documentos
         // para preparar el remate, pero crear y editar es de administración.
         $user = $request->user();
-        $puedeEditar = $user->esAdmin();
+        $puedeEditar = $user->tienePermiso('remates.editar');
         abort_unless($puedeEditar || $remate->martillero_id === $user->id, 403,
             'El remate ' . $remate->folio . ' está a cargo de ' . ($remate->martillero?->name ?? 'otro martillero')
                 . '. En «Subastas» aparecen los remates asignados a ti.');
@@ -168,7 +168,7 @@ class RematesController extends Controller
         return view('admin.remates.ficha', [
             'remate' => $remate,
             // Postores de prueba con su clave (solo recién creada o regenerada: no se guarda en claro).
-            'postoresPrueba' => $remate->es_demostracion && $puedeEditar ? app(RemateDePrueba::class)->postores($remate) : [],
+            'postoresPrueba' => $remate->es_demostracion && $user->tienePermiso('remates.prueba') ? app(RemateDePrueba::class)->postores($remate) : [],
             'clavePrueba' => (session('clave_prueba')['remate'] ?? null) === $remate->id ? session('clave_prueba')['clave'] : null,
             'puedeEditar' => $puedeEditar,
             'fila' => PresentacionRemate::fila($remate, $ahora),
@@ -202,6 +202,18 @@ class RematesController extends Controller
         }
 
         return back()->with('estado', "Remate {$remate->folio} publicado. Ya aparece en el sitio y acepta inscripciones.");
+    }
+
+    /** Vuelve a borrador un remate publicado que no comenzó y sin inscritos (22/10, rol Editor): sale del sitio. */
+    public function despublicar(Remate $remate): RedirectResponse
+    {
+        try {
+            $this->gestion->despublicar($remate);
+        } catch (DomainException $e) {
+            return back()->with('error', 'No se puede despublicar: ' . $e->getMessage());
+        }
+
+        return back()->with('estado', "Remate {$remate->folio} despublicado: volvió a borrador y ya no aparece en el sitio.");
     }
 
     public function cancelar(Request $request, Remate $remate): RedirectResponse

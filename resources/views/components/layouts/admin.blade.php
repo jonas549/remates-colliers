@@ -4,22 +4,21 @@
 --}}
 @props(['seccion', 'titulo', 'claseCuerpo' => '', 'subseccion' => null])
 @php
-    $pendientes = \App\Models\Postor::where('estado', \App\Models\Postor::ESTADO_EN_REVISION)->count()
-        + \App\Models\Garantia::where('estado', \App\Models\Garantia::ESTADO_EN_REVISION)->count();
-    $items = [
-        'dashboard' => ['01', 'Dashboard', route('admin.dashboard'), null],
-        'subastas' => ['02', 'Subastas', route('admin.subastas'), null],
-        'postores' => ['03', 'Postores', route('admin.postores'), $pendientes ?: null],
-        'reportes' => ['04', 'Reportes', route('admin.reportes'), null],
-    ];
-    // Sin diseño: quinto ítem con el mismo estilo, solo para administradores (Bloque V).
-    if (auth()->user()?->esAdmin()) {
-        $items['configuracion'] = ['05', 'Configuración', route('admin.configuracion'), null];
-        // Usuarios internos (administradores y martilleros); los postores van en «03 Postores».
-        $items['usuarios'] = ['06', 'Usuarios', route('admin.usuarios'), null];
-    } else {
-        unset($items['postores']); // datos personales de los postores: solo administradores
-    }
+    // Cada ítem se muestra solo con su permiso (App\Autenticacion\Permisos, 22/10); las rutas lo exigen también.
+    $usuario = auth()->user();
+    $puede = fn (string $permiso) => $usuario?->tienePermiso($permiso);
+    $secciones = \App\Autenticacion\Permisos::seccionesConfiguracion($usuario);
+    $items = array_filter([
+        'dashboard' => $puede('dashboard') ? ['01', 'Dashboard', route('admin.dashboard'), null] : null,
+        'subastas' => $puede('remates.ver') ? ['02', 'Subastas', route('admin.subastas'), null] : null,
+        // Datos personales de los postores: el contador también es solo para quien puede verlos.
+        'postores' => $puede('postores') ? ['03', 'Postores', route('admin.postores'), (\App\Models\Postor::where('estado', \App\Models\Postor::ESTADO_EN_REVISION)->count()
+            + \App\Models\Garantia::where('estado', \App\Models\Garantia::ESTADO_EN_REVISION)->count()) ?: null] : null,
+        'reportes' => $puede('reportes') ? ['04', 'Reportes', route('admin.reportes'), null] : null,
+        // Sin diseño: quinto y sexto ítem con el mismo estilo (Bloque V y usuarios internos).
+        'configuracion' => $secciones !== [] ? ['05', 'Configuración', route('admin.configuracion'), null] : null,
+        'usuarios' => $puede('usuarios') ? ['06', 'Usuarios', route('admin.usuarios'), null] : null,
+    ]);
 @endphp
 <x-layouts.base :titulo="$titulo . ' · Administración'" :clase-cuerpo="$claseCuerpo">
     <div class="admin" x-data="{ menu: false }" @keydown.escape.window="menu = false">
@@ -36,7 +35,7 @@
                     {{-- Configuración tiene una pantalla por tema: sus secciones se despliegan aquí, dentro del menú. --}}
                     @if ($clave === 'configuracion' && $seccion === 'configuracion')
                         <div class="admin-lateral__submenu">
-                            @foreach (\App\Models\Configuracion::SECCIONES as $sub => $datos)
+                            @foreach (array_intersect_key(\App\Models\Configuracion::SECCIONES, array_flip($secciones)) as $sub => $datos)
                                 <a href="{{ route('admin.configuracion.seccion', $sub) }}"
                                     @class(['admin-lateral__subitem', 'es-actual' => $sub === ($subseccion ?? null)])
                                     @if ($sub === ($subseccion ?? null)) aria-current="page" @endif>{{ $datos['titulo'] }}</a>
@@ -47,7 +46,7 @@
             </div>
             <div class="admin-lateral__pie">
                 <div class="admin-lateral__usuario">{{ auth()->user()?->name }}</div>
-                <div class="admin-lateral__rol">{{ auth()->user()?->rol === \App\Models\User::ROL_MARTILLERO ? 'Martillero/a' : 'Administración' }}</div>
+                <div class="admin-lateral__rol">{{ $usuario?->nombreRol() }}</div>
                 <form method="POST" action="{{ route('logout') }}" class="formulario-en-linea">
                     @csrf
                     <button type="submit" class="boton-enlace admin-lateral__salir">Cerrar sesión</button>
@@ -63,7 +62,7 @@
              del prototipo en escritorio; en móvil la barra se ordena primero con CSS. --}}
         <div class="admin-barra">
             <a href="{{ route('admin.dashboard') }}"><img src="{{ asset('img/colliers-logo.png') }}" alt="Colliers" class="admin-barra__logo"></a>
-            <span class="admin-barra__seccion">{{ mb_strtoupper($items[$seccion][1]) }}</span>
+            <span class="admin-barra__seccion">{{ mb_strtoupper($items[$seccion][1] ?? '') }}</span>
             <button type="button" class="admin-barra__menu" @click="menu = true" :aria-expanded="menu" aria-controls="admin-menu" aria-label="Abrir menú">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>
             </button>

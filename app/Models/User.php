@@ -30,7 +30,17 @@ class User extends Authenticatable implements \Illuminate\Contracts\Translation\
 
     public const ROL_MARTILLERO = 'martillero';
 
+    /** Remates, lotes y textos del sitio, sin datos de postores ni el remate en vivo (22/10; permisos en App\Autenticacion\Permisos). */
+    public const ROL_EDITOR = 'editor';
+
     public const ROL_POSTOR = 'postor';
+
+    /** Roles del panel con su nombre en pantalla. */
+    public const ROLES_INTERNOS = [
+        self::ROL_ADMIN => 'Administración',
+        self::ROL_MARTILLERO => 'Martillero/a',
+        self::ROL_EDITOR => 'Editor/a',
+    ];
 
     public const ESTADO_ACTIVO = 'activo';
 
@@ -69,9 +79,21 @@ class User extends Authenticatable implements \Illuminate\Contracts\Translation\
         return str_ends_with((string) $this->email, '@' . \App\Remates\RemateDePrueba::DOMINIO_CORREO);
     }
 
+    /** Cuenta interna del panel (administración, martillero o editor), no un postor. */
     public function esAdministracion(): bool
     {
-        return in_array($this->rol, [self::ROL_ADMIN, self::ROL_MARTILLERO], true);
+        return array_key_exists((string) $this->rol, self::ROLES_INTERNOS);
+    }
+
+    /** Permiso del panel (App\Autenticacion\Permisos::MAPA). */
+    public function tienePermiso(string $permiso): bool
+    {
+        return \App\Autenticacion\Permisos::permite($this, $permiso);
+    }
+
+    public function nombreRol(): string
+    {
+        return self::ROLES_INTERNOS[$this->rol] ?? 'Postor';
     }
 
     public function postor(): HasOne

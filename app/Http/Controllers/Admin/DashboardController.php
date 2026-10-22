@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Remates\PresentacionRemate;
 use App\Support\Formato;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -21,8 +22,12 @@ use Illuminate\View\View;
 /** Resumen del panel con datos reales (diseño «Admin Dashboard»). Excluye los remates de demostración. */
 class DashboardController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        // El editor no tiene dashboard (22/10): el resumen trae datos de postores. Entra directo a su trabajo.
+        if (! $request->user()->tienePermiso('dashboard')) {
+            return redirect()->route('admin.subastas');
+        }
         $ahora = CarbonImmutable::now('UTC');
         // El martillero no administra: entra a trabajar sus remates (21/09). El resumen general trae datos de postores
         // que no le corresponden; el suyo muestra lo que tiene en vivo y lo próximo, con el panel a un clic.

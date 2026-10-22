@@ -67,6 +67,11 @@ class DesarrolloSeeder extends Seeder
                 'rol' => User::ROL_MARTILLERO, 'estado' => User::ESTADO_ACTIVO,
             ]);
         }
+        // Rol Editor (22/10): remates, lotes y textos del sitio, sin postores ni remate en vivo.
+        $this->usuarios['editor'] = User::create([
+            'name' => 'Paula Riquelme', 'email' => 'editor@colliers.test', 'password' => 'colliers-local-2026',
+            'rol' => User::ROL_EDITOR, 'estado' => User::ESTADO_ACTIVO,
+        ]);
     }
 
     private function postores(): void

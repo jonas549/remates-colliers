@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\Validator;
  */
 class CrearUsuario extends Command
 {
-    protected $signature = 'colliers:crear-usuario {rol : admin o martillero} {email} {nombre*}';
+    protected $signature = 'colliers:crear-usuario {rol : admin, martillero o editor} {email} {nombre*}';
 
-    protected $description = 'Crea un administrador o martillero con clave temporal';
+    protected $description = 'Crea un administrador, martillero o editor con clave temporal';
 
     public function handle(): int
     {
@@ -25,7 +25,7 @@ class CrearUsuario extends Command
         $nombre = trim(implode(' ', $this->argument('nombre')));
 
         $validacion = Validator::make(['rol' => $rol, 'email' => $email, 'nombre' => $nombre], [
-            'rol' => ['required', 'in:' . User::ROL_ADMIN . ',' . User::ROL_MARTILLERO],
+            'rol' => ['required', 'in:' . implode(',', array_keys(User::ROLES_INTERNOS))],
             'email' => ['required', 'email', 'unique:users,email'],
             'nombre' => ['required', 'max:120'],
         ]);
@@ -41,7 +41,7 @@ class CrearUsuario extends Command
         $user = User::create(['name' => $nombre, 'email' => $email, 'password' => $clave, 'rol' => $rol, 'estado' => User::ESTADO_ACTIVO, 'debe_cambiar_clave' => true]);
         $user->forceFill(['email_verified_at' => now()])->save();
 
-        $this->info(($rol === User::ROL_ADMIN ? 'Administrador' : 'Martillero') . " creado: {$email}");
+        $this->info((['admin' => 'Administrador', 'martillero' => 'Martillero', 'editor' => 'Editor'][$user->rol] ?? $user->nombreRol()) . " creado: {$email}");
         $this->warn("Clave temporal (se muestra una sola vez): {$clave}");
         $this->line('Ingreso: ' . rtrim((string) config('app.url'), '/') . '/admin/ingresar (pedirá cambiar la clave).');
 

@@ -1,6 +1,6 @@
 {{--
     Usuarios internos del panel (QA del 20/09, punto 2). Sin diseño de Ángel: se arma con los componentes del panel.
-    Administradores y martilleros; los postores están en «03 Postores».
+    Administración, martilleros y editores; los postores están en «03 Postores».
 --}}
 <x-layouts.admin seccion="usuarios" titulo="Usuarios" clase-cuerpo="placeholder-claro">
     <div x-data="adminUsuarios(@js(['usuarios' => $usuarios]))" @keydown.escape.window="editando = null; form = false">
@@ -8,7 +8,7 @@
             <div class="admin-encabezado__texto">
                 <div class="admin-encabezado__kicker">USUARIOS INTERNOS</div>
                 <h1 class="admin-encabezado__titulo admin-encabezado__titulo--con-bajada">Quién entra al panel</h1>
-                <div class="admin-encabezado__bajada">Administradores y martilleros. Las cuentas no se borran: se desactivan, porque quedan remates y bitácora a su nombre. Los postores se administran en «Postores».</div>
+                <div class="admin-encabezado__bajada">Administración, martilleros y editores. Las cuentas no se borran: se desactivan, porque quedan remates y bitácora a su nombre. Los postores se administran en «Postores».</div>
             </div>
             <div class="admin-encabezado__acciones">
                 <button type="button" class="admin-boton-toggle" :class="{ 'es-abierto': form }" @click="form = !form; editando = null"
@@ -52,9 +52,10 @@
                         <label class="admin-form__campo"><span class="admin-form__etiqueta">ROL</span>
                             <select name="rol" class="admin-form__input" required>
                                 <option value="{{ \App\Models\User::ROL_MARTILLERO }}" @selected(old('rol') === \App\Models\User::ROL_MARTILLERO)>Martillero/a</option>
+                                <option value="{{ \App\Models\User::ROL_EDITOR }}" @selected(old('rol') === \App\Models\User::ROL_EDITOR)>Editor/a</option>
                                 <option value="{{ \App\Models\User::ROL_ADMIN }}" @selected(old('rol') === \App\Models\User::ROL_ADMIN)>Administración</option>
                             </select>
-                            <span class="admin-form__ayuda">El martillero ve sus remates y su panel en vivo. La administración ve todo, incluidos los datos de los postores.</span>
+                            <span class="admin-form__ayuda">El martillero ve sus remates y su panel en vivo. El editor crea y edita remates, lotes y los textos del sitio, sin datos de postores ni el remate en vivo. La administración ve todo, incluidos los datos de los postores.</span>
                         </label>
                     </div>
                     <div class="admin-form__botones">
@@ -129,6 +130,7 @@
                             <label class="admin-form__campo"><span class="admin-form__etiqueta">ROL</span>
                                 <select name="rol" class="admin-form__input" :disabled="u.esTu" required>
                                     <option value="{{ \App\Models\User::ROL_MARTILLERO }}" :selected="u.rol === 'martillero'">Martillero/a</option>
+                                    <option value="{{ \App\Models\User::ROL_EDITOR }}" :selected="u.rol === 'editor'">Editor/a</option>
                                     <option value="{{ \App\Models\User::ROL_ADMIN }}" :selected="u.rol === 'admin'">Administración</option>
                                 </select>
                                 <span class="admin-form__ayuda" x-show="u.esTu">Tu propio rol lo cambia otro administrador.</span>

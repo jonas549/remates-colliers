@@ -175,17 +175,39 @@ class GestionRemates
             throw new DomainException(implode(' ', $faltan));
         }
 
+        // Un remate despublicado y vuelto a publicar no repite el aviso «remate nuevo» a los suscriptores (22/10).
+        $primeraVez = $remate->publicado_en === null;
         DB::transaction(function () use ($remate) {
             // Plazo de garantías por defecto: N horas antes del inicio (configurable, Bloque V).
             $remate->cierre_garantias_en ??= $remate->inicio_en->subHours((int) Configuracion::valor('garantias_cierre_horas_antes'));
             $remate->estado = Remate::ESTADO_PUBLICADO;
-            $remate->publicado_en = CarbonImmutable::now('UTC');
+            $remate->publicado_en ??= CarbonImmutable::now('UTC');
             $remate->save();
             $remate->programarLotes();
         });
         $this->publicarEstadoSiCorresponde($remate);
-        if (! $remate->es_demostracion) {
+        if ($primeraVez && ! $remate->es_demostracion) {
             RematePublicado::dispatch($remate);
+        }
+    }
+
+    /**
+     * Despublicar (22/10): un remate publicado que no comenzó vuelve a borrador y sale del sitio. Con inscritos no: ya
+     * hay postores con garantía en curso para esa fecha, y eso se resuelve cancelando (administración), que deja motivo.
+     */
+    public function despublicar(Remate $remate): void
+    {
+        if ($remate->estado !== Remate::ESTADO_PUBLICADO || $remate->yaComenzo()) {
+            throw new DomainException('solo se despublica un remate publicado que todavía no comienza.');
+        }
+        if ($remate->garantias()->exists()) {
+            throw new DomainException('ya tiene postores inscritos. Para sacarlo del sitio, administración tiene que cancelarlo.');
+        }
+
+        $remate->update(['estado' => Remate::ESTADO_BORRADOR]);
+        // Un borrador no tiene estado público: el JSON que dejó la publicación se quita.
+        if ($this->emisor instanceof \App\Subastas\Difusion\EmisorJsonEstatico && is_file($ruta = $this->emisor->rutaDe($remate))) {
+            @unlink($ruta);
         }
     }
 

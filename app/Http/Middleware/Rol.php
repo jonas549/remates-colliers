@@ -20,7 +20,7 @@ class Rol
         if ($user === null) {
             return $request->expectsJson()
                 ? response()->json(['message' => __('acceso.mensajes.no_autenticado')], 401)
-                : redirect()->guest(route(array_intersect($roles, [User::ROL_ADMIN, User::ROL_MARTILLERO]) ? 'admin.ingresar' : 'login'));
+                : redirect()->guest(route(array_intersect($roles, array_keys(User::ROLES_INTERNOS)) ? 'admin.ingresar' : 'login'));
         }
 
         abort_unless(in_array($user->rol, $roles, true) && $user->estado === User::ESTADO_ACTIVO, 403);

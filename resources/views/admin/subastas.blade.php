@@ -1,6 +1,10 @@
 @php
     $filtros = ['Todas', 'En vivo', 'Próximas', 'Borradores', 'Cerradas'];
-    $esAdmin = auth()->user()?->esAdmin();
+    // Cada acción con su permiso (Permisos, 22/10): el editor crea y edita, no cierra ni ve el panel en vivo.
+    $puedeEditar = auth()->user()?->tienePermiso('remates.editar');
+    $puedeCerrar = auth()->user()?->tienePermiso('remates.cerrar');
+    $puedeEnVivo = auth()->user()?->tienePermiso('en_vivo');
+    $puedePrueba = auth()->user()?->tienePermiso('remates.prueba');
     $f = $formulario;
     $campo = fn (string $nombre) => $errors->has($nombre) ? 'es-invalido' : '';
 @endphp
@@ -12,7 +16,7 @@
                 <h1 class="admin-encabezado__titulo admin-encabezado__titulo--con-bajada">Publicación y cierre</h1>
                 <div class="admin-encabezado__bajada">Cierre automático al vencer el tiempo, sin extensiones. Un remate que no se concreta no se reabre: se crea uno nuevo.</div>
             </div>
-            @if ($esAdmin)
+            @if ($puedeEditar)
                 <div class="admin-encabezado__acciones">
                     <button type="button" class="admin-boton-toggle" :class="{ 'es-abierto': form }" @click="form = !form" x-text="form ? 'Cerrar formulario' : 'Crear subasta'">Crear subasta</button>
                 </div>
@@ -22,7 +26,7 @@
         <x-admin.avisos />
 
         {{-- Subastas de prueba (QA del 20/09, punto 3). Solo fuera de producción: no existen para el cliente. --}}
-        @if ($esAdmin && ! app()->isProduction())
+        @if ($puedePrueba && ! app()->isProduction())
             <div class="admin-pruebas">
                 <div class="admin-pruebas__texto">
                     <strong>Subastas de prueba.</strong> Crean un remate publicado con 2 lotes, postores habilitados y
@@ -89,7 +93,7 @@
             </div>
         @endif
 
-        @if ($esAdmin)
+        @if ($puedeEditar)
             <template x-if="form">
                 <div class="admin-form">
                     <form class="admin-form__interior" method="POST" action="{{ route('admin.remates.store') }}">
@@ -219,16 +223,20 @@
                             <td x-text="s.inicio"></td>
                             <td class="col-acciones">
                                 <div class="admin-acciones">
-                                    @if ($esAdmin)
+                                    @if ($puedeEditar)
                                         <a :href="s.urls.ficha" class="admin-accion">Editar</a>
                                     @endif
+                                    @if ($puedeEnVivo)
                                     <template x-if="s.estado === 'En vivo'">
                                         <a :href="s.urls.enVivo" class="admin-accion">Panel en vivo</a>
                                     </template>
-                                    @if ($esAdmin)
+                                    @endif
+                                    @if ($puedeCerrar)
                                         <template x-if="s.estado === 'En vivo' || s.estado === 'Próxima'">
                                             <button type="button" class="admin-accion admin-accion--peligro" @click="cerrar = s.id">Cerrar ahora</button>
                                         </template>
+                                    @endif
+                                    @if ($puedeEditar)
                                         <template x-if="s.estado === 'Cerrada' || s.estado === 'Cancelada'">
                                             <form method="POST" :action="s.urls.republicar" class="formulario-en-linea">
                                                 @csrf
@@ -253,16 +261,20 @@
                 <div class="admin-acciones-menu__velo" @click="menuAbierto = null"></div>
                 <div class="admin-acciones-menu__lista" role="dialog" aria-modal="true" :aria-label="'Acciones de ' + enMenu.direccion">
                     <div class="admin-acciones-menu__titulo" x-text="enMenu.direccion"></div>
-                    @if ($esAdmin)
+                    @if ($puedeEditar)
                         <a :href="enMenu.urls.ficha" class="admin-acciones-menu__enlace">Editar</a>
                     @endif
+                    @if ($puedeEnVivo)
                     <template x-if="enMenu.estado === 'En vivo'">
                         <a :href="enMenu.urls.enVivo" class="admin-acciones-menu__enlace">Panel en vivo</a>
                     </template>
-                    @if ($esAdmin)
+                    @endif
+                    @if ($puedeCerrar)
                         <template x-if="enMenu.estado === 'En vivo' || enMenu.estado === 'Próxima'">
                             <button type="button" class="es-peligro" @click="cerrar = enMenu.id; menuAbierto = null">Cerrar ahora</button>
                         </template>
+                    @endif
+                    @if ($puedeEditar)
                         <template x-if="enMenu.estado === 'Cerrada' || enMenu.estado === 'Cancelada'">
                             <form method="POST" :action="enMenu.urls.republicar">
                                 @csrf

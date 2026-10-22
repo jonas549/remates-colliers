@@ -35,6 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Bloque D: rol y cambio de contraseña obligatorio.
         $middleware->alias([
             'rol' => \App\Http\Middleware\Rol::class,
+            // Permisos del panel por rol (22/10): App\Autenticacion\Permisos.
+            'permiso' => \App\Http\Middleware\Permiso::class,
             'clave.vigente' => \App\Http\Middleware\ClaveVigente::class,
         ]);
         // Sin sesión, el panel lleva al acceso de administración; el resto, al de postores.

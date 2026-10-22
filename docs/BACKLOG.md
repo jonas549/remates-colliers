@@ -28,7 +28,7 @@ nota *(verifica Jonas en el sandbox)*.
 | M | Notificaciones | En progreso | 8/9 |
 | N | Sitio público | En progreso | 25/26 |
 | L | Streaming | En progreso | 1/4 |
-| E/F | Componentes y estructura del panel | En progreso | 1/4 |
+| E/F | Componentes y estructura del panel | En progreso | 3/5 |
 | O | Reportes | En progreso | 8/9 |
 | P | Seguridad | En progreso | 3/11 |
 | Q | QA y carga | Pendiente | 0/6 |
@@ -82,7 +82,7 @@ cerradas por Jonas el mismo día: el límite de pujas queda en 30/min; el porcen
 en el estado y aparece sin recargar; la imagen para compartir es un archivo reemplazable. Pendiente de Jonas: claves de
 Turnstile y la imagen de 1200 × 630 de Colliers. Detalle en `docs/progreso/2026-10-21.md`.
 
-**22/10, última tanda de Jonas (en local, sin push; un commit por punto):** (2) cabecera y pie como el sitio corporativo (ver N); (3) ficha sin el bloque de visitas vacío y «Coordinar visita» junto a las bases (ver N).
+**22/10, última tanda de Jonas (en local, sin push; un commit por punto):** (2) cabecera y pie como el sitio corporativo (ver N); (3) ficha sin el bloque de visitas vacío y «Coordinar visita» junto a las bases (ver N); (4) **rol Editor**, con los permisos propuestos por Jonas **a confirmar con el cliente** (ver E/F).
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -445,7 +445,8 @@ Se completan a medida que las pantallas lo pidan.
   *(`UsuariosInternosTest`, 7 pruebas; `tools/comparar/panel-usuarios.mjs`, 14 comprobaciones en navegador real
   incluidas 375/760/1120/1440 px)*
 - [ ] Componentes Blade comunes extraídos de las pantallas de T
-- [ ] Estructura del panel (navegación, permisos por rol)
+- [x] Estructura del panel (navegación, permisos por rol): **permisos en un solo lugar**, `App\Autenticacion\Permisos` (22/10). Las rutas del panel piden `permiso:x` (middleware `Permiso`), el menú lateral y los botones preguntan lo mismo; Configuración tiene permiso por sección. Administración y martillero quedan exactamente como estaban *(`RolEditorTest::test_administracion_y_martillero_no_cambian`; `recorrido-roles.mjs` 57/57)*
+- [x] **Rol Editor** *(Jonas, 22/10; ⚠️ **permisos a confirmar con el cliente**: se ajustan agregando o quitando `editor` en `Permisos::MAPA`, sin tocar rutas ni vistas)*. **Puede:** crear y editar remates y lotes, fotos, documentos y horarios de visita, «Crear remate nuevo», publicar y **despublicar** (nuevo: un remate próximo sin inscritos vuelve a borrador y sale del sitio; con inscritos no, porque hay garantías en curso, y la ficha dice que lo cancela administración; publicar de nuevo no repite el aviso «remate nuevo» a los suscriptores), y Configuración → **Sitio** (UF, contacto, enlaces y textos). **No puede:** Dashboard (entra directo a Subastas: el resumen trae datos de postores), Postores, cuentas y garantías, Reportes, panel en vivo y sala del martillero, cancelar o «Cerrar ahora», subastas de prueba (crean postores con clave), Usuarios ni el resto de Configuración. Menú y botones lo esconden; las rutas responden 403. Se crea desde «06 Usuarios» (o `colliers:crear-usuario editor`); el seeder trae `editor@colliers.test`. Sin 2FA por ahora (es solo para Administración, ver P) *(`RolEditorTest` 6 pruebas, 24 rutas prohibidas una por una; `tools/comparar/rol-editor.mjs` 17/17 en navegador real, incluido el menú a 375 px)*
 - [ ] Tablas y formularios reutilizables, adaptados a móvil
 
 ## O — Reportes · En progreso
@@ -579,4 +580,5 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] Garantía del perdedor: ¿devolución? (el diseño lo afirma; el acta no lo define)
 - [ ] Habilitación única: el modo ya está construido y apagado. Si Colliers lo quiere, debe fijar **el monto** en Configuración → Garantías y decidir qué pasa si un postor gana varios remates respaldado por una sola garantía
 - [ ] 2FA: ¿solo administradores o también postores?
+- [ ] **Permisos del rol Editor** (propuesta de Jonas del 22/10, construida así; Jonas la confirma con el cliente). Cambiarla es editar `App\Autenticacion\Permisos::MAPA`
 - [ ] Lista exacta de gráficos y columnas de los reportes

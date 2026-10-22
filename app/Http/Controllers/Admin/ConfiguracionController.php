@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Autenticacion\Permisos;
 use App\Correo\Avisos;
 use App\Correo\DiagnosticoSmtp;
 use App\Correo\Plantillas;
@@ -30,14 +31,19 @@ use Throwable;
  */
 class ConfiguracionController extends Controller
 {
-    public function index(): RedirectResponse
+    public function index(Request $request): RedirectResponse
     {
-        return redirect()->route('admin.configuracion.seccion', array_key_first(Configuracion::SECCIONES));
+        $secciones = Permisos::seccionesConfiguracion($request->user());
+        abort_if($secciones === [], 403);
+
+        return redirect()->route('admin.configuracion.seccion', $secciones[0]);
     }
 
-    public function show(string $seccion): View
+    public function show(Request $request, string $seccion): View
     {
         abort_unless(isset(Configuracion::SECCIONES[$seccion]), 404);
+        // Cada sección tiene su permiso: el editor solo entra a «Sitio» (22/10).
+        abort_unless(Permisos::configuracion($request->user(), $seccion), 403);
         Configuracion::sembrarDefectos();
         $campos = Configuracion::camposDe($seccion);
         $valores = [];
@@ -60,6 +66,7 @@ class ConfiguracionController extends Controller
     public function update(Request $request, string $seccion): RedirectResponse
     {
         abort_unless(isset(Configuracion::SECCIONES[$seccion]), 404);
+        abort_unless(Permisos::configuracion($request->user(), $seccion), 403);
         $entrada = (array) $request->input('config', []);
         // Las casillas desmarcadas no viajan: se envían con un campo oculto en 0.
         $reglas = [];
@@ -191,8 +198,10 @@ class ConfiguracionController extends Controller
             . ($aviso ? " Además: {$aviso}" : '')));
     }
 
-    public function actualizarUf(): RedirectResponse
+    public function actualizarUf(Request $request): RedirectResponse
     {
+        // El botón vive en «Sitio», junto al valor de la UF.
+        abort_unless(Permisos::configuracion($request->user(), 'sitio'), 403);
         $codigo = Artisan::call('colliers:actualizar-uf', ['--forzar' => true]);
         $salida = trim(Artisan::output());
 

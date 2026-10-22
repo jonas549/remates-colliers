@@ -24,7 +24,7 @@ use Laravel\Fortify\Fortify;
  */
 class AutenticarUsuario
 {
-    public const ROLES_ADMINISTRACION = [User::ROL_ADMIN, User::ROL_MARTILLERO];
+    public const ROLES_ADMINISTRACION = [User::ROL_ADMIN, User::ROL_MARTILLERO, User::ROL_EDITOR];
 
     public function __invoke(Request $request): ?User
     {
