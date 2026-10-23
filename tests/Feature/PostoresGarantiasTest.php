@@ -151,6 +151,12 @@ class PostoresGarantiasTest extends TestCase
         Configuracion::guardar('banco_titular', 'Colliers International Chile S.A.');
         $this->actingAs($user)->get('/mi-cuenta?remate=militares')->assertSee('N.º 000-12345-67')->assertSee('Colliers International Chile S.A.');
 
+        // Solo PDF o imagen: un ejecutable se rechaza y la garantía no cambia.
+        $this->actingAs($user)->post(route('cuenta.comprobante.store', $garantia), ['medio' => 'transferencia', 'comprobante' => UploadedFile::fake()->create('virus.exe', 10, 'application/octet-stream')])
+            ->assertSessionHasErrors('comprobante');
+        $this->assertNull($garantia->fresh()->comprobante_ruta);
+        $this->assertSame(Garantia::ESTADO_PENDIENTE, $garantia->fresh()->estado);
+
         $this->actingAs($user)->post(route('cuenta.comprobante.store', $garantia), ['medio' => 'transferencia', 'comprobante' => UploadedFile::fake()->create('transferencia.pdf', 200, 'application/pdf')])
             ->assertSessionHas('estado');
         $garantia->refresh();

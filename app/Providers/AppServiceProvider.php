@@ -62,5 +62,8 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('estado-remate', fn (Request $request) => Limit::perMinute(config('colliers.limites.estado_por_minuto'))
             ->by('estado:' . $request->ip()));
+
+        RateLimiter::for('registro', fn (Request $request) => Limit::perHour(config('colliers.limites.registros_por_hora'))
+            ->by('registro:' . $request->ip()));
     }
 }

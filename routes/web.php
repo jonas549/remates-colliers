@@ -26,6 +26,8 @@ use App\Http\Controllers\TiempoRealController;
 use App\Support\Idioma;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
+use Laravel\Fortify\Http\Controllers\RegisteredUserController;
+use Laravel\Fortify\RoutePath;
 
 /*
  * Rutas de la aplicación. La raíz es el listado de remates; /remates redirige a "/".
@@ -92,6 +94,10 @@ $publicas = function (string $prefijo) {
     // Bloque D: Fortify registra /ingresar, /registro, /salir, /recuperar-clave, /restablecer-clave y /verificar-correo
     // (config/fortify.php). Se cargan aquí, y no desde Fortify, para tener también su versión en inglés.
     Route::group(['namespace' => 'Laravel\Fortify\Http\Controllers'], fn () => require base_path('vendor/laravel/fortify/routes/routes.php'));
+    // Bloque P: Fortify no limita el envío del registro. Misma ruta, nombre y middleware que la suya (la reemplaza), más el límite.
+    Route::post(RoutePath::for('register', '/register'), [RegisteredUserController::class, 'store'])
+        ->middleware([...config('fortify.middleware', ['web']), 'guest:' . config('fortify.guard'), 'throttle:registro'])
+        ->name('register.store');
 
     // «Ingresar como este postor» (postores de prueba): el acceso con el correo ya escrito, aunque haya otra sesión abierta.
     Route::get('/ingresar/como', [IngresarComoController::class, 'show'])->name('ingresar.como');

@@ -1,6 +1,6 @@
 # BACKLOG — Remates Colliers · Fase 3
 
-> **Registro vivo del avance.** Última actualización: **2026-10-22** (última tanda de Jonas: enlaces de cabecera y pie, horarios de visita, rol Editor y 2FA del panel; en local, sin push).
+> **Registro vivo del avance.** Última actualización: **2026-10-23** (cierre: documentos al día, límite de envíos del registro, L y parte de P verificados; **OPcache es bloqueante** para el remate en vivo, ver R).
 > Se actualiza en el mismo commit que termina cada tarea (contrato de trabajo, `CLAUDE.md` §4).
 > Si este archivo y `CLAUDE.md` §8/§10 no coinciden, **manda este archivo**.
 
@@ -18,21 +18,21 @@ nota *(verifica Jonas en el sandbox)*.
 | T | Traspaso del diseño a Blade | **Completo** | 12/12 |
 | B | Base del proyecto Laravel | **Completo** | 20/20 |
 | C | Modelo de datos | **Completo** | 12/12 |
-| J | Motor de subastas en tiempo real ⚠️ | En progreso | 31/35 |
+| J | Motor de subastas en tiempo real ⚠️ | En progreso | 34/38 |
 | D | Autenticación y registro de postores | En progreso | 14/17 |
 | K | Sala de puja conectada al motor real | En progreso | 20/21 |
 | I | Remates y lotes + panel del martillero | **Completo** | 20/20 |
-| V | Configuración autoadministrable y SMTP | En progreso | 9/11 |
+| V | Configuración autoadministrable y SMTP | En progreso | 12/14 |
 | G | Postores | **Completo** | 8/8 |
 | H | Garantías | En progreso | 10/12 |
-| M | Notificaciones | En progreso | 8/9 |
+| M | Notificaciones | En progreso | 7/8 |
 | N | Sitio público | En progreso | 25/26 |
-| L | Streaming | En progreso | 1/4 |
+| L | Streaming | **Completo** | 4/4 |
 | E/F | Componentes y estructura del panel | En progreso | 3/5 |
 | O | Reportes | En progreso | 8/9 |
-| P | Seguridad | En progreso | 4/12 |
+| P | Seguridad | En progreso | 8/13 |
 | Q | QA y carga | Pendiente | 0/6 |
-| R | Despliegue a producción | Pendiente | 0/9 |
+| R | Despliegue a producción ⚠️ | Pendiente (**OPcache bloqueante** para el remate en vivo) | 0/11 |
 | S | Documentación | Pendiente | 0/4 |
 
 ## Orden de ejecución acordado
@@ -79,10 +79,17 @@ sala sin video avisa que la transmisión no comienza; N: condición de garantía
 remate; G: el dashboard explica las cuentas que esperan el correo). Grupo 4 hecho (hover en el listado, «+0,3% sobre la
 base», promedio de pujas con un decimal, página propia para el 405, buscador de Postores sin cortar). Decisiones
 cerradas por Jonas el mismo día: el límite de pujas queda en 30/min; el porcentaje sin «sobre la base»; el video llega
-en el estado y aparece sin recargar; la imagen para compartir es un archivo reemplazable. Pendiente de Jonas: claves de
-Turnstile y la imagen de 1200 × 630 de Colliers. Detalle en `docs/progreso/2026-10-21.md`.
+en el estado y aparece sin recargar; la imagen para compartir es un archivo reemplazable. Pendiente de Jonas: claves del captcha (desde el 22/10, reCAPTCHA v2 en lugar de
+Turnstile) y la imagen de 1200 × 630 de Colliers. Detalle en `docs/progreso/2026-10-21.md`.
 
-**22/10, última tanda de Jonas (en local, sin push; un commit por punto):** (2) cabecera y pie como el sitio corporativo (ver N); (3) ficha sin el bloque de visitas vacío y «Coordinar visita» junto a las bases (ver N); (4) **rol Editor**, con los permisos propuestos por Jonas **a confirmar con el cliente** (ver E/F); (1) **segundo factor por correo** para Administración al entrar al panel (ver P). ⚠️ **Antes del push: el correo saliente del sandbox tiene que funcionar**, o nadie de Administración entra al panel (salida de emergencia: `php artisan colliers:codigo-ingreso correo` en la terminal del servidor).
+**22/10, última tanda de Jonas (un commit por punto; subida a `main` hasta `86ddaa6` el 22/10 a las 19:54 UTC, con aprobación de Jonas):** (2) cabecera y pie como el sitio corporativo (ver N); (3) ficha sin el bloque de visitas vacío y «Coordinar visita» junto a las bases (ver N); (4) **rol Editor**, con los permisos propuestos por Jonas **a confirmar con el cliente** (ver E/F); (1) **segundo factor por correo** para Administración al entrar al panel (ver P). ⚠️ **Antes del push: el correo saliente del sandbox tiene que funcionar**, o nadie de Administración entra al panel (salida de emergencia: `php artisan colliers:codigo-ingreso correo` en la terminal del servidor). Jonas confirmó el correo del sandbox antes del push.
+
+**22/10, noche (QA de Jonas):** las 16 regiones en el registro (ver D) y la medición por tramos de la puja (ver J y R).
+**Hallazgo bloqueante:** sin OPcache se pierden pujas válidas en el cierre (ver R). OPcache lo activa Jonas en el servidor.
+
+**23/10, cierre:** documentos de estado al día; límite de envíos del registro por IP (P); L verificado (video, id desde el
+panel y aviso de retraso ya estaban construidos y probados); en P, límites de login/registro/pujas, RUT cifrado, archivos
+fuera de `public` y repositorio sin secretos, verificados. Detalle en `docs/progreso/2026-10-23.md`.
 
 > Los bloques G a S tienen tareas derivadas de las reglas confirmadas (`CLAUDE.md` §3–§6). El detalle
 > fino se completa al llegar a cada bloque; no se agrega funcionalidad que no esté definida.
@@ -117,7 +124,7 @@ Corrida completa el 15/09; control del listado y filtros el 16/09 (detalle en `d
 - [x] Recorrido «aprobar garantía» a 375 px automatizado
 - [x] Raíz invertida: `/` es el listado, `/remates` redirige; `/revision` solo en local
 
-## B — Base del proyecto Laravel · En progreso
+## B — Base del proyecto Laravel · Completo
 
 - [x] Comandos `colliers:instalar`, `colliers:puede-desplegar`, `colliers:diagnostico` (con pruebas)
 - [x] Programador: latido y cola por minuto con `--stop-when-empty`
@@ -200,7 +207,7 @@ tras corregir la propia prueba. Latencia con 20 pujas simultáneas: mediana ~300
 - [x] Hora de recepción desde `REQUEST_TIME_FLOAT` (antes de arrancar Laravel): sello a 0,15 s del envío con 10 simultáneas en 1 núcleo (antes 4,5 s)
 - [x] `public/hora.php` sin framework para sincronizar el reloj: 15 ms con 10 simultáneas (antes 4 s); `/hora` queda de respaldo
 - [x] Menos consultas por puja (configuración recordada 2 s, resumen con una lectura del alias)
-- [x] Escenario D en `tools/concurrencia/prueba.php` (pujas 400 ms antes de T + liquidaciones en T + margen): verde sin OPcache en 1 núcleo, 0 pujas perdidas
+- [x] Escenario D en `tools/concurrencia/prueba.php` (pujas 400 ms antes de T + liquidaciones en T + margen): verde sin OPcache en 1 núcleo, 0 pujas perdidas *(17/09; el escenario existe y funciona, pero **el resultado no se sostuvo**: el 22/10, sin OPcache, perdió pujas válidas. Ver R: OPcache es bloqueante)*
 - [x] Herramientas: `tools/rendimiento/medir.php` (local, con y sin OPcache, N núcleos) y `tools/sandbox/medir-servidor.php` (servidor real, solo GET)
 - [x] Dos pujas del mismo monto en el mismo instante: solo una gana (5 rondas × 20 simultáneas)
 - [x] Puja bajo el incremento / sin garantía / después del cierre: rechazadas
@@ -425,11 +432,11 @@ que se actualiza solo con una puja real, inscripción desde el detalle a 375 px,
   - [x] **Condiciones del remate: el párrafo de la garantía en inglés** *(QA de Jonas 21/10, 3.2)*: salía de Configuración, solo en español. Mientras el texto sea el de fábrica, sale de `remate.secciones.condicion_garantia` en cada idioma; si Colliers lo edita en el panel, se muestra tal cual en los dos (regla del 20/10: el contenido del panel va en español). La ayuda del campo en el panel lo explica *(`IdiomaTest`; `qa-visibles.mjs`: los tres párrafos en inglés)*
   - [ ] Lista de términos del negocio revisada por Jonas (glosario base aprobado el 20/10)
 
-## L — Streaming · Pendiente
+## L — Streaming · Completo
 
-- [ ] Iframe de YouTube embebido por remate
-- [ ] Identificador del video cargado desde el panel
-- [ ] Aviso de retraso del video (10–30 s) visible en pantalla
+- [x] Iframe de YouTube embebido por remate (`youtube-nocookie.com`, en la sala y en la ficha; construido en K, verificado el 23/10) *(`SalaTest`; `qa-visibles.mjs` y `seguridad.mjs` con el video cargando bajo la CSP)*
+- [x] Identificador del video cargado desde el panel (campo del formulario de la subasta, validado; al guardarlo se publica en el estado y llega a la sala abierta) *(`RematesAdminTest`, id no válido rechazado; `SalaTest`, publicación al cambiarlo)*
+- [x] Aviso de retraso del video (10–30 s) visible en pantalla: «Precio y cronómetro oficiales: el video tiene 10–30 s de retraso» *(`SalaTest`)*
 - [x] **Estado sin transmisión** *(QA de Jonas 21/10, 3.1: sin video, la sala era un recuadro negro)*: sin video cargado, el reproductor dice «La transmisión aún no comienza», que se puede pujar igual con el precio y el cronómetro oficiales del panel, que el video aparecerá ahí sin recargar, y enlaza al canal de Colliers (el de Configuración o, si está vacío, el del pie). Un video cargado que todavía no empieza o ya no está disponible lo informa el propio reproductor de YouTube. **El video viaja en el estado público** (`video` en el JSON, solo un id válido; +20 bytes): cargarlo, cambiarlo o quitarlo en el panel llega a la sala abierta en ~1 s, sin recargar; el iframe se crea una vez por video (no se recarga con cada sondeo) y al quitarlo vuelve el aviso *(Jonas, 21/10)* *(`SalaTest`; `qa-visibles.mjs` a 1440 y 375 px: sin desborde y el enlace de 44 px dentro del reproductor; video puesto, cambiado y quitado con la sala abierta, una sola carga del reproductor, sin recargar la página, sin bloqueos de la CSP, JSON de 916 bytes)*
 
 ## E/F — Componentes y estructura del panel · En progreso
@@ -471,15 +478,15 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 ## P — Seguridad · En progreso
 
 - [ ] Revisión de policies y consultas filtradas por dueño
-- [ ] Rate limiting en login, registro y pujas
-- [ ] RUT cifrado con índice ciego verificado
-- [x] **Cabeceras de seguridad y CSP** *(QA de Jonas 21/10, 2.2: no había ninguna)*, en la aplicación y no en LiteSpeed (`CabecerasSeguridad`, global: páginas, errores, JSON y descargas): `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin` (YouTube necesita el origen), `Permissions-Policy` sin cámara, micrófono, ubicación ni pagos (sin tocar autoplay ni pantalla completa del video), y CSP: solo el propio dominio, `frame-src` de YouTube (`youtube-nocookie.com`, el que usan sala y ficha, y `youtube.com`), mosaicos de OpenStreetMap, Turnstile solo si está configurado. `'unsafe-eval'` porque Alpine evalúa las expresiones de las vistas; `'unsafe-inline'` solo en estilos (el diseño trae estilos en línea); **sin scripts en línea**: los 6 `onsubmit`/`onchange` del panel (los `confirm()` de borrar) se pasaron a Alpine, porque con la CSP el navegador los habría ignorado y el formulario se habría enviado **sin confirmar**. `report-uri /csp-informe`: lo bloqueado queda en el log de Laravel («CSP bloqueó un recurso»). `COLLIERS_CSP=reporte|apagada` la afloja desde el .env sin deploy *(`SeguridadTest`; `tools/comparar/seguridad.mjs` en Chrome: video de YouTube en ficha y sala, mapa, latido de presencia, estado de la sala, Alpine en listado y registro, los confirm del panel, con un control que confirma que un script en línea sí se bloquea y se detecta; los 16 recorridos en navegador corridos con la CSP activa y 0 bloqueos en el log)*. Los archivos estáticos (JSON del tiempo real, `hora.php`, `presencia.php`) no pasan por Laravel y no llevan estas cabeceras
+- [x] Rate limiting en login, registro y pujas. Login: 10/min por usuario e IP y 30/min por IP (postores y panel, además del bloqueo de la cuenta en tabla); pujas: 30/min por postor; **registro: 20 envíos por hora y por IP** (23/10: Fortify no lo limitaba; cada envío puede subir ~21 MB de adjuntos y los fallidos también cuentan; `COLLIERS_REGISTROS_POR_HORA`). Decisión propia y reversible: el número *(`SeguridadTest`: 429 en los tres, el registro en los dos idiomas; `registro-acceso.mjs` 33/33 y `recorrido-roles.mjs` 58/58 con el límite activo)*
+- [x] RUT cifrado con índice ciego verificado: en la base no aparece el RUT con ni sin puntos, el índice no depende del formato, usa clave (no es un SHA-256 simple) y no se repite entre postores ni empresas *(`ModeloDatosTest`, en SQLite y MySQL el 23/10)*
+- [x] **Cabeceras de seguridad y CSP** *(QA de Jonas 21/10, 2.2: no había ninguna)*, en la aplicación y no en LiteSpeed (`CabecerasSeguridad`, global: páginas, errores, JSON y descargas): `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin` (YouTube necesita el origen), `Permissions-Policy` sin cámara, micrófono, ubicación ni pagos (sin tocar autoplay ni pantalla completa del video), y CSP: solo el propio dominio, `frame-src` de YouTube (`youtube-nocookie.com`, el que usan sala y ficha, y `youtube.com`), mosaicos de OpenStreetMap, y Google reCAPTCHA v2 solo si tiene claves (desde el 22/10; antes Turnstile, ya quitado). `'unsafe-eval'` porque Alpine evalúa las expresiones de las vistas; `'unsafe-inline'` solo en estilos (el diseño trae estilos en línea); **sin scripts en línea**: los 6 `onsubmit`/`onchange` del panel (los `confirm()` de borrar) se pasaron a Alpine, porque con la CSP el navegador los habría ignorado y el formulario se habría enviado **sin confirmar**. `report-uri /csp-informe`: lo bloqueado queda en el log de Laravel («CSP bloqueó un recurso»). `COLLIERS_CSP=reporte|apagada` la afloja desde el .env sin deploy *(`SeguridadTest`; `tools/comparar/seguridad.mjs` en Chrome: video de YouTube en ficha y sala, mapa, latido de presencia, estado de la sala, Alpine en listado y registro, los confirm del panel, con un control que confirma que un script en línea sí se bloquea y se detecta; los 16 recorridos en navegador corridos con la CSP activa y 0 bloqueos en el log)*. Los archivos estáticos (JSON del tiempo real, `hora.php`, `presencia.php`) no pasan por Laravel y no llevan estas cabeceras
 - [x] **HTTPS forzado por la aplicación** *(QA 21/10, 2.1: http:// respondía 200)*: `ForzarHttps` redirige toda petición http a la misma dirección en https (301 GET/HEAD; 308 el resto, que conserva método y cuerpo), antes de abrir la base o la sesión; `Strict-Transport-Security: max-age=31536000` (sin `includeSubDomains` ni `preload`), y todos los enlaces generados en https. Activo por defecto fuera de local y pruebas (`COLLIERS_FORZAR_HTTPS`). `X-Forwarded-Proto: https` cuenta como https, para no entrar en bucle si el hosting termina el TLS en un proxy. La redirección del servidor la configura Jonas *(`SeguridadTest`)*
 - [x] **Captcha en el registro: Google reCAPTCHA v2** («No soy un robot»; *Jonas, 22/10: reemplaza a Turnstile, que se quitó entero*). `App\Support\Recaptcha`: se verifica en el servidor (`siteverify` de Google) antes de validar el resto del formulario; si falla, no se valida nada más ni se guardan adjuntos, y si Google no responde el registro se rechaza (falla cerrado) y queda en el log. Sin `RECAPTCHA_SITE_KEY` y `RECAPTCHA_SECRET_KEY` no se muestra ni se exige (local y pruebas). Idioma del widget según la página (`hl=es`/`hl=en`). **CSP**, solo con claves: `script-src` www.google.com/recaptcha/ y www.gstatic.com/recaptcha/, `frame-src` www.google.com/recaptcha/ y recaptcha.google.com/recaptcha/, y `connect-src` www.google.com/recaptcha/ (el script hace un fetch a `api2/clr` desde la página: lo detectó `seguridad.mjs`). Excepción a «nada de CDN», como lo era Turnstile *(`AutenticacionTest`: sin claves, sin token, token rechazado, Google caído con su entrada en el log y token válido; `SeguridadTest`; en Chrome con las claves de prueba de Google: `seguridad.mjs` 22/22 con la casilla cargada, marcada y el token en el formulario, 0 bloqueos y 0 «CSP bloqueó» en el log; `registro-acceso.mjs` 33/33 con y sin claves; `composer test:mysql` 232/232)*
 - [ ] Claves de reCAPTCHA cargadas en el sandbox y registro probado con la casilla *(Jonas: `RECAPTCHA_SITE_KEY` y `RECAPTCHA_SECRET_KEY` en el `.env`; dominio del sandbox registrado en la consola de reCAPTCHA)*
 - [ ] HTTPS y cabeceras comprobados en el sandbox: `http://` → 301 a https, HSTS y CSP en las respuestas, sala con video y presencia sin «CSP bloqueó» en el log *(Jonas)*
-- [ ] Carga de archivos (comprobantes, documentos) validada y fuera de `public`
-- [ ] Sin secretos en el repositorio público
+- [x] Carga de archivos (comprobantes, documentos) validada y fuera de `public`: documentos del registro, comprobantes y documentos del remate van al disco privado (`storage/app/private`) y se descargan por Laravel con su permiso; tipo validado por contenido (PDF o imagen; documentos del remate también Word y Excel) y tamaño máximo. Las fotos de los lotes sí son públicas a propósito (solo imágenes) *(`AutenticacionTest`: un `.exe` en el registro se rechaza; `PostoresGarantiasTest`: un `.exe` como comprobante se rechaza y la garantía no cambia; `SeguridadTest`: el disco privado está bajo `storage` y fuera de `public`)*
+- [x] Sin secretos en el repositorio público *(23/10: en todo el historial el único `.env*` versionado es `.env.example`; sin claves privadas, `APP_KEY`, contraseñas ni secretos en los archivos ni en los commits. Lo único parecido son las claves de prueba **públicas** de Google para reCAPTCHA, en un comentario)*
 - [x] **Segundo factor por correo para Administración** *(Jonas, 22/10)*. En `/admin/ingresar`, usuario y clave correctos **no abren sesión**: llega un código de 6 dígitos al correo de la cuenta y se pide en «Revisa tu correo» (diseño del Login). Sin el código correcto no hay sesión. El código se guarda como hash, vence en 10 min, sirve una vez y admite 5 intentos; reenvío con 1 minuto de espera y tope de 5 códigos por hora y cuenta (también al volver a escribir la clave), para que no sirva para inundar un buzón. **Recordar el dispositivo** 7 días (casilla; cookie con token al azar, en la base su hash), por dispositivo y **revocable en «Sesiones activas»** (botón OLVIDAR y «Olvidar todos»); también se olvidan al cambiar o restablecer la contraseña, al desactivar la cuenta o al cerrar sus sesiones desde «06 Usuarios». Si el correo falla, la pantalla lo dice («No pudimos enviar el código…»), queda «Fallida» en Registro de correos con el error y en `access_logs`, y no deja entrar; con el correo en modo «registro» fuera de local tampoco se da por enviado. Plantilla «Código de ingreso al panel» editable en Plantillas de correo (el asunto no lleva el código; si alguien quita `{{ codigo }}` del texto, el código va igual). Valores en Configuración → Seguridad (vigencia, intentos, códigos por hora, días de recordar). **A quién se exige: `Permisos::MAPA['dos_pasos']`** (hoy solo `admin`; extenderlo a martillero o editor es agregar el rol ahí). Salida de emergencia si el correo del servidor no funciona: `php artisan colliers:codigo-ingreso correo` (requiere la terminal). Enlace nuevo «Sesiones y contraseña» en el pie del menú lateral del panel (antes no había cómo llegar a esas pantallas sin escribir la dirección) *(`SegundoFactorTest` 12 pruebas; `tools/comparar/dos-pasos.mjs` 18/18 en navegador real, también a 375 px; los recorridos que entran como administración leen el código del correo del log local: `recorrido-roles.mjs` 58/58, `registro-acceso.mjs` 33/33, `ingreso-servidor.mjs` 7/7)*
 - [ ] Segundo factor en el sandbox *(Jonas)*: **antes del push**, Configuración → Correo → enviar un correo de prueba y confirmar que llega; después del deploy, ingresar con la clave, recibir el código y entrar; probar «recordar dispositivo» y olvidarlo en «Sesiones activas»
 - [ ] Revisión de registros de acceso
@@ -503,8 +510,9 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] Bloqueo de deploy con remate en curso activo en el script
 - [ ] Verificación con `colliers:diagnostico`
 - [ ] ⚠️ **Riesgo: la base compartida del hosting deja de aceptar conexiones** *(sandbox, 21/09: `1040 Too many connections` a las 16:14 UTC y `2002 No such file or directory` —MariaDB caída o reiniciando— a las 16:24 UTC, ambos en el cron)*. Si pasa durante un remate: **ninguna puja queda a medias** (la transacción es todo o nada) pero **ninguna puja entra** mientras dure; el postor ve «No pudimos confirmar tu puja», el precio del JSON queda congelado, el cronómetro sigue (`hora.php` no usa la base) y **el lote cierra igual en `cierra_en`** (no hay anti-sniping ni se reabre). Hay que: (1) medir `max_connections`, `max_user_connections` y el reinicio en el sandbox y pedir al hosting de producción el límite por cuenta; (2) definir con Colliers qué dicen las bases si la plataforma falla durante un remate; (3) bajar «espectadores que avisan» del 100 % (cada aviso abre una conexión en el mismo segundo del cierre). Análisis completo en `docs/progreso/2026-09-21.md`. **Mitigado en parte (21/09):** la puja reintenta la conexión hasta 1,5 s (ver J); una caída larga sigue siendo este riesgo
-- [ ] ⚠️ **Pujas válidas perdidas bajo carga sin OPcache** *(medido el 22/10, QA de Jonas)*: en el escenario D (pujas 400 ms antes de T y liquidaciones en T + margen a la vez), sin OPcache y con 2 núcleos se perdieron 2–7 pujas con 10 postores y margen de 2 s, y 11 con 20 postores y margen de 5 s: siguen compilando Laravel cuando el lote se adjudica. Con OPcache, 0 perdidas con 10 y 20. **Ningún margen fijo lo garantiza sin OPcache.** Propuesta (pendiente de Jonas): marca de «puja en vuelo» escrita antes de cargar Laravel y liquidación que espera esas marcas (`docs/progreso/2026-10-22.md`). Medición en `docs/RENDIMIENTO-SIN-OPCACHE.md` §9
-- [ ] ⚠️ **Riesgo: verificar OPcache en el hosting de producción antes de comprometer rendimiento.** Sin OPcache la validez de las pujas se mantiene, pero 10 pujas en el mismo segundo tardan ~4 s en confirmarse con 1 núcleo. Medir con `tools/sandbox/medir-servidor.php` y fijar el margen de liquidación según la latencia (`docs/RENDIMIENTO-SIN-OPCACHE.md` §7)
+- [ ] 🛑 **BLOQUEANTE: OPcache activo en el servidor donde corra un remate en vivo** (sandbox y producción). **No es una optimización: sin OPcache la plataforma no cumple el acta.** Medido el 22/10 (escenario D: pujas 400 ms antes de T y liquidaciones en T + margen a la vez, 2 núcleos): sin OPcache se perdieron **2–7 pujas válidas** con 10 postores y margen de 2 s, 8 con 20 postores, y 11 con 20 postores y margen de 5 s; con OPcache, **0** con 10 y con 20. Una puja recibida antes de T que todavía está arrancando Laravel cuando se adjudica se rechaza como «lote cerrado»: viola la validez por hora de recepción, y **ningún margen fijo lo garantiza sin OPcache**. Además, sin OPcache 10 pujas simultáneas tardan 3–6 s en confirmarse. **No se hace un remate en vivo sin OPcache.** Lo activa Jonas (17/09 no se podía desde cPanel; ver `docs/RENDIMIENTO-SIN-OPCACHE.md` §6.6). Se da por cumplido cuando: (1) el panel, en Configuración → Sistema, dice «OPcache (web): Activo» (no basta `php -m` ni `colliers:diagnostico` en la terminal: la consola puede usar otro PHP que la web), y (2) se repite la medición en el sandbox con OPcache activo (`COLLIERS_MEDIR_PUJA=true`, `tools/sandbox/medir-servidor.php`) sin pujas perdidas. Medición en `docs/RENDIMIENTO-SIN-OPCACHE.md` §9
+- [ ] **Propuesta condicionada (no implementada): «puja en vuelo»**. Solo si la medición del sandbox **con OPcache activo** vuelve a mostrar pujas perdidas, o si producción no puede tener OPcache: `public/index.php` escribe, antes de cargar Composer, una marca por cada POST a `/pujas` con su hora de recepción y la borra al terminar; el liquidador no adjudica mientras exista una marca recibida antes de T (vence a los 60 s). Diseño en `docs/progreso/2026-10-22.md`. Con OPcache y 0 pujas perdidas en el sandbox, no se implementa (Jonas, 23/10)
+- [ ] ⚠️ **Verificar OPcache en el hosting de producción** antes de la fecha del primer remate real (mismo criterio que el bloqueante de arriba) y fijar el margen de liquidación según la latencia medida allí (`docs/RENDIMIENTO-SIN-OPCACHE.md` §7)
 
 ## S — Documentación · Pendiente
 
@@ -583,6 +591,6 @@ terminado; con un lote por remate, cada fila es el remate del diseño *(supuesto
 - [ ] Garantía del perdedor: ¿devolución? (el diseño lo afirma; el acta no lo define)
 - [ ] Habilitación única: el modo ya está construido y apagado. Si Colliers lo quiere, debe fijar **el monto** en Configuración → Garantías y decidir qué pasa si un postor gana varios remates respaldado por una sola garantía
 - [x] 2FA: **solo Administración por ahora** *(Jonas, 22/10)*, preparado para extenderlo por rol (`Permisos::MAPA['dos_pasos']`)
-- [ ] **Rendimiento de la puja (22/10)**: medido por tramos, el ~95 % es compilar Laravel sin OPcache (lo serializado suma ~30–60 ms). Jonas activa OPcache; propuestas a decidir: (1) «puja en vuelo» para no perder pujas válidas sin OPcache, (2) leer cuenta y garantía antes de tomar el bloqueo del lote (solo rinde con OPcache), (3) medir en el sandbox con `COLLIERS_MEDIR_PUJA=true` antes y después de OPcache
+- [ ] **Rendimiento de la puja (22/10)**: medido por tramos, el ~95 % es compilar Laravel sin OPcache (lo serializado suma ~30–60 ms). **Decidido por Jonas (23/10):** OPcache es bloqueante y lo activa él (ver R); no se toca el motor. Queda: (1) medir en el sandbox con OPcache activo (`COLLIERS_MEDIR_PUJA=true`); (2) «puja en vuelo» **solo si esa medición vuelve a perder pujas** (propuesta condicionada, ver R); (3) leer cuenta y garantía antes de tomar el bloqueo del lote: a decidir después de medir (solo rinde con OPcache)
 - [ ] **Permisos del rol Editor** (propuesta de Jonas del 22/10, construida así; Jonas la confirma con el cliente). Cambiarla es editar `App\Autenticacion\Permisos::MAPA`
 - [ ] Lista exacta de gráficos y columnas de los reportes

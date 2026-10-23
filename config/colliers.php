@@ -63,10 +63,12 @@ return [
     /*
      * Límites técnicos de protección (no son reglas de negocio del acta): peticiones por minuto.
      * Un postor real no se acerca a 30 pujas por minuto; los espectadores consultan el JSON estático, no PHP.
+     * Registro: envíos por hora y por IP (cada envío puede subir ~21 MB de adjuntos; los fallidos también cuentan).
      */
     'limites' => [
         'pujas_por_minuto' => (int) env('COLLIERS_PUJAS_POR_MINUTO', 30),
         'estado_por_minuto' => (int) env('COLLIERS_ESTADO_POR_MINUTO', 60),
+        'registros_por_hora' => (int) env('COLLIERS_REGISTROS_POR_HORA', 20),
     ],
 
     /*

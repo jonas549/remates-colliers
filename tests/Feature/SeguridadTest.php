@@ -78,4 +78,42 @@ class SeguridadTest extends TestCase
         config(['colliers.seguridad.csp' => 'apagada']);
         $this->get('/')->assertHeaderMissing('Content-Security-Policy')->assertHeaderMissing('Content-Security-Policy-Report-Only');
     }
+
+    /** Bloque P: el registro tiene tope de envíos por hora y por IP, en los dos idiomas y contando los fallidos. */
+    public function test_el_registro_limita_los_envios_por_hora(): void
+    {
+        config(['colliers.limites.registros_por_hora' => 3]);
+
+        $this->post('/registro', [])->assertRedirect();
+        $this->post('/en/registro', [])->assertRedirect();
+        $this->post('/registro', [])->assertRedirect();
+        $this->post('/registro', [])->assertStatus(429);
+        $this->post('/en/registro', [])->assertStatus(429);
+        $this->get('/registro')->assertOk();
+    }
+
+    /** Bloque P: login (postores y panel) y pujas responden 429 al pasar su límite. */
+    public function test_login_y_pujas_tienen_limite(): void
+    {
+        foreach (range(1, 10) as $_) {
+            $this->post('/ingresar', ['email' => 'nadie@correo.test', 'password' => 'mal'])->assertRedirect();
+        }
+        $this->post('/ingresar', ['email' => 'nadie@correo.test', 'password' => 'mal'])->assertStatus(429);
+        $this->post('/admin/ingresar', ['email' => 'nadie@correo.test', 'password' => 'mal'])->assertStatus(429);
+
+        config(['colliers.limites.pujas_por_minuto' => 2]);
+        $postor = \App\Models\User::factory()->create();
+        $this->actingAs($postor)->postJson('/remates/no-existe/lotes/1/pujas', ['monto' => 1]);
+        $this->actingAs($postor)->postJson('/remates/no-existe/lotes/1/pujas', ['monto' => 1]);
+        $this->actingAs($postor)->postJson('/remates/no-existe/lotes/1/pujas', ['monto' => 1])->assertStatus(429);
+    }
+
+    /** Bloque P: comprobantes y documentos van al disco privado, fuera de la carpeta pública. */
+    public function test_los_archivos_privados_quedan_fuera_de_public(): void
+    {
+        $privado = realpath(config('filesystems.disks.local.root')) ?: config('filesystems.disks.local.root');
+
+        $this->assertStringStartsNotWith(realpath(public_path()), $privado);
+        $this->assertStringStartsWith(realpath(storage_path()), $privado);
+    }
 }

@@ -4,6 +4,12 @@
 > desde cPanel. El hosting de producción de Colliers puede tener la misma limitación. Este documento mide el efecto,
 > explica qué se cambió en el código y qué queda como riesgo del Bloque R.
 
+> 🛑 **Corrección del 23/10 (manda sobre §3 y §7):** la medición del 22/10 (§9) mostró que **sin OPcache se pierden pujas
+> válidas** en el cierre, con 10 y con 20 postores, y que ningún margen fijo lo evita. Lo que §3 llama «Validez: resuelta»
+> solo vale para el sello de la hora, no para la adjudicación. **OPcache es requisito bloqueante para un remate en vivo**,
+> no una optimización (Jonas, 23/10; BACKLOG, Bloque R). Lo activa Jonas en el servidor y luego se mide en el sandbox. La
+> «puja en vuelo» queda como propuesta condicionada a que esa medición, con OPcache, vuelva a perder pujas.
+
 ## 1. Qué hace OPcache y por qué importa aquí
 
 PHP compila cada archivo en cada petición. OPcache guarda el resultado en memoria compartida y lo reutiliza. Sin él,

@@ -1,6 +1,6 @@
 # PROGRESO — Remates Colliers · Fase 3
 
-> Punto de retome. Última actualización: **2026-10-22.**
+> Punto de retome. Última actualización: **2026-10-23.**
 > Leer junto con `CLAUDE.md` (reglas) y **`docs/BACKLOG.md` (estado vivo de cada tarea)**.
 > El detalle de cada jornada está en `docs/progreso/AAAA-MM-DD.md`.
 
@@ -8,47 +8,37 @@
 
 ## 0. Para retomar en 30 segundos
 
-- **Estado (21/09):** T, C, I y G completos; B completo. J, D, K, V, H, M, N y O hechos y probados en local.
-  E/F empezado: la pantalla **«06 Usuarios»**.
-- **179 pruebas PHPUnit**: en SQLite (`php artisan test`, 2 se saltan) y en MySQL (`composer test:mysql`, 179/179).
-  Recorridos en navegador real al día (`tools/comparar/*.mjs`).
-- **21/09:** folio de la subasta de prueba corregido (500 en el sandbox), suite contra MySQL, análisis del
-  `1040 Too many connections` del hosting y **reintento de conexión en la puja** con margen seguro de 5 s vigilado por el
-  panel. Detalle en `docs/progreso/2026-09-21.md`.
-- **21/09, noche:** martillero a cargo de la subasta de prueba e inicio «Tus remates», **sandbox sin clave de acceso**
-  (noindex fuera de producción), la sala respeta un remate borrado o cancelado, **cambio de lote evidente**, y el
-  recorrido de los tres roles `tools/comparar/recorrido-roles.mjs` (50/50).
-- **Todo subido a `main` hasta `450ffae`** (aprobado el 21/09). **Locales sin push:** `cb5ea9e` (progreso del 21/09) y lo
-  del 18/10.
-- **18/10 (QA de Jonas):** favicon, cabecera y pie hacia el sitio corporativo (solo lo que tiene página allí) y
-  **presencia en la sala** (contador para el postor; lista con nombres solo en el panel; latido sin Laravel). Detalle y qué
-  probar en el sandbox: `docs/progreso/2026-10-18.md`.
-- **Mañana (22/09): Jonas prueba en el sandbox** con el plan de `docs/progreso/2026-09-21.md` §11.
-- **20/10: sitio público en inglés** completo en local, sin push (`docs/progreso/2026-10-20.md`). Pendiente de Jonas: revisar el glosario y las cadenas dudosas, confirmar con el cliente la línea «la versión en español rige» y el registro de extranjeros sin RUT. Antes de tocar textos del sitio: van en `lang/es` y `lang/en` (mismas claves); `tools/comparar/ingles.mjs` revisa `/en` en navegador.
-- **21/10: QA de Jonas sobre el sandbox, 18 hallazgos en 4 grupos**, subidos a `main` el 21/10 con aprobación de Jonas (un commit por grupo:
-  `6dc3a3b`, `080f99e`, `0055101`, `7bc11d1` y el cierre de decisiones). Límite de pujas: queda en 30/min por
-  usuario. Video de la sala en el estado público (aparece sin recargar). Pendiente de Jonas: cargar `RECAPTCHA_SITE_KEY` /
-  `RECAPTCHA_SECRET_KEY` (22/10: reCAPTCHA v2 reemplazó a Turnstile), reemplazar `public/img/compartir.png` cuando Colliers mande la imagen de 1200 × 630, y probar en
-  el sandbox lo de cada grupo (`docs/progreso/2026-10-21.md`). El 2FA
-  queda fuera de la tanda. Fuera de la tanda también OPcache, el rol Editor y los enlaces sin destino. Recorrido nuevo de
-  esta tanda: `tools/comparar/qa-visibles.mjs`; de seguridad, `tools/comparar/seguridad.mjs`.
-- **22/10: última tanda de Jonas, en local y SIN push** (un commit por punto): cabecera y pie como el sitio corporativo,
-  ficha sin bloque de visitas vacío, **rol Editor** (permisos a confirmar con el cliente, en `App\Autenticacion\Permisos`) y
-  **segundo factor por correo para Administración**. ⚠️ Antes del push: el correo saliente del sandbox tiene que funcionar
-  (emergencia: `php artisan colliers:codigo-ingreso correo`) (`composer test:mysql` 232/232 el 22/10). Mismo día: **reCAPTCHA v2 reemplaza a Turnstile** en el registro.
-  Los recorridos que entran como administración leen el código del log local (`tools/comparar/segundo-factor.mjs`).
-  Detalle: `docs/progreso/2026-10-22.md`.
+- **Estado (23/10):** T, B, C, I, G y L completos. J, D, K, V, H, M, N, O, P y E/F hechos y probados en local; lo que
+  falta de ellos se prueba en el sandbox (Jonas) o espera al cliente. Q, R y S sin empezar. Estado fino: `docs/BACKLOG.md`.
+- **Todo subido a `main` el 23/10** (aprobado por Jonas), incluido este cierre: nada local sin push. El push anterior fue
+  el 22/10 a las 19:54 UTC hasta `86ddaa6`.
+- **237 pruebas PHPUnit**: SQLite 237 (235 + 2 saltadas, `composer test`) y MySQL 237/237 (`composer test:mysql`, con el
+  MySQL 8.4 de Laragon levantado a mano). Navegador al 23/10: `recorrido-roles` 58/58, `registro-acceso` 33/33.
+- 🛑 **OPcache es BLOQUEANTE para el remate en vivo** (22/10): sin OPcache se pierden pujas válidas en el cierre y ningún
+  margen lo evita (`docs/RENDIMIENTO-SIN-OPCACHE.md` §9, BACKLOG R). Lo activa Jonas; después se mide en el sandbox. La
+  «puja en vuelo» es una propuesta **condicionada** a que esa medición vuelva a perder pujas: no implementarla antes.
+- **23/10:** documentos de estado al día, límite de envíos del registro (20/h por IP), L y parte de P verificados,
+  temporales viejos de `bootstrap/cache` borrados. Detalle: `docs/progreso/2026-10-23.md`.
+- **22/10:** cabecera y pie como el sitio corporativo, ficha sin bloque de visitas vacío, **rol Editor** (permisos a
+  confirmar con el cliente, en `App\Autenticacion\Permisos`), **2FA por correo para Administración** (emergencia:
+  `php artisan colliers:codigo-ingreso correo`), reCAPTCHA v2 en lugar de Turnstile; noche: 16 regiones en el registro y
+  medición por tramos de la puja. Los recorridos que entran como administración leen el código del log local
+  (`tools/comparar/segundo-factor.mjs`). Detalle: `docs/progreso/2026-10-22.md`.
+- **Historial corto:** 21/10 QA de Jonas sobre el sandbox (18 hallazgos, `docs/progreso/2026-10-21.md`); 20/10 sitio
+  público en inglés (textos en `lang/es` y `lang/en` con las mismas claves, `tools/comparar/ingles.mjs`); 18/10 favicon,
+  menú y presencia en la sala; 21/09 reintento de conexión en la puja, sandbox sin clave y recorrido de los tres roles.
+- **Pendiente de Jonas:** OPcache y medición en el sandbox; claves `RECAPTCHA_SITE_KEY` / `RECAPTCHA_SECRET_KEY`; probar
+  el código del 2FA y crear un Editor; sala con video y presencia; log de la CSP; `post_max_size` 64M /
+  `upload_max_filesize` 20M si falta; imagen de 1200 × 630 de Colliers. Con el cliente: ver «Decisiones pendientes» del BACKLOG.
 - **Antes de reportar algo como listo:** `node tools/comparar/recorrido-roles.mjs` (los tres roles con clics) en verde.
 - **Criterio de Jonas (21/09), para todo el proyecto:** si algo necesita que alguien escriba una URL o sepa algo que la
   pantalla no dice, está mal. Los recorridos en navegador tampoco escriben URL: hacen clic, copian y pegan.
-- **Pendiente de Jonas en el sandbox:** margen a 5 s y aviso del cierre al 10 %, `colliers:diagnostico` (conexiones),
-  `post_max_size` 64M / `upload_max_filesize` 20M si falta, y el recorrido de los tres roles (plan en el registro del 21/09 §11).
-- **Siguiente para Claude:** lo que salga de esas pruebas → Bloque L (streaming) → resto de E/F.
 - **Decisiones vigentes:** el **PDF de reportes** está fuera del alcance; la **habilitación única** está construida,
   apagada y con el monto vacío; **«cerrar el remate completo» lo decide Jonas después (no implementar)**; el cambio de lote
   en la sala se destacó el 21/09 a su pedido.
-- OPcache está **apagado** en el sandbox: leer `docs/RENDIMIENTO-SIN-OPCACHE.md` antes de tocar el camino de la puja.
-- Antes de correr recorridos en navegador: **uno a la vez** y cerrar Chrome al terminar.
+- Antes de tocar el camino de la puja: leer `docs/RENDIMIENTO-SIN-OPCACHE.md`.
+- Antes de correr recorridos en navegador: **uno a la vez** y cerrar Chrome al terminar. Detener `php artisan serve` deja
+  vivo el `php -S` hijo: cerrar lo que escuche en el puerto antes de levantar otro.
 
 ## 1. Jornadas
 
@@ -59,9 +49,10 @@
 | 2026-09-17 | [`docs/progreso/2026-09-17.md`](progreso/2026-09-17.md) | Rendimiento sin OPcache, K terminado, I, V, G, H, M, N, manual de pruebas y push |
 | 2026-09-21 | [`docs/progreso/2026-09-21.md`](progreso/2026-09-21.md) | Folio (500 en el sandbox), suite contra MySQL, `1040 Too many connections` y reintento en la puja, experiencia de prueba sin URL, martillero y «Tus remates», sandbox sin clave, sala ante remate borrado/cancelado, cambio de lote evidente, recorrido de los tres roles. §11: plan de prueba del 22/09 |
 | 2026-10-18 | [`docs/progreso/2026-10-18.md`](progreso/2026-10-18.md) | Favicon, menú y pie hacia el sitio corporativo, presencia en la sala (latido sin Laravel, nombres solo en el panel) |
-| 2026-10-20 | [`docs/progreso/2026-10-20.md`](progreso/2026-10-20.md) | Sitio público en inglés: prefijo `/en`, conmutador en todas las cabeceras públicas, 886 cadenas en `lang/es` y `lang/en`, formatos por idioma, documentos «(in Spanish)». Local, sin push |
-| 2026-10-22 | [`docs/progreso/2026-10-22.md`](progreso/2026-10-22.md) | Última tanda: enlaces de cabecera y pie, horarios de visita, rol Editor, segundo factor por correo. Local, sin push |
-| 2026-10-21 | [`docs/progreso/2026-10-21.md`](progreso/2026-10-21.md) | QA de Jonas sobre el sandbox en 4 grupos: aviso de conexión y adjudicación visible (sala, Mi cuenta); HTTPS forzado, cabeceras con CSP y Turnstile; sala sin transmisión, condiciones en inglés, cuentas por aprobar y SEO; menores (hover, «sobre la base», promedio, 405, buscador). Local, sin push |
+| 2026-10-20 | [`docs/progreso/2026-10-20.md`](progreso/2026-10-20.md) | Sitio público en inglés: prefijo `/en`, conmutador en todas las cabeceras públicas, 886 cadenas en `lang/es` y `lang/en`, formatos por idioma, documentos «(in Spanish)». Subido |
+| 2026-10-22 | [`docs/progreso/2026-10-22.md`](progreso/2026-10-22.md) | Última tanda: enlaces de cabecera y pie, horarios de visita, rol Editor, segundo factor por correo, reCAPTCHA v2 (subido el 22/10 a las 19:54 UTC hasta `86ddaa6`); noche: 16 regiones y medición por tramos de la puja (subido el 23/10) |
+| 2026-10-23 | [`docs/progreso/2026-10-23.md`](progreso/2026-10-23.md) | Diagnóstico tras el corte de luz, documentos al día, límite de envíos del registro, L y parte de P verificados, OPcache bloqueante. Subido |
+| 2026-10-21 | [`docs/progreso/2026-10-21.md`](progreso/2026-10-21.md) | QA de Jonas sobre el sandbox en 4 grupos: aviso de conexión y adjudicación visible (sala, Mi cuenta); HTTPS forzado, cabeceras con CSP y Turnstile (reemplazado por reCAPTCHA v2 el 22/10); sala sin transmisión, condiciones en inglés, cuentas por aprobar y SEO; menores (hover, «sobre la base», promedio, 405, buscador). Subido el 21/10 |
 | 2026-09-20 | [`docs/progreso/2026-09-20.md`](progreso/2026-09-20.md) | Los 8 puntos del QA de Jonas: martillero, cierre anticipado, hover, registro que no pierde nada, subasta de prueba, ayudas del formulario, «06 Usuarios» y `Habilitacion`. Tarde: push, habilitación única configurable y PDF fuera de alcance |
 
 ---
