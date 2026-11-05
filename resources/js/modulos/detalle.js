@@ -15,8 +15,13 @@ function reloj(segundos) {
 // y mapa. Los espectadores SOLO leen el JSON estático (cada ~2 s) y sincronizan el reloj con hora.php: el detalle nunca
 // ejecuta el framework, así la cantidad de espectadores no compite con las pujas (docs/RENDIMIENTO-SIN-OPCACHE.md).
 export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estadoJson, hora, pujas, precioActual, totalPujas, uf, mapa, rutas, remate,
-    margenMs = 2000, avisoCierre = { espera_ms: 5000, porcentaje: 100 }, estadoUrl = null }) => ({
+    margenMs = 2000, avisoCierre = { espera_ms: 5000, porcentaje: 100 }, estadoUrl = null, fotos = [] }) => ({
     pujas,
+    // Visor de la galería (05/11): índice de la foto abierta, o null si está cerrado.
+    fotos,
+    visor: null,
+    toqueX: null,
+    enfocadoAntes: null,
     precio: precioActual,
     total: totalPujas,
     objetivo: objetivoMs,
@@ -208,6 +213,55 @@ export default ({ enVivo, proximo = false, loteId, objetivoMs, servidorMs, estad
         } finally {
             this.avisoEnviando = false;
         }
+    },
+
+    abrirVisor(indice) {
+        if (!this.fotos.length) return;
+        this.enfocadoAntes = document.activeElement;
+        this.visor = Math.min(Math.max(0, indice), this.fotos.length - 1);
+        // Sin scroll de la página detrás del visor.
+        document.documentElement.style.overflow = 'hidden';
+        this.$nextTick(() => this.$refs.cerrarVisor?.focus());
+        this.precargarVecinas();
+    },
+
+    cerrarVisor() {
+        if (this.visor === null) return;
+        this.visor = null;
+        document.documentElement.style.overflow = '';
+        this.enfocadoAntes?.focus?.();
+    },
+
+    moverVisor(paso) {
+        if (this.visor === null || this.fotos.length < 2) return;
+        const n = this.fotos.length;
+        this.visor = (this.visor + paso + n) % n;
+        this.precargarVecinas();
+    },
+
+    // Deslizar en pantallas táctiles: más de 40 px en horizontal cambia de foto.
+    tocarVisor(e) {
+        this.toqueX = e.changedTouches[0]?.clientX ?? null;
+    },
+
+    soltarVisor(e) {
+        if (this.toqueX === null) return;
+        const dx = (e.changedTouches[0]?.clientX ?? this.toqueX) - this.toqueX;
+        this.toqueX = null;
+        if (Math.abs(dx) > 40) this.moverVisor(dx < 0 ? 1 : -1);
+    },
+
+    precargarVecinas() {
+        const n = this.fotos.length;
+        [1, -1].forEach((d) => { new Image().src = this.fotos[(this.visor + d + n) % n]; });
+    },
+
+    get fotoVisor() {
+        return this.visor === null ? '' : this.fotos[this.visor];
+    },
+
+    get contadorVisor() {
+        return this.visor === null ? '' : (this.visor + 1) + ' / ' + this.fotos.length;
     },
 
     iniciarMapa() {

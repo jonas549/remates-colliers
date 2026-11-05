@@ -8,7 +8,8 @@
  *   php tools/comparar/sala-ayudante.php dos-lotes N    remate «dos-lotes»: lote 1 cierra en N s, lote 2 abre 3 s después
  *   php tools/comparar/sala-ayudante.php mensaje SLUG T mensaje del martillero en ese remate
  *   php tools/comparar/sala-ayudante.php video SLUG [ID] id del video de YouTube del remate (sin ID, lo quita)
- *   php tools/comparar/sala-ayudante.php codigo CORREO   último código de ingreso al panel enviado a esa cuenta (correo en el log)
+ *   php tools/comparar/sala-ayudante.php fotos SLUG N    deja N fotos distintas en el primer lote del remate
+ *   php tools/comparar/sala-ayudante.php codigo CORREO  último código de ingreso al panel enviado a esa cuenta (correo en el log)
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -111,6 +112,20 @@ switch ($accion) {
         $user = User::where('email', $argv[3] ?? '')->firstOrFail();
         $puja = app(App\Subastas\MotorPujas::class)->pujar($user, $remate->lotes()->first()->id, (int) ($argv[4] ?? 0), CarbonImmutable::now('UTC'));
         echo "ok {$puja->monto}\n";
+        break;
+
+    case 'fotos':
+        // fotos SLUG N: deja N fotos en el primer lote (muestras del seeder; `?n=` las hace distintas para el visor).
+        $remateFotos = Remate::where('slug', $argv[2] ?? '')->firstOrFail();
+        $loteFotos = $remateFotos->lotes()->first();
+        $muestras = array_map(fn ($f) => 'img/demo/' . basename($f), glob(public_path('img/demo/prop-*.jpg')));
+        $loteFotos->imagenes()->delete();
+        for ($i = 0, $n = (int) ($argv[3] ?? 14); $i < $n; $i++) {
+            $loteFotos->imagenes()->create(['ruta' => $muestras[$i % count($muestras)] . '?n=' . ($i + 1), 'orden' => $i + 1]);
+        }
+        // `reiniciar` borra los JSON publicados: sin esto la ficha en vivo consulta un JSON que no existe (404).
+        app(Emisor::class)->publicarEstado($remateFotos);
+        echo "ok {$n}\n";
         break;
 
     case 'codigo':

@@ -191,6 +191,9 @@ class Catalogo
             ],
             'galeria' => $fotos->slice($enVivo ? 0 : 1, 4)->values()->all(),
             'totalFotos' => $fotos->count(),
+            // Visor de la galería (05/11): todas las fotos; la grilla muestra 4 desde `galeriaDesde` (en vivo la principal es el video).
+            'fotos' => $fotos->all(),
+            'galeriaDesde' => $enVivo ? 0 : 1,
             'descripcion' => $lote->descripcion ?: $r->descripcion,
             'ficha' => $ficha,
             'adicional' => $adicional,

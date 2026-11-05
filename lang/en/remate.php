@@ -104,6 +104,15 @@ return [
         'ver_fotos' => 'View all :total photos',
     ],
 
+    // Photo viewer (05/11).
+    'visor' => [
+        'titulo' => 'Property photos',
+        'abrir' => 'View photo :n of :total',
+        'cerrar' => 'Close photos',
+        'anterior' => 'Previous photo',
+        'siguiente' => 'Next photo',
+    ],
+
     // Description for search engines and link previews (QA 21/10, 3.4).
     'seo' => [
         'proximo' => 'Auction of :direccion (:lugar). Starting price :base. Starts :fecha. Colliers Chile.',

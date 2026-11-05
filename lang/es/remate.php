@@ -103,6 +103,15 @@ return [
         'ver_fotos' => 'Ver las :total fotos',
     ],
 
+    // Visor de la galería (05/11).
+    'visor' => [
+        'titulo' => 'Fotos de la propiedad',
+        'abrir' => 'Ver foto :n de :total',
+        'cerrar' => 'Cerrar las fotos',
+        'anterior' => 'Foto anterior',
+        'siguiente' => 'Foto siguiente',
+    ],
+
     // Descripción para buscadores y vista previa al compartir (QA 21/10, 3.4).
     'seo' => [
         'proximo' => 'Remate de :direccion (:lugar). Precio base :base. Comienza el :fecha. Colliers Chile.',

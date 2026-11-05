@@ -38,7 +38,11 @@
         [__('remate.pasos.puja.titulo'), __('remate.pasos.puja.texto', ['monto' => $clp($r['incremento'])])],
     ];
 
-    $config = $r['tiempoReal'] + ['enVivo' => $vivo, 'mapa' => $r['mapa'], 'rutas' => ['avisame' => route('suscripciones.store')], 'remate' => $r['id']];
+    // Visor de la galería (05/11). La ficha de demostración no trae `fotos`: el visor usa las miniaturas.
+    $fotosVisor = $r['fotos'] ?? $r['galeria'];
+    $desdeGaleria = isset($r['fotos']) ? ($r['galeriaDesde'] ?? 0) : 0;
+
+    $config = $r['tiempoReal'] + ['enVivo' => $vivo, 'mapa' => $r['mapa'], 'fotos' => $fotosVisor, 'rutas' => ['avisame' => route('suscripciones.store')], 'remate' => $r['id']];
     $iconoCalendario = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#25408f" stroke-width="1.5"><rect x="3" y="5" width="18" height="16"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>';
     $correoVisita = 'mailto:' . Sitio::correo() . '?subject=' . rawurlencode(__('remate.correo.asunto_visita', ['direccion' => $r['direccion'], 'folio' => $r['folio']]));
 @endphp
@@ -105,12 +109,14 @@
 
                     <div @class(['detalle__galeria', 'detalle__galeria--vivo' => $vivo])>
                         @foreach ($r['galeria'] as $i => $foto)
-                            <div class="detalle__miniatura">
+                            @php $indice = $desdeGaleria + $i; @endphp
+                            <button type="button" class="detalle__miniatura" @click="abrirVisor({{ $indice }})"
+                                aria-label="{{ $loop->last ? __('remate.video.ver_fotos', ['total' => count($fotosVisor)]) : __('remate.visor.abrir', ['n' => $indice + 1, 'total' => count($fotosVisor)]) }}">
                                 <x-imagen-slot :src="$foto" />
                                 @if ($loop->last)
-                                    <div class="detalle__mas-fotos">{{ __('remate.video.ver_fotos', ['total' => $r['totalFotos']]) }}</div>
+                                    <span class="detalle__mas-fotos">{{ __('remate.video.ver_fotos', ['total' => $r['totalFotos']]) }}</span>
                                 @endif
-                            </div>
+                            </button>
                         @endforeach
                     </div>
 
@@ -448,5 +454,28 @@
         @endif
 
         <x-publico.pie :separado="$vivo" />
+
+        {{-- Visor de la galería (05/11): no está en el prototipo; aprobado por Jonas con los tokens del letrero «Ver las N fotos». --}}
+        <div class="visor" x-show="visor !== null" x-cloak role="dialog" aria-modal="true" aria-label="{{ __('remate.visor.titulo') }}"
+            @keydown.window.escape="cerrarVisor()" @keydown.window.arrow-left="visor !== null && moverVisor(-1)" @keydown.window.arrow-right="visor !== null && moverVisor(1)"
+            @click.self="cerrarVisor()">
+            <div class="visor__barra">
+                <span class="visor__contador" x-text="contadorVisor" aria-live="polite"></span>
+                <button type="button" class="visor__boton visor__cerrar" x-ref="cerrarVisor" @click="cerrarVisor()" aria-label="{{ __('remate.visor.cerrar') }}">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+                </button>
+            </div>
+            <div class="visor__escena" @click.self="cerrarVisor()" @touchstart.passive="tocarVisor($event)" @touchend="soltarVisor($event)">
+                <img class="visor__foto" :src="fotoVisor" alt="" draggable="false">
+            </div>
+            @if (count($fotosVisor) > 1)
+                <button type="button" class="visor__boton visor__flecha visor__flecha--anterior" @click="moverVisor(-1)" aria-label="{{ __('remate.visor.anterior') }}">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+                </button>
+                <button type="button" class="visor__boton visor__flecha visor__flecha--siguiente" @click="moverVisor(1)" aria-label="{{ __('remate.visor.siguiente') }}">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            @endif
+        </div>
     </div>
 </x-layouts.base>
